@@ -1254,6 +1254,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         <div class="grid4 stagger" id="profileStats"></div>
 
         <div class="card settings-list">
+          <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
+            <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">🛠️</div>
+            <div class="si-text"><div class="t">Admin panel</div><div class="s">Savollar, foydalanuvchilar va xabarlarni boshqarish</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
           <div class="settings-item" data-view="sozlamalar">
             <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">⚙️</div>
             <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma, mavzu va hisob sozlamalari</div></div>
@@ -1432,7 +1437,7 @@ window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqa
    DIQQAT: bu faqat tugmani yashiradi — haqiqiy himoya emas! Admin ma'lumotlariga backend (Supabase RLS)
    tarafida ham shu ID'lar uchun ruxsat berilishi shart, aks holda boshqa foydalanuvchi ham API orqali
    to'g'ridan-to'g'ri o'sha ma'lumotlarga kirib olishi mumkin. */
-const ADMIN_TELEGRAM_IDS = [];
+const ADMIN_TELEGRAM_IDS = [5400174077];
 
 /* MOSLASHTIRING: qo'llab-quvvatlash uchun o'z Telegram username'ingizni yozing */
 const SUPPORT_USERNAME = 'arabication_support';
@@ -1555,8 +1560,12 @@ function renderGreetingFromProfile(){
   const pt = document.getElementById('profileTelegram');
   if(pt) pt.textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id}`;
 
+  const isAdmin = ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId);
+  showDebug(`ℹ️ rawId=${TELEGRAM_PROFILE.rawId} (${typeof TELEGRAM_PROFILE.rawId}), ADMIN_TELEGRAM_IDS=[${ADMIN_TELEGRAM_IDS.join(',')}], isAdmin=${isAdmin}`);
   const adminLink = document.getElementById('adminNavLink');
-  if(adminLink) adminLink.style.display = ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId) ? '' : 'none';
+  if(adminLink) adminLink.style.display = isAdmin ? '' : 'none';
+  const profileAdminLink = document.getElementById('profileAdminLink');
+  if(profileAdminLink) profileAdminLink.style.display = isAdmin ? '' : 'none';
 }
 
 async function bootApp(){
