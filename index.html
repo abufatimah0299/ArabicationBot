@@ -1346,19 +1346,36 @@ function authHeaders(){
 
 async function tgInitAndAuth(){
   const tg = window.Telegram?.WebApp;
-  if(!tg){ console.warn("Telegram WebApp SDK topilmadi — brauzerda dev rejimida ishlayapmiz, mock user ishlatiladi."); return null; }
+  if(!tg){ showDebug("❌ Telegram.WebApp topilmadi — SDK yuklanmagan yoki brauzerda ochilgan."); return null; }
   tg.ready(); tg.expand();
   const initData = tg.initData;
-  if(!initData){ console.warn("initData yo'q (dev muhiti bo'lishi mumkin)."); return null; }
+  if(!initData){ showDebug("❌ initData BO'SH. Menu Button 'Web App' turida sozlanmagan bo'lishi mumkin. (tg.platform: "+tg.platform+", version: "+tg.version+")"); return null; }
+  showDebug("✅ initData bor (uzunligi: "+initData.length+"). Supabase'ga so'rov yuborilmoqda...");
   try{
     const res = await fetch(AUTH_FUNCTION_URL, {
       method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({initData})
     });
-    if(!res.ok){ console.error("Auth xato:", await res.text()); return null; }
+    if(!res.ok){ const t = await res.text(); showDebug("❌ Auth xato ("+res.status+"): "+t); return null; }
     const {token, user} = await res.json();
     SESSION_TOKEN = token;
+    showDebug("✅ Auth muvaffaqiyatli: "+(user?.first_name||'?'));
     return user;
-  }catch(e){ console.error("Auth so'rovda xato:", e); return null; }
+  }catch(e){ showDebug("❌ So'rov xatosi: "+e.message+" (SUPABASE_URL to'g'ri kiritilganini tekshiring)"); return null; }
+}
+
+/* VAQTINCHALIK DEBUG — muammoni topgach shu funksiya chaqiruvlarini olib tashlash mumkin */
+function showDebug(msg){
+  console.log("[DEBUG]", msg);
+  let el = document.getElementById('debugBanner');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'debugBanner';
+    el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:11px;padding:8px;z-index:99999;font-family:monospace;max-height:35vh;overflow-y:auto;white-space:pre-wrap;';
+    document.body.appendChild(el);
+  }
+  const line = document.createElement('div');
+  line.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
+  el.appendChild(line);
 }
 
 async function loadDashboardFromBackend(userId){
