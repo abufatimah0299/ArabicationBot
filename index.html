@@ -1481,19 +1481,9 @@ async function tgInitAndAuth(){
   }catch(e){ showDebug("❌ So'rov xatosi: "+e.message+" (SUPABASE_URL to'g'ri kiritilganini tekshiring)"); return null; }
 }
 
-/* VAQTINCHALIK DEBUG — muammoni topgach shu funksiya chaqiruvlarini olib tashlash mumkin */
+/* Debug panel olib tashlandi — xatoliklar faqat brauzer konsoliga (F12) yoziladi */
 function showDebug(msg){
   console.log("[DEBUG]", msg);
-  let el = document.getElementById('debugBanner');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'debugBanner';
-    el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:11px;padding:8px;z-index:99999;font-family:monospace;max-height:35vh;overflow-y:auto;white-space:pre-wrap;';
-    document.body.appendChild(el);
-  }
-  const line = document.createElement('div');
-  line.textContent = new Date().toLocaleTimeString() + ' — ' + msg;
-  el.appendChild(line);
 }
 
 async function loadDashboardFromBackend(userId){
