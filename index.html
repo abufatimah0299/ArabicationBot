@@ -102,7 +102,7 @@ body{
 }
 body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-nav, .navlink,
 .settings-item, .btn-outline, .exam-card, .lb-row, .podium-item, .review-card, .stat-card,
-.option, .filter-chip, .detail-btn, .icon-edit-btn, .form-field input, .form-field select, .form-field textarea{
+.option, .filter-chip, .rank-type-btn, .detail-btn, .icon-edit-btn, .form-field input, .form-field select, .form-field textarea{
   transition:background-color .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
 }
 .app{ display:flex; min-height:100vh; }
@@ -327,7 +327,12 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   box-shadow:var(--shadow); min-height:104px;
   transition:transform .28s var(--ease), box-shadow .28s var(--ease);
 }
-.skill-banner:hover{ transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,.3), 0 22px 40px -16px rgba(0,0,0,.6); }
+.skill-banner:hover{ transform:translateY(-3px); }
+.sb-istima:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(90,110,232,.55); }
+.sb-qiroa:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(34,181,122,.55); }
+.sb-grammatika:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(139,111,232,.55); }
+.sb-muhavara:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(232,150,63,.55); }
+.sb-kitaba:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(225,85,79,.55); }
 .skill-banner:active{ transform:scale(.99); }
 .skill-banner::before{
   content:""; position:absolute; top:-55px; inset-inline-end:-30px; width:190px; height:190px; border-radius:50%;
@@ -577,9 +582,13 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .grammar-cat-card{
   position:relative; overflow:hidden; display:flex; align-items:center; gap:16px; padding:22px 24px;
   cursor:pointer; color:#fff; min-height:104px;
-  transition:filter .2s var(--ease);
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
 }
-.grammar-cat-card:hover{ filter:brightness(1.06); }
+.grammar-cat-card:hover{ transform:translateY(-3px); filter:brightness(1.04); }
+.gcat-nahv:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(90,110,232,.55); }
+.gcat-sarf:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(139,111,232,.55); }
+.gcat-tarqim:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(232,150,63,.55); }
+.gcat-xatolar:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(225,85,79,.55); }
 .grammar-cat-card::before{
   content:""; position:absolute; top:-55px; inset-inline-end:-30px; width:190px; height:190px; border-radius:50%;
   background:radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
@@ -590,9 +599,10 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .gcat-xatolar{ background:linear-gradient(120deg, #E1554F 0%, #A82F2B 100%); }
 .grammar-cat-icon{
   width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center;
-  font-size:21px; flex-shrink:0; position:relative; z-index:1;
+  flex-shrink:0; position:relative; z-index:1;
   background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.3);
 }
+.grammar-cat-icon svg{ width:24px; height:24px; }
 .grammar-cat-main{ flex:1; min-width:0; position:relative; z-index:1; }
 .grammar-cat-name{ font-family:var(--font-ar-bold); font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .grammar-cat-desc{ font-size:12px; color:rgba(255,255,255,0.82); font-weight:600; margin-top:4px; }
@@ -611,6 +621,22 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 }
 .filter-chip:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
 .filter-chip.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
+
+/* Reyting: TANAL/CEFR va davr filtrlari — teng width/height, card bilan bir xil chetlar */
+.rank-type-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+.rank-type-btn{
+  flex:1 1 0; min-width:0; box-sizing:border-box; text-align:center; white-space:nowrap;
+  padding:13px 10px; border-radius:14px; border:1.5px solid var(--border);
+  background:var(--card); color:var(--text-dim); font-family:inherit; font-weight:800; font-size:13.5px;
+  cursor:pointer; transition:.15s var(--ease);
+}
+.rank-type-btn:hover{ border-color:var(--hover-border); color:var(--indigo-700); }
+.rank-type-btn.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
+#filterRankPeriod{ display:flex; flex-wrap:nowrap; gap:8px; }
+#filterRankPeriod .filter-chip{
+  flex:1 1 0; min-width:0; box-sizing:border-box; text-align:center; white-space:nowrap;
+  padding:10px 6px; font-size:12px;
+}
 
 /* ---------- History ---------- */
 .history-item{ padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
@@ -702,7 +728,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
   text-align:start; font-family:inherit; box-shadow:var(--shadow);
   transition:transform .28s var(--ease), box-shadow .28s var(--ease);
 }
-.exam-card:hover{ transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,.3), 0 22px 40px -16px rgba(0,0,0,.6); }
+.exam-card:hover{ transform:translateY(-3px); }
+.exam-card.exam-red:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(229,84,77,.55); }
+.exam-card.exam-green:hover{ box-shadow:0 4px 10px rgba(0,0,0,.22), 0 16px 36px -14px rgba(14,143,88,.55); }
 .exam-card:active{ transform:scale(.99); }
 .exam-card::after{
   content:""; position:absolute; bottom:-34px; inset-inline-end:-10px; width:140px; height:140px; border-radius:50%;
@@ -752,6 +780,51 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .placeholder-card svg{ width:44px; height:44px; margin-bottom:14px; color:var(--indigo-500);}
 .placeholder-card h3{ font-size:15px; color:var(--text); font-weight:800; margin-bottom:6px;}
 .placeholder-card p{ font-size:13px; font-weight:600; }
+
+/* ================= ADMIN PANEL ================= */
+.admin-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-bottom:18px; max-width:640px; }
+.admin-tabs{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding-bottom:2px; }
+.admin-tab{ font-family:inherit; cursor:pointer; white-space:nowrap; border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-weight:800; font-size:12.5px; padding:9px 16px; border-radius:11px; transition:all .2s var(--ease); }
+.admin-tab:hover{ border-color:var(--indigo-500); color:var(--text); }
+.admin-tab.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
+.admin-panel-body{ animation:fadein .25s ease; }
+
+.stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 18px; }
+.stat-card .stat-icon{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; font-size:16px; }
+.stat-card .stat-val{ font-size:22px; font-weight:900; letter-spacing:-.02em; }
+.stat-card .stat-label{ font-size:11.5px; color:var(--text-faint); font-weight:700; margin-top:2px; }
+
+.admin-search{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; margin-bottom:14px; }
+.admin-search input{ flex:1; border:none; background:transparent; font-family:inherit; font-size:13px; font-weight:600; color:var(--text); outline:none; }
+.admin-search svg{ width:16px; height:16px; color:var(--text-faint); flex-shrink:0; }
+
+.data-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.data-table th{ text-align:right; font-weight:800; color:var(--text-faint); font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 12px; border-bottom:1px solid var(--border); }
+.data-table td{ padding:12px; border-bottom:1px solid var(--border); font-weight:600; color:var(--text-dim); vertical-align:middle; }
+.data-table tr:last-child td{ border-bottom:none; }
+.data-table .u-name{ display:flex; align-items:center; gap:10px; font-weight:800; color:var(--text); }
+.data-table .u-avatar{ width:32px; height:32px; border-radius:50%; background:var(--indigo-100); color:var(--indigo-700); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; flex-shrink:0; }
+.data-table .row-btn{ font-family:inherit; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-weight:700; font-size:11.5px; padding:6px 11px; border-radius:8px; }
+.data-table .row-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
+.data-table .row-btn.danger:hover{ border-color:var(--red); color:var(--red); }
+
+.skill-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.skill-chip{ font-family:inherit; cursor:pointer; border:1.5px solid var(--border); background:var(--card); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px; display:flex; align-items:center; gap:6px; color:var(--text-dim); transition:all .2s var(--ease); }
+.skill-chip.active{ color:var(--sk-color); background:var(--sk-bg); border-color:var(--sk-color); }
+
+.topic-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; margin-bottom:9px; }
+.topic-row:last-child{ margin-bottom:0; }
+.topic-row .t-name{ font-weight:800; font-size:13px; color:var(--text); }
+.topic-row .t-meta{ font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:2px; }
+.topic-row .t-actions{ display:flex; gap:6px; flex-shrink:0; }
+
+.admin-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.q-opt-row{ display:flex; align-items:center; gap:10px; }
+.q-opt-row input[type="text"]{ flex:1; }
+.q-opt-row input[type="radio"]{ width:18px; height:18px; accent-color:var(--indigo-700); flex-shrink:0; }
+.admin-toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:12.5px; font-weight:700; padding:11px 20px; border-radius:12px; z-index:9999; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
+.admin-toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
 .toast{
   position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--indigo-900);
@@ -834,22 +907,6 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       </div>
     </div>
     <nav class="navlist" id="navlist">
-      <button class="navlink" data-view="dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
-        Bosh sahifa
-      </button>
-      <button class="navlink" data-view="attanal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
-        At-Tanal
-      </button>
-      <button class="navlink" data-view="imtihon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 7 22l5-3 5 3-2-7.5"/></svg>
-        Imtihon
-      </button>
-      <button class="navlink" data-view="grammar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Arab tili grammatikasi
-      </button>
       <button class="navlink" data-view="natijalar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
         Natijalarim
@@ -858,17 +915,21 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         Xatolarim
       </button>
-      <button class="navlink" data-view="profil">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-        Profil
+      <button class="navlink" data-view="rank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 7 22l5-3 5 3-2-7.5"/></svg>
+        Reyting
       </button>
       <button class="navlink" data-view="sozlamalar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
         Sozlamalar
       </button>
+      <button class="navlink" onclick="contactSupport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Yordam
+      </button>
     </nav>
     <div class="sidebar-bottom">
-      <button class="admin-link" data-view="admin">
+      <button class="admin-link" data-view="admin" id="adminNavLink" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg>
         Admin panel
       </button>
@@ -902,22 +963,6 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <!-- ============ DASHBOARD ============ -->
       <div class="view active" id="view-dashboard">
         <div class="grid3 stagger" style="grid-template-columns:1fr;">
-          <div class="card prep-card">
-            <div class="prep-top">
-              <h3>At-Tanal tayyorgarligi</h3>
-            </div>
-            <div class="prep-score"><span class="num-target" data-target="23">0</span><span> / 30</span></div>
-            <div class="bar-bg"><div class="bar-fill" data-target="77" style="width:0%"></div></div>
-            <div class="skill-rows">
-              <div class="skill-row"><span class="dot" style="background:var(--qiroa)"></span><span class="name">Qiroa (القراءة)</span><span class="val">25 / 30</span></div>
-              <div class="skill-row"><span class="dot" style="background:var(--istima)"></span><span class="name">Istima (الاستماع)</span><span class="val">22 / 30</span></div>
-              <div class="skill-row"><span class="dot" style="background:var(--grammatika)"></span><span class="name">Grammatika (القواعد)</span><span class="val">27 / 30</span></div>
-              <div class="skill-row"><span class="dot" style="background:var(--muhavara)"></span><span class="name">Muhovara (المحادثة)</span><span class="val">21 / 30</span></div>
-              <div class="skill-row"><span class="dot" style="background:var(--kitaba)"></span><span class="name">Kitaba (الكتابة)</span><span class="val">19 / 30</span></div>
-            </div>
-            <button class="detail-btn" data-view="attanal">Batafsil natija →</button>
-          </div>
-
           <div class="card" style="padding:20px;">
             <h3 style="font-size:14.5px;font-weight:800;margin-bottom:14px;">Bugungi mashg'ulot</h3>
             <div class="lesson-item" onclick="startQuiz('istima', 'Istima — Kundalik suhbat')">
@@ -1178,7 +1223,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <!-- ============ XATOLAR ============ -->
       <div class="view" id="view-xatolar">
         <div class="view-title">Xatolarim</div>
-        <div class="card placeholder-card">
+        <div id="errorsListWrap" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div class="card placeholder-card" id="errorsEmpty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
           <h3>Barcha xatolaringiz shu yerda to'planadi</h3>
           <p>Testlarni topshiring — xato qilgan savollaringiz avtomatik ravishda bu yerga qo'shiladi va takroriy mashq uchun taklif qilinadi.</p>
@@ -1207,17 +1253,23 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         <div class="section-title">O'rganish statistikasi</div>
         <div class="grid4 stagger" id="profileStats"></div>
 
-        <div class="section-title">Sozlamalar</div>
+        <div class="card settings-list">
+          <div class="settings-item" data-view="sozlamalar">
+            <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">⚙️</div>
+            <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma, mavzu va hisob sozlamalari</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SOZLAMALAR ============ -->
+      <div class="view" id="view-sozlamalar">
+        <div class="view-title">Sozlamalar</div>
         <div class="card settings-list">
           <div class="settings-item">
             <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">🔔</div>
             <div class="si-text"><div class="t">Kunlik eslatmalar</div><div class="s">Har kuni mashq qilish haqida bildirishnoma</div></div>
             <label class="switch"><input type="checkbox" checked onchange="toast(this.checked ? 'Eslatmalar yoqildi' : 'Eslatmalar o\'chirildi')"><span class="switch-track"></span></label>
-          </div>
-          <div class="settings-item" onclick="toast('Parol sozlamalari tez orada')">
-            <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">🔒</div>
-            <div class="si-text"><div class="t">Parol va xavfsizlik</div><div class="s">Parolni yangilash, ikki bosqichli tekshiruv</div></div>
-            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
           <div class="settings-item">
             <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🌐</div>
@@ -1231,19 +1283,14 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         </div>
       </div>
 
-      <!-- ============ SOZLAMALAR ============ -->
-      <div class="view" id="view-sozlamalar">
-        <div class="view-title">Sozlamalar</div>
-        <div class="card placeholder-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87"/></svg>
-          <h3>Sozlamalar bo'limi</h3>
-          <p>Bildirishnomalar, til, mavzu va hisob sozlamalari shu yerda bo'ladi.</p>
-        </div>
-      </div>
-
       <!-- ============ RANK (reyting) ============ -->
       <div class="view" id="view-rank">
         <div class="view-title">Reyting</div>
+
+        <div class="rank-type-toggle" id="rankTypeToggle">
+          <button class="rank-type-btn active" data-type="tanal">At-Tanal</button>
+          <button class="rank-type-btn" data-type="cefr">CEFR</button>
+        </div>
 
         <div class="card rank-top-card">
           <div class="rank-top-left">
@@ -1275,11 +1322,56 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
       <!-- ============ ADMIN — Haqiqiy imtihon xabarlari ============ -->
       <div class="view" id="view-admin">
-        <div class="view-title">Haqiqiy imtihon xabarlari</div>
-        <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
-          O'quvchilar "Haqiqiy imtihonga kirdingizmi?" formasi orqali yuborgan xabarlar — qaysi kuni, qaysi bo'limda, qaysi xona/parta va qanday savol tushgani haqida.
-        </p>
-        <div class="card" style="padding:18px 20px;" id="adminReportsList"></div>
+        <div class="view-title">Admin panel</div>
+        <p class="admin-sub">Test kontentini, foydalanuvchilarni va imtihon xabarlarini shu yerdan boshqarasiz.</p>
+
+        <div class="admin-tabs" id="adminTabs">
+          <button class="admin-tab active" data-atab="overview" onclick="showAdminTab('overview')">📊 Umumiy</button>
+          <button class="admin-tab" data-atab="users" onclick="showAdminTab('users')">👥 Foydalanuvchilar</button>
+          <button class="admin-tab" data-atab="questions" onclick="showAdminTab('questions')">📝 Savollar banki</button>
+          <button class="admin-tab" data-atab="reports" onclick="showAdminTab('reports')">📩 Imtihon xabarlari</button>
+        </div>
+
+        <!-- 1) UMUMIY KO'RINISH -->
+        <div class="admin-panel-body" id="adminTab-overview">
+          <div class="stat-grid" id="adminStatGrid"></div>
+          <div class="card" style="padding:18px 20px;">
+            <div style="font-weight:800;font-size:13.5px;margin-bottom:12px;">Ko'nikmalar bo'yicha umumiy o'zlashtirish</div>
+            <div id="adminSkillBars"></div>
+          </div>
+        </div>
+
+        <!-- 2) FOYDALANUVCHILAR -->
+        <div class="admin-panel-body" id="adminTab-users" style="display:none;">
+          <div class="admin-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="adminUserSearch" placeholder="Ism yoki username bo'yicha qidirish..." oninput="renderAdminUsers()">
+          </div>
+          <div class="card" style="padding:8px;overflow-x:auto;">
+            <table class="data-table">
+              <thead><tr><th>Foydalanuvchi</th><th>Daraja</th><th>XP</th><th>Oxirgi faollik</th><th></th></tr></thead>
+              <tbody id="adminUsersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3) SAVOLLAR BANKI -->
+        <div class="admin-panel-body" id="adminTab-questions" style="display:none;">
+          <div class="skill-chip-row" id="adminSkillChips"></div>
+          <div class="admin-toolbar">
+            <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
+            <button class="btn btn-primary" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
+          </div>
+          <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
+        </div>
+
+        <!-- 4) IMTIHON XABARLARI (mavjud) -->
+        <div class="admin-panel-body" id="adminTab-reports" style="display:none;">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
+            O'quvchilar "Haqiqiy imtihonga kirdingizmi?" formasi orqali yuborgan xabarlar — qaysi kuni, qaysi bo'limda, qaysi xona/parta va qanday savol tushgani haqida.
+          </p>
+          <div class="card" style="padding:18px 20px;" id="adminReportsList"></div>
+        </div>
       </div>
 
     </div>
@@ -1335,6 +1427,21 @@ const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
+
+/* MOSLASHTIRING: bu yerga faqat admin panelni ko'rishi kerak bo'lgan Telegram foydalanuvi ID'larini yozing.
+   DIQQAT: bu faqat tugmani yashiradi — haqiqiy himoya emas! Admin ma'lumotlariga backend (Supabase RLS)
+   tarafida ham shu ID'lar uchun ruxsat berilishi shart, aks holda boshqa foydalanuvchi ham API orqali
+   to'g'ridan-to'g'ri o'sha ma'lumotlarga kirib olishi mumkin. */
+const ADMIN_TELEGRAM_IDS = [];
+
+/* MOSLASHTIRING: qo'llab-quvvatlash uchun o'z Telegram username'ingizni yozing */
+const SUPPORT_USERNAME = 'arabication_support';
+function contactSupport(){
+  const tg = window.Telegram?.WebApp;
+  const url = `https://t.me/${SUPPORT_USERNAME}`;
+  if(tg?.openTelegramLink){ tg.openTelegramLink(url); }
+  else{ window.open(url, '_blank'); }
+}
 
 function authHeaders(){
   return {
@@ -1447,6 +1554,9 @@ function renderGreetingFromProfile(){
   if(pn) pn.textContent = TELEGRAM_PROFILE.name || 'Foydalanuvchi';
   const pt = document.getElementById('profileTelegram');
   if(pt) pt.textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id}`;
+
+  const adminLink = document.getElementById('adminNavLink');
+  if(adminLink) adminLink.style.display = ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId) ? '' : 'none';
 }
 
 async function bootApp(){
@@ -1464,6 +1574,10 @@ async function bootApp(){
     TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
   }
   renderGreetingFromProfile();
+  Object.values(RANK_DATASETS).forEach(list=>{
+    const me = list.find(u=>u.me);
+    if(me) me.name = TELEGRAM_PROFILE.name || me.name;
+  });
 
   if(TELEGRAM_PROFILE.rawId){
     const dash = await loadDashboardFromBackend(TELEGRAM_PROFILE.rawId);
@@ -1473,6 +1587,11 @@ async function bootApp(){
 
     window.HISTORY_DATA_LIVE = await loadHistoryFromBackend(TELEGRAM_PROFILE.rawId);
     window.USER_ERRORS_LIVE = await loadErrorsFromBackend(TELEGRAM_PROFILE.rawId);
+    applyLiveHistory();
+    applyLiveErrors();
+
+    const lb = await loadLeaderboardFromBackend();
+    applyLiveLeaderboard(lb);
   }
   window.APP_READY = true;
 }
@@ -1519,7 +1638,7 @@ function showView(name, push=true){
   closeSidebar();
   const activeEl = document.getElementById('view-'+name);
   if(activeEl) runEntranceAnimations(activeEl);
-  if(name==='admin') renderAdminReports();
+  if(name==='admin') renderAdminPanel();
 }
 
 /* ---------------- Entrance animations (bars, rings, counters) ---------------- */
@@ -1600,7 +1719,6 @@ overlay.addEventListener('click', closeSidebar);
 function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
 
 /* view-dashboard is default active in HTML already */
-document.querySelector('.navlink[data-view="dashboard"]').classList.add('active');
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
 
 /* ---------------- Toast ---------------- */
@@ -1630,6 +1748,29 @@ function applyBackendSkillScores(dash){
     if(typeof val === 'number'){ s.score = val; s.pct = Math.round((val/s.total)*100); }
   });
   renderSkillHub();
+}
+/* Bo'lim nomi -> ikonka/rang, tarix va xatolar ro'yxatini backend qatoridan chizish uchun */
+const SKILL_META = {};
+SKILLS.forEach(s=>{ SKILL_META[s.id] = {section:s.name, icon:s.icon, color:s.color, bg:s.bg}; });
+/* Backend qator shakli aniq bo'lmagani uchun bir nechta mumkin bo'lgan ustun nomini sinab ko'radi */
+function pick(obj, keys, fallback){
+  for(const k of keys){ if(obj && obj[k]!==undefined && obj[k]!==null) return obj[k]; }
+  return fallback;
+}
+function fmtBackendDate(iso){
+  if(!iso) return {date:'', time:''};
+  const d = new Date(iso);
+  if(isNaN(d)) return {date:'', time:''};
+  const now = new Date();
+  const diffDays = Math.floor((now - d) / 86400000);
+  let date;
+  if(diffDays<=0) date = 'Bugun';
+  else if(diffDays===1) date = 'Kecha';
+  else if(diffDays<7) date = diffDays+' kun oldin';
+  else date = d.toLocaleDateString('uz-UZ', {day:'numeric', month:'long', year:'numeric'});
+  const time = d.toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit'});
+  const dateGroup = diffDays<7 ? '7kun' : (diffDays<31 ? 'oy' : 'hammasi');
+  return {date, time, dateGroup};
 }
 const SKILL_ICONS = {
   qiroa:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
@@ -1700,10 +1841,10 @@ function beginPendingSkill(){
 
 /* ---------------- Grammar topics ---------------- */
 const GRAMMAR_CATEGORIES = [
-  {id:'nahv', name:'Nahv', ar:'النحو', desc:"Gap tuzilishi va i'rob qoidalari", icon:'📐', color:'var(--istima)', bg:'var(--istima-bg)'},
-  {id:'sarf', name:'Sarf', ar:'الصرف', desc:"So'z yasalishi va shakllanishi", icon:'🔤', color:'var(--qiroa)', bg:'var(--qiroa-bg)'},
-  {id:'tarqim', name:'Tarqim belgilari', ar:'الترقيم', desc:'Tinish belgilaridan foydalanish', icon:'❝❞', color:'var(--muhavara)', bg:'var(--muhavara-bg)'},
-  {id:'xatolar', name:'Umumiy xatolar', ar:'الأخطاء الشائعة', desc:"Ko'p uchraydigan xatolarni bartaraf etish", icon:'⚠️', color:'var(--red)', bg:'var(--red-bg)'},
+  {id:'nahv', name:'Nahv', ar:'النحو', desc:"Gap tuzilishi va i'rob qoidalari", icon:'<rect x="9" y="2" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>', color:'var(--istima)', bg:'var(--istima-bg)'},
+  {id:'sarf', name:'Sarf', ar:'الصرف', desc:"So'z yasalishi va shakllanishi", icon:'<path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>', color:'var(--qiroa)', bg:'var(--qiroa-bg)'},
+  {id:'tarqim', name:'Tarqim belgilari', ar:'الترقيم', desc:'Tinish belgilaridan foydalanish', icon:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/>', color:'var(--muhavara)', bg:'var(--muhavara-bg)'},
+  {id:'xatolar', name:'Umumiy xatolar', ar:'الأخطاء الشائعة', desc:"Ko'p uchraydigan xatolarni bartaraf etish", icon:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>', color:'var(--red)', bg:'var(--red-bg)'},
 ];
 const GRAMMAR_TOPICS = [
   {id:'ism-turlari', category:'sarf', name:"Ism va uning turlari", ar:'الاسم وأنواعه', n:12, pct:80},
@@ -1727,7 +1868,7 @@ function renderGrammarCategories(){
     return `
     <div class="grammar-cat-wrap" data-cat="${cat.id}">
       <div class="grammar-cat-card gcat-${cat.id}" onclick="toggleGrammarCat('${cat.id}')">
-        <div class="grammar-cat-icon">${cat.icon}</div>
+        <div class="grammar-cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg></div>
         <div class="grammar-cat-main">
           <div class="grammar-cat-name">${cat.ar}</div>
           <div class="grammar-cat-desc">${cat.desc} · ${topics.length} ta mavzu</div>
@@ -1805,7 +1946,9 @@ if(grammarHistFilterEl){
 }
 
 /* ================= HISTORY (Tarix) ================= */
-const HISTORY_DATA = [
+/* Bu massiv — backenddan hali javob kelmagan holatlar uchun namunaviy (mock) ma'lumot.
+   Haqiqiy foydalanuvchi tarixi kelsa, applyLiveHistory() shu massivni backend natijasi bilan almashtiradi. */
+let HISTORY_DATA = [
   {id:1, section:'Qiroa', topic:"Qiroa — Qisqa matnlar", date:'Bugun', time:'14:30', dateGroup:'7kun', correct:18, total:20, icon:'📖', color:'var(--qiroa)', bg:'var(--qiroa-bg)'},
   {id:2, section:'Grammatika', topic:"Grammatika — Fe'l zamonlari", topicId:'fel-zamonlari', date:'Bugun', time:'10:05', dateGroup:'7kun', correct:14, total:15, icon:'📗', color:'var(--grammatika)', bg:'var(--grammatika-bg)'},
   {id:3, section:'Istima', topic:'Istima — Kundalik suhbat', date:'Kecha', time:'19:12', dateGroup:'7kun', correct:7, total:10, icon:'🎧', color:'var(--istima)', bg:'var(--istima-bg)'},
@@ -1818,6 +1961,78 @@ const HISTORY_DATA = [
   {id:10, section:'Grammatika', topic:"Grammatika — Asosiy tinish belgilari", topicId:'tinish-belgilari', date:'9 Avgust, 2026', time:'17:05', dateGroup:'oy', correct:4, total:5, icon:'📗', color:'var(--grammatika)', bg:'var(--grammatika-bg)'},
   {id:11, section:'Grammatika', topic:"Grammatika — Ko'p uchraydigan nahviy xatolar", topicId:'nahviy-xatolar', date:'30 Iyul, 2026', time:'20:10', dateGroup:'hammasi', correct:2, total:5, icon:'📗', color:'var(--grammatika)', bg:'var(--grammatika-bg)'},
 ];
+/* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi.
+   MOSLASHTIRING: agar sizning jadval ustunlaringiz boshqacha nomlansa, pick() ichidagi nomlarga qo'shing. */
+function mapBackendHistoryRow(row, idx){
+  const skillId = pick(row, ['skill_id','skillId'], 'grammatika');
+  const meta = SKILL_META[skillId] || {section:skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
+  const topicName = pick(row, ['topic_name','topicName'], null);
+  const {date, time, dateGroup} = fmtBackendDate(pick(row, ['created_at','createdAt','inserted_at'], null));
+  return {
+    id: pick(row, ['id'], idx+1),
+    section: meta.section,
+    topic: topicName ? `${meta.section} — ${topicName}` : meta.section,
+    topicId: pick(row, ['topic_id','topicId'], undefined),
+    date, time, dateGroup,
+    correct: pick(row, ['correct'], 0),
+    total: pick(row, ['total'], 1),
+    icon: meta.icon, color: meta.color, bg: meta.bg,
+  };
+}
+function applyLiveHistory(){
+  if(Array.isArray(window.HISTORY_DATA_LIVE) && window.HISTORY_DATA_LIVE.length){
+    HISTORY_DATA = window.HISTORY_DATA_LIVE.map(mapBackendHistoryRow);
+  }
+  renderHistoryStats();
+  renderHistoryList();
+  renderGrammarHistory();
+}
+
+/* ================= XATOLARIM (foydalanuvchi xato javob bergan savollar) ================= */
+/* MOSLASHTIRING: user_errors jadvalingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
+function mapBackendErrorRow(row, idx){
+  const skillId = pick(row, ['skill_id','skillId'], 'grammatika');
+  const meta = SKILL_META[skillId] || {section:skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
+  const {date, time} = fmtBackendDate(pick(row, ['created_at','createdAt','inserted_at'], null));
+  return {
+    id: pick(row, ['id'], idx+1),
+    section: meta.section,
+    topic: pick(row, ['topic_name','topicName'], meta.section),
+    icon: meta.icon, bg: meta.bg,
+    q: pick(row, ['question','question_text','q'], ''),
+    picked: pick(row, ['picked_answer','user_answer','picked'], '—'),
+    correctAns: pick(row, ['correct_answer','correct','answer'], '—'),
+    exp: pick(row, ['explanation','exp'], ''),
+    date, time,
+  };
+}
+function applyLiveErrors(){
+  const wrap = document.getElementById('errorsListWrap');
+  const empty = document.getElementById('errorsEmpty');
+  if(!wrap) return;
+  const rows = Array.isArray(window.USER_ERRORS_LIVE) ? window.USER_ERRORS_LIVE.map(mapBackendErrorRow) : [];
+  if(!rows.length){
+    wrap.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  wrap.innerHTML = rows.map(r=>`
+    <div class="card mistake-item">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="history-icon" style="background:${r.bg};width:32px;height:32px;font-size:15px;">${r.icon}</div>
+        <div style="min-width:0;">
+          <div style="font-size:12.5px;font-weight:800;">${r.section}${r.topic && r.topic!==r.section ? ' · '+r.topic : ''}</div>
+          <div style="font-size:11px;color:var(--text-faint);font-weight:600;">${r.date}${r.time?', '+r.time:''}</div>
+        </div>
+      </div>
+      <div class="mistake-q">${r.q}</div>
+      <div class="mistake-row wrong">✕ Sizning javobingiz: ${r.picked}</div>
+      <div class="mistake-row right">✓ To'g'ri javob: ${r.correctAns}</div>
+      ${r.exp ? `<div class="mistake-exp">💡 ${r.exp}</div>` : ''}
+    </div>
+  `).join('');
+}
 let historyFilters = {section:'Barchasi', date:'7kun'};
 
 function statusOf(pct){
@@ -1968,8 +2183,271 @@ function submitExamReport(){
   });
   closeModal();
   toast("Ma'lumot yuborildi! Administratorlarga yetkazildi ✅");
-  if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminReports();
+  if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminPanel();
 }
+/* ================= ADMIN PANEL — asosiy mantiq ================= */
+function showAdminTab(tab){
+  document.querySelectorAll('#adminTabs .admin-tab').forEach(b=>b.classList.toggle('active', b.dataset.atab===tab));
+  ['overview','users','questions','reports'].forEach(t=>{
+    const el = document.getElementById('adminTab-'+t);
+    if(el) el.style.display = (t===tab) ? '' : 'none';
+  });
+  if(tab==='overview') renderAdminOverview();
+  if(tab==='users') renderAdminUsers();
+  if(tab==='questions') renderAdminQuestions();
+  if(tab==='reports') renderAdminReports();
+}
+
+function renderAdminPanel(){
+  const active = document.querySelector('#adminTabs .admin-tab.active');
+  showAdminTab(active ? active.dataset.atab : 'overview');
+}
+
+/* ---- 1) UMUMIY KO'RINISH ---- */
+/* DIQQAT: quyidagi statistikalar hozircha ADMIN_USERS_MOCK / QUESTION_BANKS asosida
+   hisoblanadi. Backend ulanganda buni {action:'admin_stats'} so'roviga almashtiring —
+   frontend qismi (kartalar, layout) shu ko'rinishda qoladi. */
+function renderAdminOverview(){
+  const totalUsers = ADMIN_USERS_MOCK.length;
+  const totalXp = ADMIN_USERS_MOCK.reduce((s,u)=>s+u.xp,0);
+  const totalQuestions = Object.values(QUESTION_BANKS).reduce((s,b)=> s + (b.questions?.length||0), 0)
+    + Object.values(GRAMMAR_TOPIC_BANKS).reduce((s,arr)=> s + arr.length, 0);
+  const activeToday = ADMIN_USERS_MOCK.filter(u=>u.lastActive==='Bugun').length;
+
+  const grid = document.getElementById('adminStatGrid');
+  grid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--indigo-100);color:var(--indigo-700);">👥</div>
+      <div class="stat-val">${totalUsers}</div>
+      <div class="stat-label">Jami foydalanuvchi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🔥</div>
+      <div class="stat-val">${activeToday}</div>
+      <div class="stat-label">Bugun faol</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">⚡</div>
+      <div class="stat-val">${totalXp.toLocaleString()}</div>
+      <div class="stat-label">Jami XP</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">📝</div>
+      <div class="stat-val">${totalQuestions}</div>
+      <div class="stat-label">Jami savollar soni</div>
+    </div>
+  `;
+
+  const skillAvg = SKILLS.map(s=>{
+    const avg = ADMIN_USERS_MOCK.length
+      ? Math.round(ADMIN_USERS_MOCK.reduce((sum,u)=> sum + (u.skills?.[s.id] ?? 0), 0) / ADMIN_USERS_MOCK.length)
+      : 0;
+    return {...s, avgPct: Math.round((avg/30)*100)};
+  });
+  document.getElementById('adminSkillBars').innerHTML = skillAvg.map(s=>`
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:6px;">
+        <span>${s.name}</span><span>${s.avgPct}%</span>
+      </div>
+      <div style="height:8px;border-radius:99px;background:var(--bg);overflow:hidden;">
+        <div style="height:100%;width:${s.avgPct}%;background:${s.color};border-radius:99px;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---- 2) FOYDALANUVCHILAR ---- */
+/* DIQQAT: ADMIN_USERS_MOCK — namunaviy ma'lumot. Backend ulanganda buni
+   {action:'admin_list_users'} so'roviga almashtiring. */
+const ADMIN_USERS_MOCK = [
+  {id:5834021967, name:'Muhammad Umarov', username:'@muhammad_u', level:'B1', xp:1240, lastActive:'Bugun', skills:{qiroa:25,istima:22,grammatika:27,muhavara:21,kitaba:19}},
+  {id:1112223334, name:'Sardor Aliyev', username:'@sardor_a', level:'B2', xp:420, lastActive:'Bugun', skills:{qiroa:20,istima:18,grammatika:23,muhavara:15,kitaba:17}},
+  {id:2223334445, name:'Zilola Karimova', username:'@zilola_k', level:'B2', xp:390, lastActive:'Kecha', skills:{qiroa:19,istima:21,grammatika:20,muhavara:14,kitaba:16}},
+  {id:3334445556, name:'Javlon Nazarov', username:'@javlon_n', level:'B1', xp:355, lastActive:'3 kun oldin', skills:{qiroa:16,istima:15,grammatika:19,muhavara:12,kitaba:13}},
+];
+function renderAdminUsers(){
+  const q = (document.getElementById('adminUserSearch')?.value || '').toLowerCase().trim();
+  const rows = ADMIN_USERS_MOCK.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
+  const body = document.getElementById('adminUsersBody');
+  if(!body) return;
+  if(rows.length===0){
+    body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-faint);">Hech narsa topilmadi</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(u=>`
+    <tr>
+      <td>
+        <div class="u-name">
+          <div class="u-avatar">${u.name.charAt(0)}</div>
+          <div>${u.name}<div style="font-weight:600;color:var(--text-faint);font-size:11px;">${u.username}</div></div>
+        </div>
+      </td>
+      <td>${u.level}</td>
+      <td>${u.xp.toLocaleString()}</td>
+      <td>${u.lastActive}</td>
+      <td><button class="row-btn" onclick="viewAdminUser(${u.id})">Batafsil</button></td>
+    </tr>
+  `).join('');
+}
+function viewAdminUser(userId){
+  const u = ADMIN_USERS_MOCK.find(x=>x.id===userId);
+  if(!u) return;
+  document.getElementById('modalTitle').textContent = u.name;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="padding:14px 4px;">
+      <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-bottom:16px;">${u.username} · ID: ${u.id} · Daraja: ${u.level}</div>
+      ${SKILLS.map(s=>{
+        const val = u.skills?.[s.id] ?? 0;
+        const pct = Math.round((val/30)*100);
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:5px;">
+            <span>${s.name}</span><span>${val}/30</span>
+          </div>
+          <div style="height:7px;border-radius:99px;background:var(--bg);overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${s.color};border-radius:99px;"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+/* ---- 3) SAVOLLAR BANKI ---- */
+let adminActiveSkill = 'qiroa';
+function renderAdminQuestions(){
+  const chips = document.getElementById('adminSkillChips');
+  chips.innerHTML = SKILLS.map(s=>`
+    <button class="skill-chip ${s.id===adminActiveSkill?'active':''}" style="--sk-color:${s.color};--sk-bg:${s.bg};" onclick="setAdminSkill('${s.id}')">${s.icon} ${s.name}</button>
+  `).join('');
+
+  const list = document.getElementById('adminQuestionsList');
+  const countEl = document.getElementById('adminQuestionsCount');
+
+  if(adminActiveSkill==='grammatika'){
+    const total = GRAMMAR_TOPICS.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
+    countEl.textContent = `${GRAMMAR_TOPICS.length} ta mavzu · ${total} ta savol`;
+    list.innerHTML = GRAMMAR_TOPICS.map(t=>{
+      const n = GRAMMAR_TOPIC_BANKS[t.id]?.length || 0;
+      return `<div class="topic-row">
+        <div>
+          <div class="t-name">${t.name}</div>
+          <div class="t-meta">${n} ta savol · ${t.ar}</div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" onclick="viewTopicQuestions('grammatika','${t.id}')">Ko'rish</button>
+          <button class="row-btn" onclick="openAddQuestionModal('grammatika','${t.id}')">+ Savol</button>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const bank = QUESTION_BANKS[adminActiveSkill];
+    const n = bank?.questions?.length || 0;
+    countEl.textContent = `${n} ta savol`;
+    if(n===0){
+      list.innerHTML = `<div class="placeholder-card"><h3>Hali savol yo'q</h3><p>"Yangi savol qo'shish" tugmasi orqali qo'shing.</p></div>`;
+      return;
+    }
+    list.innerHTML = `<div class="topic-row">
+      <div>
+        <div class="t-name">${SKILL_META[adminActiveSkill]?.name || adminActiveSkill}</div>
+        <div class="t-meta">${n} ta savol</div>
+      </div>
+      <div class="t-actions">
+        <button class="row-btn" onclick="viewTopicQuestions('${adminActiveSkill}', null)">Ko'rish</button>
+      </div>
+    </div>`;
+  }
+}
+function setAdminSkill(id){ adminActiveSkill = id; renderAdminQuestions(); }
+
+function viewTopicQuestions(skillId, topicId){
+  const items = skillId==='grammatika' ? (GRAMMAR_TOPIC_BANKS[topicId]||[]) : (QUESTION_BANKS[skillId]?.questions||[]);
+  document.getElementById('modalTitle').textContent = `Savollar (${items.length} ta)`;
+  document.getElementById('modalBody').innerHTML = items.map((q,i)=>`
+    <div class="report-item">
+      <div style="font-weight:700;font-size:14px;direction:rtl;text-align:right;margin-bottom:8px;">${i+1}. ${q.q}</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${q.opts.map((o,oi)=>`<div style="font-size:12.5px;font-weight:600;direction:rtl;text-align:right;color:${oi===q.a?'var(--grammatika)':'var(--text-dim)'};">${oi===q.a?'✓ ':''}${o}</div>`).join('')}
+      </div>
+      ${q.exp?`<div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${q.exp}</div>`:''}
+    </div>
+  `).join('') || `<div class="placeholder-card"><h3>Bo'sh</h3></div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openAddQuestionModal(presetSkill, presetTopic){
+  const skillId = presetSkill || adminActiveSkill;
+  const isGrammar = skillId === 'grammatika';
+  document.getElementById('modalTitle').textContent = "Yangi savol qo'shish";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="adminQForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitNewQuestion(event)">
+      <div class="form-field">
+        <label>Bo'lim</label>
+        <select id="qSkill" onchange="toggleGrammarTopicField()">
+          ${SKILLS.map(s=>`<option value="${s.id}" ${s.id===skillId?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field" id="qTopicField" style="${isGrammar?'':'display:none;'}">
+        <label>Mavzu</label>
+        <select id="qTopic">
+          ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}" ${t.id===presetTopic?'selected':''}>${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="qText" dir="rtl" placeholder="أَيْنَ ذَهَبَ..." required></textarea>
+      </div>
+      <div class="form-field">
+        <label>Javob variantlari (to'g'risini belgilang)</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[0,1,2,3].map(i=>`
+            <div class="q-opt-row">
+              <input type="radio" name="qCorrect" value="${i}" ${i===0?'checked':''} required>
+              <input type="text" id="qOpt${i}" placeholder="Variant ${i+1}" dir="rtl" required>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
+        <textarea id="qExp" placeholder="Nima uchun bu javob to'g'ri..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function toggleGrammarTopicField(){
+  const isGrammar = document.getElementById('qSkill').value === 'grammatika';
+  document.getElementById('qTopicField').style.display = isGrammar ? '' : 'none';
+}
+function submitNewQuestion(e){
+  e.preventDefault();
+  const skillId = document.getElementById('qSkill').value;
+  const topicId = document.getElementById('qTopic')?.value;
+  const newQ = {
+    q: document.getElementById('qText').value,
+    opts: [0,1,2,3].map(i=>document.getElementById('qOpt'+i).value),
+    a: Number(document.querySelector('input[name="qCorrect"]:checked').value),
+    exp: document.getElementById('qExp').value,
+  };
+  // Hozircha faqat lokal massivga qo'shiladi (namoyish rejimi).
+  // Backend tayyor bo'lganda: {action:'admin_add_question', skillId, topicId, ...newQ} yuboriladi.
+  if(skillId==='grammatika'){
+    if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
+    GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
+  } else {
+    if(!QUESTION_BANKS[skillId].questions) QUESTION_BANKS[skillId].questions = [];
+    QUESTION_BANKS[skillId].questions.push(newQ);
+  }
+  closeModal();
+  toast("✅ Savol qo'shildi (namoyish rejimi — backend ulanganda avtomatik saqlanadi)");
+  adminActiveSkill = skillId;
+  renderAdminQuestions();
+  return false;
+}
+
 function renderAdminReports(){
   const list = document.getElementById('adminReportsList');
   if(!list) return;
@@ -1995,10 +2473,8 @@ function renderAdminReports(){
 
 /* ================= RANK (Reyting) ================= */
 const RANK_COLORS = ['#A78BFA','#5FA6EE','#22C57F','#EB8C5E','#E3BE4E','#0E8F58','#F1706A'];
-/* DIQQAT: Reyting (RANK_DATASETS) hozircha MOCK (namunaviy) ma'lumot bo'lib qolmoqda.
-   Uni ham backendga ulash uchun loadLeaderboardFromBackend() funksiyasidan foydalaning
-   va bu massivni backend natijasi bilan almashtiring — bu qism alohida ishlanishi kerak,
-   chunki hafta/oy/umumiy filtrlar uchun backend tarafida davr bo'yicha so'rov kerak bo'ladi. */
+/* Bu — backenddan hali javob kelmagan holatlar uchun namunaviy (mock) reyting.
+   applyLiveLeaderboard() haqiqiy ma'lumot kelganda shu massivni almashtiradi. */
 const RANK_DATASETS = {
   hafta: [
     {name:'Sardor Aliyev', level:'B2', xp:420, me:false},
@@ -2009,7 +2485,7 @@ const RANK_DATASETS = {
     {name:'Kamola Tosheva', level:'A2', xp:260, me:false},
     {name:'Diyor Xolmatov', level:'B1', xp:235, me:false},
     {name:'Nilufar Sattorova', level:'A2', xp:210, me:false},
-    {name:'Muhammad Umarov', level:'B1', xp:165, me:true},
+    {name:'Foydalanuvchi', level:'B1', xp:165, me:true},
   ],
   oy: [
     {name:'Sardor Aliyev', level:'B2', xp:1840, me:false},
@@ -2018,7 +2494,7 @@ const RANK_DATASETS = {
     {name:'Madina Yusupova', level:'B1', xp:1110, me:false},
     {name:'Otabek Rashidov', level:'B1', xp:980, me:false},
     {name:'Kamola Tosheva', level:'A2', xp:755, me:false},
-    {name:'Muhammad Umarov', level:'B1', xp:640, me:true},
+    {name:'Foydalanuvchi', level:'B1', xp:640, me:true},
     {name:'Diyor Xolmatov', level:'B1', xp:590, me:false},
     {name:'Nilufar Sattorova', level:'A2', xp:420, me:false},
   ],
@@ -2031,9 +2507,28 @@ const RANK_DATASETS = {
     {name:'Kamola Tosheva', level:'A2', xp:1755, me:false},
     {name:'Diyor Xolmatov', level:'B1', xp:1590, me:false},
     {name:'Nilufar Sattorova', level:'A2', xp:1420, me:false},
-    {name:'Muhammad Umarov', level:'B1', xp:1240, me:true},
+    {name:'Foydalanuvchi', level:'B1', xp:1240, me:true},
   ],
 };
+/* Backend leaderboard_view qatorini reyting shakliga o'giradi.
+   MOSLASHTIRING: view'ingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
+function applyLiveLeaderboard(rows){
+  if(!Array.isArray(rows) || !rows.length) return;
+  const myId = TELEGRAM_PROFILE.rawId;
+  const build = (xpKeys) => rows.map(r=>({
+    name: pick(r, ['name','full_name','first_name'], 'Foydalanuvchi'),
+    level: pick(r, ['level'], 'A1'),
+    xp: Number(pick(r, xpKeys, 0)) || 0,
+    me: String(pick(r, ['user_id','telegram_id','id'], '')) === String(myId),
+  })).filter(u=>u.xp>0 || u.me);
+  const hafta = build(['xp_week','xp_weekly','weekly_xp']);
+  const oy = build(['xp_month','xp_monthly','monthly_xp']);
+  const hammasi = build(['xp_total','xp_all','total_xp','xp']);
+  if(hafta.length) RANK_DATASETS.hafta = hafta;
+  if(oy.length) RANK_DATASETS.oy = oy;
+  if(hammasi.length) RANK_DATASETS.hammasi = hammasi;
+  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod);
+}
 let currentRankPeriod = 'hafta';
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 function sortedRank(period){
@@ -2095,6 +2590,12 @@ document.getElementById('filterRankPeriod').addEventListener('click', e=>{
   document.querySelectorAll('#filterRankPeriod .filter-chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderRank(btn.dataset.val);
+});
+document.getElementById('rankTypeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('.rank-type-btn'); if(!btn) return;
+  if(btn.dataset.type === 'cefr'){ toast("CEFR reytingi tez orada qo'shiladi"); return; }
+  document.querySelectorAll('#rankTypeToggle .rank-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
 });
 renderRank(currentRankPeriod);
 
