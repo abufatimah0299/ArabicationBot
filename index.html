@@ -1353,7 +1353,13 @@ async function tgInitAndAuth(){
   showDebug("✅ initData bor (uzunligi: "+initData.length+"). Supabase'ga so'rov yuborilmoqda...");
   try{
     const res = await fetch(AUTH_FUNCTION_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({initData})
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({initData})
     });
     if(!res.ok){ const t = await res.text(); showDebug("❌ Auth xato ("+res.status+"): "+t); return null; }
     const {token, user} = await res.json();
