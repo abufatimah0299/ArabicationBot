@@ -1246,7 +1246,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <span class="level-badge">B1 Daraja · O'rta</span>
             </div>
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-top:4px;" id="profileTelegram">Telegram: yuklanmoqda...</div>
-            <div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Ro'yxatdan o'tgan: Yanvar 2026</div>
+            <div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;" id="profileJoined">Ro'yxatdan o'tgan: —</div>
           </div>
         </div>
 
@@ -1537,6 +1537,38 @@ async function loadLeaderboardFromBackend(){
   }catch(e){ console.error(e); return []; }
 }
 
+/* Savollar banki — hammasi uchun umumiy (Supabase "questions" jadvali).
+   Admin yangi savol qo'shganda backendga yoziladi, boshqa foydalanuvchilar
+   ilovani ochganda shu funksiya orqali yuklanadi. */
+async function loadQuestionsFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/questions?select=*&order=created_at.asc`, { headers: authHeaders() });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+async function saveQuestionToBackend({skillId, topicId, q, opts, a, exp}){
+  if(!SESSION_TOKEN) return null;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
+    });
+    if(!res.ok){ console.error("Savol saqlanmadi:", await res.text()); return null; }
+    return await res.json();
+  }catch(e){ console.error(e); return null; }
+}
+
+/* Admin — real foydalanuvchilar ro'yxati (faqat admin uchun ishlaydi, RLS/RPC orqali cheklanadi). */
+async function loadAdminUsersFromBackend(){
+  if(!SESSION_TOKEN) return [];
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_users`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+
 function renderGreetingFromProfile(){
   const firstName = (TELEGRAM_PROFILE.name || '').split(' ')[0] || 'Foydalanuvchi';
   const gName = document.getElementById('greetingName');
@@ -1573,6 +1605,7 @@ async function bootApp(){
     TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
   }
   renderGreetingFromProfile();
+  applyProfileHeader(null);
   Object.values(RANK_DATASETS).forEach(list=>{
     const me = list.find(u=>u.me);
     if(me) me.name = TELEGRAM_PROFILE.name || me.name;
@@ -1581,6 +1614,8 @@ async function bootApp(){
   if(TELEGRAM_PROFILE.rawId){
     const dash = await loadDashboardFromBackend(TELEGRAM_PROFILE.rawId);
     applyBackendSkillScores(dash);
+    applyProfileStats(dash);
+    applyProfileHeader(dash);
     const sub = document.getElementById('greetingSub');
     if(sub && dash) sub.textContent = `Bugungi maqsadingizga ${dash.daily_pct ?? 0}% yetdingiz.`;
 
@@ -1591,6 +1626,14 @@ async function bootApp(){
 
     const lb = await loadLeaderboardFromBackend();
     applyLiveLeaderboard(lb);
+
+    const liveQuestions = await loadQuestionsFromBackend();
+    applyLiveQuestions(liveQuestions);
+
+    if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
+      const liveAdminUsers = await loadAdminUsersFromBackend();
+      applyLiveAdminUsers(liveAdminUsers);
+    }
   }
   window.APP_READY = true;
 }
@@ -2207,11 +2250,11 @@ function renderAdminPanel(){
    hisoblanadi. Backend ulanganda buni {action:'admin_stats'} so'roviga almashtiring —
    frontend qismi (kartalar, layout) shu ko'rinishda qoladi. */
 function renderAdminOverview(){
-  const totalUsers = ADMIN_USERS_MOCK.length;
-  const totalXp = ADMIN_USERS_MOCK.reduce((s,u)=>s+u.xp,0);
+  const totalUsers = ADMIN_USERS.length;
+  const totalXp = ADMIN_USERS.reduce((s,u)=>s+u.xp,0);
   const totalQuestions = Object.values(QUESTION_BANKS).reduce((s,b)=> s + (b.questions?.length||0), 0)
     + Object.values(GRAMMAR_TOPIC_BANKS).reduce((s,arr)=> s + arr.length, 0);
-  const activeToday = ADMIN_USERS_MOCK.filter(u=>u.lastActive==='Bugun').length;
+  const activeToday = ADMIN_USERS.filter(u=>u.lastActive==='Bugun').length;
 
   const grid = document.getElementById('adminStatGrid');
   grid.innerHTML = `
@@ -2238,8 +2281,8 @@ function renderAdminOverview(){
   `;
 
   const skillAvg = SKILLS.map(s=>{
-    const avg = ADMIN_USERS_MOCK.length
-      ? Math.round(ADMIN_USERS_MOCK.reduce((sum,u)=> sum + (u.skills?.[s.id] ?? 0), 0) / ADMIN_USERS_MOCK.length)
+    const avg = ADMIN_USERS.length
+      ? Math.round(ADMIN_USERS.reduce((sum,u)=> sum + (u.skills?.[s.id] ?? 0), 0) / ADMIN_USERS.length)
       : 0;
     return {...s, avgPct: Math.round((avg/30)*100)};
   });
@@ -2266,7 +2309,7 @@ const ADMIN_USERS_MOCK = [
 ];
 function renderAdminUsers(){
   const q = (document.getElementById('adminUserSearch')?.value || '').toLowerCase().trim();
-  const rows = ADMIN_USERS_MOCK.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
+  const rows = ADMIN_USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
   const body = document.getElementById('adminUsersBody');
   if(!body) return;
   if(rows.length===0){
@@ -2289,7 +2332,7 @@ function renderAdminUsers(){
   `).join('');
 }
 function viewAdminUser(userId){
-  const u = ADMIN_USERS_MOCK.find(x=>x.id===userId);
+  const u = ADMIN_USERS.find(x=>x.id===userId);
   if(!u) return;
   document.getElementById('modalTitle').textContent = u.name;
   document.getElementById('modalBody').innerHTML = `
@@ -2421,7 +2464,7 @@ function toggleGrammarTopicField(){
   const isGrammar = document.getElementById('qSkill').value === 'grammatika';
   document.getElementById('qTopicField').style.display = isGrammar ? '' : 'none';
 }
-function submitNewQuestion(e){
+async function submitNewQuestion(e){
   e.preventDefault();
   const skillId = document.getElementById('qSkill').value;
   const topicId = document.getElementById('qTopic')?.value;
@@ -2431,8 +2474,9 @@ function submitNewQuestion(e){
     a: Number(document.querySelector('input[name="qCorrect"]:checked').value),
     exp: document.getElementById('qExp').value,
   };
-  // Hozircha faqat lokal massivga qo'shiladi (namoyish rejimi).
-  // Backend tayyor bo'lganda: {action:'admin_add_question', skillId, topicId, ...newQ} yuboriladi.
+  // Avval ekranga darhol qo'shamiz (tezkor tuyulishi uchun), so'ng backendga yuboramiz —
+  // shunda savol Supabase "questions" jadvaliga yoziladi va boshqa foydalanuvchilar
+  // ilovani keyingi ochganda uni ko'radi.
   if(skillId==='grammatika'){
     if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
     GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
@@ -2441,9 +2485,15 @@ function submitNewQuestion(e){
     QUESTION_BANKS[skillId].questions.push(newQ);
   }
   closeModal();
-  toast("✅ Savol qo'shildi (namoyish rejimi — backend ulanganda avtomatik saqlanadi)");
   adminActiveSkill = skillId;
   renderAdminQuestions();
+
+  const saved = await saveQuestionToBackend({ skillId, topicId: skillId==='grammatika'?topicId:null, ...newQ });
+  if(saved){
+    toast("✅ Savol qo'shildi — endi hamma foydalanuvchida ko'rinadi");
+  } else {
+    toast("⚠️ Savol faqat shu qurilmada saqlandi (backendga yuborilmadi)");
+  }
   return false;
 }
 
@@ -2599,14 +2649,47 @@ document.getElementById('rankTypeToggle').addEventListener('click', e=>{
 renderRank(currentRankPeriod);
 
 /* ================= PROFILE ================= */
+/* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
+   (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
+let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
   document.getElementById('profileStats').innerHTML = `
-    <div class="card stat-card"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="1240">0</span></div><div class="sub">XP</div></div>
-    <div class="card stat-card"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="23">0</span></div><div class="sub" style="color:var(--text-faint)">/ 40</div></div>
-    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="78">0</span>%</div><div class="sub">+6% bu oy</div></div>
+    <div class="card stat-card"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.xp}">0</span></div><div class="sub">XP</div></div>
+    <div class="card stat-card"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.topicsDone}">0</span></div><div class="sub" style="color:var(--text-faint)">/ ${PROFILE_STATS.topicsTotal}</div></div>
+    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}">0</span>%</div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
   `;
 }
 renderProfileStats();
+/* Backend get_user_dashboard javobidan XP/mavzular/aniqlikni oladi.
+   MOSLASHTIRING: view'ingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
+function applyProfileStats(dash){
+  if(!dash) return;
+  PROFILE_STATS.xp = Number(pick(dash, ['total_xp','xp'], PROFILE_STATS.xp)) || 0;
+  PROFILE_STATS.topicsDone = Number(pick(dash, ['topics_done','completed_topics'], PROFILE_STATS.topicsDone)) || 0;
+  PROFILE_STATS.topicsTotal = Number(pick(dash, ['topics_total'], PROFILE_STATS.topicsTotal)) || PROFILE_STATS.topicsTotal;
+  const acc = pick(dash, ['accuracy_pct','accuracy'], null);
+  if(acc!==null) PROFILE_STATS.accuracy = Number(acc) || 0;
+  const delta = pick(dash, ['accuracy_delta_pct','accuracy_delta'], null);
+  PROFILE_STATS.accuracyDeltaText = (delta!==null && delta!==undefined) ? `${Number(delta)>=0?'+':''}${delta}% bu oy` : '';
+  renderProfileStats();
+}
+/* Profil sarlavhasidagi daraja belgisi va ro'yxatdan o'tgan sana — backenddan keladi,
+   bo'lmasa umumiy % asosida hisoblanadi (statik "B1" endi yo'q). */
+function applyProfileHeader(dash){
+  const totalScore = SKILLS.reduce((s,sk)=>s+(sk.score||0),0);
+  const totalMax = SKILLS.reduce((s,sk)=>s+sk.total,0);
+  const pct = totalMax ? Math.round((totalScore/totalMax)*100) : 0;
+  const lvl = pick(dash||{}, ['level','cefr_level'], null) || getCEFRLevel(pct);
+  const badge = document.querySelector('#view-profil .level-badge');
+  if(badge) badge.textContent = `${lvl} Daraja`;
+  const joined = pick(dash||{}, ['joined_at','created_at','registered_at'], null);
+  const joinedEl = document.getElementById('profileJoined');
+  if(joinedEl){
+    joinedEl.textContent = joined
+      ? "Ro'yxatdan o'tgan: " + new Date(joined).toLocaleDateString('uz-UZ', {month:'long', year:'numeric'})
+      : "Ro'yxatdan o'tgan: —";
+  }
+}
 
 /* ================= EDIT PROFILE (Telegram-based) ================= */
 /* Endi bu ma'lumot Telegram autentifikatsiyasidan (tgInitAndAuth) real vaqtda keladi.
@@ -2816,6 +2899,44 @@ const GRAMMAR_TOPIC_BANKS = {
     {q:'مَا الْخَطَأُ فِي كِتَابَةِ «انشاء الله»؟', opts:['يُكْتَبُ «إِنْ شَاءَ اللَّهُ» بِثَلَاثِ كَلِمَاتٍ مُنْفَصِلَةٍ','لَا يُوجَدُ خَطَأٌ','يَنْبَغِي حَذْفُ الْأَلِفِ','يَنْبَغِي إِضَافَةُ تَاءٍ مَرْبُوطَةٍ'], a:0, exp:'To\'g\'ri yozilishi "إِنْ شَاءَ اللَّهُ" — uch alohida so\'z sifatida; "انشاء الله" (bitta so\'z kabi) yozish keng tarqalgan xato hisoblanadi.'},
   ],
 };
+
+/* Backend "questions" jadvalidan kelgan savollarni QUESTION_BANKS / GRAMMAR_TOPIC_BANKS
+   ichiga joylaydi — shu orqali admin qo'shgan har bir savol BARCHA foydalanuvchilarda
+   (ilova qayta ochilganda) ko'rinadi. Backend bo'sh bo'lsa, yuqoridagi namunaviy
+   savollar o'zgarishsiz qoladi. */
+function applyLiveQuestions(rows){
+  if(!Array.isArray(rows) || !rows.length) return;
+  rows.forEach(r=>{
+    const item = { q: r.q, opts: r.opts, a: r.correct_index ?? r.a, exp: r.exp || '' };
+    if(r.skill_id === 'grammatika' && r.topic_id){
+      if(!GRAMMAR_TOPIC_BANKS[r.topic_id]) GRAMMAR_TOPIC_BANKS[r.topic_id] = [];
+      GRAMMAR_TOPIC_BANKS[r.topic_id].push(item);
+    } else if(QUESTION_BANKS[r.skill_id]){
+      if(!QUESTION_BANKS[r.skill_id].questions) QUESTION_BANKS[r.skill_id].questions = [];
+      QUESTION_BANKS[r.skill_id].questions.push(item);
+    }
+  });
+}
+
+/* Admin — real foydalanuvchilar ro'yxati. Backenddan hali javob kelmagan/bo'sh
+   bo'lsa ADMIN_USERS_MOCK namunaviy ma'lumot sifatida qoladi. */
+let ADMIN_USERS = [...ADMIN_USERS_MOCK];
+function applyLiveAdminUsers(rows){
+  if(Array.isArray(rows) && rows.length){
+    ADMIN_USERS = rows.map(u=>({
+      id: pick(u, ['telegram_id','id'], 0),
+      name: pick(u, ['name','full_name'], 'Foydalanuvchi'),
+      username: pick(u, ['username'], ''),
+      level: pick(u, ['level'], 'A1'),
+      xp: Number(pick(u, ['xp'], 0)) || 0,
+      lastActive: pick(u, ['last_active','lastActive'], '-'),
+      skills: u.skills || {},
+    }));
+  } else {
+    ADMIN_USERS = [...ADMIN_USERS_MOCK];
+  }
+  if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminPanel();
+}
 
 /* ---------------- Start quiz ---------------- */
 function startQuiz(skillId, customLabel, topicId){
