@@ -2330,12 +2330,21 @@ function openMistakeModal(id){
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
 
+/* Foydalanuvchi matnini xavfsiz HTML sifatida chiqarish uchun (XSS oldini olish). */
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /* ================= Haqiqiy imtihon xabari (foydalanuvchi -> admin) ================= */
 const EXAM_SECTIONS = ['Qiroa','Istima','Grammatika','Muhavara','Kitaba'];
-let examReports = [
-  {type:'at-Tanal', date:'2026-08-10', center:'Toshkent, IX markaz', sections:['Grammatika','Kitaba'], seat:'B-14', text:"Grammatikada كان va uning opa-singillari mavzusidan 3 ta savol, Kitaba qismida oddiy xat yozish topshirig'i bor edi.", submittedAt:'2026-08-10 18:40'},
-  {type:'CEFR', date:'2026-08-05', center:'Samarqand markazi', sections:['Istima'], seat:'A-02', text:"Istima qismida kundalik suhbat audiosi bo'yicha 5 ta savol, matn ancha tez o'qilgan edi.", submittedAt:'2026-08-05 14:12'},
-];
+/* Backendga ulanish uchun: submit_exam_report (yuborish) va admin_list_exam_reports
+   (adminlar uchun ro'yxat) RPC'lari orqali ishlaydi. Quyidagi massiv faqat
+   backenddan javob kelmagan holatlar uchun bo'sh boshlanadi. */
+let examReports = [];
 let examChipSelection = [];
 
 function openExamReportModal(){
@@ -2385,7 +2394,7 @@ function openExamReportModal(){
   });
   document.getElementById('modalOverlay').classList.add('show');
 }
-function submitExamReport(){
+async function submitExamReport(){
   const type = document.getElementById('repType').value;
   const date = document.getElementById('repDate').value;
   const center = document.getElementById('repCenter').value.trim();
@@ -2395,14 +2404,32 @@ function submitExamReport(){
     toast("Iltimos, sana, bo'lim va savollar haqida ma'lumotni to'ldiring");
     return;
   }
-  const now = new Date();
-  examReports.unshift({
-    type, date, center, sections:[...examChipSelection], seat, text,
-    submittedAt: now.toISOString().slice(0,16).replace('T',' ')
-  });
-  closeModal();
-  toast("Ma'lumot yuborildi! Administratorlarga yetkazildi ✅");
-  if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminPanel();
+  const btn = document.querySelector('#modalBody .btn-primary');
+  if(btn){ btn.disabled = true; btn.textContent = 'Yuborilmoqda...'; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_exam_report`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        p_type: type,
+        p_date: date,
+        p_center: center || null,
+        p_sections: examChipSelection,
+        p_seat: seat || null,
+        p_text: text
+      })
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      throw new Error(errText || ('HTTP ' + res.status));
+    }
+    closeModal();
+    toast("Ma'lumot yuborildi! Administratorlarga yetkazildi ✅");
+  }catch(e){
+    console.error(e);
+    toast('❌ Yuborilmadi: ' + (e.message || 'Supabase xatosi').slice(0,180), 5000);
+    if(btn){ btn.disabled = false; btn.textContent = 'Yuborish'; }
+  }
 }
 /* ================= ADMIN PANEL — asosiy mantiq ================= */
 function showAdminTab(tab){
@@ -2674,9 +2701,33 @@ async function submitNewQuestion(e){
   return false;
 }
 
-function renderAdminReports(){
+/* Admin — real imtihon xabarlari ro'yxati (backend: admin_list_exam_reports RPC). */
+async function loadExamReportsFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_exam_reports`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+async function renderAdminReports(){
   const list = document.getElementById('adminReportsList');
   if(!list) return;
+  list.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">Yuklanmoqda...</p>`;
+
+  const rows = await loadExamReportsFromBackend();
+  examReports = (Array.isArray(rows) ? rows : []).map(r => ({
+    type: r.exam_type,
+    date: r.exam_date,
+    center: r.center,
+    sections: Array.isArray(r.sections) ? r.sections : [],
+    seat: r.seat,
+    text: r.report_text,
+    submittedAt: r.created_at ? new Date(r.created_at).toLocaleString('uz-UZ') : '',
+    name: r.name,
+    username: r.username,
+  }));
+
   if(examReports.length===0){
     list.innerHTML = `<div class="placeholder-card"><h3>Hali xabar yo'q</h3><p>O'quvchilar real imtihondan so'ng yuborgan xabarlari shu yerda ko'rinadi.</p></div>`;
     return;
@@ -2684,15 +2735,16 @@ function renderAdminReports(){
   list.innerHTML = examReports.map(r=>`
     <div class="report-item">
       <div class="report-head">
-        <span style="font-weight:800;font-size:13.5px;">${r.type} imtihoni · ${r.date}</span>
-        <span class="report-meta">Yuborildi: ${r.submittedAt}</span>
+        <span style="font-weight:800;font-size:13.5px;">${escapeHtml(r.type)} imtihoni · ${escapeHtml(r.date)}</span>
+        <span class="report-meta">Yuborildi: ${escapeHtml(r.submittedAt)}</span>
       </div>
       <div class="report-tags">
-        ${r.sections.map(s=>`<span class="report-tag">${s}</span>`).join('')}
-        ${r.center?`<span class="report-tag">📍 ${r.center}</span>`:''}
-        ${r.seat?`<span class="report-tag">🪑 ${r.seat}</span>`:''}
+        ${r.sections.map(s=>`<span class="report-tag">${escapeHtml(s)}</span>`).join('')}
+        ${r.center?`<span class="report-tag">📍 ${escapeHtml(r.center)}</span>`:''}
+        ${r.seat?`<span class="report-tag">🪑 ${escapeHtml(r.seat)}</span>`:''}
+        ${r.name?`<span class="report-tag">👤 ${escapeHtml(r.name)}${r.username?' (@'+escapeHtml(r.username)+')':''}</span>`:''}
       </div>
-      <div class="report-text">${r.text}</div>
+      <div class="report-text">${escapeHtml(r.text)}</div>
     </div>
   `).join('');
 }
