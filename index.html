@@ -1035,7 +1035,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <div class="view" id="view-imtihon">
         <div class="view-title">Imtihon</div>
         <div style="display:flex;flex-direction:column;gap:16px;">
-          <button class="exam-card exam-red" onclick="showView('attanal')">
+          <button class="exam-card exam-red" data-card-id="attanal_full" onclick="showView('attanal')">
             <span class="exam-card-badge">Mock imtihon</span>
             <span class="exam-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg>
@@ -1048,7 +1048,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <svg class="exam-card-arrow" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </button>
 
-          <button class="exam-card exam-green" onclick="toast('CEFR mock imtihon tez orada qo\'shiladi')">
+          <button class="exam-card exam-green" data-card-id="cefr_mock" onclick="toast('CEFR mock imtihon tez orada qo\'shiladi')">
             <span class="exam-card-badge">Mock imtihon</span>
             <span class="exam-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
@@ -1086,7 +1086,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <div class="view" id="view-grammar">
         <div class="view-title">Umumiy arab tili grammatikasi</div>
         <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:600px;">Bo'limni tanlang va shu bo'limga oid mavzular bo'yicha alohida testlar orqali bilimingizni mustahkamlang.</p>
-        <div class="grammar-cat-grid" id="grammarCatGrid"></div>
+        <div class="grammar-cat-grid" id="grammarCatGrid" data-grammar-topics></div>
 
         <div class="card" style="padding:22px;">
           <div style="font-weight:800;font-size:15px;margin-bottom:14px;">Grammatika bo'yicha tarix</div>
@@ -1343,6 +1343,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           <button class="admin-tab" data-atab="users" onclick="showAdminTab('users')">👥 Foydalanuvchilar</button>
           <button class="admin-tab" data-atab="questions" onclick="showAdminTab('questions')">📝 Savollar banki</button>
           <button class="admin-tab" data-atab="reports" onclick="showAdminTab('reports')">📩 Imtihon xabarlari</button>
+          <button class="admin-tab" data-atab="examcards" onclick="showAdminTab('examcards')">🎯 Imtihon cardlari</button>
+          <button class="admin-tab" data-atab="gramorder" onclick="showAdminTab('gramorder')">📚 Grammatika tartibi</button>
+          <button class="admin-tab" data-atab="sendmsg" onclick="showAdminTab('sendmsg')">✉️ Xabar yuborish</button>
         </div>
 
         <!-- 1) UMUMIY KO'RINISH -->
@@ -1385,6 +1388,47 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           </p>
           <div class="card" style="padding:18px 20px;" id="adminReportsList"></div>
         </div>
+
+<!-- 5) IMTIHON CARDLARI BOSHQARUVI -->
+<div class="admin-panel-body" id="adminTab-examcards" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+    Cardlarni yashirish/ko'rsatish yoki qulflash/ochish foydalanuvchi ekranida darhol aks etadi.
+  </p>
+  <div id="examCardAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<!-- 6) GRAMMATIKA TARTIBI -->
+<div class="admin-panel-body" id="adminTab-gramorder" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+    Mavzularni ushlab sudrab tartibini o'zgartiring. Tartib avtomatik saqlanadi va foydalanuvchiga darhol ta'sir qiladi.
+  </p>
+  <ul id="grammarOrderList" class="grammar-sortable"></ul>
+</div>
+
+<!-- 7) XABAR YUBORISH -->
+<div class="admin-panel-body" id="adminTab-sendmsg" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+    Foydalanuvchiga xabar yuboring. Xabar foydalanuvchi ekranida 🔔 qo'ng'iroq sifatida ko'rinadi.
+  </p>
+  <form class="admin-msg-form" id="adminMsgForm" onsubmit="return sendAdminMessage(event)">
+    <div class="form-field">
+      <label>Foydalanuvchi ID (yoki "all" — hammasiga)</label>
+      <input type="text" id="msgUserId" placeholder="Masalan: 5400174077 yoki all" required>
+    </div>
+    <div class="form-field">
+      <label>Sarlavha</label>
+      <input type="text" id="msgTitle" placeholder="Xabar sarlavhasi" required>
+    </div>
+    <div class="form-field">
+      <label>Xabar matni</label>
+      <textarea id="msgBody" placeholder="Xabar matnini yozing..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">📨 Yuborish</button>
+  </form>
+  <h4 style="font-size:13px;font-weight:800;margin:16px 0 10px;">Yuborilgan xabarlar</h4>
+  <div id="sentMessagesList"></div>
+</div>
+
       </div>
 
     </div>
@@ -1417,6 +1461,18 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     <span>Profil</span>
   </button>
 </nav>
+
+<!-- Foydalanuvchi xabar qo'ng'irog'i -->
+<button id="userMsgBell" hidden onclick="toggleUserMsgPanel()">
+  🔔<span id="userMsgBadge">0</span>
+</button>
+<div id="userMsgPanel" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <h4 style="font-size:14px;font-weight:800;">📨 Xabarlar</h4>
+    <button onclick="toggleUserMsgPanel()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:16px;">✕</button>
+  </div>
+  <div id="userMsgList"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -3245,7 +3301,314 @@ runEntranceAnimations(document.getElementById('view-dashboard'));
 
 /* Telegram autentifikatsiya + backend ma'lumotlarini yuklashni ishga tushirish */
 bootApp();
+/* ============================================================
+   ADMIN EXTENSION: Imtihon cardlari / Grammatika tartibi / Xabarlar
+   ============================================================ */
 
+/* ---- 1) IMTIHON CARDLARI BOSHQARUVI ---- */
+const EXAM_CARD_CONFIG = [
+  { id: 'attanal_full', title: "To'liq At-Tanal imtihoni (التنال العربي)" },
+  { id: 'cefr_mock', title: "CEFR Daraja testi (Mock imtihon)" },
+];
+
+function getExamCardState() {
+  try {
+    return JSON.parse(localStorage.getItem('arab_ext_exam_cards')) || {};
+  } catch(e) { return {}; }
+}
+function setExamCardState(state) {
+  localStorage.setItem('arab_ext_exam_cards', JSON.stringify(state));
+}
+
+function renderExamCardAdmin() {
+  const list = document.getElementById('examCardAdminList');
+  if (!list) return;
+  const state = getExamCardState();
+  list.innerHTML = EXAM_CARD_CONFIG.map(card => {
+    const s = state[card.id] || { visible: true, locked: false };
+    return `
+    <div class="admin-ext-row">
+      <span class="ext-label">${card.title}</span>
+      <div class="admin-ext-toggles">
+        <label>
+          <input type="checkbox" ${s.visible ? 'checked' : ''} 
+            onchange="toggleExamCard('${card.id}', 'visible', this.checked)">
+          Ko'rinsin
+        </label>
+        <label>
+          <input type="checkbox" ${s.locked ? 'checked' : ''} 
+            onchange="toggleExamCard('${card.id}', 'locked', this.checked)">
+          🔒 Qulflangan
+        </label>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleExamCard(cardId, field, value) {
+  const state = getExamCardState();
+  if (!state[cardId]) state[cardId] = { visible: true, locked: false };
+  state[cardId][field] = value;
+  setExamCardState(state);
+  applyExamCardState();
+  toast('✅ Card holati saqlandi');
+}
+
+function applyExamCardState() {
+  const state = getExamCardState();
+  EXAM_CARD_CONFIG.forEach(card => {
+    const el = document.querySelector(`[data-card-id="${card.id}"]`);
+    if (!el) return;
+    const s = state[card.id] || { visible: true, locked: false };
+    el.hidden = !s.visible;
+    el.classList.toggle('is-locked', s.locked);
+    if (s.locked) {
+      el.setAttribute('aria-disabled', 'true');
+    } else {
+      el.removeAttribute('aria-disabled');
+    }
+  });
+}
+
+// Qulflangan cardga bosilganda to'siq qo'yish
+document.addEventListener('click', function(e) {
+  const card = e.target.closest('[data-card-id]');
+  if (!card) return;
+  const state = getExamCardState();
+  const s = state[card.dataset.cardId];
+  if (s && s.locked) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    toast('🔒 Bu bo\'lim hozircha qulflangan');
+  }
+}, true);
+
+/* ---- 2) GRAMMATIKA TARTIBI (Drag & Drop) ---- */
+function getGrammarOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('arab_ext_grammar_order'));
+    if (saved && Array.isArray(saved)) return saved;
+  } catch(e) {}
+  return GRAMMAR_CATEGORIES.map(c => c.id);
+}
+function setGrammarOrder(order) {
+  localStorage.setItem('arab_ext_grammar_order', JSON.stringify(order));
+}
+
+function renderGrammarOrderAdmin() {
+  const ul = document.getElementById('grammarOrderList');
+  if (!ul) return;
+  const order = getGrammarOrder();
+  ul.innerHTML = order.map((catId, idx) => {
+    const cat = GRAMMAR_CATEGORIES.find(c => c.id === catId);
+    if (!cat) return '';
+    return `
+    <li draggable="true" data-cat-id="${cat.id}">
+      <span class="drag-handle">⠿</span>
+      <span class="drag-icon" style="background:${cat.color};">${cat.icon ? '📗' : '📘'}</span>
+      <span style="flex:1;">${cat.name} <span style="color:var(--text-faint);font-size:11px;">(${cat.ar})</span></span>
+    </li>`;
+  }).join('');
+  initGrammarDragDrop(ul);
+}
+
+function initGrammarDragDrop(ul) {
+  let dragEl = null;
+  ul.querySelectorAll('li').forEach(li => {
+    li.addEventListener('dragstart', function(e) {
+      dragEl = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    li.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      dragEl = null;
+      saveGrammarOrderFromDOM(ul);
+    });
+    li.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (!dragEl || dragEl === this) return;
+      const rect = this.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        ul.insertBefore(dragEl, this);
+      } else {
+        ul.insertBefore(dragEl, this.nextSibling);
+      }
+    });
+  });
+}
+
+function saveGrammarOrderFromDOM(ul) {
+  const order = Array.from(ul.querySelectorAll('li')).map(li => li.dataset.catId);
+  setGrammarOrder(order);
+  applyGrammarOrder();
+  toast('✅ Grammatika tartibi saqlandi');
+}
+
+function applyGrammarOrder() {
+  const container = document.querySelector('[data-grammar-topics]');
+  if (!container) return;
+  const order = getGrammarOrder();
+  const items = Array.from(container.querySelectorAll('[data-cat]'));
+  items.sort((a, b) => {
+    return order.indexOf(a.dataset.cat) - order.indexOf(b.dataset.cat);
+  });
+  items.forEach(item => container.appendChild(item));
+}
+
+/* ---- 3) XABAR YUBORISH ---- */
+function getAdminMessages() {
+  try {
+    return JSON.parse(localStorage.getItem('arab_ext_messages')) || [];
+  } catch(e) { return []; }
+}
+function setAdminMessages(msgs) {
+  localStorage.setItem('arab_ext_messages', JSON.stringify(msgs));
+}
+
+function sendAdminMessage(e) {
+  e.preventDefault();
+  const userId = document.getElementById('msgUserId').value.trim();
+  const title = document.getElementById('msgTitle').value.trim();
+  const body = document.getElementById('msgBody').value.trim();
+  if (!userId || !title || !body) {
+    toast('⚠️ Barcha maydonlarni to\'ldiring');
+    return false;
+  }
+  const msgs = getAdminMessages();
+  msgs.unshift({
+    id: Date.now().toString(),
+    userId, title, body,
+    createdAt: new Date().toISOString(),
+    readBy: []
+  });
+  setAdminMessages(msgs);
+  renderSentMessages();
+  renderUserMsgBell();
+  document.getElementById('adminMsgForm').reset();
+  toast('✅ Xabar yuborildi!');
+  return false;
+}
+
+function renderSentMessages() {
+  const list = document.getElementById('sentMessagesList');
+  if (!list) return;
+  const msgs = getAdminMessages();
+  if (!msgs.length) {
+    list.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Hali xabar yuborilmagan.</p>';
+    return;
+  }
+  list.innerHTML = msgs.slice(0, 20).map(m => `
+    <div class="sent-msg-item">
+      <div style="font-weight:800;font-size:13px;">${m.title}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${m.body}</div>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">
+        👤 ${m.userId} · ${new Date(m.createdAt).toLocaleString('uz-UZ')}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---- 4) FOYDALANUVCHI XABAR QO'NG'IROG'I ---- */
+function getUserMessages() {
+  const msgs = getAdminMessages();
+  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
+  return msgs.filter(m => m.userId === 'all' || String(m.userId) === myId);
+}
+
+function renderUserMsgBell() {
+  const bell = document.getElementById('userMsgBell');
+  const badge = document.getElementById('userMsgBadge');
+  if (!bell || !badge) return;
+  const msgs = getUserMessages();
+  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
+  const unread = msgs.filter(m => !(m.readBy || []).includes(myId)).length;
+  bell.hidden = msgs.length === 0;
+  badge.textContent = unread;
+  badge.style.display = unread > 0 ? 'flex' : 'none';
+}
+
+function toggleUserMsgPanel() {
+  const panel = document.getElementById('userMsgPanel');
+  if (!panel) return;
+  const willOpen = panel.hidden;
+  panel.hidden = !willOpen;
+  if (willOpen) {
+    markAllRead();
+    renderUserMsgPanel();
+    renderUserMsgBell();
+  }
+}
+
+function renderUserMsgPanel() {
+  const list = document.getElementById('userMsgList');
+  if (!list) return;
+  const msgs = getUserMessages();
+  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
+  if (!msgs.length) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text-faint);padding:20px;">Xabarlar yo\'q</p>';
+    return;
+  }
+  list.innerHTML = msgs.map(m => {
+    const isUnread = !(m.readBy || []).includes(myId);
+    return `
+    <div class="umsg-item ${isUnread ? 'unread' : ''}">
+      <div class="umsg-title">${m.title}</div>
+      <div class="umsg-body">${m.body}</div>
+      <div class="umsg-time">${new Date(m.createdAt).toLocaleString('uz-UZ')}</div>
+    </div>`;
+  }).join('');
+}
+
+function markAllRead() {
+  const msgs = getAdminMessages();
+  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
+  let changed = false;
+  msgs.forEach(m => {
+    if (m.userId === 'all' || String(m.userId) === myId) {
+      if (!m.readBy) m.readBy = [];
+      if (!m.readBy.includes(myId)) {
+        m.readBy.push(myId);
+        changed = true;
+      }
+    }
+  });
+  if (changed) setAdminMessages(msgs);
+}
+
+/* ---- 5) ADMIN TAB KENGAYTIRISH ---- */
+const origShowAdminTab = showAdminTab;
+showAdminTab = function(tab) {
+  origShowAdminTab(tab);
+  const extTabs = ['examcards', 'gramorder', 'sendmsg'];
+  extTabs.forEach(t => {
+    const el = document.getElementById('adminTab-' + t);
+    if (el) el.style.display = (t === tab) ? '' : 'none';
+  });
+  document.querySelectorAll('#adminTabs .admin-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.atab === tab);
+  });
+  if (tab === 'examcards') renderExamCardAdmin();
+  if (tab === 'gramorder') renderGrammarOrderAdmin();
+  if (tab === 'sendmsg') { renderSentMessages(); }
+};
+
+/* ---- 6) ISHGA TUSHIRISH ---- */
+function initAdminExtension() {
+  applyExamCardState();
+  applyGrammarOrder();
+  renderUserMsgBell();
+  renderSentMessages();
+}
+
+// bootApp tugagach ishga tushirish
+const origBootApp = bootApp;
+bootApp = async function() {
+  await origBootApp();
+  initAdminExtension();
+};
+bootApp();
 </script>
 </body>
 </html>
