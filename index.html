@@ -1816,53 +1816,62 @@ async function loadQuestionsFromBackend(){
     return res.ok ? await res.json() : [];
   }catch(e){ console.error(e); return []; }
 }
+/* Backend xatolarini konsoldan tashqari ilova ichida (toast) ko'rsatish uchun —
+   Telegram Mini App'da DevTools ochib bo'lmaydi, shu sabab admin xato matnini
+   to'g'ridan-to'g'ri ekranda ko'rishi kerak. */
+window.LAST_BACKEND_ERROR = '';
+function setLastBackendError(status, text){
+  window.LAST_BACKEND_ERROR = `HTTP ${status}: ${(text||'').slice(0,300)}`;
+  console.error(window.LAST_BACKEND_ERROR);
+}
+
 async function saveQuestionToBackend({skillId, topicId, q, opts, a, exp}){
-  if(!SESSION_TOKEN) return null;
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
     });
-    if(!res.ok){ console.error("Savol saqlanmadi:", await res.text()); return null; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
-  }catch(e){ console.error(e); return null; }
+  }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Mavjud savolni tahrirlash — Supabase'da `admin_edit_question` RPC funksiyasi talab qilinadi. */
 async function updateQuestionOnBackend({id, q, opts, a, exp}){
-  if(!SESSION_TOKEN || !id) return null;
+  if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_question`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_id: id, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
     });
-    if(!res.ok){ console.error("Savol tahrirlanmadi:", await res.text()); return null; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
-  }catch(e){ console.error(e); return null; }
+  }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Savolni o'chirish — Supabase'da `admin_delete_question` RPC funksiyasi talab qilinadi. */
 async function deleteQuestionOnBackend(id){
-  if(!SESSION_TOKEN || !id) return false;
+  if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return false; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_question`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_id: id })
     });
-    if(!res.ok){ console.error("Savol o'chirilmadi:", await res.text()); return false; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
     return true;
-  }catch(e){ console.error(e); return false; }
+  }catch(e){ setLastBackendError('—', e.message); return false; }
 }
 /* Savollar tartibini saqlash — Supabase'da `admin_reorder_questions` RPC funksiyasi
    talab qilinadi (p_ids — tartib bo'yicha id'lar ro'yxati). */
 async function reorderQuestionsOnBackend(orderedIds){
-  if(!SESSION_TOKEN || !orderedIds?.length) return false;
+  if(!SESSION_TOKEN || !orderedIds?.length){ setLastBackendError('—', 'SESSION_TOKEN yoki id ro\'yxati yo\'q'); return false; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reorder_questions`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_ids: orderedIds })
     });
-    if(!res.ok){ console.error("Tartib saqlanmadi:", await res.text()); return false; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
     return true;
-  }catch(e){ console.error(e); return false; }
+  }catch(e){ setLastBackendError('—', e.message); return false; }
 }
 
 /* Grammatika mavzulari — hammasi uchun umumiy (Supabase "grammar_topics" jadvali).
@@ -1879,51 +1888,49 @@ async function loadGrammarTopicsFromBackend(){
   }catch(e){ console.error(e); return []; }
 }
 async function saveGrammarTopicToBackend({category, name, ar}){
-  if(!SESSION_TOKEN) return null;
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_grammar_topic`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_category: category, p_name: name, p_ar: ar })
     });
-    if(!res.ok){ console.error("Mavzu saqlanmadi:", await res.text()); return null; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
-  }catch(e){ console.error(e); return null; }
+  }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function updateGrammarTopicOnBackend({id, category, name, ar}){
-  if(!SESSION_TOKEN || !id) return null;
+  if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_grammar_topic`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_id: id, p_category: category, p_name: name, p_ar: ar })
     });
-    if(!res.ok){ console.error("Mavzu tahrirlanmadi:", await res.text()); return null; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
-  }catch(e){ console.error(e); return null; }
+  }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function deleteGrammarTopicOnBackend(id){
-  if(!SESSION_TOKEN || !id) return false;
+  if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return false; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_grammar_topic`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_id: id })
     });
-    if(!res.ok){ console.error("Mavzu o'chirilmadi:", await res.text()); return false; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
     return true;
-  }catch(e){ console.error(e); return false; }
+  }catch(e){ setLastBackendError('—', e.message); return false; }
 }
 async function reorderGrammarTopicsOnBackend(orderedIds){
-  if(!SESSION_TOKEN || !orderedIds?.length) return false;
+  if(!SESSION_TOKEN || !orderedIds?.length){ setLastBackendError('—', 'SESSION_TOKEN yoki id ro\'yxati yo\'q'); return false; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reorder_grammar_topics`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_ids: orderedIds })
     });
-    if(!res.ok){ console.error("Mavzular tartibi saqlanmadi:", await res.text()); return false; }
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
     return true;
-  }catch(e){ console.error(e); return false; }
+  }catch(e){ setLastBackendError('—', e.message); return false; }
 }
-
-/* Admin — real foydalanuvchilar ro'yxati (faqat admin uchun ishlaydi, RLS/RPC orqali cheklanadi). */
 async function loadAdminUsersFromBackend(){
   if(!SESSION_TOKEN) return [];
   try{
@@ -2926,7 +2933,7 @@ async function submitNewTopic(e){
   if(!name || !ar) return false;
   const saved = await saveGrammarTopicToBackend({category, name, ar});
   if(!saved){
-    toast("❌ Mavzu saqlanmadi: backendda `admin_add_grammar_topic` funksiyasi topilmadi yoki xato");
+    toast("❌ Mavzu saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000);
     return false;
   }
   const row = Array.isArray(saved) ? saved[0] : saved;
@@ -2971,7 +2978,7 @@ async function submitEditTopic(e, id){
   const ar = document.getElementById('tAr').value.trim();
   const ok = await updateGrammarTopicOnBackend({id, category, name, ar});
   if(!ok){
-    toast("❌ Saqlanmadi: backendda `admin_edit_grammar_topic` funksiyasi topilmadi yoki xato");
+    toast("❌ Saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000);
     return false;
   }
   t.category = category; t.name = name; t.ar = ar;
@@ -2988,7 +2995,7 @@ async function deleteTopic(id){
   if(!confirm(n ? `Bu mavzuda ${n} ta savol bor. Mavzu va uning barcha savollarini o'chirmoqchimisiz?` : "Bu mavzuni rostdan ham o'chirmoqchimisiz?")) return;
   const ok = await deleteGrammarTopicOnBackend(id);
   if(!ok){
-    toast("❌ O'chirilmadi: backendda `admin_delete_grammar_topic` funksiyasi topilmadi yoki xato");
+    toast("❌ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
     return;
   }
   GRAMMAR_TOPICS = GRAMMAR_TOPICS.filter(x=>x.id!==id);
@@ -3071,7 +3078,7 @@ async function submitEditQuestion(e, skillId, topicId, idx){
   viewTopicQuestions(skillId, topicId);
   if(q.id){
     const ok = await updateQuestionOnBackend({id:q.id, q:q.q, opts:q.opts, a:q.a, exp:q.exp});
-    toast(ok ? "✅ Savol yangilandi" : "❌ Saqlanmadi: backendda `admin_edit_question` funksiyasi topilmadi yoki xato");
+    toast(ok ? "✅ Savol yangilandi" : "❌ Saqlanmadi: " + window.LAST_BACKEND_ERROR, ok?2200:6000);
   } else {
     toast("⚠️ Bu namunaviy savol — o'zgarish faqat shu seansda ko'rinadi (backendda saqlanmagan)");
   }
@@ -3087,7 +3094,7 @@ async function deleteQuestion(skillId, topicId, idx){
   viewTopicQuestions(skillId, topicId);
   if(q.id){
     const ok = await deleteQuestionOnBackend(q.id);
-    toast(ok ? "✅ Savol o'chirildi" : "❌ O'chirilmadi: backendda `admin_delete_question` funksiyasi topilmadi yoki xato");
+    toast(ok ? "✅ Savol o'chirildi" : "❌ O'chirilmadi: " + window.LAST_BACKEND_ERROR, ok?2200:6000);
   } else {
     toast("⚠️ Bu namunaviy savol — o'chirish faqat shu seansda amal qildi (backendda saqlanmagan)");
   }
@@ -3101,7 +3108,7 @@ async function moveQuestion(skillId, topicId, idx, dir){
   const ids = items.map(x=>x.id).filter(Boolean);
   if(ids.length === items.length){
     const ok = await reorderQuestionsOnBackend(ids);
-    if(!ok) toast("⚠️ Tartib faqat shu seansda saqlandi (backendda `admin_reorder_questions` funksiyasi topilmadi yoki xato)");
+    if(!ok) toast("⚠️ Tartib faqat shu seansda saqlandi: " + window.LAST_BACKEND_ERROR, 6000);
   } else {
     toast("⚠️ Tartib faqat shu seansda saqlandi (ro'yxatda namunaviy savollar bor)");
   }
@@ -3185,7 +3192,7 @@ async function submitNewQuestion(e){
     if(savedId) newQ.id = savedId;
     toast("✅ Savol qo'shildi — endi hamma foydalanuvchida ko'rinadi");
   } else {
-    toast("⚠️ Savol faqat shu qurilmada saqlandi (backendga yuborilmadi)");
+    toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000);
   }
   return false;
 }
