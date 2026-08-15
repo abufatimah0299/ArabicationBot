@@ -1010,6 +1010,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
+        <button class="theme-toggle" id="userMsgBell" hidden onclick="toggleUserMsgPanel()" title="Xabarlar" style="position:relative;">
+          🔔<span id="userMsgBadge">0</span>
+        </button>
         <div class="avatar" id="topAvatar">?</div>
       </div>
     </div>
@@ -1496,6 +1499,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="btn" id="adminAddTopicBtn" style="display:none;" onclick="openAddTopicModal()">+ Yangi mavzu</button>
+              <button class="btn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
               <button class="btn btn-primary" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
             </div>
           </div>
@@ -1611,10 +1615,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
   </button>
 </nav>
 
-<!-- Foydalanuvchi xabar qo'ng'irog'i -->
-<button id="userMsgBell" hidden onclick="toggleUserMsgPanel()">
-  🔔<span id="userMsgBadge">0</span>
-</button>
+<!-- Foydalanuvchi xabar qo'ng'irog'i (tugma tepadagi topbar'ga ko'chirildi, shu yerda faqat panel qoladi) -->
 <div id="userMsgPanel" hidden>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
     <h4 style="font-size:14px;font-weight:800;">📨 Xabarlar</h4>
@@ -1831,6 +1832,24 @@ async function saveQuestionToBackend({skillId, topicId, q, opts, a, exp}){
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+/* Bir nechta savolni bittada qo'shish (ommaviy/bulk) — Supabase'da `admin_bulk_add_questions`
+   RPC funksiyasi talab qilinadi (p_items — har biri {p_skill_id,p_topic_id,p_q,p_opts,p_correct,p_exp}
+   shaklidagi obyektlar massivi). Muvaffaqiyatli bo'lsa backend qo'shilgan qatorlarni qaytaradi. */
+async function saveQuestionsBulkToBackend(items){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  if(!Array.isArray(items) || !items.length){ setLastBackendError('—', 'Ro\'yxat bo\'sh'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_bulk_add_questions`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_items: items.map(it=>({
+        p_skill_id: it.skillId, p_topic_id: it.topicId||null, p_q: it.q,
+        p_opts: it.opts, p_correct: it.a, p_exp: it.exp||null,
+      })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
@@ -3197,6 +3216,100 @@ async function submitNewQuestion(e){
   return false;
 }
 
+/* ---------- Savollarni ommaviy (bulk) qo'shish ----------
+   Admin bir nechta savolni bitta JSON massiv ko'rinishida joylashtirib, hammasini
+   bittada Supabase'ga yuboradi. Format: har bir element
+   {"q":"...","opts":["...","...","...","..."],"a":0,"exp":"..."} (exp ixtiyoriy). */
+function openBulkAddQuestionModal(){
+  const skillId = adminActiveSkill;
+  const isGrammar = skillId === 'grammatika';
+  document.getElementById('modalTitle').textContent = "Savollarni ommaviy qo'shish";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="adminBulkQForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkQuestions(event)">
+      <div class="form-field">
+        <label>Bo'lim</label>
+        <select id="bqSkill" onchange="toggleBulkGrammarTopicField()">
+          ${SKILLS.map(s=>`<option value="${s.id}" ${s.id===skillId?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field" id="bqTopicField" style="${isGrammar?'':'display:none;'}">
+        <label>Mavzu</label>
+        <select id="bqTopic">
+          ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Savollar (JSON massiv)</label>
+        <textarea id="bqJson" rows="10" placeholder='[
+  {"q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
+  {"q":"...","opts":["...","...","...","..."],"a":2}
+]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
+          Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Hammasini saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function toggleBulkGrammarTopicField(){
+  const isGrammar = document.getElementById('bqSkill').value === 'grammatika';
+  document.getElementById('bqTopicField').style.display = isGrammar ? '' : 'none';
+}
+async function submitBulkQuestions(e){
+  e.preventDefault();
+  const skillId = document.getElementById('bqSkill').value;
+  const topicId = document.getElementById('bqTopic')?.value;
+  let parsed;
+  try{
+    parsed = JSON.parse(document.getElementById('bqJson').value);
+    if(!Array.isArray(parsed) || !parsed.length) throw new Error('Bo\'sh yoki massiv emas');
+  }catch(err){
+    toast("❌ JSON noto'g'ri: " + err.message, 6000);
+    return false;
+  }
+  const items = [];
+  for(const [i, row] of parsed.entries()){
+    if(!row.q || !Array.isArray(row.opts) || row.opts.length !== 4 || typeof row.a !== 'number'){
+      toast(`❌ ${i+1}-savol formati noto'g'ri (q, opts[4], a talab qilinadi)`, 6000);
+      return false;
+    }
+    items.push({
+      skillId, topicId: skillId==='grammatika' ? topicId : null,
+      q: row.q, opts: row.opts, a: row.a, exp: row.exp || '',
+    });
+  }
+  // Ekranga darhol qo'shamiz — tezkor tuyulishi uchun.
+  for(const newQ of items){
+    if(skillId==='grammatika'){
+      if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
+      GRAMMAR_TOPIC_BANKS[topicId].push({...newQ, id:null});
+    } else {
+      if(!QUESTION_BANKS[skillId].questions) QUESTION_BANKS[skillId].questions = [];
+      QUESTION_BANKS[skillId].questions.push({...newQ, id:null});
+    }
+  }
+  closeModal();
+  adminActiveSkill = skillId;
+  renderAdminQuestions();
+
+  const saved = await saveQuestionsBulkToBackend(items);
+  if(saved){
+    toast(`✅ ${items.length} ta savol qo'shildi — endi hamma foydalanuvchida ko'rinadi`);
+    // Backend'dan qaytgan haqiqiy id'larni yangi savollarga biriktiramiz (mavjud bo'lsa).
+    const savedRows = Array.isArray(saved) ? saved : [];
+    const bank = skillId==='grammatika' ? GRAMMAR_TOPIC_BANKS[topicId] : QUESTION_BANKS[skillId].questions;
+    if(bank && savedRows.length === items.length){
+      const startIdx = bank.length - items.length;
+      savedRows.forEach((r, i) => { if(bank[startIdx+i]) bank[startIdx+i].id = r.id; });
+    }
+  } else {
+    toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000);
+  }
+  return false;
+}
+
 /* Admin — real imtihon xabarlari ro'yxati (backend: admin_list_exam_reports RPC). */
 async function loadExamReportsFromBackend(){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_exam_reports`, {
@@ -4061,49 +4174,34 @@ bootApp();
         z-index:10;
       }
 
-      #userMsgBell{
-        position:fixed;
-        right:20px;
-        bottom:90px;
-        z-index:9999;
-        width:52px;
-        height:52px;
-        border-radius:50%;
-        border:none;
-        cursor:pointer;
-        background:var(--indigo-700);
-        color:#fff;
-        font-size:20px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow:0 8px 24px -6px rgba(18,167,104,.55);
-      }
+      /* userMsgBell endi tepadagi topbar'da, dark-mode tugmasi yonida (.theme-toggle
+         klassidan uslub oladi) — pastki fixed FAB o'rniga. Faqat badge shu yerda. */
+      #userMsgBell{ font-size:16px; }
 
       #userMsgBadge{
         position:absolute;
-        top:-2px;
-        right:-2px;
-        min-width:20px;
-        height:20px;
+        top:-4px;
+        right:-4px;
+        min-width:18px;
+        height:18px;
         border-radius:99px;
         background:var(--red);
         color:#fff;
-        font-size:11px;
+        font-size:10px;
         font-weight:800;
         display:flex;
         align-items:center;
         justify-content:center;
-        padding:0 5px;
-        border:2px solid var(--bg);
+        padding:0 4px;
+        border:2px solid var(--indigo-900);
       }
 
       #userMsgPanel{
         position:fixed;
+        top:70px;
         right:20px;
-        bottom:150px;
         width:min(380px, calc(100vw - 40px));
-        max-height:450px;
+        max-height:min(450px, calc(100vh - 100px));
         overflow-y:auto;
         z-index:9999;
         border-radius:20px;
@@ -4223,11 +4321,17 @@ bootApp();
     }
 
     if (!document.getElementById('userMsgBell')) {
+      const topbarRight = document.querySelector('.topbar-right');
+      if (topbarRight) {
+        topbarRight.insertAdjacentHTML('afterbegin', `
+          <button class="theme-toggle" id="userMsgBell" hidden onclick="toggleUserMsgPanel()" title="Xabarlar" style="position:relative;font-size:16px;">
+            🔔<span id="userMsgBadge">0</span>
+          </button>
+        `);
+      }
+    }
+    if (!document.getElementById('userMsgPanel')) {
       document.body.insertAdjacentHTML('beforeend', `
-        <button id="userMsgBell" hidden>
-          🔔<span id="userMsgBadge">0</span>
-        </button>
-
         <div id="userMsgPanel" hidden>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <h4 style="font-size:14px;font-weight:800;">📨 Xabarlar</h4>
@@ -4835,11 +4939,10 @@ bootApp();
       msgForm.addEventListener('submit', sendAdminMessage);
     }
 
-    const bell = document.getElementById('userMsgBell');
-
-    if (bell) {
-      bell.addEventListener('click', window.toggleUserMsgPanel);
-    }
+    // DIQQAT: userMsgBell tugmasida HTML ichida onclick="toggleUserMsgPanel()" allaqachon bor.
+    // Bu yerda avval yana addEventListener bilan bog'langani uchun bosilganda funksiya
+    // 2 marta ishlab, panel ochilib-yopilib (toggle ustiga toggle) hech narsa
+    // bo'lmagandek ko'rinar edi. Endi faqat bitta ulanish qoldirildi (HTML'dagi onclick).
   }
 
   /* ---------- auth wait ---------- */
