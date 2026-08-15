@@ -3610,5 +3610,885 @@ bootApp = async function() {
 };
 bootApp();
 </script>
+  <script>
+/* ============================================================
+   REAL ADMIN EXTENSION — Supabase bilan haqiqiy ishlashi
+   ============================================================ */
+(function () {
+
+  const EXAM_CARD_CONFIG = [
+    { id: 'attanal_full', title: "To'liq At-Tanal imtihoni" },
+    { id: 'cefr_mock', title: "CEFR Daraja testi (Mock imtihon)" }
+  ];
+
+  const DEFAULT_GRAMMAR_ORDER = ['nahv', 'sarf', 'tarqim', 'xatolar'];
+
+  let APP_CONFIG = {
+    exam_cards: {},
+    grammar_order: []
+  };
+
+  let USER_MESSAGES = [];
+  let pollTimer = null;
+
+  /* ---------- helpers ---------- */
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function localGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function localSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  async function rpc(name, body) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + name, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(body || {})
+    });
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text || ('HTTP ' + res.status));
+    }
+
+    return text ? JSON.parse(text) : null;
+  }
+
+  /* ---------- CSS inject ---------- */
+
+  function injectAssets() {
+    if (document.getElementById('realAdminExtensionStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'realAdminExtensionStyle';
+    style.textContent = `
+      [hidden]{display:none!important;}
+
+      .admin-ext-row{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:12px 0;
+        border-bottom:1px solid var(--border);
+        flex-wrap:wrap;
+      }
+
+      .admin-ext-toggles{
+        display:flex;
+        gap:14px;
+        align-items:center;
+        flex-wrap:wrap;
+      }
+
+      .admin-ext-toggles label{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        font-size:12.5px;
+        font-weight:700;
+        cursor:pointer;
+        color:var(--text-dim);
+      }
+
+      .admin-ext-toggles input{
+        width:16px;
+        height:16px;
+        accent-color:var(--indigo-700);
+        cursor:pointer;
+      }
+
+      .grammar-sortable{
+        list-style:none;
+        padding:0;
+        margin:0;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+      }
+
+      .grammar-sortable li{
+        padding:14px 16px;
+        border:1px solid var(--border);
+        border-radius:14px;
+        cursor:grab;
+        user-select:none;
+        display:flex;
+        align-items:center;
+        gap:12px;
+        font-weight:700;
+        font-size:13.5px;
+        background:var(--card);
+      }
+
+      .grammar-sortable li.dragging{
+        opacity:.5;
+      }
+
+      .exam-card.is-locked{
+        opacity:.55;
+        pointer-events:none;
+        filter:grayscale(.3);
+        position:relative;
+      }
+
+      .exam-card.is-locked::after{
+        content:'🔒 Qulflangan';
+        position:absolute;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,.35);
+        border-radius:22px;
+        font-weight:800;
+        font-size:14px;
+        color:#fff;
+        pointer-events:auto;
+        cursor:not-allowed;
+        z-index:10;
+      }
+
+      #userMsgBell{
+        position:fixed;
+        right:20px;
+        bottom:90px;
+        z-index:9999;
+        width:52px;
+        height:52px;
+        border-radius:50%;
+        border:none;
+        cursor:pointer;
+        background:var(--indigo-700);
+        color:#fff;
+        font-size:20px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 8px 24px -6px rgba(18,167,104,.55);
+      }
+
+      #userMsgBadge{
+        position:absolute;
+        top:-2px;
+        right:-2px;
+        min-width:20px;
+        height:20px;
+        border-radius:99px;
+        background:var(--red);
+        color:#fff;
+        font-size:11px;
+        font-weight:800;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:0 5px;
+        border:2px solid var(--bg);
+      }
+
+      #userMsgPanel{
+        position:fixed;
+        right:20px;
+        bottom:150px;
+        width:min(380px, calc(100vw - 40px));
+        max-height:450px;
+        overflow-y:auto;
+        z-index:9999;
+        border-radius:20px;
+        border:1px solid var(--border);
+        background:var(--card);
+        box-shadow:0 20px 50px -12px rgba(0,0,0,.5);
+        padding:20px;
+      }
+
+      .umsg-item{
+        padding:14px;
+        border:1px solid var(--border);
+        border-radius:14px;
+        margin-bottom:10px;
+        background:var(--bg);
+      }
+
+      .umsg-item.unread{
+        border-color:var(--indigo-500);
+        background:var(--indigo-100);
+      }
+
+      .umsg-title{
+        font-weight:800;
+        font-size:13.5px;
+        margin-bottom:4px;
+      }
+
+      .umsg-body{
+        font-size:12.5px;
+        color:var(--text-dim);
+        line-height:1.5;
+      }
+
+      .umsg-time{
+        font-size:11px;
+        color:var(--text-faint);
+        font-weight:600;
+        margin-top:6px;
+      }
+
+      .sent-msg-item{
+        padding:12px;
+        border-bottom:1px solid var(--border);
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  /* ---------- HTML inject ---------- */
+
+  function injectAdminExtensionHTML() {
+    const tabs = document.getElementById('adminTabs');
+    const reportsPane = document.getElementById('adminTab-reports');
+
+    if (tabs && !document.getElementById('adminTab-examcards')) {
+      tabs.insertAdjacentHTML('beforeend', `
+        <button class="admin-tab" data-atab="examcards" onclick="showAdminTab('examcards')">🎯 Imtihon cardlari</button>
+        <button class="admin-tab" data-atab="gramorder" onclick="showAdminTab('gramorder')">📚 Grammatika tartibi</button>
+        <button class="admin-tab" data-atab="sendmsg" onclick="showAdminTab('sendmsg')">✉️ Xabar yuborish</button>
+      `);
+    }
+
+    if (reportsPane && !document.getElementById('adminTab-examcards')) {
+      reportsPane.insertAdjacentHTML('afterend', `
+        <div class="admin-panel-body" id="adminTab-examcards" style="display:none;">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+            Cardlarni yashirish/ko‘rsatish yoki qulflash/ochish barcha foydalanuvchilarga ta’sir qiladi.
+          </p>
+          <div class="card" style="padding:18px 20px;">
+            <div id="examCardAdminList"></div>
+          </div>
+        </div>
+
+        <div class="admin-panel-body" id="adminTab-gramorder" style="display:none;">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+            Grammatika bo‘limlarini ushlab sudrab tartibini o‘zgartiring. Tartib Supabase’da saqlanadi.
+          </p>
+          <div class="card" style="padding:18px 20px;">
+            <ul id="grammarOrderList" class="grammar-sortable"></ul>
+          </div>
+        </div>
+
+        <div class="admin-panel-body" id="adminTab-sendmsg" style="display:none;">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+            Foydalanuvchi Telegram ID yozing yoki <b>all</b> deb yozing — hammasiga yuboriladi.
+          </p>
+
+          <div class="card" style="padding:18px 20px;margin-bottom:16px;">
+            <form id="adminMsgForm">
+              <div class="form-field" style="margin-bottom:12px;">
+                <label>Foydalanuvchi ID</label>
+                <input type="text" id="msgUserId" placeholder="Masalan: 5400174077 yoki all" required>
+              </div>
+
+              <div class="form-field" style="margin-bottom:12px;">
+                <label>Sarlavha</label>
+                <input type="text" id="msgTitle" placeholder="Xabar sarlavhasi" required>
+              </div>
+
+              <div class="form-field" style="margin-bottom:12px;">
+                <label>Xabar matni</label>
+                <textarea id="msgBody" placeholder="Xabar matni..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary">📨 Yuborish</button>
+            </form>
+          </div>
+
+          <div class="card" style="padding:18px 20px;">
+            <h4 style="font-size:13px;font-weight:800;margin-bottom:10px;">Yuborilgan xabarlar</h4>
+            <div id="sentMessagesList"></div>
+          </div>
+        </div>
+      `);
+    }
+
+    if (!document.getElementById('userMsgBell')) {
+      document.body.insertAdjacentHTML('beforeend', `
+        <button id="userMsgBell" hidden>
+          🔔<span id="userMsgBadge">0</span>
+        </button>
+
+        <div id="userMsgPanel" hidden>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="font-size:14px;font-weight:800;">📨 Xabarlar</h4>
+            <button onclick="toggleUserMsgPanel()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:16px;">✕</button>
+          </div>
+          <div id="userMsgList"></div>
+        </div>
+      `);
+    }
+  }
+
+  /* ---------- config load ---------- */
+
+  async function loadAppConfig() {
+    try {
+      const cfg = await rpc('get_app_config');
+
+      if (cfg) {
+        APP_CONFIG = {
+          exam_cards: cfg.exam_cards || {},
+          grammar_order: cfg.grammar_order || []
+        };
+
+        localSet('arab_app_config_cache', APP_CONFIG);
+      }
+    } catch (e) {
+      console.warn('App config yuklanmadi, fallback ishlatiladi:', e);
+
+      const cached = localGet('arab_app_config_cache', null);
+
+      if (cached) {
+        APP_CONFIG = cached;
+      } else {
+        APP_CONFIG = {
+          exam_cards: localGet('arab_ext_exam_cards', {}),
+          grammar_order: localGet('arab_ext_grammar_order', DEFAULT_GRAMMAR_ORDER)
+        };
+      }
+    }
+
+    applyExamCardState();
+    applyGrammarOrder();
+  }
+
+  function getCardState(cardId) {
+    return APP_CONFIG.exam_cards[cardId] || {
+      visible: true,
+      locked: false
+    };
+  }
+
+  function normalizeGrammarOrder(order) {
+    let result = Array.isArray(order)
+      ? order.filter(id => DEFAULT_GRAMMAR_ORDER.includes(id))
+      : [];
+
+    DEFAULT_GRAMMAR_ORDER.forEach(id => {
+      if (!result.includes(id)) {
+        result.push(id);
+      }
+    });
+
+    return result;
+  }
+
+  /* ---------- exam cards ---------- */
+
+  function ensureExamCardIds() {
+    EXAM_CARD_CONFIG.forEach(card => {
+      if (document.querySelector('[data-card-id="' + card.id + '"]')) return;
+
+      const searchText = card.id === 'attanal_full'
+        ? 'التنال العربي'
+        : 'CEFR';
+
+      const cards = document.querySelectorAll('.exam-card');
+
+      for (const el of cards) {
+        if (el.textContent.includes(searchText)) {
+          el.setAttribute('data-card-id', card.id);
+          break;
+        }
+      }
+    });
+  }
+
+  function applyExamCardState() {
+    ensureExamCardIds();
+
+    EXAM_CARD_CONFIG.forEach(card => {
+      const el = document.querySelector('[data-card-id="' + card.id + '"]');
+      if (!el) return;
+
+      const state = getCardState(card.id);
+
+      el.hidden = !state.visible;
+      el.classList.toggle('is-locked', state.locked);
+    });
+  }
+
+  async function saveExamCard(cardId) {
+    const state = getCardState(cardId);
+
+    try {
+      await rpc('admin_set_exam_card', {
+        p_card_id: cardId,
+        p_visible: state.visible,
+        p_locked: state.locked
+      });
+
+      localSet('arab_app_config_cache', APP_CONFIG);
+      toast('✅ Saqlandi');
+    } catch (e) {
+      console.error(e);
+      toast('❌ Saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+    }
+  }
+
+  window.toggleExamCard = async function (cardId, field, value) {
+    if (!APP_CONFIG.exam_cards[cardId]) {
+      APP_CONFIG.exam_cards[cardId] = {
+        visible: true,
+        locked: false
+      };
+    }
+
+    APP_CONFIG.exam_cards[cardId][field] = value;
+
+    renderExamCardAdmin();
+    applyExamCardState();
+
+    await saveExamCard(cardId);
+  };
+
+  function renderExamCardAdmin() {
+    const list = document.getElementById('examCardAdminList');
+    if (!list) return;
+
+    list.innerHTML = EXAM_CARD_CONFIG.map(card => {
+      const state = getCardState(card.id);
+
+      return `
+        <div class="admin-ext-row">
+          <strong style="font-size:13px;">${card.title}</strong>
+
+          <div class="admin-ext-toggles">
+            <label>
+              <input
+                type="checkbox"
+                ${state.visible ? 'checked' : ''}
+                onchange="toggleExamCard('${card.id}', 'visible', this.checked)"
+              >
+              Ko‘rinsin
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                ${state.locked ? 'checked' : ''}
+                onchange="toggleExamCard('${card.id}', 'locked', this.checked)"
+              >
+              🔒 Qulflangan
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Qulflangan cardga bosishni bloklash
+  document.addEventListener('click', function (e) {
+    const card = e.target.closest('[data-card-id]');
+    if (!card) return;
+
+    const state = getCardState(card.dataset.cardId);
+
+    if (state && state.locked) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toast('🔒 Bu bo‘lim hozircha qulflangan');
+    }
+  }, true);
+
+  /* ---------- grammar order ---------- */
+
+  function applyGrammarOrder() {
+    const container = document.getElementById('grammarCatGrid');
+    if (!container) return;
+
+    const order = normalizeGrammarOrder(APP_CONFIG.grammar_order);
+
+    const items = Array.from(container.querySelectorAll('.grammar-cat-wrap[data-cat]'));
+
+    items.sort((a, b) => {
+      return order.indexOf(a.dataset.cat) - order.indexOf(b.dataset.cat);
+    });
+
+    items.forEach(item => container.appendChild(item));
+  }
+
+  function renderGrammarOrderAdmin() {
+    const ul = document.getElementById('grammarOrderList');
+    if (!ul) return;
+
+    const order = normalizeGrammarOrder(APP_CONFIG.grammar_order);
+
+    ul.innerHTML = order.map(id => {
+      const cat = (typeof GRAMMAR_CATEGORIES !== 'undefined')
+        ? GRAMMAR_CATEGORIES.find(c => c.id === id)
+        : null;
+
+      if (!cat) return '';
+
+      return `
+        <li draggable="true" data-cat-id="${cat.id}">
+          <span style="color:var(--text-faint);cursor:grab;">⠿</span>
+          <span style="flex:1;">${cat.name} <span style="color:var(--text-faint);font-size:11px;">(${cat.ar})</span></span>
+        </li>
+      `;
+    }).join('');
+
+    initGrammarDragDrop(ul);
+  }
+
+  function initGrammarDragDrop(ul) {
+    let dragEl = null;
+
+    ul.querySelectorAll('li').forEach(li => {
+      li.addEventListener('dragstart', function (e) {
+        dragEl = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+      });
+
+      li.addEventListener('dragend', function () {
+        this.classList.remove('dragging');
+        dragEl = null;
+        saveGrammarOrderFromDOM(ul);
+      });
+    });
+
+    ul.addEventListener('dragover', function (e) {
+      e.preventDefault();
+
+      if (!dragEl) return;
+
+      const afterElement = getDragAfterElement(ul, e.clientY);
+
+      if (afterElement === null) {
+        ul.appendChild(dragEl);
+      } else {
+        ul.insertBefore(dragEl, afterElement);
+      }
+    });
+
+    ul.addEventListener('drop', function (e) {
+      e.preventDefault();
+    });
+  }
+
+  function getDragAfterElement(container, y) {
+    const items = Array.from(container.querySelectorAll('li:not(.dragging)'));
+
+    return items.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+
+      if (offset < 0 && offset > closest.offset) {
+        return {
+          offset: offset,
+          element: child
+        };
+      }
+
+      return closest;
+    }, {
+      offset: Number.NEGATIVE_INFINITY,
+      element: null
+    }).element;
+  }
+
+  async function saveGrammarOrderFromDOM(ul) {
+    const order = Array.from(ul.querySelectorAll('li')).map(li => li.dataset.catId);
+
+    APP_CONFIG.grammar_order = order;
+
+    applyGrammarOrder();
+    localSet('arab_app_config_cache', APP_CONFIG);
+
+    try {
+      await rpc('admin_set_grammar_order', {
+        p_order: order
+      });
+
+      toast('✅ Grammatika tartibi saqlandi');
+    } catch (e) {
+      console.error(e);
+      toast('❌ Tartib saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+    }
+  }
+
+  /* ---------- messages ---------- */
+
+  async function refreshUserMessages() {
+    if (!SESSION_TOKEN) {
+      USER_MESSAGES = [];
+      renderUserMsgBell();
+      return;
+    }
+
+    try {
+      USER_MESSAGES = await rpc('get_my_messages') || [];
+    } catch (e) {
+      console.warn('Xabarlar yuklanmadi:', e);
+      USER_MESSAGES = [];
+    }
+
+    renderUserMsgBell();
+
+    const panel = document.getElementById('userMsgPanel');
+
+    if (panel && !panel.hidden) {
+      renderUserMsgPanel();
+    }
+  }
+
+  function renderUserMsgBell() {
+    const bell = document.getElementById('userMsgBell');
+    const badge = document.getElementById('userMsgBadge');
+
+    if (!bell || !badge) return;
+
+    const unread = USER_MESSAGES.filter(m => !m.read).length;
+
+    bell.hidden = USER_MESSAGES.length === 0;
+    badge.textContent = String(unread);
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+
+  function renderUserMsgPanel() {
+    const list = document.getElementById('userMsgList');
+    if (!list) return;
+
+    if (!USER_MESSAGES.length) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text-faint);padding:20px;">Xabar yo‘q</p>';
+      return;
+    }
+
+    list.innerHTML = USER_MESSAGES.map(m => `
+      <div class="umsg-item ${m.read ? '' : 'unread'}">
+        <div class="umsg-title">${escapeHtml(m.title)}</div>
+        <div class="umsg-body">${escapeHtml(m.body)}</div>
+        <div class="umsg-time">${new Date(m.created_at).toLocaleString('uz-UZ')}</div>
+      </div>
+    `).join('');
+  }
+
+  window.toggleUserMsgPanel = async function () {
+    const panel = document.getElementById('userMsgPanel');
+    if (!panel) return;
+
+    const willOpen = panel.hidden;
+
+    panel.hidden = !willOpen;
+
+    if (willOpen) {
+      renderUserMsgPanel();
+
+      try {
+        await rpc('mark_my_messages_read');
+        await refreshUserMessages();
+      } catch (e) {
+        console.warn('O‘qilgan deb belgilanmadi:', e);
+      }
+    }
+  };
+
+  async function sendAdminMessage(e) {
+    e.preventDefault();
+
+    const userId = document.getElementById('msgUserId').value.trim();
+    const title = document.getElementById('msgTitle').value.trim();
+    const body = document.getElementById('msgBody').value.trim();
+
+    if (!userId || !title || !body) {
+      toast('⚠️ Barcha maydonlarni to‘ldiring');
+      return false;
+    }
+
+    try {
+      await rpc('admin_send_message', {
+        p_user_id: userId,
+        p_title: title,
+        p_body: body
+      });
+
+      toast('✅ Xabar yuborildi');
+
+      document.getElementById('adminMsgForm').reset();
+
+      renderSentMessages();
+      refreshUserMessages();
+    } catch (e) {
+      console.error(e);
+      toast('❌ Xabar yuborilmadi. Admin huquqi yoki Supabase xatosi.');
+    }
+
+    return false;
+  }
+
+  async function renderSentMessages() {
+    const list = document.getElementById('sentMessagesList');
+    if (!list) return;
+
+    const isAdminUser =
+      typeof ADMIN_TELEGRAM_IDS !== 'undefined' &&
+      typeof TELEGRAM_PROFILE !== 'undefined' &&
+      TELEGRAM_PROFILE &&
+      ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId);
+
+    if (!isAdminUser) {
+      list.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Faqat admin ko‘ra oladi.</p>';
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/rest/v1/admin_messages?select=*&order=created_at.desc&limit=20',
+        { headers: authHeaders() }
+      );
+
+      const msgs = res.ok ? await res.json() : [];
+
+      if (!msgs.length) {
+        list.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Hali xabar yuborilmagan.</p>';
+        return;
+      }
+
+      list.innerHTML = msgs.map(m => `
+        <div class="sent-msg-item">
+          <div style="font-weight:800;font-size:13px;">${escapeHtml(m.title)}</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${escapeHtml(m.body)}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">
+            👤 ${escapeHtml(m.user_id)} · ${new Date(m.created_at).toLocaleString('uz-UZ')}
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Xabarlar yuklanmadi.</p>';
+    }
+  }
+
+  /* ---------- admin tab override ---------- */
+
+  function overrideShowAdminTab() {
+    const baseShowAdminTab = window.showAdminTab;
+
+    window.showAdminTab = function (tab) {
+      if (typeof baseShowAdminTab === 'function') {
+        baseShowAdminTab(tab);
+      }
+
+      ['examcards', 'gramorder', 'sendmsg'].forEach(t => {
+        const el = document.getElementById('adminTab-' + t);
+        if (el) {
+          el.style.display = (t === tab) ? '' : 'none';
+        }
+      });
+
+      document.querySelectorAll('#adminTabs .admin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.atab === tab);
+      });
+
+      if (tab === 'examcards') renderExamCardAdmin();
+      if (tab === 'gramorder') renderGrammarOrderAdmin();
+      if (tab === 'sendmsg') renderSentMessages();
+    };
+  }
+
+  /* ---------- bind events ---------- */
+
+  function bindStaticEvents() {
+    const msgForm = document.getElementById('adminMsgForm');
+
+    if (msgForm) {
+      msgForm.addEventListener('submit', sendAdminMessage);
+    }
+
+    const bell = document.getElementById('userMsgBell');
+
+    if (bell) {
+      bell.addEventListener('click', window.toggleUserMsgPanel);
+    }
+  }
+
+  /* ---------- auth wait ---------- */
+
+  async function waitForAuth() {
+    const start = Date.now();
+
+    while (
+      (typeof APP_READY === 'undefined' || !APP_READY) &&
+      Date.now() - start < 10000
+    ) {
+      await sleep(250);
+    }
+
+    await sleep(300);
+  }
+
+  /* ---------- init ---------- */
+
+  async function initRealAdminExtension() {
+    injectAssets();
+    injectAdminExtensionHTML();
+    overrideShowAdminTab();
+    bindStaticEvents();
+
+    await waitForAuth();
+
+    await loadAppConfig();
+
+    renderExamCardAdmin();
+    renderGrammarOrderAdmin();
+
+    await refreshUserMessages();
+
+    if (pollTimer) {
+      clearInterval(pollTimer);
+    }
+
+    // Har 30 soniyada config va xabarlarni tekshirib turadi
+    pollTimer = setInterval(function () {
+      loadAppConfig();
+      refreshUserMessages();
+    }, 30000);
+
+    // Telefonda ilovaga qaytgan ham yangilab oladi
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) {
+        loadAppConfig();
+        refreshUserMessages();
+      }
+    });
+  }
+
+  initRealAdminExtension();
+
+})();
+</script>
 </body>
 </html>
