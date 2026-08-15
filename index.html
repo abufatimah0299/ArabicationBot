@@ -1473,6 +1473,10 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
     <span>Testlar</span>
   </button>
+  <button class="bn-btn" data-view="rank" id="bnRankBtn">
+    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 7 22l5-3 5 3-2-7.5"/></svg></span>
+    <span>Reyting</span>
+  </button>
   <button class="bn-btn" data-view="admin" id="bnAdminBtn" style="display:none;">
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
     <span>Admin</span>
@@ -1571,6 +1575,10 @@ function showAdminButtons(show){
   if(profileAdminLink) profileAdminLink.style.display = show ? '' : 'none';
   const bnAdminBtn = document.getElementById('bnAdminBtn');
   if(bnAdminBtn) bnAdminBtn.style.display = show ? '' : 'none';
+  // Admin uchun pastki bardagi "Reyting" tugmasi "Admin" tugmasiga almashadi
+  // (joy cheklangani uchun ikkalasi bir vaqtda ko'rinmaydi).
+  const bnRankBtn = document.getElementById('bnRankBtn');
+  if(bnRankBtn) bnRankBtn.style.display = show ? 'none' : '';
 }
 
 /* "Bosh admin" (super admin) — faqat ADMIN_TELEGRAM_IDS massividagi ID'lar.
@@ -1858,6 +1866,9 @@ function showView(name, push=true){
   const activeEl = document.getElementById('view-'+name);
   if(activeEl) runEntranceAnimations(activeEl);
   if(name==='admin') renderAdminPanel();
+  // Rank bo'limi ochilganda har doim eng so'nggi (backenddan kelgan) ma'lumot bilan
+  // qayta chiziladi — aks holda birinchi ochilishda static/mock ma'lumot ko'rinib qolardi.
+  if(name==='rank') renderRank(currentRankPeriod);
 }
 
 /* ---------------- Entrance animations (bars, rings, counters) ---------------- */
