@@ -1856,12 +1856,12 @@ function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.rem
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
 
 /* ---------------- Toast ---------------- */
-function toast(msg){
+function toast(msg, duration){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(()=> t.classList.remove('show'), 2200);
+  window._toastTimer = setTimeout(()=> t.classList.remove('show'), duration || 2200);
 }
 
 /* ---------------- Skill hub ---------------- */
@@ -3774,7 +3774,7 @@ bootApp();
       toast('✅ Saqlandi');
     } catch (e) {
       console.error(e);
-      toast('❌ Saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+      toast('❌ Saqlanmadi: ' + (e.message || 'Admin huquqi yoki Supabase xatosi').slice(0, 180), 5000);
     }
   }
 
@@ -3958,7 +3958,7 @@ bootApp();
       toast('✅ Grammatika tartibi saqlandi');
     } catch (e) {
       console.error(e);
-      toast('❌ Tartib saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+      toast('❌ Tartib saqlanmadi: ' + (e.message || 'Admin huquqi yoki Supabase xatosi').slice(0, 180), 5000);
     }
   }
 
@@ -4065,7 +4065,7 @@ bootApp();
       refreshUserMessages();
     } catch (e) {
       console.error(e);
-      toast('❌ Xabar yuborilmadi. Admin huquqi yoki Supabase xatosi.');
+      toast('❌ Xabar yuborilmadi: ' + (e.message || 'Admin huquqi yoki Supabase xatosi').slice(0, 180), 5000);
     }
 
     return false;
