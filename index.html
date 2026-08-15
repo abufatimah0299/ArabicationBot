@@ -2714,19 +2714,31 @@ async function submitNewQuestion(e){
 
 /* Admin — real imtihon xabarlari ro'yxati (backend: admin_list_exam_reports RPC). */
 async function loadExamReportsFromBackend(){
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_exam_reports`, {
-      method:"POST", headers: authHeaders(), body: JSON.stringify({})
-    });
-    return res.ok ? await res.json() : [];
-  }catch(e){ console.error(e); return []; }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_exam_reports`, {
+    method:"POST", headers: authHeaders(), body: JSON.stringify({})
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error(errText || ('HTTP ' + res.status));
+  }
+  return await res.json();
 }
 async function renderAdminReports(){
   const list = document.getElementById('adminReportsList');
   if(!list) return;
   list.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">Yuklanmoqda...</p>`;
 
-  const rows = await loadExamReportsFromBackend();
+  let rows;
+  try{
+    rows = await loadExamReportsFromBackend();
+  }catch(e){
+    console.error(e);
+    // DIQQAT: avval bu yerdagi xato yashirilib, har doim "Hali xabar yo'q" ko'rsatilardi —
+    // shu sabab haqiqiy xabar bazada bo'lsa ham admin uni ko'ra olmasdi. Endi haqiqiy xato
+    // matni chiqariladi, shunda sababini (RPC nomi, ruxsat/RLS va h.k.) aniqlash mumkin.
+    list.innerHTML = `<div class="placeholder-card"><h3>⚠️ Xabarlarni yuklab bo'lmadi</h3><p style="word-break:break-word;">${escapeHtml(e.message || 'Nomalum xato')}</p></div>`;
+    return;
+  }
   examReports = (Array.isArray(rows) ? rows : []).map(r => ({
     type: r.exam_type,
     date: r.exam_date,
