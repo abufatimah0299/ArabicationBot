@@ -1452,9 +1452,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
     <span>Testlar</span>
   </button>
-  <button class="bn-btn" data-view="rank">
-    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0 0 4h2M17 6h3a2 2 0 0 1 0 4h-2"/></svg></span>
-    <span>Rank</span>
+  <button class="bn-btn" data-view="admin" id="bnAdminBtn" style="display:none;">
+    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+    <span>Admin</span>
   </button>
   <button class="bn-btn" data-view="profil">
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
@@ -1652,6 +1652,8 @@ function renderGreetingFromProfile(){
   if(adminLink) adminLink.style.display = isAdmin ? '' : 'none';
   const profileAdminLink = document.getElementById('profileAdminLink');
   if(profileAdminLink) profileAdminLink.style.display = isAdmin ? '' : 'none';
+  const bnAdminBtn = document.getElementById('bnAdminBtn');
+  if(bnAdminBtn) bnAdminBtn.style.display = isAdmin ? '' : 'none';
 }
 
 async function bootApp(){
