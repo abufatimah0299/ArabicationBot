@@ -2789,18 +2789,23 @@ const RANK_DATASETS = {
   ],
 };
 /* Backend leaderboard_view qatorini reyting shakliga o'giradi.
-   MOSLASHTIRING: view'ingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
+   DIQQAT: hozirgi leaderboard_view'da faqat umumiy XP bor (id, first_name, last_name,
+   username, photo_url, total_xp, level, rank) — haftalik/oylik XP alohida saqlanmagan.
+   Shu sabab "Hafta" va "Oy" bo'limlari ham hozircha umumiy XP asosida ko'rsatiladi.
+   Kelajakda backendda haftalik/oylik XP alohida hisoblansa (masalan xp_week,
+   xp_month ustunlari qo'shilsa), pastdagi xpKeys ro'yxatlariga shularni ham qo'shing —
+   ular topilsa avtomatik ustunlik beriladi. */
 function applyLiveLeaderboard(rows){
   if(!Array.isArray(rows) || !rows.length) return;
   const myId = TELEGRAM_PROFILE.rawId;
   const build = (xpKeys) => rows.map(r=>({
-    name: pick(r, ['name','full_name','first_name'], 'Foydalanuvchi'),
+    name: pick(r, ['name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
     level: pick(r, ['level'], 'A1'),
     xp: Number(pick(r, xpKeys, 0)) || 0,
     me: String(pick(r, ['user_id','telegram_id','id'], '')) === String(myId),
   })).filter(u=>u.xp>0 || u.me);
-  const hafta = build(['xp_week','xp_weekly','weekly_xp']);
-  const oy = build(['xp_month','xp_monthly','monthly_xp']);
+  const hafta = build(['xp_week','xp_weekly','weekly_xp','total_xp']);
+  const oy = build(['xp_month','xp_monthly','monthly_xp','total_xp']);
   const hammasi = build(['xp_total','xp_all','total_xp','xp']);
   if(hafta.length) RANK_DATASETS.hafta = hafta;
   if(oy.length) RANK_DATASETS.oy = oy;
