@@ -801,10 +801,48 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
 /* ================= ADMIN PANEL ================= */
 .admin-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-bottom:18px; max-width:640px; }
-.admin-tabs{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding-bottom:2px; }
-.admin-tab{ font-family:inherit; cursor:pointer; white-space:nowrap; border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-weight:800; font-size:12.5px; padding:9px 16px; border-radius:11px; transition:all .2s var(--ease); }
-.admin-tab:hover{ border-color:var(--indigo-500); color:var(--text); }
-.admin-tab.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
+.admin-tabs{ display:flex; flex-direction:column; gap:0; margin-bottom:20px; }
+.admin-tab-tier{
+  font-size:11px; font-weight:800; color:var(--text-faint); text-transform:uppercase;
+  letter-spacing:.04em; margin:16px 0 9px; display:flex; align-items:center; gap:8px;
+}
+.admin-tab-tier:first-child{ margin-top:0; }
+.admin-tab-tier::after{ content:""; flex:1; height:1px; background:var(--border); }
+.admin-tab-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+@media (max-width:560px){ .admin-tab-row{ grid-template-columns:repeat(2, 1fr); } }
+.admin-tab{
+  position:relative; overflow:hidden; border-radius:16px; padding:14px 12px 12px;
+  display:flex; flex-direction:column; gap:8px; cursor:pointer; color:#fff; border:2px solid transparent;
+  text-align:start; font-family:inherit; box-shadow:var(--shadow); min-height:104px;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.admin-tab:hover{ transform:translateY(-2px); }
+.admin-tab:active{ transform:scale(.98); }
+.admin-tab.active{ border-color:rgba(255,255,255,0.75); }
+.admin-tab::after{
+  content:""; position:absolute; bottom:-28px; inset-inline-end:-12px; width:100px; height:100px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+}
+.admin-tab-top{ display:flex; align-items:flex-start; justify-content:space-between; position:relative; z-index:1; }
+.admin-tab-icon{
+  width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.32);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.admin-tab-icon svg{ width:17px; height:17px; }
+.admin-tab-badge{
+  background:rgba(255,255,255,0.95); color:var(--indigo-900); font-size:9px; font-weight:800;
+  padding:3px 8px; border-radius:20px; white-space:nowrap;
+}
+.admin-tab-title{ font-size:13.5px; font-weight:800; position:relative; z-index:1; line-height:1.25; }
+.admin-tab-sub{ font-size:10.5px; font-weight:600; opacity:.85; position:relative; z-index:1; }
+.admin-tab.tab-emerald{ background:linear-gradient(135deg, #22C57F 0%, #0E5C3A 100%); }
+.admin-tab.tab-blue{ background:linear-gradient(135deg, #5FA6EE 0%, #1E4E85 100%); }
+.admin-tab.tab-purple{ background:linear-gradient(135deg, #A78BFA 0%, #4E3B8F 100%); }
+.admin-tab.tab-amber{ background:linear-gradient(135deg, #E3BE4E 0%, #8A6A10 100%); }
+.admin-tab.tab-red{ background:linear-gradient(135deg, #E5544D 0%, #6E1E1A 100%); }
+.admin-tab.tab-teal{ background:linear-gradient(135deg, #12A768 0%, #0A3A26 100%); }
+.admin-tab.tab-orange{ background:linear-gradient(135deg, #EB8C5E 0%, #7A3A1C 100%); }
+.admin-tab.tab-slate{ background:linear-gradient(135deg, #647468 0%, #2A332C 100%); }
 .admin-panel-body{ animation:fadein .25s ease; }
 
 .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
@@ -1349,14 +1387,75 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         <p class="admin-sub">Test kontentini, foydalanuvchilarni va imtihon xabarlarini shu yerdan boshqarasiz.</p>
 
         <div class="admin-tabs" id="adminTabs">
-          <button class="admin-tab active" data-atab="overview" onclick="showAdminTab('overview')">📊 Umumiy</button>
-          <button class="admin-tab" data-atab="users" onclick="showAdminTab('users')">👥 Foydalanuvchilar</button>
-          <button class="admin-tab" data-atab="questions" onclick="showAdminTab('questions')">📝 Savollar banki</button>
-          <button class="admin-tab" data-atab="reports" onclick="showAdminTab('reports')">📩 Imtihon xabarlari</button>
-          <button class="admin-tab" data-atab="examcards" onclick="showAdminTab('examcards')">🎯 Imtihon cardlari</button>
-          <button class="admin-tab" data-atab="gramorder" onclick="showAdminTab('gramorder')">📚 Grammatika tartibi</button>
-          <button class="admin-tab" data-atab="sendmsg" onclick="showAdminTab('sendmsg')">✉️ Xabar yuborish</button>
-          <button class="admin-tab" data-atab="admins" onclick="showAdminTab('admins')" style="display:none;">👑 Adminlar</button>
+          <div class="admin-tab-tier">Kundalik ishlar</div>
+          <div class="admin-tab-row">
+            <button class="admin-tab tab-emerald active" data-atab="overview" onclick="showAdminTab('overview')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></span>
+                <span class="admin-tab-badge">Asosiy</span>
+              </div>
+              <div class="admin-tab-title">Umumiy</div>
+              <div class="admin-tab-sub">Statistika va holat</div>
+            </button>
+            <button class="admin-tab tab-blue" data-atab="users" onclick="showAdminTab('users')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Foydalanuvchilar</div>
+              <div class="admin-tab-sub">Ro'yxat va qidiruv</div>
+            </button>
+            <button class="admin-tab tab-purple" data-atab="questions" onclick="showAdminTab('questions')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Savollar banki</div>
+              <div class="admin-tab-sub">Qo'shish / tahrirlash</div>
+            </button>
+          </div>
+
+          <div class="admin-tab-tier">Vaqti-vaqti bilan</div>
+          <div class="admin-tab-row">
+            <button class="admin-tab tab-amber" data-atab="reports" onclick="showAdminTab('reports')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Imtihon xabarlari</div>
+              <div class="admin-tab-sub">O'quvchi hisobotlari</div>
+            </button>
+            <button class="admin-tab tab-red" data-atab="examcards" onclick="showAdminTab('examcards')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Imtihon cardlari</div>
+              <div class="admin-tab-sub">Yashirish / qulflash</div>
+            </button>
+            <button class="admin-tab tab-teal" data-atab="sendmsg" onclick="showAdminTab('sendmsg')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Xabar yuborish</div>
+              <div class="admin-tab-sub">Ommaviy xabarnoma</div>
+            </button>
+          </div>
+
+          <div class="admin-tab-tier">Kamdan-kam</div>
+          <div class="admin-tab-row">
+            <button class="admin-tab tab-orange" data-atab="gramorder" onclick="showAdminTab('gramorder')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Grammatika tartibi</div>
+              <div class="admin-tab-sub">Tartibni sudrab o'zgartirish</div>
+            </button>
+            <button class="admin-tab tab-slate" data-atab="admins" onclick="showAdminTab('admins')" style="display:none;">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m2 20 2-10 5 4 3-7 3 7 5-4 2 10Z"/><path d="M4 20h16"/></svg></span>
+                <span class="admin-tab-badge">Cheklangan</span>
+              </div>
+              <div class="admin-tab-title">Adminlar</div>
+              <div class="admin-tab-sub">Huquqlarni boshqarish</div>
+            </button>
+          </div>
         </div>
 
         <!-- 1) UMUMIY KO'RINISH -->
