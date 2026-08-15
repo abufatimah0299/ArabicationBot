@@ -1727,7 +1727,35 @@ function toggleTheme(){
 const views = ['dashboard','attanal','skillintro','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
+/* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
+   tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
+   cardning o'zini bosishni emas. Admin panelda saqlangan holatni to'g'ridan-to'g'ri
+   localStorage'dan o'qiydi, shuning uchun tarmoq/auth kutilmasdan, sinxron ishlaydi
+   va sahifa ochilgan zahotiyoq to'g'ri natija beradi. */
+const VIEW_CARD_MAP = { attanal: 'attanal_full' };
+function getExamCardLockState(cardId){
+  try{
+    const cfg = JSON.parse(localStorage.getItem('arab_app_config_cache'));
+    if(cfg && cfg.exam_cards && cfg.exam_cards[cardId]) return cfg.exam_cards[cardId];
+  }catch(e){}
+  try{
+    const legacy = JSON.parse(localStorage.getItem('arab_ext_exam_cards'));
+    if(legacy && legacy[cardId]) return legacy[cardId];
+  }catch(e){}
+  return { visible:true, locked:false };
+}
+function isAttanalLocked(){
+  const st = getExamCardLockState('attanal_full');
+  return !!(st.locked || st.visible === false);
+}
+
 function showView(name, push=true){
+  const cardId = VIEW_CARD_MAP[name];
+  if(cardId){
+    const st = getExamCardLockState(cardId);
+    if(st.locked){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+    if(st.visible === false){ toast("Bu bo'lim vaqtincha mavjud emas"); return; }
+  }
   views.forEach(v=>{
     const el = document.getElementById('view-'+v);
     if(el) el.classList.toggle('active', v===name);
@@ -3004,6 +3032,7 @@ function applyLiveAdminUsers(rows){
 
 /* ---------------- Start quiz ---------------- */
 function startQuiz(skillId, customLabel, topicId){
+  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   const bank = QUESTION_BANKS[skillId] || QUESTION_BANKS.grammatika;
   let questions = bank.questions;
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
@@ -3025,6 +3054,7 @@ function startQuiz(skillId, customLabel, topicId){
   showView('quiz');
 }
 function startWriting(){
+  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   currentQuiz = {skillId:'kitaba', type:'writing', label:'Kitaba (Writing)', color:'var(--kitaba)', text:'', idx:0};
   document.getElementById('quizTag').textContent = 'Kitaba (Writing)';
   document.getElementById('quizTag').style.background = 'var(--kitaba-bg)';
@@ -3300,314 +3330,6 @@ function openTopic(id){
 runEntranceAnimations(document.getElementById('view-dashboard'));
 
 /* Telegram autentifikatsiya + backend ma'lumotlarini yuklashni ishga tushirish */
-bootApp();
-/* ============================================================
-   ADMIN EXTENSION: Imtihon cardlari / Grammatika tartibi / Xabarlar
-   ============================================================ */
-
-/* ---- 1) IMTIHON CARDLARI BOSHQARUVI ---- */
-const EXAM_CARD_CONFIG = [
-  { id: 'attanal_full', title: "To'liq At-Tanal imtihoni (التنال العربي)" },
-  { id: 'cefr_mock', title: "CEFR Daraja testi (Mock imtihon)" },
-];
-
-function getExamCardState() {
-  try {
-    return JSON.parse(localStorage.getItem('arab_ext_exam_cards')) || {};
-  } catch(e) { return {}; }
-}
-function setExamCardState(state) {
-  localStorage.setItem('arab_ext_exam_cards', JSON.stringify(state));
-}
-
-function renderExamCardAdmin() {
-  const list = document.getElementById('examCardAdminList');
-  if (!list) return;
-  const state = getExamCardState();
-  list.innerHTML = EXAM_CARD_CONFIG.map(card => {
-    const s = state[card.id] || { visible: true, locked: false };
-    return `
-    <div class="admin-ext-row">
-      <span class="ext-label">${card.title}</span>
-      <div class="admin-ext-toggles">
-        <label>
-          <input type="checkbox" ${s.visible ? 'checked' : ''} 
-            onchange="toggleExamCard('${card.id}', 'visible', this.checked)">
-          Ko'rinsin
-        </label>
-        <label>
-          <input type="checkbox" ${s.locked ? 'checked' : ''} 
-            onchange="toggleExamCard('${card.id}', 'locked', this.checked)">
-          🔒 Qulflangan
-        </label>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleExamCard(cardId, field, value) {
-  const state = getExamCardState();
-  if (!state[cardId]) state[cardId] = { visible: true, locked: false };
-  state[cardId][field] = value;
-  setExamCardState(state);
-  applyExamCardState();
-  toast('✅ Card holati saqlandi');
-}
-
-function applyExamCardState() {
-  const state = getExamCardState();
-  EXAM_CARD_CONFIG.forEach(card => {
-    const el = document.querySelector(`[data-card-id="${card.id}"]`);
-    if (!el) return;
-    const s = state[card.id] || { visible: true, locked: false };
-    el.hidden = !s.visible;
-    el.classList.toggle('is-locked', s.locked);
-    if (s.locked) {
-      el.setAttribute('aria-disabled', 'true');
-    } else {
-      el.removeAttribute('aria-disabled');
-    }
-  });
-}
-
-// Qulflangan cardga bosilganda to'siq qo'yish
-document.addEventListener('click', function(e) {
-  const card = e.target.closest('[data-card-id]');
-  if (!card) return;
-  const state = getExamCardState();
-  const s = state[card.dataset.cardId];
-  if (s && s.locked) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    toast('🔒 Bu bo\'lim hozircha qulflangan');
-  }
-}, true);
-
-/* ---- 2) GRAMMATIKA TARTIBI (Drag & Drop) ---- */
-function getGrammarOrder() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('arab_ext_grammar_order'));
-    if (saved && Array.isArray(saved)) return saved;
-  } catch(e) {}
-  return GRAMMAR_CATEGORIES.map(c => c.id);
-}
-function setGrammarOrder(order) {
-  localStorage.setItem('arab_ext_grammar_order', JSON.stringify(order));
-}
-
-function renderGrammarOrderAdmin() {
-  const ul = document.getElementById('grammarOrderList');
-  if (!ul) return;
-  const order = getGrammarOrder();
-  ul.innerHTML = order.map((catId, idx) => {
-    const cat = GRAMMAR_CATEGORIES.find(c => c.id === catId);
-    if (!cat) return '';
-    return `
-    <li draggable="true" data-cat-id="${cat.id}">
-      <span class="drag-handle">⠿</span>
-      <span class="drag-icon" style="background:${cat.color};">${cat.icon ? '📗' : '📘'}</span>
-      <span style="flex:1;">${cat.name} <span style="color:var(--text-faint);font-size:11px;">(${cat.ar})</span></span>
-    </li>`;
-  }).join('');
-  initGrammarDragDrop(ul);
-}
-
-function initGrammarDragDrop(ul) {
-  let dragEl = null;
-  ul.querySelectorAll('li').forEach(li => {
-    li.addEventListener('dragstart', function(e) {
-      dragEl = this;
-      this.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    li.addEventListener('dragend', function() {
-      this.classList.remove('dragging');
-      dragEl = null;
-      saveGrammarOrderFromDOM(ul);
-    });
-    li.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      if (!dragEl || dragEl === this) return;
-      const rect = this.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        ul.insertBefore(dragEl, this);
-      } else {
-        ul.insertBefore(dragEl, this.nextSibling);
-      }
-    });
-  });
-}
-
-function saveGrammarOrderFromDOM(ul) {
-  const order = Array.from(ul.querySelectorAll('li')).map(li => li.dataset.catId);
-  setGrammarOrder(order);
-  applyGrammarOrder();
-  toast('✅ Grammatika tartibi saqlandi');
-}
-
-function applyGrammarOrder() {
-  const container = document.querySelector('[data-grammar-topics]');
-  if (!container) return;
-  const order = getGrammarOrder();
-  const items = Array.from(container.querySelectorAll('[data-cat]'));
-  items.sort((a, b) => {
-    return order.indexOf(a.dataset.cat) - order.indexOf(b.dataset.cat);
-  });
-  items.forEach(item => container.appendChild(item));
-}
-
-/* ---- 3) XABAR YUBORISH ---- */
-function getAdminMessages() {
-  try {
-    return JSON.parse(localStorage.getItem('arab_ext_messages')) || [];
-  } catch(e) { return []; }
-}
-function setAdminMessages(msgs) {
-  localStorage.setItem('arab_ext_messages', JSON.stringify(msgs));
-}
-
-function sendAdminMessage(e) {
-  e.preventDefault();
-  const userId = document.getElementById('msgUserId').value.trim();
-  const title = document.getElementById('msgTitle').value.trim();
-  const body = document.getElementById('msgBody').value.trim();
-  if (!userId || !title || !body) {
-    toast('⚠️ Barcha maydonlarni to\'ldiring');
-    return false;
-  }
-  const msgs = getAdminMessages();
-  msgs.unshift({
-    id: Date.now().toString(),
-    userId, title, body,
-    createdAt: new Date().toISOString(),
-    readBy: []
-  });
-  setAdminMessages(msgs);
-  renderSentMessages();
-  renderUserMsgBell();
-  document.getElementById('adminMsgForm').reset();
-  toast('✅ Xabar yuborildi!');
-  return false;
-}
-
-function renderSentMessages() {
-  const list = document.getElementById('sentMessagesList');
-  if (!list) return;
-  const msgs = getAdminMessages();
-  if (!msgs.length) {
-    list.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Hali xabar yuborilmagan.</p>';
-    return;
-  }
-  list.innerHTML = msgs.slice(0, 20).map(m => `
-    <div class="sent-msg-item">
-      <div style="font-weight:800;font-size:13px;">${m.title}</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${m.body}</div>
-      <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">
-        👤 ${m.userId} · ${new Date(m.createdAt).toLocaleString('uz-UZ')}
-      </div>
-    </div>
-  `).join('');
-}
-
-/* ---- 4) FOYDALANUVCHI XABAR QO'NG'IROG'I ---- */
-function getUserMessages() {
-  const msgs = getAdminMessages();
-  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
-  return msgs.filter(m => m.userId === 'all' || String(m.userId) === myId);
-}
-
-function renderUserMsgBell() {
-  const bell = document.getElementById('userMsgBell');
-  const badge = document.getElementById('userMsgBadge');
-  if (!bell || !badge) return;
-  const msgs = getUserMessages();
-  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
-  const unread = msgs.filter(m => !(m.readBy || []).includes(myId)).length;
-  bell.hidden = msgs.length === 0;
-  badge.textContent = unread;
-  badge.style.display = unread > 0 ? 'flex' : 'none';
-}
-
-function toggleUserMsgPanel() {
-  const panel = document.getElementById('userMsgPanel');
-  if (!panel) return;
-  const willOpen = panel.hidden;
-  panel.hidden = !willOpen;
-  if (willOpen) {
-    markAllRead();
-    renderUserMsgPanel();
-    renderUserMsgBell();
-  }
-}
-
-function renderUserMsgPanel() {
-  const list = document.getElementById('userMsgList');
-  if (!list) return;
-  const msgs = getUserMessages();
-  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
-  if (!msgs.length) {
-    list.innerHTML = '<p style="text-align:center;color:var(--text-faint);padding:20px;">Xabarlar yo\'q</p>';
-    return;
-  }
-  list.innerHTML = msgs.map(m => {
-    const isUnread = !(m.readBy || []).includes(myId);
-    return `
-    <div class="umsg-item ${isUnread ? 'unread' : ''}">
-      <div class="umsg-title">${m.title}</div>
-      <div class="umsg-body">${m.body}</div>
-      <div class="umsg-time">${new Date(m.createdAt).toLocaleString('uz-UZ')}</div>
-    </div>`;
-  }).join('');
-}
-
-function markAllRead() {
-  const msgs = getAdminMessages();
-  const myId = String(TELEGRAM_PROFILE.rawId || 'demo_user');
-  let changed = false;
-  msgs.forEach(m => {
-    if (m.userId === 'all' || String(m.userId) === myId) {
-      if (!m.readBy) m.readBy = [];
-      if (!m.readBy.includes(myId)) {
-        m.readBy.push(myId);
-        changed = true;
-      }
-    }
-  });
-  if (changed) setAdminMessages(msgs);
-}
-
-/* ---- 5) ADMIN TAB KENGAYTIRISH ---- */
-const origShowAdminTab = showAdminTab;
-showAdminTab = function(tab) {
-  origShowAdminTab(tab);
-  const extTabs = ['examcards', 'gramorder', 'sendmsg'];
-  extTabs.forEach(t => {
-    const el = document.getElementById('adminTab-' + t);
-    if (el) el.style.display = (t === tab) ? '' : 'none';
-  });
-  document.querySelectorAll('#adminTabs .admin-tab').forEach(b => {
-    b.classList.toggle('active', b.dataset.atab === tab);
-  });
-  if (tab === 'examcards') renderExamCardAdmin();
-  if (tab === 'gramorder') renderGrammarOrderAdmin();
-  if (tab === 'sendmsg') { renderSentMessages(); }
-};
-
-/* ---- 6) ISHGA TUSHIRISH ---- */
-function initAdminExtension() {
-  applyExamCardState();
-  applyGrammarOrder();
-  renderUserMsgBell();
-  renderSentMessages();
-}
-
-// bootApp tugagach ishga tushirish
-const origBootApp = bootApp;
-bootApp = async function() {
-  await origBootApp();
-  initAdminExtension();
-};
 bootApp();
 </script>
   <script>
@@ -4457,6 +4179,19 @@ bootApp();
     injectAdminExtensionHTML();
     overrideShowAdminTab();
     bindStaticEvents();
+
+    // Tarmoq/auth kutilmasdan, keshdan darhol tiklaymiz — shu bilan qulf/hide
+    // holati ilova ochilgan zahoti to'g'ri ko'rinadi (avval bir necha soniya
+    // hech narsa qulflanmagandek ko'rinib turardi).
+    const cachedCfg = localGet('arab_app_config_cache', null);
+    if (cachedCfg) {
+      APP_CONFIG = {
+        exam_cards: cachedCfg.exam_cards || {},
+        grammar_order: cachedCfg.grammar_order || []
+      };
+      applyExamCardState();
+      applyGrammarOrder();
+    }
 
     await waitForAuth();
 
