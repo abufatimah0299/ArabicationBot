@@ -789,6 +789,16 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .placeholder-card h3{ font-size:15px; color:var(--text); font-weight:800; margin-bottom:6px;}
 .placeholder-card p{ font-size:13px; font-weight:600; }
 
+/* ---------- Yuklanmoqda holati (static/mock ma'lumot o'rniga) ---------- */
+@keyframes skelPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+.skel{ background:var(--border); border-radius:8px; animation:skelPulse 1.1s ease-in-out infinite; }
+.skel-row{ display:flex; align-items:center; gap:12px; padding:10px 4px; }
+.skel-avatar{ width:36px; height:36px; border-radius:50%; flex-shrink:0; }
+.skel-line{ height:12px; border-radius:6px; }
+.loading-inline{ display:flex; align-items:center; justify-content:center; gap:10px; padding:26px 10px; color:var(--text-faint); font-size:13px; font-weight:700; }
+.loading-spinner{ width:16px; height:16px; border-radius:50%; border:2.5px solid var(--border); border-top-color:var(--indigo-700); animation:skelSpin .7s linear infinite; flex-shrink:0; }
+@keyframes skelSpin{ to{ transform:rotate(360deg); } }
+
 /* ================= ADMIN PANEL ================= */
 .admin-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-bottom:18px; max-width:640px; }
 .admin-tabs{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding-bottom:2px; }
@@ -2461,10 +2471,13 @@ function renderAdminPanel(){
 }
 
 /* ---- 1) UMUMIY KO'RINISH ---- */
-/* DIQQAT: quyidagi statistikalar hozircha ADMIN_USERS_MOCK / QUESTION_BANKS asosida
-   hisoblanadi. Backend ulanganda buni {action:'admin_stats'} so'roviga almashtiring —
-   frontend qismi (kartalar, layout) shu ko'rinishda qoladi. */
 function renderAdminOverview(){
+  const grid0 = document.getElementById('adminStatGrid');
+  if(!adminUsersLoaded && grid0){
+    grid0.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Statistika yuklanmoqda…</div>`;
+    document.getElementById('adminSkillBars').innerHTML = '';
+    return;
+  }
   const totalUsers = ADMIN_USERS.length;
   const totalXp = ADMIN_USERS.reduce((s,u)=>s+u.xp,0);
   const totalQuestions = Object.values(QUESTION_BANKS).reduce((s,b)=> s + (b.questions?.length||0), 0)
@@ -2514,19 +2527,19 @@ function renderAdminOverview(){
 }
 
 /* ---- 2) FOYDALANUVCHILAR ---- */
-/* DIQQAT: ADMIN_USERS_MOCK — namunaviy ma'lumot. Backend ulanganda buni
-   {action:'admin_list_users'} so'roviga almashtiring. */
-const ADMIN_USERS_MOCK = [
-  {id:5834021967, name:'Muhammad Umarov', username:'@muhammad_u', level:'B1', xp:1240, lastActive:'Bugun', skills:{qiroa:25,istima:22,grammatika:27,muhavara:21,kitaba:19}},
-  {id:1112223334, name:'Sardor Aliyev', username:'@sardor_a', level:'B2', xp:420, lastActive:'Bugun', skills:{qiroa:20,istima:18,grammatika:23,muhavara:15,kitaba:17}},
-  {id:2223334445, name:'Zilola Karimova', username:'@zilola_k', level:'B2', xp:390, lastActive:'Kecha', skills:{qiroa:19,istima:21,grammatika:20,muhavara:14,kitaba:16}},
-  {id:3334445556, name:'Javlon Nazarov', username:'@javlon_n', level:'B1', xp:355, lastActive:'3 kun oldin', skills:{qiroa:16,istima:15,grammatika:19,muhavara:12,kitaba:13}},
-];
+/* DIQQAT: ilgari bu yerda ADMIN_USERS_MOCK namunaviy ma'lumot bo'lardi va u
+   backend javob bermaguncha (yoki xato bo'lsa) doim ko'rinib turardi — shu
+   sabab "userlar static" bo'lib ko'rinardi. Endi ro'yxat bo'sh boshlanadi,
+   backend javob bergunga qadar "Yuklanmoqda" ko'rsatiladi. */
 function renderAdminUsers(){
   const q = (document.getElementById('adminUserSearch')?.value || '').toLowerCase().trim();
-  const rows = ADMIN_USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
   const body = document.getElementById('adminUsersBody');
   if(!body) return;
+  if(!adminUsersLoaded){
+    body.innerHTML = `<tr><td colspan="5"><div class="loading-inline"><span class="loading-spinner"></span>Foydalanuvchilar yuklanmoqda…</div></td></tr>`;
+    return;
+  }
+  const rows = ADMIN_USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
   if(rows.length===0){
     body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-faint);">Hech narsa topilmadi</td></tr>`;
     return;
@@ -2774,43 +2787,13 @@ async function renderAdminReports(){
 
 /* ================= RANK (Reyting) ================= */
 const RANK_COLORS = ['#A78BFA','#5FA6EE','#22C57F','#EB8C5E','#E3BE4E','#0E8F58','#F1706A'];
-/* Bu — backenddan hali javob kelmagan holatlar uchun namunaviy (mock) reyting.
-   applyLiveLeaderboard() haqiqiy ma'lumot kelganda shu massivni almashtiradi. */
-const RANK_DATASETS = {
-  hafta: [
-    {name:'Sardor Aliyev', level:'B2', xp:420, me:false},
-    {name:'Zilola Karimova', level:'B2', xp:390, me:false},
-    {name:'Javlon Nazarov', level:'B1', xp:355, me:false},
-    {name:'Madina Yusupova', level:'B1', xp:310, me:false},
-    {name:'Otabek Rashidov', level:'B1', xp:290, me:false},
-    {name:'Kamola Tosheva', level:'A2', xp:260, me:false},
-    {name:'Diyor Xolmatov', level:'B1', xp:235, me:false},
-    {name:'Nilufar Sattorova', level:'A2', xp:210, me:false},
-    {name:'Foydalanuvchi', level:'B1', xp:165, me:true},
-  ],
-  oy: [
-    {name:'Sardor Aliyev', level:'B2', xp:1840, me:false},
-    {name:'Zilola Karimova', level:'B2', xp:1615, me:false},
-    {name:'Javlon Nazarov', level:'B1', xp:1390, me:false},
-    {name:'Madina Yusupova', level:'B1', xp:1110, me:false},
-    {name:'Otabek Rashidov', level:'B1', xp:980, me:false},
-    {name:'Kamola Tosheva', level:'A2', xp:755, me:false},
-    {name:'Foydalanuvchi', level:'B1', xp:640, me:true},
-    {name:'Diyor Xolmatov', level:'B1', xp:590, me:false},
-    {name:'Nilufar Sattorova', level:'A2', xp:420, me:false},
-  ],
-  hammasi: [
-    {name:'Sardor Aliyev', level:'B2', xp:2840, me:false},
-    {name:'Zilola Karimova', level:'B2', xp:2615, me:false},
-    {name:'Javlon Nazarov', level:'B1', xp:2390, me:false},
-    {name:'Madina Yusupova', level:'B1', xp:2110, me:false},
-    {name:'Otabek Rashidov', level:'B1', xp:1980, me:false},
-    {name:'Kamola Tosheva', level:'A2', xp:1755, me:false},
-    {name:'Diyor Xolmatov', level:'B1', xp:1590, me:false},
-    {name:'Nilufar Sattorova', level:'A2', xp:1420, me:false},
-    {name:'Foydalanuvchi', level:'B1', xp:1240, me:true},
-  ],
-};
+/* DIQQAT: bu yerda ilgari namunaviy (mock) foydalanuvchilar bo'lardi va ular
+   backenddan haqiqiy reyting kelgunga qadar ekranda ko'rinib turardi — shu
+   sabab reyting "static" ko'rinardi. Endi ro'yxatlar bo'sh boshlanadi va
+   backend javob bergunga qadar "Yuklanmoqda" holati ko'rsatiladi (pastga
+   qarang: rankLoaded, renderRank). */
+const RANK_DATASETS = { hafta: [], oy: [], hammasi: [] };
+let rankLoaded = false;
 /* Backend leaderboard_view qatorini reyting shakliga o'giradi.
    DIQQAT: hozirgi leaderboard_view'da faqat umumiy XP bor (id, first_name, last_name,
    username, photo_url, total_xp, level, rank) — haftalik/oylik XP alohida saqlanmagan.
@@ -2822,7 +2805,11 @@ const RANK_DATASETS = {
    ko'plab yangi foydalanuvchilar hali XP to'plamagan bo'lishi mumkin, lekin baribir
    reytingda (0-o'rinda) ko'rinishi kerak. */
 function applyLiveLeaderboard(rows){
-  if(!Array.isArray(rows) || !rows.length) return;
+  rankLoaded = true; // backenddan javob (bo'sh bo'lsa ham) keldi — endi "Yuklanmoqda" ko'rsatilmaydi
+  if(!Array.isArray(rows) || !rows.length){
+    if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod);
+    return;
+  }
   const myId = TELEGRAM_PROFILE.rawId;
   const build = (xpKeys) => rows.map(r=>({
     name: pick(r, ['name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
@@ -2844,10 +2831,19 @@ function sortedRank(period){
   return [...RANK_DATASETS[period]].sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
 }
 function renderPodium(period){
+  const podiumEl = document.getElementById('podium');
+  if(!rankLoaded){
+    podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Reyting yuklanmoqda…</div>`;
+    return;
+  }
   const top3 = sortedRank(period).slice(0,3);
+  if(!top3.length){
+    podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;">Hali reytingda hech kim yo'q</div>`;
+    return;
+  }
   const medals = ['🥇','🥈','🥉'];
   const order = [1,0,2]; // 2nd, 1st, 3rd visual order
-  document.getElementById('podium').innerHTML = order.map(i=>{
+  podiumEl.innerHTML = order.map(i=>{
     const u = top3[i]; if(!u) return '<div></div>';
     return `
     <div class="podium-item ${i===0?'first':''}">
@@ -2859,8 +2855,24 @@ function renderPodium(period){
   }).join('');
 }
 function renderLeaderboard(period){
+  const listEl = document.getElementById('leaderboardList');
+  if(!rankLoaded){
+    listEl.innerHTML = Array.from({length:5}).map(()=>`
+      <div class="skel-row">
+        <div class="skel skel-avatar"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <div class="skel skel-line" style="width:55%;"></div>
+          <div class="skel skel-line" style="width:30%;"></div>
+        </div>
+      </div>`).join('');
+    return;
+  }
   const data = sortedRank(period);
-  document.getElementById('leaderboardList').innerHTML = data.map((u,i)=>`
+  if(!data.length){
+    listEl.innerHTML = `<div class="loading-inline">Bu davr uchun ma'lumot yo'q</div>`;
+    return;
+  }
+  listEl.innerHTML = data.map((u,i)=>`
     <div class="lb-row ${u.me?'me':''}">
       <div class="lb-rank">${u.rank}</div>
       <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${initials(u.name)}</div>
@@ -2873,8 +2885,22 @@ function renderLeaderboard(period){
   `).join('');
 }
 function renderRankTop(period){
+  if(!rankLoaded){
+    document.getElementById('rankNum').textContent = '—';
+    document.getElementById('rankXpText').textContent = 'Yuklanmoqda…';
+    document.getElementById('rankGapText').innerHTML = '';
+    document.getElementById('rankGapBar').style.width = '0%';
+    return;
+  }
   const data = sortedRank(period);
   const me = data.find(u=>u.me);
+  if(!me){
+    document.getElementById('rankNum').textContent = '—';
+    document.getElementById('rankXpText').textContent = 'Hali XP to\'plamagansiz';
+    document.getElementById('rankGapText').innerHTML = '';
+    document.getElementById('rankGapBar').style.width = '0%';
+    return;
+  }
   const above = data[data.indexOf(me)-1];
   document.getElementById('rankNum').textContent = '#' + me.rank;
   document.getElementById('rankXpText').textContent = me.xp.toLocaleString('ru-RU') + ' XP to\'pladingiz';
@@ -3178,10 +3204,11 @@ function applyLiveQuestions(rows){
   });
 }
 
-/* Admin — real foydalanuvchilar ro'yxati. Backenddan hali javob kelmagan/bo'sh
-   bo'lsa ADMIN_USERS_MOCK namunaviy ma'lumot sifatida qoladi. */
-let ADMIN_USERS = [...ADMIN_USERS_MOCK];
+/* Admin — real foydalanuvchilar ro'yxati. */
+let ADMIN_USERS = [];
+let adminUsersLoaded = false;
 function applyLiveAdminUsers(rows){
+  adminUsersLoaded = true; // backend javob berdi (bo'sh bo'lsa ham) — "Yuklanmoqda" tugadi
   if(Array.isArray(rows) && rows.length){
     ADMIN_USERS = rows.map(u=>({
       id: pick(u, ['telegram_id','id'], 0),
@@ -3193,7 +3220,7 @@ function applyLiveAdminUsers(rows){
       skills: u.skills || {},
     }));
   } else {
-    ADMIN_USERS = [...ADMIN_USERS_MOCK];
+    ADMIN_USERS = [];
   }
   if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminPanel();
 }
