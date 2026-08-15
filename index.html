@@ -1855,6 +1855,28 @@ async function saveQuestionsBulkToBackend(items){
     return await res.json();
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
+/* Bir nechta savolni bittada, HAR BIRI O'Z MAVZUSI bilan qo'shish (mavzu nomi bo'yicha
+   avtomatik topiladi yoki mavjud bo'lmasa avtomatik yaratiladi). Supabase'da
+   `admin_bulk_add_questions_with_topics` RPC funksiyasi talab qilinadi. */
+async function saveQuestionsBulkWithTopicsToBackend(items){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  if(!Array.isArray(items) || !items.length){ setLastBackendError('—', 'Ro\'yxat bo\'sh'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_bulk_add_questions_with_topics`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_items: items.map(it=>({
+        p_skill_id: it.skillId,
+        p_topic_id: it.topicId || null,
+        p_topic_name: it.topicName || null,
+        p_topic_ar: it.topicAr || null,
+        p_category: it.category || null,
+        p_q: it.q, p_opts: it.opts, p_correct: it.a, p_exp: it.exp||null,
+      })) })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
 /* Mavjud savolni tahrirlash — Supabase'da `admin_edit_question` RPC funksiyasi talab qilinadi. */
 async function updateQuestionOnBackend({id, q, opts, a, exp}){
   if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return null; }
@@ -3232,20 +3254,31 @@ function openBulkAddQuestionModal(){
           ${SKILLS.map(s=>`<option value="${s.id}" ${s.id===skillId?'selected':''}>${s.name}</option>`).join('')}
         </select>
       </div>
-      <div class="form-field" id="bqTopicField" style="${isGrammar?'':'display:none;'}">
-        <label>Mavzu</label>
-        <select id="bqTopic">
-          ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
-        </select>
+      <div id="bqGrammarFields" style="${isGrammar?'':'display:none;'}display:flex;flex-direction:column;gap:14px;">
+        <div class="form-field">
+          <label>Standart mavzu (ixtiyoriy — pastdagi matnda "topic" ko'rsatilmagan savollar shu mavzuga tushadi)</label>
+          <select id="bqTopic">
+            <option value="">— tanlanmagan —</option>
+            ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Yangi mavzular uchun kategoriya (mavzu mavjud bo'lmasa, shu kategoriya ostida avtomatik yaratiladi)</label>
+          <select id="bqCategory">
+            ${GRAMMAR_CATEGORIES.map(c=>`<option value="${c.id}">${c.name} (${c.ar})</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="form-field">
         <label>Savollar (JSON massiv)</label>
-        <textarea id="bqJson" rows="10" placeholder='[
-  {"q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
-  {"q":"...","opts":["...","...","...","..."],"a":2}
+        <textarea id="bqJson" rows="12" placeholder='[
+  {"topic":"Fe\\'l zamonlari","topicAr":"أزمنة الفعل","q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
+  {"topic":"Fe\\'l zamonlari","q":"...","opts":["...","...","...","..."],"a":2},
+  {"q":"...","opts":["...","...","...","..."],"a":1}
 ]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
-          Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).
+          Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
+          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yuqorida tanlangan kategoriya ostida avtomatik yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzudagi savollarni aralashtirib yozishingiz mumkin.` : ''}
         </div>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Hammasini saqlash</button>
@@ -3255,12 +3288,14 @@ function openBulkAddQuestionModal(){
 }
 function toggleBulkGrammarTopicField(){
   const isGrammar = document.getElementById('bqSkill').value === 'grammatika';
-  document.getElementById('bqTopicField').style.display = isGrammar ? '' : 'none';
+  document.getElementById('bqGrammarFields').style.display = isGrammar ? 'flex' : 'none';
 }
 async function submitBulkQuestions(e){
   e.preventDefault();
   const skillId = document.getElementById('bqSkill').value;
-  const topicId = document.getElementById('bqTopic')?.value;
+  const isGrammar = skillId === 'grammatika';
+  const defaultTopicId = isGrammar ? (document.getElementById('bqTopic')?.value || '') : '';
+  const category = isGrammar ? (document.getElementById('bqCategory')?.value || '') : '';
   let parsed;
   try{
     parsed = JSON.parse(document.getElementById('bqJson').value);
@@ -3276,34 +3311,29 @@ async function submitBulkQuestions(e){
       return false;
     }
     items.push({
-      skillId, topicId: skillId==='grammatika' ? topicId : null,
+      skillId,
+      topicId: isGrammar ? (defaultTopicId || null) : null,
+      topicName: isGrammar ? (row.topic || null) : null,
+      topicAr: isGrammar ? (row.topicAr || null) : null,
+      category: isGrammar ? (category || null) : null,
       q: row.q, opts: row.opts, a: row.a, exp: row.exp || '',
     });
   }
-  // Ekranga darhol qo'shamiz — tezkor tuyulishi uchun.
-  for(const newQ of items){
-    if(skillId==='grammatika'){
-      if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
-      GRAMMAR_TOPIC_BANKS[topicId].push({...newQ, id:null});
-    } else {
-      if(!QUESTION_BANKS[skillId].questions) QUESTION_BANKS[skillId].questions = [];
-      QUESTION_BANKS[skillId].questions.push({...newQ, id:null});
-    }
-  }
   closeModal();
-  adminActiveSkill = skillId;
-  renderAdminQuestions();
+  toast(`⏳ ${items.length} ta savol yuborilmoqda...`);
 
-  const saved = await saveQuestionsBulkToBackend(items);
+  const saved = await saveQuestionsBulkWithTopicsToBackend(items);
   if(saved){
     toast(`✅ ${items.length} ta savol qo'shildi — endi hamma foydalanuvchida ko'rinadi`);
-    // Backend'dan qaytgan haqiqiy id'larni yangi savollarga biriktiramiz (mavjud bo'lsa).
-    const savedRows = Array.isArray(saved) ? saved : [];
-    const bank = skillId==='grammatika' ? GRAMMAR_TOPIC_BANKS[topicId] : QUESTION_BANKS[skillId].questions;
-    if(bank && savedRows.length === items.length){
-      const startIdx = bank.length - items.length;
-      savedRows.forEach((r, i) => { if(bank[startIdx+i]) bank[startIdx+i].id = r.id; });
-    }
+    // Yangi mavzular avtomatik yaratilgan bo'lishi mumkin — shu sabab mavzular va
+    // savollarni backenddan to'liq qayta yuklab, ekranni yangilaymiz (optimistik
+    // lokal qo'shish o'rniga — chunki mavzu id'lari oldindan noma'lum edi).
+    const liveTopics = await loadGrammarTopicsFromBackend();
+    applyLiveGrammarTopics(liveTopics);
+    const liveQuestions = await loadQuestionsFromBackend();
+    applyLiveQuestions(liveQuestions);
+    adminActiveSkill = skillId;
+    renderAdminQuestions();
   } else {
     toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000);
   }
