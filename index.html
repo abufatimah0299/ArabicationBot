@@ -4121,48 +4121,244 @@ bootApp();
     }
   }, true);
 
-  /* ---------- grammar order ---------- */
+/* ============================================================
+   TUZATISH: Grammatika bo'limida 4 ta kategoriya emas,
+   kategoriya ICHIDAGI mavzular tartibini drag & drop qilish
+   ============================================================ */
+(function () {
 
-  function applyGrammarOrder() {
-    const container = document.getElementById('grammarCatGrid');
-    if (!container) return;
-
-    const order = normalizeGrammarOrder(APP_CONFIG.grammar_order);
-
-    const items = Array.from(container.querySelectorAll('.grammar-cat-wrap[data-cat]'));
-
-    items.sort((a, b) => {
-      return order.indexOf(a.dataset.cat) - order.indexOf(b.dataset.cat);
-    });
-
-    items.forEach(item => container.appendChild(item));
+  function localGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
   }
 
-  function renderGrammarOrderAdmin() {
-    const ul = document.getElementById('grammarOrderList');
-    if (!ul) return;
+  function localSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
 
-    const order = normalizeGrammarOrder(APP_CONFIG.grammar_order);
+  function rpcHeaders() {
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY
+    };
 
-    ul.innerHTML = order.map(id => {
-      const cat = (typeof GRAMMAR_CATEGORIES !== 'undefined')
-        ? GRAMMAR_CATEGORIES.find(c => c.id === id)
-        : null;
+    if (typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) {
+      headers['Authorization'] = 'Bearer ' + SESSION_TOKEN;
+    }
 
-      if (!cat) return '';
+    return headers;
+  }
+
+  async function rpc(name, body) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + name, {
+      method: 'POST',
+      headers: rpcHeaders(),
+      body: JSON.stringify(body || {})
+    });
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(text || ('HTTP ' + res.status));
+    }
+
+    return text ? JSON.parse(text) : null;
+  }
+
+  let grammarTopicOrderMap = localGet('arab_grammar_topic_order_map', {});
+
+  /* ---------- CSS ---------- */
+
+  function injectStyles() {
+    if (document.getElementById('grammarTopicOrderStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'grammarTopicOrderStyles';
+    style.textContent = `
+      .grammar-topic-admin-block{
+        margin-bottom:22px;
+      }
+
+      .grammar-topic-admin-title{
+        font-size:13.5px;
+        font-weight:800;
+        margin-bottom:10px;
+      }
+
+      .grammar-topic-sortable{
+        list-style:none;
+        padding:0;
+        margin:0;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+      }
+
+      .grammar-topic-sortable li{
+        padding:12px 14px;
+        border:1px solid var(--border);
+        border-radius:12px;
+        cursor:grab;
+        user-select:none;
+        display:flex;
+        align-items:center;
+        gap:10px;
+        font-weight:700;
+        font-size:13px;
+        background:var(--card);
+      }
+
+      .grammar-topic-sortable li.dragging{
+        opacity:.5;
+      }
+
+      .grammar-topic-sortable .drag-handle{
+        color:var(--text-faint);
+      }
+
+      .grammar-topic-sortable .topic-ar{
+        margin-left:auto;
+        color:var(--text-faint);
+        font-size:12px;
+        font-weight:700;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  /* ---------- User taraf: mavzularni tartiblash ---------- */
+
+  function ensureTopicAttributes() {
+    const grid = document.getElementById('grammarCatGrid');
+    if (!grid) return;
+
+    GRAMMAR_TOPICS.forEach(topic => {
+      if (grid.querySelector('[data-topic-id="' + topic.id + '"]')) return;
+
+      const items = grid.querySelectorAll('.topic-item');
+
+      items.forEach(item => {
+        const arEl = item.querySelector('.t.ar');
+
+        if (arEl && arEl.textContent.trim() === topic.ar) {
+          item.setAttribute('data-topic-id', topic.id);
+        }
+      });
+    });
+  }
+
+  function getTopicSortValue(topic) {
+    const val = Number(grammarTopicOrderMap[topic.id]);
+
+    if (Number.isFinite(val)) {
+      return val;
+    }
+
+    return 999999 + GRAMMAR_TOPICS.findIndex(t => t.id === topic.id);
+  }
+
+  function applyGrammarTopicOrder() {
+    ensureTopicAttributes();
+
+    GRAMMAR_CATEGORIES.forEach(cat => {
+      const container = document.getElementById('cat-topics-' + cat.id);
+      if (!container) return;
+
+      const items = Array.from(container.querySelectorAll('[data-topic-id]'));
+
+      items.sort((a, b) => {
+        const aTopic = GRAMMAR_TOPICS.find(t => t.id === a.dataset.topicId);
+        const bTopic = GRAMMAR_TOPICS.find(t => t.id === b.dataset.topicId);
+
+        return getTopicSortValue(aTopic) - getTopicSortValue(bTopic);
+      });
+
+      items.forEach(item => container.appendChild(item));
+    });
+  }
+
+  /* ---------- Admin taraf: drag & drop UI ---------- */
+
+  function injectAdminUI() {
+    const tabs = document.getElementById('adminTabs');
+    const reportsPane = document.getElementById('adminTab-reports');
+
+    if (!tabs || !reportsPane) return;
+
+    if (!document.querySelector('#adminTabs .admin-tab[data-atab="gramorder"]')) {
+      tabs.insertAdjacentHTML('beforeend', `
+        <button class="admin-tab" data-atab="gramorder" onclick="showAdminTab('gramorder')">
+          📚 Grammatika tartibi
+        </button>
+      `);
+    }
+
+    let pane = document.getElementById('adminTab-gramorder');
+
+    if (!pane) {
+      reportsPane.insertAdjacentHTML('afterend', `
+        <div class="admin-panel-body" id="adminTab-gramorder" style="display:none;">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
+            Har bir bo'limning ichidagi mavzularni ushlab sudrab tartiblang.
+            Tartib Supabase'da saqlanadi va foydalanuvchilarda ko'rinadi.
+          </p>
+
+          <div class="card" style="padding:18px 20px;">
+            <div id="grammarTopicOrderAdmin"></div>
+          </div>
+        </div>
+      `);
+    } else {
+      pane.innerHTML = `
+        <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
+          Har bir bo'limning ichidagi mavzularni ushlab sudrab tartiblang.
+          Tartib Supabase'da saqlanadi va foydalanuvchilarda ko'rinadi.
+        </p>
+
+        <div class="card" style="padding:18px 20px;">
+          <div id="grammarTopicOrderAdmin"></div>
+        </div>
+      `;
+    }
+  }
+
+  function renderGrammarTopicAdmin() {
+    const wrap = document.getElementById('grammarTopicOrderAdmin');
+    if (!wrap) return;
+
+    wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => {
+      const topics = GRAMMAR_TOPICS
+        .filter(t => t.category === cat.id)
+        .sort((a, b) => getTopicSortValue(a) - getTopicSortValue(b));
 
       return `
-        <li draggable="true" data-cat-id="${cat.id}">
-          <span style="color:var(--text-faint);cursor:grab;">⠿</span>
-          <span style="flex:1;">${cat.name} <span style="color:var(--text-faint);font-size:11px;">(${cat.ar})</span></span>
-        </li>
+        <div class="grammar-topic-admin-block">
+          <div class="grammar-topic-admin-title">${cat.name} · ${cat.ar}</div>
+
+          <ul class="grammar-topic-sortable" data-category="${cat.id}">
+            ${topics.map(t => `
+              <li draggable="true" data-topic-id="${t.id}">
+                <span class="drag-handle">⠿</span>
+                <span>${t.name}</span>
+                <span class="topic-ar">${t.ar}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
       `;
     }).join('');
 
-    initGrammarDragDrop(ul);
+    wrap.querySelectorAll('.grammar-topic-sortable').forEach(initTopicSortable);
   }
 
-  function initGrammarDragDrop(ul) {
+  function initTopicSortable(ul) {
     let dragEl = null;
 
     ul.querySelectorAll('li').forEach(li => {
@@ -4176,7 +4372,7 @@ bootApp();
       li.addEventListener('dragend', function () {
         this.classList.remove('dragging');
         dragEl = null;
-        saveGrammarOrderFromDOM(ul);
+        saveCategoryTopicOrder(ul);
       });
     });
 
@@ -4184,6 +4380,9 @@ bootApp();
       e.preventDefault();
 
       if (!dragEl) return;
+
+      // Faqat o'z ro'yxati ichida sudrashga ruxsat beramiz
+      if (dragEl.parentElement !== ul) return;
 
       const afterElement = getDragAfterElement(ul, e.clientY);
 
@@ -4220,26 +4419,109 @@ bootApp();
     }).element;
   }
 
-  async function saveGrammarOrderFromDOM(ul) {
-    const order = Array.from(ul.querySelectorAll('li')).map(li => li.dataset.catId);
+  async function saveCategoryTopicOrder(ul) {
+    const ids = Array.from(ul.querySelectorAll('li')).map(li => li.dataset.topicId);
 
-    APP_CONFIG.grammar_order = order;
+    ids.forEach((topicId, index) => {
+      grammarTopicOrderMap[topicId] = index + 1;
+    });
 
-    applyGrammarOrder();
-    localSet('arab_app_config_cache', APP_CONFIG);
+    localSet('arab_grammar_topic_order_map', grammarTopicOrderMap);
+
+    applyGrammarTopicOrder();
+    renderGrammarTopicAdmin();
 
     try {
-      await rpc('admin_set_grammar_order', {
-        p_order: order
+      await rpc('admin_set_grammar_topic_order', {
+        p_topic_ids: ids
       });
 
-      toast('✅ Grammatika tartibi saqlandi');
+      if (typeof toast === 'function') {
+        toast('✅ Grammatika mavzulari tartibi saqlandi');
+      }
     } catch (e) {
       console.error(e);
-      toast('❌ Tartib saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+
+      if (typeof toast === 'function') {
+        toast('❌ Tartib saqlanmadi. Admin huquqi yoki Supabase xatosi.');
+      }
     }
   }
 
+  /* ---------- Supabase'dan tartibni yuklash ---------- */
+
+  async function loadGrammarTopicOrder() {
+    try {
+      const order = await rpc('get_grammar_topic_order');
+
+      if (order) {
+        grammarTopicOrderMap = order;
+        localSet('arab_grammar_topic_order_map', grammarTopicOrderMap);
+      }
+    } catch (e) {
+      console.warn('Grammatika tartibi Supabase\'dan yuklanmadi, lokal fallback ishlatiladi:', e);
+    }
+
+    applyGrammarTopicOrder();
+    renderGrammarTopicAdmin();
+  }
+
+  /* ---------- Admin tab ishlashi uchun ---------- */
+
+  function overrideShowAdminTab() {
+    const baseShowAdminTab = window.showAdminTab;
+
+    window.showAdminTab = function (tab) {
+      if (typeof baseShowAdminTab === 'function') {
+        baseShowAdminTab(tab);
+      }
+
+      const pane = document.getElementById('adminTab-gramorder');
+
+      if (pane) {
+        pane.style.display = (tab === 'gramorder') ? '' : 'none';
+      }
+
+      document.querySelectorAll('#adminTabs .admin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.atab === tab);
+      });
+
+      if (tab === 'gramorder') {
+        renderGrammarTopicAdmin();
+      }
+    };
+  }
+
+  /* ---------- Init ---------- */
+
+  function init() {
+    injectStyles();
+    injectAdminUI();
+    overrideShowAdminTab();
+
+    applyGrammarTopicOrder();
+    loadGrammarTopicOrder();
+
+    // Grammatika bo'limi ochilganda tartibni qayta qo'llash
+    document.addEventListener('click', function (e) {
+      const nav = e.target.closest('[data-view="grammar"]');
+
+      if (nav) {
+        setTimeout(function () {
+          ensureTopicAttributes();
+          applyGrammarTopicOrder();
+        }, 50);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}
+ 
   /* ---------- messages ---------- */
 
   async function refreshUserMessages() {
