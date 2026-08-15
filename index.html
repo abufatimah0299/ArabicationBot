@@ -1346,7 +1346,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           <button class="admin-tab" data-atab="examcards" onclick="showAdminTab('examcards')">🎯 Imtihon cardlari</button>
           <button class="admin-tab" data-atab="gramorder" onclick="showAdminTab('gramorder')">📚 Grammatika tartibi</button>
           <button class="admin-tab" data-atab="sendmsg" onclick="showAdminTab('sendmsg')">✉️ Xabar yuborish</button>
-          <button class="admin-tab" data-atab="admins" onclick="showAdminTab('admins')">👑 Adminlar</button>
+          <button class="admin-tab" data-atab="admins" onclick="showAdminTab('admins')" style="display:none;">👑 Adminlar</button>
         </div>
 
         <!-- 1) UMUMIY KO'RINISH -->
@@ -1573,6 +1573,27 @@ function showAdminButtons(show){
   if(bnAdminBtn) bnAdminBtn.style.display = show ? '' : 'none';
 }
 
+/* "Bosh admin" (super admin) — faqat ADMIN_TELEGRAM_IDS massividagi ID'lar.
+   Faqat ular "👑 Adminlar" bo'limini ko'radi va yangi admin qo'sha/o'chira/olib
+   tashlay oladi. Backend orqali (Adminlar bo'limi bilan) qo'shilgan oddiy adminlar
+   bu bo'limni ko'rmaydi. DIQQAT: bu ham faqat UI cheklovi — admin_add_admin /
+   admin_remove_admin / admin_set_admin_active RPC'lari Supabase tomonida ham
+   faqat super adminlarga ruxsat berilishi shart, aks holda oddiy admin buni
+   to'g'ridan-to'g'ri API orqali chaqirib yuborishi mumkin.*/
+window.IS_SUPER_ADMIN = false;
+function setSuperAdminUI(isSuper){
+  window.IS_SUPER_ADMIN = !!isSuper;
+  const tabBtn = document.querySelector('#adminTabs [data-atab="admins"]');
+  if(tabBtn) tabBtn.style.display = isSuper ? '' : 'none';
+  // Agar hozir aynan shu tab ochiq bo'lsa-yu, huquq yo'q bo'lib qolsa — umumiy bo'limga qaytaramiz.
+  if(!isSuper){
+    const pane = document.getElementById('adminTab-admins');
+    if(pane && pane.style.display !== 'none'){
+      showAdminTab('overview');
+    }
+  }
+}
+
 async function tgInitAndAuth(){
   const tg = window.Telegram?.WebApp;
   if(!tg){ showDebug("❌ Telegram.WebApp topilmadi — SDK yuklanmagan yoki brauzerda ochilgan."); return null; }
@@ -1703,6 +1724,9 @@ function renderGreetingFromProfile(){
   showDebug(`ℹ️ rawId=${TELEGRAM_PROFILE.rawId} (${typeof TELEGRAM_PROFILE.rawId}), ADMIN_TELEGRAM_IDS=[${ADMIN_TELEGRAM_IDS.join(',')}], isAdmin=${isAdmin}`);
   // Hardcoded ro'yxatdagi adminlar uchun tugmalar darhol (kechikishsiz) ko'rinadi.
   showAdminButtons(isAdmin);
+  // Faqat ADMIN_TELEGRAM_IDS ro'yxatidagilar "bosh admin" (super admin) hisoblanadi —
+  // faqat ular boshqa adminlarni qo'sha/o'chira/olib tashlay oladi.
+  setSuperAdminUI(isAdmin);
 }
 
 async function bootApp(){
@@ -4183,6 +4207,12 @@ bootApp();
   async function renderAdminAdminsList() {
     const wrap = document.getElementById('adminAdminsList');
     if (!wrap) return;
+
+    if (!window.IS_SUPER_ADMIN) {
+      wrap.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Bu bo\u2018lim faqat bosh administratorlar uchun.</p>';
+      return;
+    }
+
     wrap.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Yuklanmoqda...</p>';
 
     try {
@@ -4223,6 +4253,10 @@ bootApp();
   }
 
   window.addNewAdmin = async function () {
+    if (!window.IS_SUPER_ADMIN) {
+      toast('Ruxsat yo\u2018q: bu amal faqat bosh administratorlar uchun');
+      return;
+    }
     const input = document.getElementById('newAdminId');
     const raw = (input?.value || '').trim();
     if (!/^\d+$/.test(raw)) {
@@ -4241,6 +4275,10 @@ bootApp();
   };
 
   window.toggleAdminActive = async function (telegramId, currentlyActive) {
+    if (!window.IS_SUPER_ADMIN) {
+      toast('Ruxsat yo\u2018q: bu amal faqat bosh administratorlar uchun');
+      return;
+    }
     try {
       await rpc('admin_set_admin_active', { p_telegram_id: Number(telegramId), p_active: !currentlyActive });
       toast(currentlyActive ? '\u2705 Admin vaqtincha o\u2018chirildi' : '\u2705 Admin qayta yoqildi');
@@ -4252,6 +4290,10 @@ bootApp();
   };
 
   window.removeAdmin = async function (telegramId) {
+    if (!window.IS_SUPER_ADMIN) {
+      toast('Ruxsat yo\u2018q: bu amal faqat bosh administratorlar uchun');
+      return;
+    }
     const myId = String((typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE) ? TELEGRAM_PROFILE.rawId : '');
     if (myId && String(telegramId) === myId) {
       toast('O\u2018zingizni adminlikdan olib tashlay olmaysiz');
@@ -4274,6 +4316,11 @@ bootApp();
     const baseShowAdminTab = window.showAdminTab;
 
     window.showAdminTab = function (tab) {
+      if (tab === 'admins' && !window.IS_SUPER_ADMIN) {
+        toast('Bu bo\u2018lim faqat bosh administratorlar uchun');
+        tab = 'overview';
+      }
+
       if (typeof baseShowAdminTab === 'function') {
         baseShowAdminTab(tab);
       }
