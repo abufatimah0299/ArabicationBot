@@ -1908,6 +1908,19 @@ function showDebug(msg){
   console.log("[DEBUG]", msg);
 }
 
+/* Telegram Mini App ichida DevTools yo'q, shu sabab har qanday kutilmagan JS xatosini
+   (oldin faqat konsolga yozilib, ko'rinmay qolardi) endi ekranda toast sifatida
+   ko'rsatamiz — shunda foydalanuvchi (yoki admin) xato matnini ko'rib, yuborib bera oladi. */
+window.addEventListener('error', function(e){
+  try{ toast(`⚠️ Kutilmagan xato: ${e.message}`, 7000); }catch(_){}
+  console.error('[window.onerror]', e.error || e.message, e);
+});
+window.addEventListener('unhandledrejection', function(e){
+  const msg = (e.reason && e.reason.message) || e.reason;
+  try{ toast(`⚠️ Kutilmagan xato (promise): ${msg}`, 7000); }catch(_){}
+  console.error('[unhandledrejection]', e.reason);
+});
+
 async function loadDashboardFromBackend(userId){
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_dashboard`, {
@@ -2491,44 +2504,62 @@ async function bootApp(){
     if(me) me.name = TELEGRAM_PROFILE.name || me.name;
   });
 
+  async function safeBootStep(label, fn){
+    try{ await fn(); }
+    catch(e){
+      console.error(`[bootApp] "${label}" bosqichida xato:`, e);
+      toast(`⚠️ "${label}" yuklanmadi: ${(e && e.message) || e}`, 7000);
+    }
+  }
+
   if(TELEGRAM_PROFILE.rawId){
-    const dash = await loadDashboardFromBackend(TELEGRAM_PROFILE.rawId);
-    applyBackendSkillScores(dash);
-    applyProfileStats(dash);
-    applyProfileHeader(dash);
-    const sub = document.getElementById('greetingSub');
-    if(sub && dash) sub.textContent = `Bugungi maqsadingizga ${dash.daily_pct ?? 0}% yetdingiz.`;
+    await safeBootStep('Dashboard', async ()=>{
+      const dash = await loadDashboardFromBackend(TELEGRAM_PROFILE.rawId);
+      applyBackendSkillScores(dash);
+      applyProfileStats(dash);
+      applyProfileHeader(dash);
+      const sub = document.getElementById('greetingSub');
+      if(sub && dash) sub.textContent = `Bugungi maqsadingizga ${dash.daily_pct ?? 0}% yetdingiz.`;
+    });
 
-    window.HISTORY_DATA_LIVE = await loadHistoryFromBackend(TELEGRAM_PROFILE.rawId);
-    window.USER_ERRORS_LIVE = await loadErrorsFromBackend(TELEGRAM_PROFILE.rawId);
-    applyLiveHistory();
-    applyLiveErrors();
+    await safeBootStep('Tarix/xatolar', async ()=>{
+      window.HISTORY_DATA_LIVE = await loadHistoryFromBackend(TELEGRAM_PROFILE.rawId);
+      window.USER_ERRORS_LIVE = await loadErrorsFromBackend(TELEGRAM_PROFILE.rawId);
+      applyLiveHistory();
+      applyLiveErrors();
+    });
 
-    const lb = await loadLeaderboardFromBackend();
-    applyLiveLeaderboard(lb);
+    await safeBootStep('Reyting', async ()=>{
+      const lb = await loadLeaderboardFromBackend();
+      applyLiveLeaderboard(lb);
+    });
 
-    const liveTopics = await loadGrammarTopicsFromBackend();
-    applyLiveGrammarTopics(liveTopics);
+    await safeBootStep('Grammatika mavzulari', async ()=>{
+      const liveTopics = await loadGrammarTopicsFromBackend();
+      applyLiveGrammarTopics(liveTopics);
+    });
 
-    await refreshQiroaFromBackend();
-    await refreshIstimaFromBackend();
-    await refreshSpeakingFromBackend();
-    await refreshKitabaFromBackend();
+    await safeBootStep('Qiroa', refreshQiroaFromBackend);
+    await safeBootStep('Istima', refreshIstimaFromBackend);
+    await safeBootStep('Muhavara', refreshSpeakingFromBackend);
+    await safeBootStep('Kitaba', refreshKitabaFromBackend);
 
-    if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
-      const liveAdminUsers = await loadAdminUsersFromBackend();
-      applyLiveAdminUsers(liveAdminUsers);
-    } else {
-      // ADMIN_TELEGRAM_IDS massivida yo'q, lekin "Adminlar" bo'limi orqali backendga
-      // qo'shilgan bo'lishi mumkin — shuni backenddan so'rab tekshiramiz va agar
-      // rostdan ham admin bo'lsa, tugmalarni shu yerda ko'rsatamiz.
-      const isBackendAdmin = await checkBackendAdminAccess(TELEGRAM_PROFILE.rawId);
-      if(isBackendAdmin){
-        showAdminButtons(true);
+    await safeBootStep('Admin huquqi', async ()=>{
+      if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
         const liveAdminUsers = await loadAdminUsersFromBackend();
         applyLiveAdminUsers(liveAdminUsers);
+      } else {
+        // ADMIN_TELEGRAM_IDS massivida yo'q, lekin "Adminlar" bo'limi orqali backendga
+        // qo'shilgan bo'lishi mumkin — shuni backenddan so'rab tekshiramiz va agar
+        // rostdan ham admin bo'lsa, tugmalarni shu yerda ko'rsatamiz.
+        const isBackendAdmin = await checkBackendAdminAccess(TELEGRAM_PROFILE.rawId);
+        if(isBackendAdmin){
+          showAdminButtons(true);
+          const liveAdminUsers = await loadAdminUsersFromBackend();
+          applyLiveAdminUsers(liveAdminUsers);
+        }
       }
-    }
+    });
   }
   window.APP_READY = true;
 }
