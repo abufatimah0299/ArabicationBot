@@ -717,24 +717,29 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 /* ---------- Rank ---------- */
 .rank-top-card{
   background:linear-gradient(135deg, var(--indigo-600), var(--indigo-900));
-  color:#fff; padding:22px 26px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  color:#fff; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
 }
-.rank-top-left{ display:flex; align-items:center; gap:16px; }
-.rank-num{ font-size:30px; font-weight:900; letter-spacing:-1px; }
-.rank-top-right{ display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.rank-top-left{ display:flex; align-items:center; gap:12px; }
+.rank-num{ font-size:23px; font-weight:900; letter-spacing:-1px; }
+.rank-top-right{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+/* Reyting: mahorat (bo'lim) filtri — davr filtri bilan bir xil uslub, ranglar bilan */
+.rank-skill-filter{ margin-bottom:10px; }
+.rank-skill-filter .filter-chip{ display:flex; align-items:center; gap:6px; }
+.rank-skill-filter .filter-chip .dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .podium{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; align-items:end; margin-top:18px; }
 .podium-item{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:18px 12px; text-align:center; box-shadow:var(--shadow); }
 .podium-item.first{ padding-top:26px; border:2px solid #D4A72C; background:linear-gradient(180deg,#3A2E12,var(--card)); }
 .podium-medal{ font-size:30px; }
-.podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; }
+.podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:16px; overflow:hidden; }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; }
+.podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
 .podium-name{ font-size:12.5px; font-weight:800; margin-top:4px; }
 .podium-xp{ font-size:11px; color:var(--text-faint); font-weight:700; margin-top:2px; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:13px; }
 .lb-row.me{ background:var(--indigo-100); }
 .lb-rank{ width:26px; text-align:center; font-weight:800; font-size:13px; color:var(--text-faint); flex-shrink:0; }
-.lb-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:12.5px; flex-shrink:0; }
+.lb-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:12.5px; flex-shrink:0; overflow:hidden; }
 .lb-info{ flex:1; min-width:0; }
 .lb-info .n{ font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:800; }
@@ -1492,20 +1497,22 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
         <div class="rank-type-toggle" id="rankTypeToggle">
           <button class="rank-type-btn active" data-type="tanal">At-Tanal</button>
-          <button class="rank-type-btn" data-type="cefr">CEFR</button>
         </div>
+
+        <div class="section-title" style="margin-top:0;">Mahorat</div>
+        <div class="filter-group rank-skill-filter" id="filterRankSkill"></div>
 
         <div class="card rank-top-card">
           <div class="rank-top-left">
             <div class="rank-num" id="rankNum">#14</div>
             <div>
-              <div style="font-weight:800;font-size:14.5px;">Sizning o'rningiz</div>
-              <div style="font-size:12px;opacity:.85;font-weight:600;" id="rankXpText">1 240 XP to'pladingiz</div>
+              <div style="font-weight:800;font-size:13.5px;">Sizning o'rningiz</div>
+              <div style="font-size:11.5px;opacity:.85;font-weight:600;" id="rankXpText">1 240 XP to'pladingiz</div>
             </div>
           </div>
           <div class="rank-top-right">
-            <div style="font-size:12px;font-weight:700;opacity:.9;" id="rankGapText">Keyingi o'ringa: <b>60 XP</b> qoldi</div>
-            <div class="bar-bg" style="background:rgba(255,255,255,.28);width:180px;"><div class="bar-fill" id="rankGapBar" style="width:0%;background:#fff;"></div></div>
+            <div style="font-size:11.5px;font-weight:700;opacity:.9;" id="rankGapText">Keyingi o'ringa: <b>60 XP</b> qoldi</div>
+            <div class="bar-bg" style="background:rgba(255,255,255,.28);width:150px;"><div class="bar-fill" id="rankGapBar" style="width:0%;background:#fff;"></div></div>
           </div>
         </div>
 
@@ -5238,56 +5245,87 @@ const VERIFIED_BADGE_SVG = `<svg viewBox="0 0 24 24" width="14" height="14" styl
    sabab reyting "static" ko'rinardi. Endi ro'yxatlar bo'sh boshlanadi va
    backend javob bergunga qadar "Yuklanmoqda" holati ko'rsatiladi (pastga
    qarang: rankLoaded, renderRank). */
-const RANK_DATASETS = { hafta: [], oy: [], hammasi: [] };
 let rankLoaded = false;
-/* Backend leaderboard_view qatorini reyting shakliga o'giradi.
-   DIQQAT: hozirgi leaderboard_view'da faqat umumiy XP bor (id, first_name, last_name,
-   username, photo_url, total_xp, level, rank) — haftalik/oylik XP alohida saqlanmagan.
-   Shu sabab "Hafta" va "Oy" bo'limlari ham hozircha umumiy XP asosida ko'rsatiladi.
-   Kelajakda backendda haftalik/oylik XP alohida hisoblansa (masalan xp_week,
-   xp_month ustunlari qo'shilsa), pastdagi xpKeys ro'yxatlariga shularni ham qo'shing —
-   ular topilsa avtomatik ustunlik beriladi.
+/* Backenddan kelgan xom leaderboard qatorlari shu yerda saqlanadi — davr (hafta/oy/
+   hammasi) va mahorat (grammatika/qiroa/istima/muhavara/kitaba/hammasi) filtrlari
+   endi RENDER vaqtida qo'llanadi (pastga qarang: sortedRank), shu sabab ular
+   kombinatsiyalanib ishlay oladi.
    MUHIM: bu yerda xp=0 bo'lgan foydalanuvchilarni ELIMINATSIYA QILMAYMIZ — chunki
    ko'plab yangi foydalanuvchilar hali XP to'plamagan bo'lishi mumkin, lekin baribir
    reytingda (0-o'rinda) ko'rinishi kerak. */
+let RANK_RAW_ROWS = [];
 function applyLiveLeaderboard(rows){
   rankLoaded = true; // backenddan javob (bo'sh bo'lsa ham) keldi — endi "Yuklanmoqda" ko'rsatilmaydi
-  if(!Array.isArray(rows) || !rows.length){
-    if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod);
-    return;
+  RANK_RAW_ROWS = Array.isArray(rows) ? rows : [];
+  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod, currentRankSkill);
+}
+let currentRankPeriod = 'hafta';
+let currentRankSkill = 'hammasi'; // 'hammasi' yoki SKILLS ichidagi id (grammatika/qiroa/istima/muhavara/kitaba)
+function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+/* Mahorat (bo'lim) va davrga qarab XP ustuni nomini tanlaydi.
+   DIQQAT: hozirgi leaderboard_view'da faqat umumiy XP bor (total_xp) — mahorat va
+   davr bo'yicha alohida XP ustunlari (masalan grammatika_xp, xp_week va h.k.)
+   backendda hali qo'shilmagan bo'lishi mumkin. Shu sabab har bir holat uchun bir
+   nechta mumkin bo'lgan ustun nomi sinab ko'riladi va topilmasa eng yaqin mos
+   qiymatga (masalan mahoratning umumiy balliga) tushiladi — backendda tegishli
+   ustunlar qo'shilishi bilan reyting avtomatik to'g'ri ishlay boshlaydi. */
+function rankXpKeys(skill, period){
+  if(skill === 'hammasi'){
+    if(period === 'hafta') return ['xp_week','xp_weekly','weekly_xp','total_xp'];
+    if(period === 'oy') return ['xp_month','xp_monthly','monthly_xp','total_xp'];
+    return ['xp_total','xp_all','total_xp','xp'];
   }
+  const keys = [];
+  if(period === 'hafta') keys.push(`${skill}_xp_week`, `xp_week_${skill}`);
+  else if(period === 'oy') keys.push(`${skill}_xp_month`, `xp_month_${skill}`);
+  keys.push(`${skill}_xp`, `xp_${skill}`, `${skill}Xp`, `${skill}_score`);
+  return keys;
+}
+/* Ko'rsatiladigan "Daraja" — talab bo'yicha har doim foydalanuvchining ENG SO'NGGI
+   TO'LIQ (5 mahorotli) imtihon natijasiga asoslanadi, XP'ga bog'liq emas:
+   - "Hammasi" tanlansa: shu oxirgi to'liq imtihonning UMUMIY darajasi (backend 'level'
+     ustuni — u XP'dan mustaqil, imtihon natijasi asosida saqlanadi).
+   - Muayyan mahorat tanlansa: o'sha oxirgi to'liq imtihonda AYNAN o'sha mahorotdan
+     olingan daraja (masalan '{skill}_level' ustuni). Bunday ustun hali backendda
+     bo'lmasa, umumiy darajaga tushiladi (backendda qo'shilgach avtomatik ishlaydi). */
+function rankLevelFor(r, skill){
+  const overall = pick(r, ['level'], 'A1');
+  if(skill === 'hammasi') return overall;
+  return pick(r, [`${skill}_level`, `level_${skill}`, `${skill}Level`], overall);
+}
+function sortedRank(period, skill){
   const myId = TELEGRAM_PROFILE.rawId;
-  const build = (xpKeys) => rows.map(r=>{
+  const xpKeys = rankXpKeys(skill, period);
+  const list = RANK_RAW_ROWS.map(r=>{
     const rid = pick(r, ['user_id','telegram_id','id'], '');
     return {
       id: rid,
       name: pick(r, ['name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
-      level: pick(r, ['level'], 'A1'),
+      photo: pick(r, ['photo_url','avatar_url','photo'], null),
+      level: rankLevelFor(r, skill),
       xp: Number(pick(r, xpKeys, 0)) || 0,
       me: String(rid) === String(myId),
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
   });
-  const hafta = build(['xp_week','xp_weekly','weekly_xp','total_xp']);
-  const oy = build(['xp_month','xp_monthly','monthly_xp','total_xp']);
-  const hammasi = build(['xp_total','xp_all','total_xp','xp']);
-  if(hafta.length) RANK_DATASETS.hafta = hafta;
-  if(oy.length) RANK_DATASETS.oy = oy;
-  if(hammasi.length) RANK_DATASETS.hammasi = hammasi;
-  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod);
+  return list.sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
 }
-let currentRankPeriod = 'hafta';
-function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
-function sortedRank(period){
-  return [...RANK_DATASETS[period]].sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
+/* Profil rasmi bor bo'lsa uni, bo'lmasa harflardan iborat rangli doirani chizadi.
+   Rasm yuklanmasa (buzilgan URL va h.k.) avtomatik harflarga qaytadi. */
+function rankAvatarHTML(u, color){
+  const initialsText = escapeHtml(initials(u.name));
+  if(u.photo){
+    return `<img src="${escapeHtml(u.photo)}" alt="" data-fallback="${initialsText}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:this.dataset.fallback}))">`;
+  }
+  return initialsText;
 }
-function renderPodium(period){
+function renderPodium(period, skill){
   const podiumEl = document.getElementById('podium');
   if(!rankLoaded){
     podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Reyting yuklanmoqda…</div>`;
     return;
   }
-  const top3 = sortedRank(period).slice(0,3);
+  const top3 = sortedRank(period, skill).slice(0,3);
   if(!top3.length){
     podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;">Hali reytingda hech kim yo'q</div>`;
     return;
@@ -5299,13 +5337,13 @@ function renderPodium(period){
     return `
     <div class="podium-item ${i===0?'first':''}">
       <div class="podium-medal">${medals[i]}</div>
-      <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${initials(u.name)}</div>
-      <div class="podium-name">${u.name}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
-      <div class="podium-xp">${u.xp} XP · ${u.level}</div>
+      <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${rankAvatarHTML(u, RANK_COLORS[i])}</div>
+      <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
+      <div class="podium-xp">${u.xp} XP · ${escapeHtml(u.level)}</div>
     </div>`;
   }).join('');
 }
-function renderLeaderboard(period){
+function renderLeaderboard(period, skill){
   const listEl = document.getElementById('leaderboardList');
   if(!rankLoaded){
     listEl.innerHTML = Array.from({length:5}).map(()=>`
@@ -5318,24 +5356,24 @@ function renderLeaderboard(period){
       </div>`).join('');
     return;
   }
-  const data = sortedRank(period);
+  const data = sortedRank(period, skill);
   if(!data.length){
-    listEl.innerHTML = `<div class="loading-inline">Bu davr uchun ma'lumot yo'q</div>`;
+    listEl.innerHTML = `<div class="loading-inline">Bu filtr uchun ma'lumot yo'q</div>`;
     return;
   }
   listEl.innerHTML = data.map((u,i)=>`
     <div class="lb-row ${u.me?'me':''}">
       <div class="lb-rank">${u.rank}</div>
-      <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${initials(u.name)}</div>
+      <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i%RANK_COLORS.length])}</div>
       <div class="lb-info">
-        <div class="n">${u.name}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
-        <div class="l">${u.level} daraja</div>
+        <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
+        <div class="l">${escapeHtml(u.level)} daraja</div>
       </div>
       <div class="lb-xp">${u.xp}<span style="font-size:10.5px;color:var(--text-faint);font-weight:700;"> XP</span></div>
     </div>
   `).join('');
 }
-function renderRankTop(period){
+function renderRankTop(period, skill){
   if(!rankLoaded){
     document.getElementById('rankNum').textContent = '—';
     document.getElementById('rankXpText').textContent = 'Yuklanmoqda…';
@@ -5343,7 +5381,7 @@ function renderRankTop(period){
     document.getElementById('rankGapBar').style.width = '0%';
     return;
   }
-  const data = sortedRank(period);
+  const data = sortedRank(period, skill);
   const me = data.find(u=>u.me);
   if(!me){
     document.getElementById('rankNum').textContent = '—';
@@ -5365,25 +5403,34 @@ function renderRankTop(period){
     document.getElementById('rankGapBar').style.width = '100%';
   }
 }
-function renderRank(period){
+function renderRank(period, skill){
   currentRankPeriod = period;
-  renderRankTop(period);
-  renderPodium(period);
-  renderLeaderboard(period);
+  currentRankSkill = skill;
+  renderRankTop(period, skill);
+  renderPodium(period, skill);
+  renderLeaderboard(period, skill);
 }
+/* Mahorat filtri chiplarini SKILLS ro'yxatidan avtomatik yasaydi — shu bilan
+   bo'lim nomlari/ranglari boshqa joylar bilan (skill hub, tarix va h.k.) doim mos keladi. */
+(function initRankSkillFilter(){
+  const wrap = document.getElementById('filterRankSkill');
+  const chips = [`<button class="filter-chip active" data-val="hammasi">Barchasi</button>`]
+    .concat(SKILLS.map(s=>`<button class="filter-chip" data-val="${s.id}"><span class="dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</button>`));
+  wrap.innerHTML = chips.join('');
+  wrap.addEventListener('click', e=>{
+    const btn = e.target.closest('.filter-chip'); if(!btn) return;
+    wrap.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRank(currentRankPeriod, btn.dataset.val);
+  });
+})();
 document.getElementById('filterRankPeriod').addEventListener('click', e=>{
   const btn = e.target.closest('.filter-chip'); if(!btn) return;
   document.querySelectorAll('#filterRankPeriod .filter-chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderRank(btn.dataset.val);
+  renderRank(btn.dataset.val, currentRankSkill);
 });
-document.getElementById('rankTypeToggle').addEventListener('click', e=>{
-  const btn = e.target.closest('.rank-type-btn'); if(!btn) return;
-  if(btn.dataset.type === 'cefr'){ toast("CEFR reytingi tez orada qo'shiladi"); return; }
-  document.querySelectorAll('#rankTypeToggle .rank-type-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-});
-renderRank(currentRankPeriod);
+renderRank(currentRankPeriod, currentRankSkill);
 
 /* ================= PROFILE ================= */
 /* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
