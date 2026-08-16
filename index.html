@@ -2019,6 +2019,10 @@ async function refreshHistoryAndScoresFromBackend(){
     applyBackendSkillScores(dash);
     applyProfileStats(dash);
     applyProfileHeader(dash);
+    // Yangi to'plangan XP reytingda ham darhol ko'rinishi uchun (foydalanuvchi
+    // Rank bo'limini qayta ochmasdan turib ham) leaderboard'ni shu yerda ham
+    // qayta yuklaymiz.
+    refreshRankFromBackend();
   }catch(e){ console.error('[refreshHistoryAndScoresFromBackend]', e); }
 }
 
@@ -2045,6 +2049,13 @@ async function loadLeaderboardFromBackend(){
     const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() });
     return res.ok ? await res.json() : [];
   }catch(e){ console.error(e); return []; }
+}
+/* Reyting ro'yxatini backenddan qayta yuklab, ekranni yangi ma'lumot bilan qayta
+   chizadi. applyLiveLeaderboard() ichida view-rank ochiq bo'lsa renderRank() ni
+   o'zi chaqiradi — shu sabab bu yerda alohida render() chaqirish shart emas. */
+async function refreshRankFromBackend(){
+  const lb = await loadLeaderboardFromBackend();
+  applyLiveLeaderboard(lb);
 }
 
 /* Savollar banki — hammasi uchun umumiy (Supabase "questions" jadvali).
@@ -2715,9 +2726,10 @@ function showView(name, push=true){
   const activeEl = document.getElementById('view-'+name);
   if(activeEl) runEntranceAnimations(activeEl);
   if(name==='admin') renderAdminPanel();
-  // Rank bo'limi ochilganda har doim eng so'nggi (backenddan kelgan) ma'lumot bilan
-  // qayta chiziladi — aks holda birinchi ochilishda static/mock ma'lumot ko'rinib qolardi.
-  if(name==='rank') renderRank(currentRankPeriod);
+  // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
+  // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
+  // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
+  if(name==='rank') refreshRankFromBackend();
 }
 
 /* ---------------- Entrance animations (bars, rings, counters) ---------------- */
