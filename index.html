@@ -244,6 +244,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 @media (prefers-reduced-motion: reduce){
   .stagger > *{ animation:none !important; opacity:1 !important; }
   .card, .btn, .option, .mic-circle, .bar-fill, #resultRing, .bn-icon{ animation:none !important; transition:none !important; }
+  .q-istima-out, .q-istima-in{ animation:none !important; }
 }
 .section-title{
   font-size:12px; font-weight:800; letter-spacing:1.2px; color:var(--text-faint);
@@ -407,6 +408,12 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .quiz-head .tag{ font-size:12px; font-weight:800; padding:4px 10px; border-radius:8px; }
 .quiz-head .timer{ font-size:13px; font-weight:700; color:var(--text-dim); border:1.5px solid transparent; border-radius:8px; padding:2px 8px; transition:color .3s var(--ease), border-color .3s var(--ease); }
 .quiz-body{ padding:8px 26px 26px 26px; }
+/* Istima: savol almashganda silliq slide+fade transition (faqat #quizBody kontenti uchun —
+   header, timer va yon panel (progress grid) DOM'da alohida bo'lgani uchun joyidan qimirlamaydi). */
+@keyframes istimaQOut{ from{ opacity:1; transform:translateX(0); } to{ opacity:0; transform:translateX(-26px); } }
+@keyframes istimaQIn{ from{ opacity:0; transform:translateX(26px); } to{ opacity:1; transform:translateX(0); } }
+.q-istima-out{ animation:istimaQOut .15s ease-out forwards; }
+.q-istima-in{ animation:istimaQIn .2s ease-out forwards; }
 .passage{
   background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:18px;
   font-family:var(--font-ar); font-size:19px; line-height:2; text-align:right; direction:rtl; margin-bottom:18px;
@@ -6023,7 +6030,7 @@ function nextQ(){
   }
   if(currentQuiz.skillId==='istima'){
     const juz = currentQuiz.juz[currentQuiz.juzPointer];
-    if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
+    if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderIstimaQuestionAnimated(); }
     else { advanceAfterIstimaJuz(); }
     return;
   }
@@ -6076,6 +6083,28 @@ function renderQiroaPhase(){
       <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi juz →':'Keyingi →')}</button>
     </div>`;
   body.innerHTML = html;
+}
+
+/* Istima: savol almashishida ishlatiladigan silliq transition.
+   Audio tugab avtomatik o'tishda ham, "Keyingi savol" tugmasi bosilganda ham
+   xuddi shu funksiya orqali chaqiriladi — shu sabab ikkalasida ham bir xil animatsiya ishlaydi.
+   Ketma-ketlik: qisqa pauza -> joriy savol chapga siljib yo'qoladi -> kontent almashadi
+   -> yangi savol o'ngdan kirib keladi. Faqat #quizBody kontenti animatsiya qilinadi;
+   header, timer va yon paneldagi progress grid alohida DOM elementlari bo'lgani uchun joyidan qimirlamaydi. */
+function renderIstimaQuestionAnimated(){
+  const body = document.getElementById('quizBody');
+  if(!body || !body.firstElementChild){ renderQuestion(); updateQGrid(); return; }
+  body.classList.remove('q-istima-in','q-istima-out');
+  setTimeout(function(){
+    body.classList.add('q-istima-out');
+    setTimeout(function(){
+      renderQuestion();
+      updateQGrid();
+      body.classList.remove('q-istima-out');
+      body.classList.add('q-istima-in');
+      setTimeout(function(){ body.classList.remove('q-istima-in'); }, 220);
+    }, 160);
+  }, 180);
 }
 
 /* ---------------- Istima: joriy qismga qarab render qilish (audio + savol) ---------------- */
@@ -6141,8 +6170,7 @@ function advanceIstimaToQuestions(){
   const el = document.getElementById('istimaAudioEl');
   if(el){ el.onended = null; el.pause(); }
   currentQuiz.phase = 'questions';
-  renderQuestion();
-  updateQGrid();
+  renderIstimaQuestionAnimated();
 }
 /* Audio faqat cheklangan marta (juz.maxPlays) ijro etiladi. DOM'ni to'liq qayta chizmasdan
    (renderQuestion chaqirmasdan) faqat hisoblagich va tugma holatini yangilaymiz — aks holda
