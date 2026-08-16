@@ -1502,6 +1502,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <button class="btn" id="adminBulkAddBtn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
               <button class="btn btn-primary" id="adminAddQuestionBtn" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
               <button class="btn btn-primary" id="adminAddQiroaTestBtn" style="display:none;" onclick="openAddQiroaFullTestModal()">+ Yangi test qo'shish</button>
+              <button class="btn" id="adminBulkQiroaTestBtn" style="display:none;" onclick="openBulkAddQiroaTestsModal()">+ Bir nechta test (JSON)</button>
               <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (yuklab olish)</button>
               <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (yuklash)</button>
               <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
@@ -3049,10 +3050,12 @@ function renderAdminQuestions(){
   const bulkBtn = document.getElementById('adminBulkAddBtn');
   const singleBtn = document.getElementById('adminAddQuestionBtn');
   const qiroaTestBtn = document.getElementById('adminAddQiroaTestBtn');
+  const bulkQiroaTestBtn = document.getElementById('adminBulkQiroaTestBtn');
   const isQiroaTab = adminActiveSkill === 'qiroa';
   if(bulkBtn) bulkBtn.style.display = isQiroaTab ? 'none' : '';
   if(singleBtn) singleBtn.style.display = isQiroaTab ? 'none' : '';
   if(qiroaTestBtn) qiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
+  if(bulkQiroaTestBtn) bulkQiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
 
   if(adminActiveSkill==='grammatika'){
     const total = GRAMMAR_TOPICS.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
@@ -3516,6 +3519,119 @@ async function submitQiroaFullTest(e){
     toast(`✅ Yangi test qo'shildi — matn + ${insertedCount} ta savol`, 6000);
   } else {
     toast("⚠️ Matn saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR + " — testga savollarni \"+ Savol\" tugmasi orqali qo'shishingiz mumkin", 8000);
+  }
+  return false;
+}
+
+/* ---- Qiroa: BIR NECHTA to'liq testni (har biri: juz + matn + 6 savol) bittada,
+   JSON massiv orqali qo'shish. Har bir test o'z alohida matnini yaratadi va
+   o'ziga tegishli savollarni o'sha matnga bog'lab yuboradi. Faqat Qiroa bo'limiga
+   tegishli — boshqa bo'limlarning bulk qo'shish oynasiga (openBulkAddQuestionModal)
+   hech qanday ta'sir qilmaydi. */
+function openBulkAddQiroaTestsModal(){
+  document.getElementById('modalTitle').textContent = "Bir nechta test qo'shish (Qiroa, JSON)";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="bulkQiroaTestForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkQiroaTests(event)">
+      <p class="form-hint">Bir nechta TO'LIQ testni (har biri: juz + matn + savollar) bitta JSON massiv orqali kiriting. Har bir test o'ziga alohida matn yaratadi va shu matnga tegishli savollarni bog'laydi.</p>
+      <div class="form-field">
+        <label>Testlar (JSON massiv)</label>
+        <textarea id="bqtJson" rows="18" required style="font-family:monospace;font-size:12px;direction:ltr;" placeholder='[
+  {
+    "juz": "juz1",
+    "passage": "نَصّ الْقِرَاءَة...",
+    "questions": [
+      {"q":"...","opts":["...","...","...","..."],"a":0,"exp":"ixtiyoriy"},
+      {"q":"...","opts":["...","...","...","..."],"a":1},
+      {"q":"...","opts":["...","...","...","..."],"a":2},
+      {"q":"...","opts":["...","...","...","..."],"a":3},
+      {"q":"...","opts":["...","...","...","..."],"a":0},
+      {"q":"...","opts":["...","...","...","..."],"a":1}
+    ]
+  },
+  { "juz": "juz2", "passage": "...", "questions": [ "... yana 6 ta savol ..." ] }
+]'></textarea>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
+          <b>juz</b> — ${QIROA_JUZ.map(j=>`<code>${j.id}</code> (${j.name})`).join(', ')} dan biri.<br>
+          <b>passage</b> — shu testning matni (arabcha).<br>
+          <b>questions</b> — bitta testda ko'pi bilan ${QIROA_MAX_Q_PER_TEST} ta savol; har biri <b>q</b> (savol), <b>opts</b> (4 ta variant), <b>a</b> (to'g'ri variant indeksi, 0-3), <b>exp</b> (izoh, ixtiyoriy).<br>
+          Massivda nechta test bo'lsa — shuncha yangi matn va ularga tegishli savollar birdaniga yaratiladi.
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Barcha testlarni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitBulkQiroaTests(e){
+  e.preventDefault();
+  let parsed;
+  try{
+    parsed = JSON.parse(document.getElementById('bqtJson').value);
+    if(!Array.isArray(parsed) || !parsed.length) throw new Error("Bo'sh yoki massiv emas");
+  }catch(err){
+    toast("❌ JSON noto'g'ri: " + err.message, 6000);
+    return false;
+  }
+  for(const [i, t] of parsed.entries()){
+    if(!t.juz || !QIROA_JUZ.some(j=>j.id===t.juz)){
+      toast(`❌ ${i+1}-testda "juz" noto'g'ri — ${QIROA_JUZ.map(j=>j.id).join('/')} dan biri bo'lishi kerak`, 7000);
+      return false;
+    }
+    if(!t.passage || !String(t.passage).trim()){
+      toast(`❌ ${i+1}-testda "passage" (matn) kiritilmagan`, 6000);
+      return false;
+    }
+    if(!Array.isArray(t.questions) || !t.questions.length || t.questions.length > QIROA_MAX_Q_PER_TEST){
+      toast(`❌ ${i+1}-testda savollar soni noto'g'ri (1-${QIROA_MAX_Q_PER_TEST} ta bo'lishi kerak)`, 7000);
+      return false;
+    }
+    for(const [qi, row] of t.questions.entries()){
+      if(!row.q || !Array.isArray(row.opts) || row.opts.length !== 4 || typeof row.a !== 'number'){
+        toast(`❌ ${i+1}-test, ${qi+1}-savol formati noto'g'ri (q, opts[4], a talab qilinadi)`, 7000);
+        return false;
+      }
+    }
+  }
+
+  closeModal();
+  toast(`⏳ ${parsed.length} ta test (matn) yaratilmoqda...`);
+  const allItems = [];
+  let failedTexts = 0;
+  for(const [i, t] of parsed.entries()){
+    const savedText = await addQiroaTextToBackend(t.juz, t.passage);
+    if(!savedText){
+      failedTexts++;
+      toast(`⚠️ ${i+1}-test matni saqlanmadi: ` + window.LAST_BACKEND_ERROR, 7000);
+      continue;
+    }
+    const testId = Array.isArray(savedText) ? savedText[0]?.id : savedText?.id;
+    if(!testId){ failedTexts++; continue; }
+    t.questions.forEach(row=>{
+      allItems.push({ skillId:'qiroa', topicId:testId, q:row.q, opts:row.opts, a:row.a, exp:row.exp||'' });
+    });
+  }
+
+  if(!allItems.length){
+    await refreshQiroaFromBackend();
+    adminActiveSkill = 'qiroa';
+    renderAdminQuestions();
+    toast('⚠️ Hech qanday savol yuborilmadi', 6000);
+    return false;
+  }
+
+  toast(`⏳ ${allItems.length} ta savol yuborilmoqda...`);
+  const result = await saveQuestionsBulkWithTopicsToBackend(allItems);
+  await refreshQiroaFromBackend();
+  adminActiveSkill = 'qiroa';
+  renderAdminQuestions();
+  if(result){
+    const insertedCount = result.inserted_count ?? allItems.length;
+    const okTests = parsed.length - failedTexts;
+    let msg = `✅ ${okTests} ta test qo'shildi (${insertedCount} ta savol)`;
+    if(failedTexts>0) msg += ` — ${failedTexts} ta test matni saqlanmadi`;
+    toast(msg, 8000);
+  } else {
+    toast("⚠️ Matn(lar) saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR, 8000);
   }
   return false;
 }
