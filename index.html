@@ -26,6 +26,9 @@
   font-display:swap;
 }
 :root{
+  /* Imtihon (quiz) bo'limlaridagi matnlarni kattalashtirish/kichiklashtirish uchun.
+     examFontStep()/applyExamFontScale() shu qiymatni o'zgartiradi (topics: font size). */
+  --exam-font-scale:1;
   /* Brand green, sampled from the Arabication logo */
   --indigo-900:#062E1D;
   --indigo-700:#12A768;
@@ -423,14 +426,14 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .q-istima-in{ animation:istimaQIn .2s ease-out forwards; }
 .passage{
   background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:18px;
-  font-family:var(--font-ar); font-size:19px; line-height:2; text-align:right; direction:rtl; margin-bottom:18px;
+  font-family:var(--font-ar); font-size:calc(19px * var(--exam-font-scale)); line-height:2; text-align:right; direction:rtl; margin-bottom:18px;
 }
-.q-text{ font-family:var(--font-ar); font-size:20px; text-align:right; direction:rtl; line-height:1.9; margin-bottom:18px; font-weight:700;}
-.q-sub{ font-size:12.5px; color:var(--text-faint); font-weight:700; margin-bottom:14px; }
+.q-text{ font-family:var(--font-ar); font-size:calc(20px * var(--exam-font-scale)); text-align:right; direction:rtl; line-height:1.9; margin-bottom:18px; font-weight:700;}
+.q-sub{ font-size:calc(12.5px * var(--exam-font-scale)); color:var(--text-faint); font-weight:700; margin-bottom:14px; }
 .options{ display:flex; flex-direction:column; gap:10px; }
 .option{
   display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px; border:1.5px solid var(--border);
-  cursor:pointer; direction:rtl; font-family:var(--font-ar); font-size:17px; transition:.12s;
+  cursor:pointer; direction:rtl; font-family:var(--font-ar); font-size:calc(17px * var(--exam-font-scale)); transition:.12s;
 }
 .option:hover{ border-color:var(--indigo-500); }
 .option.selected{ border-color:var(--indigo-700); background:var(--indigo-100); }
@@ -438,7 +441,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .option.incorrect{ border-color:var(--red); background:var(--red-bg); }
 .opt-circle{
   width:26px; height:26px; border-radius:50%; border:2px solid var(--text-faint); flex-shrink:0;
-  display:flex; align-items:center; justify-content:center; font-family:var(--font-ar); font-size:13px;
+  display:flex; align-items:center; justify-content:center; font-family:var(--font-ar); font-size:calc(13px * var(--exam-font-scale));
   font-weight:800; color:var(--text-dim); background:var(--card);
 }
 .option.selected .opt-circle{ border-color:var(--indigo-700); background:var(--indigo-700); color:#fff; }
@@ -493,13 +496,23 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .mic-hint{ margin-top:6px; font-size:12.5px; color:var(--text-faint); font-weight:600;}
 textarea.write-area{
   width:100%; min-height:220px; border:1.5px solid var(--border); border-radius:13px; padding:16px;
-  font-family:var(--font-ar); font-size:18px; direction:rtl; text-align:right; resize:vertical; margin-top:12px;
+  font-family:var(--font-ar); font-size:calc(18px * var(--exam-font-scale)); direction:rtl; text-align:right; resize:vertical; margin-top:12px;
 }
 textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .wordcount{ font-size:12px; color:var(--text-faint); font-weight:700; margin-top:8px; text-align:left;}
 .prompt-box{ background:var(--bg); border:1px solid var(--border); border-radius:13px; padding:16px; margin-bottom:14px;}
 .prompt-box .lbl{ font-size:11.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;}
-.prompt-box ul{ margin-inline-start:18px; font-size:13px; color:var(--text-dim); font-weight:600; line-height:1.8;}
+.prompt-box ul{ margin-inline-start:18px; font-size:calc(13px * var(--exam-font-scale)); color:var(--text-dim); font-weight:600; line-height:1.8;}
+/* Imtihon matn o'lchami tugmalari (Savol X/Y bilan bir qatorda, quiz-head ichida) */
+.font-zoom-ctrl{ display:flex; align-items:center; gap:2px; border:1.5px solid var(--border); border-radius:9px; padding:2px; }
+.font-zoom-ctrl button{
+  border:none; background:transparent; cursor:pointer; color:var(--text-dim); font-weight:800;
+  font-size:12.5px; width:26px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+}
+.font-zoom-ctrl button:first-child{ font-size:11px; }
+.font-zoom-ctrl button:active{ transform:scale(.92); }
+.font-zoom-ctrl button:hover{ background:var(--indigo-100); color:var(--indigo-700); }
+
 
 /* results */
 .result-hero{ display:flex; align-items:center; gap:26px; padding:26px; flex-wrap:wrap; }
@@ -1355,7 +1368,13 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           <div class="card">
             <div class="quiz-head">
               <span class="tag" id="quizTag">Qiroa test oynasi</span>
-              <span class="timer" id="quizTimer">⏱ 18:42</span>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="font-zoom-ctrl" id="examFontCtrl" title="Matn o'lchami">
+                  <button type="button" onclick="examFontStep(-1)" title="Matnni kichiklashtirish">A−</button>
+                  <button type="button" onclick="examFontStep(1)" title="Matnni kattalashtirish">A+</button>
+                </div>
+                <span class="timer" id="quizTimer">⏱ 18:42</span>
+              </div>
             </div>
             <div style="height:1px;background:var(--border);"></div>
             <div class="quiz-body" id="quizBody"></div>
@@ -1678,7 +1697,10 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input type="text" id="adminUserSearch" placeholder="Ism yoki username bo'yicha qidirish..." oninput="renderAdminUsers()">
           </div>
-          <div style="display:flex;justify-content:flex-end;margin:0 0 12px;">
+          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
+            <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllExamHistory()">
+              🗑 Barcha imtihon tarixini tozalash
+            </button>
             <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="resetAllUsersXp()">
               ↺ Barcha XP'larni 0'ga qaytarish
             </button>
@@ -2722,6 +2744,32 @@ function toggleTheme(){
   applyTheme(saved==='light' ? 'light' : 'dark');
 })();
 
+/* ---------------- Imtihon matn o'lchami (barcha bo'limlar uchun umumiy) ----------------
+   Quiz-head ichidagi A−/A+ tugmalari --exam-font-scale CSS o'zgaruvchisini o'zgartiradi,
+   shu o'zgaruvchidan .passage/.q-text/.q-sub/.option/.opt-circle/.write-area/.qiroa-title-btn
+   kabi barcha imtihon matnlari font-size'ini hisoblab oladi (qarang: calc(...*var(--exam-font-scale))).
+   Tanlov localStorage'da saqlanadi — foydalanuvchi bir marta sozlasa, hamma bo'limda va
+   keyingi safar ochganda ham shu o'lcham qo'llanadi. */
+const EXAM_FONT_MIN = 0.8, EXAM_FONT_MAX = 1.6, EXAM_FONT_STEP = 0.1;
+function getExamFontScale(){
+  let v = null;
+  try{ v = parseFloat(localStorage.getItem('arab_exam_font_scale')); }catch(e){}
+  if(!v || isNaN(v)) v = 1;
+  return Math.min(EXAM_FONT_MAX, Math.max(EXAM_FONT_MIN, v));
+}
+function applyExamFontScale(v){
+  document.documentElement.style.setProperty('--exam-font-scale', v);
+}
+function examFontStep(dir){
+  let v = getExamFontScale();
+  v = Math.round((v + dir*EXAM_FONT_STEP) * 100) / 100;
+  v = Math.min(EXAM_FONT_MAX, Math.max(EXAM_FONT_MIN, v));
+  try{ localStorage.setItem('arab_exam_font_scale', v); }catch(e){}
+  applyExamFontScale(v);
+  toast(`🔤 Matn o'lchami: ${Math.round(v*100)}%`, 1100);
+}
+applyExamFontScale(getExamFontScale());
+
 /* ---------------- Navigation ---------------- */
 const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
@@ -3694,6 +3742,34 @@ async function resetAllUsersXp(){
   renderAdminPanel();
 }
 
+/* ---- Admin: BARCHA foydalanuvchilarning imtihon tarixini (quiz_attempts) tozalash ----
+   Supabase'da `admin_clear_all_exam_history` RPC funksiyasi talab qilinadi — u
+   `quiz_attempts` jadvalidagi BARCHA qatorlarni (hamma foydalanuvchi uchun) o'chirib,
+   o'chirilgan qatorlar sonini qaytarishi kerak. Masalan:
+   create or replace function admin_clear_all_exam_history()
+   returns integer language plpgsql security definer as $$
+   declare n integer; begin
+     delete from quiz_attempts; get diagnostics n = row_count; return n;
+   end; $$; */
+async function clearAllExamHistoryOnBackend(){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_clear_all_exam_history`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // nechta yozuv o'chirilganini qaytaradi
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function clearAllExamHistory(){
+  if(!confirm("⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning BARCHA imtihon tarixini (natijalar, urinishlar) butunlay o'chiradi. Foydalanuvchilarning o'zi, XP va darajasi bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?")) return;
+  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA foydalanuvchilarning imtihon tarixini butunlay o'chirmoqchimisiz?")) return;
+  const result = await clearAllExamHistoryOnBackend();
+  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+  toast(`🗑 Imtihon tarixi tozalandi (${result} ta yozuv o'chirildi)`);
+  renderAdminPanel();
+}
+
 /* ---- 3) SAVOLLAR BANKI ---- */
 let adminActiveSkill = 'qiroa';
 function renderAdminQuestions(){
@@ -3755,10 +3831,13 @@ function renderAdminQuestions(){
         ? tests.map((t,idx)=>{
             const n = t.questions.length;
             const excerpt = (t.passage||'').trim().slice(0,40) || '(matn kiritilmagan)';
+            const excerptLine = t.title
+              ? `📌 ${escapeHtml(t.title)}`
+              : `${escapeHtml(excerpt)}${(t.passage||'').length>40?'…':''}`;
             return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--qiroa);padding-inline-start:10px;">
               <div>
                 <div class="t-name" style="font-size:13px;">${j.name} · Test ${idx+1}</div>
-                <div class="t-meta" dir="rtl" style="text-align:left;direction:ltr;">${escapeHtml(excerpt)}${(t.passage||'').length>40?'…':''}</div>
+                <div class="t-meta" dir="rtl" style="text-align:left;direction:ltr;">${excerptLine}</div>
                 <div class="t-meta">${n} / ${QIROA_MAX_Q_PER_TEST} ta savol</div>
               </div>
               <div class="t-actions icon-btn-row">
@@ -4198,6 +4277,11 @@ function openAddQiroaTextModal(juzId){
     <form id="qiroaPassageForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitNewQiroaText(event,'${juzId}')">
       <p class="form-hint">Bu matn — "${juz.name}"dagi yangi, mustaqil test. Saqlagach, shu matnga tegishli 6 ta savolni "+ Savol" yoki "Ommaviy qo'shish" orqali kiritasiz — bu savollar faqat shu matn bilan birga chiqadi.</p>
       <div class="form-field">
+        <label>Mavzu nomi</label>
+        <input type="text" id="qiroaTitleText" placeholder="Masalan: Oilaviy hayot haqida matn" maxlength="120">
+        <p class="form-hint">Imtihon paytida foydalanuvchiga uzun matn o'rniga shu nom ko'rsatiladi — bosilgandagina matnning o'zi ochiladi. Bo'sh qoldirsangiz, matn to'g'ridan-to'g'ri ko'rinadi.</p>
+      </div>
+      <div class="form-field">
         <label>Matn (arabcha)</label>
         <textarea id="qiroaPassageText" dir="rtl" style="min-height:160px;" placeholder="نَصّ الْقِرَاءَة..." required></textarea>
       </div>
@@ -4209,9 +4293,10 @@ function openAddQiroaTextModal(juzId){
 async function submitNewQiroaText(e, juzId){
   e.preventDefault();
   const text = document.getElementById('qiroaPassageText').value;
+  const title = document.getElementById('qiroaTitleText').value.trim();
   closeModal();
   toast('⏳ Matn saqlanmoqda...');
-  const saved = await addQiroaTextToBackend(juzId, text);
+  const saved = await addQiroaTextToBackend(juzId, text, title);
   if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
   await refreshQiroaFromBackend();
   renderAdminQuestions();
@@ -4227,6 +4312,11 @@ function openEditQiroaTextModal(testId){
   document.getElementById('modalBody').innerHTML = `
     <form id="qiroaPassageForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditQiroaText(event,'${testId}')">
       <div class="form-field">
+        <label>Mavzu nomi</label>
+        <input type="text" id="qiroaTitleText" placeholder="Masalan: Oilaviy hayot haqida matn" maxlength="120" value="${escapeHtml(test.title||'')}">
+        <p class="form-hint">Imtihon paytida foydalanuvchiga uzun matn o'rniga shu nom ko'rsatiladi — bosilgandagina matnning o'zi ochiladi. Bo'sh qoldirsangiz, matn to'g'ridan-to'g'ri ko'rinadi.</p>
+      </div>
+      <div class="form-field">
         <label>Matn (arabcha)</label>
         <textarea id="qiroaPassageText" dir="rtl" style="min-height:160px;" placeholder="نَصّ الْقِرَاءَة..." required>${escapeHtml(test.passage||'')}</textarea>
       </div>
@@ -4238,9 +4328,10 @@ function openEditQiroaTextModal(testId){
 async function submitEditQiroaText(e, testId){
   e.preventDefault();
   const text = document.getElementById('qiroaPassageText').value;
+  const title = document.getElementById('qiroaTitleText').value.trim();
   closeModal();
   toast('⏳ Saqlanmoqda...');
-  const saved = await editQiroaTextOnBackend(testId, text);
+  const saved = await editQiroaTextOnBackend(testId, text, title);
   if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
   await refreshQiroaFromBackend();
   renderAdminQuestions();
@@ -5736,30 +5827,35 @@ function applyLiveQiroaTexts(rows){
   if(!Array.isArray(rows)) return;
   rows.forEach(r=>{
     if(!QIROA_TESTS[r.juz_id]) return;
-    const test = { id: r.id, juzId: r.juz_id, passage: r.passage || '', questions: [] };
+    const test = { id: r.id, juzId: r.juz_id, passage: r.passage || '', title: r.title || '', questions: [] };
     QIROA_TESTS[r.juz_id].push(test);
     QIROA_TEST_BY_ID[r.id] = test;
   });
 }
-/* Yangi Qiroa matni (test) yaratadi — backendda "admin_add_qiroa_text" RPC talab qilinadi. */
-async function addQiroaTextToBackend(juzId, passage){
+/* Yangi Qiroa matni (test) yaratadi — backendda "admin_add_qiroa_text" RPC talab qilinadi.
+   p_title — admin bergan mavzu nomi (masalan "Oilaviy hayot haqida matn"): imtihon paytida
+   foydalanuvchiga uzun matn o'rniga shu nom ko'rsatiladi, bosilganda matn ochiladi. RPC
+   `qiroa_texts` jadvaliga `title` ustunini ham yozishi kerak (agar hali yo'q bo'lsa, ustun
+   qo'shib, funksiyani shunga mos yangilash lozim). */
+async function addQiroaTextToBackend(juzId, passage, title){
   if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_qiroa_text`, {
       method:"POST", headers: authHeaders(),
-      body: JSON.stringify({ p_juz_id: juzId, p_passage: passage })
+      body: JSON.stringify({ p_juz_id: juzId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json(); // { id: '...' } kutiladi
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
-/* Mavjud Qiroa matnini tahrirlaydi — backendda "admin_edit_qiroa_text" RPC talab qilinadi. */
-async function editQiroaTextOnBackend(testId, passage){
+/* Mavjud Qiroa matnini (va mavzu nomini) tahrirlaydi — backendda "admin_edit_qiroa_text"
+   RPC talab qilinadi, p_title parametrini ham qabul qilishi kerak. */
+async function editQiroaTextOnBackend(testId, passage, title){
   if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_qiroa_text`, {
       method:"POST", headers: authHeaders(),
-      body: JSON.stringify({ p_text_id: testId, p_passage: passage })
+      body: JSON.stringify({ p_text_id: testId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     return await res.json();
@@ -6148,7 +6244,7 @@ function startQiroaQuiz(customLabel){
       const tests = (QIROA_TESTS[meta.id]||[]).filter(t => t.questions.length > 0);
       if(!tests.length) return null;
       const picked = tests[Math.floor(Math.random()*tests.length)];
-      return { ...meta, passage: picked.passage || '', questions: picked.questions.map(q=>({...q, picked:null})) };
+      return { ...meta, passage: picked.passage || '', title: picked.title || '', questions: picked.questions.map(q=>({...q, picked:null})) };
     })
     .filter(Boolean);
   if(availableJuz.length === 0){
@@ -6159,7 +6255,7 @@ function startQiroaQuiz(customLabel){
   const juzMeta = availableJuz.map(j=>{
     const startIdx = flat.length;
     flat = flat.concat(j.questions);
-    return { id:j.id, name:j.name, passage:j.passage, readMins:j.readMins, qMins:j.qMins, startIdx, endIdx: flat.length-1 };
+    return { id:j.id, name:j.name, passage:j.passage, title:j.title, readMins:j.readMins, qMins:j.qMins, startIdx, endIdx: flat.length-1 };
   });
   const skillMeta = SKILLS.find(s=>s.id==='qiroa');
   currentQuiz = {
@@ -6431,6 +6527,9 @@ function renderQiroaPhase(){
   const juzLabel = `${juz.name} / ${currentQuiz.juz.length}`;
 
   if(currentQuiz.phase==='reading'){
+    /* Foydalanuvchiga imtihonda har doim matnning o'zi to'liq ko'rsatiladi — "mavzu nomi"
+       faqat admin panelda testlar ro'yxatini ko'rishni qulaylashtirish uchun (pastda,
+       renderAdminQuestions() ichida ishlatiladi), imtihon oynasiga taalluqli emas. */
     body.innerHTML = `
       <div class="q-sub">${juzLabel} · Matnni o'qing — savollar avtomatik boshlanadi, yoki tayyor bo'lsangiz oldinroq o'ting</div>
       <div class="passage">${juz.passage ? juz.passage : '<span style="opacity:.5;">Bu juz uchun matn hali admin panelda kiritilmagan.</span>'}</div>
