@@ -1179,7 +1179,55 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <h3 style="font-size:16px;font-weight:800;margin-bottom:6px;">To'liq At-Tanal imtihoni</h3>
             <p style="font-size:13px;color:var(--text-dim);font-weight:600;max-width:420px;">5 mahorat bo'yicha to'liq imtihon topshirib, o'z bilimingizni sinang.</p>
           </div>
-          <button class="btn btn-primary" onclick="startFullExam()">Imtihonni boshlash 🎓</button>
+          <button class="btn btn-primary" onclick="openFullExamIntro()">Imtihonni boshlash 🎓</button>
+        </div>
+      </div>
+
+      <!-- ============ FULL EXAM INTRO SCREEN ============ -->
+      <div class="view" id="view-fullexamintro">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div class="skill-intro-wrap">
+          <div class="card skill-intro-card">
+            <div class="skill-intro-icon" style="background:var(--indigo-100);color:var(--indigo-700);">🎓</div>
+            <div class="skill-intro-title-uz">"At-Tanal" to'liq imtihon simulyatsiyasi</div>
+            <p class="skill-intro-desc">Imtihon 5 ta bo'limdan iborat bo'lib, qat'iy ketma-ketlikda topshiriladi. Boshlangach, orqaga qaytib bo'lmaydi.</p>
+            <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin:14px 0;">
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;font-size:13px;font-weight:700;">⏱ Davomiyligi</div>
+                <div style="font-weight:800;font-size:13px;">3 soat (+5 min tanaffus)</div>
+              </div>
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;font-size:13px;font-weight:700;">📌 Qoida</div>
+                <div style="font-weight:700;font-size:12.5px;text-align:right;color:var(--text-dim);">Bo'lim tugashi bilan avtomatik keyingisiga o'tiladi</div>
+              </div>
+            </div>
+            <div style="width:100%;text-align:left;font-size:13px;font-weight:800;margin-top:6px;margin-bottom:4px;">Imtihon tarkibi:</div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:8px;">
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">📗 Grammar</div><div class="t-meta">30 ta test · 1 daqiqadan · har biri 1 ball</div></div>
+              </div>
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">📖 Reading</div><div class="t-meta">3 ta qism · arabcha matnlar va testlar</div></div>
+              </div>
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">🎧 Listening</div><div class="t-meta">3 ta qism · 18 ta savol · audio cheksiz</div></div>
+              </div>
+              <div class="topic-row" style="align-items:center;background:color-mix(in srgb, var(--amber, #E3BE4E) 12%, transparent);">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">☕ Tanaffus</div><div class="t-meta">5 daqiqalik qisqa dam olish</div></div>
+              </div>
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">🎙️ Speaking</div><div class="t-meta">3 qism × 2 savol · savoliga 0-5 ball</div></div>
+              </div>
+              <div class="topic-row" style="align-items:center;">
+                <div style="flex:1;"><div class="t-name" style="font-size:13px;">✍️ Writing</div><div class="t-meta">3 ta insho · avto-mavzu · har biri 0-10 ball</div></div>
+              </div>
+            </div>
+            <p class="skill-intro-desc" style="margin-top:14px;font-size:12px;color:var(--text-faint);">To'liq imtihonda orqaga qaytish, natijani tahlil qilish, savollar orasida erkin yurish yoki bo'limni muddatidan oldin yakunlash imkoni bo'lmaydi.</p>
+            <button class="btn btn-primary skill-intro-btn" onclick="startFullExam()">Imtihonni boshlash 🎓</button>
+          </div>
         </div>
       </div>
 
@@ -2675,7 +2723,7 @@ function toggleTheme(){
 })();
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
@@ -2701,6 +2749,10 @@ function isAttanalLocked(){
 }
 
 function showView(name, push=true){
+  if(FULL_EXAM && FULL_EXAM.active && !['quiz','miccheck'].includes(name)){
+    toast("To'liq imtihon davom etmoqda — avval uni yakunlang", 2000);
+    return;
+  }
   if(name !== 'miccheck'){ try{ stopMicCheckStream(); }catch(e){} }
   const cardId = VIEW_CARD_MAP[name];
   if(cardId){
@@ -2794,8 +2846,8 @@ function fireConfetti(){
   }
 }
 function goBack(){
+  if(FULL_EXAM && FULL_EXAM.active){ toast("To'liq imtihonda orqaga qaytish mumkin emas", 2000); return; }
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
-  if(FULL_EXAM && FULL_EXAM.active){ FULL_EXAM = null; toast("To'liq imtihon bekor qilindi", 2000); }
   if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
   if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
   stopMuhavaraLevelMeter();
@@ -5540,15 +5592,54 @@ const ARABIC_OPT_LETTERS = ['أ','ب','ج','د','هـ','و'];
    ichida to'planadi, oxirida esa umumiy (5 mahorat yig'indisi) natija ekrani
    ko'rsatiladi. Har bir mahorat baribir alohida-alohida backendga (odatdagidek)
    yoziladi — shu sabab bu funksiya alohida backend jadvali talab qilmaydi. */
-const FULL_EXAM_ORDER = ['grammatika','qiroa','istima','muhavara','kitaba'];
+const FULL_EXAM_ORDER = ['grammatika','qiroa','istima','break','muhavara','kitaba'];
 let FULL_EXAM = null;
+function openFullExamIntro(){
+  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  showView('fullexamintro');
+}
+function fullExamStepLabel(id){
+  if(id==='break') return 'Tanaffus';
+  const meta = SKILLS.find(s=>s.id===id);
+  return meta ? meta.name : id;
+}
+/* Imtihon boshlanganda: orqaga tugmasini (quiz/miccheck ekranlarida) yashiradi —
+   foydalanuvchi qat'iy ketma-ketlikdan chiqib keta olmasligi kerak. */
+function setFullExamChromeLocked(locked){
+  document.querySelectorAll('#view-quiz .back-row, #view-miccheck .back-row').forEach(el=>{
+    el.style.display = locked ? 'none' : '';
+  });
+}
 function runFullExamStep(){
   if(!FULL_EXAM || !FULL_EXAM.active) return;
   const skillId = FULL_EXAM.order[FULL_EXAM.stepIndex];
   if(!skillId){ showFullExamResults(); return; }
+  if(skillId==='break'){ runFullExamBreakStep(); return; }
   if(skillId==='muhavara'){ openMicCheck(); return; }
   if(skillId==='kitaba'){ startKitabaExam(); return; }
   startQuiz(skillId);
+}
+function runFullExamBreakStep(){
+  const side = document.getElementById('quizSide');
+  if(side) side.style.display = 'none';
+  const tagEl = document.getElementById('quizTag');
+  if(tagEl){ tagEl.textContent = '☕ Tanaffus'; tagEl.style.background = 'color-mix(in srgb, var(--amber, #E3BE4E) 20%, white)'; tagEl.style.color = 'var(--amber, #92400E)'; }
+  document.getElementById('quizBody').innerHTML = `
+    <div class="prompt-box" style="text-align:center;">
+      <div class="lbl">☕ Tanaffus</div>
+      <div style="font-size:15px;margin:10px 0;font-weight:700;">Listening bo'limi yakunlandi.</div>
+      <div style="font-size:13px;color:var(--text-dim);">5 daqiqalik qisqa tanaffusdan so'ng Speaking (Muhovara) bo'limi avtomatik boshlanadi. Mikrofoningiz tayyor turishiga ishonch hosil qiling.</div>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="skipFullExamBreak()">Hoziroq davom etish</button>
+  `;
+  showView('quiz');
+  startTimer(5*60, ()=> continueFullExamAfterBreak());
+}
+function skipFullExamBreak(){ clearInterval(timerInterval); continueFullExamAfterBreak(); }
+function continueFullExamAfterBreak(){
+  if(!FULL_EXAM) return;
+  FULL_EXAM.stepIndex++;
+  runFullExamStep();
 }
 function advanceFullExam(){
   if(!FULL_EXAM) return;
@@ -5557,12 +5648,11 @@ function advanceFullExam(){
   const nextId = FULL_EXAM.order[FULL_EXAM.stepIndex];
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   if(!nextId){ showFullExamResults(); return; }
-  const finishedMeta = SKILLS.find(s=>s.id===finishedId);
-  const nextMeta = SKILLS.find(s=>s.id===nextId);
-  toast(`✅ ${finishedMeta?finishedMeta.name:finishedId} yakunlandi. Keyingi bo'lim: ${nextMeta?nextMeta.name:nextId}`, 2200);
+  toast(`✅ ${fullExamStepLabel(finishedId)} yakunlandi. Keyingi bo'lim: ${fullExamStepLabel(nextId)}`, 2200);
   setTimeout(runFullExamStep, 1400);
 }
 function showFullExamResults(){
+  setFullExamChromeLocked(false);
   const timerEl = document.getElementById('quizTimer');
   if(timerEl) timerEl.textContent = '';
   const tagEl = document.getElementById('quizTag');
@@ -5570,7 +5660,7 @@ function showFullExamResults(){
   const side = document.getElementById('quizSide');
   if(side) side.style.display = 'none';
   let sumCorrect = 0, sumTotal = 0;
-  const rows = FULL_EXAM.order.map(id=>{
+  const rows = FULL_EXAM.order.filter(id=>id!=='break').map(id=>{
     const r = FULL_EXAM.results[id] || {correct:0, total:0};
     sumCorrect += (r.correct||0); sumTotal += (r.total||0);
     const meta = SKILLS.find(s=>s.id===id);
@@ -5600,6 +5690,13 @@ function showFullExamResults(){
 function finishFullExamAndGoHome(){
   FULL_EXAM = null;
   showView('dashboard');
+}
+function startFullExam(){
+  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  FULL_EXAM = { active:true, order: FULL_EXAM_ORDER.slice(), stepIndex:0, results:{} };
+  setFullExamChromeLocked(true);
+  toast("🎓 To'liq At-Tanal imtihoni boshlandi: Grammar", 2200);
+  runFullExamStep();
 }
 
 /* ---------------- Qiroa: 3 juz, har bir juzda BIR NECHTA "test" (matn+6 savol) ---------------- */
@@ -6126,7 +6223,7 @@ function startIstimaQuiz(customLabel){
   const juzMeta = availableJuz.map(j=>{
     const startIdx = flat.length;
     flat = flat.concat(j.questions);
-    return { id:j.id, name:j.name, audioUrl:j.audioUrl, maxPlays:j.maxPlays, startIdx, endIdx: flat.length-1 };
+    return { id:j.id, name:j.name, audioUrl:j.audioUrl, maxPlays:(FULL_EXAM && FULL_EXAM.active) ? Infinity : j.maxPlays, startIdx, endIdx: flat.length-1 };
   });
   const skillMeta = SKILLS.find(s=>s.id==='istima');
   currentQuiz = {
@@ -6189,12 +6286,6 @@ function startKitabaExam(){
   startTimer(currentQuiz.questions[0].part.seconds, ()=> forceSubmitWriting());
   showView('quiz');
 }
-function startFullExam(){
-  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
-  FULL_EXAM = { active:true, order: FULL_EXAM_ORDER.slice(), stepIndex:0, results:{} };
-  toast("🎓 To'liq At-Tanal imtihoni boshlandi: 1/5 — Grammatika", 2200);
-  runFullExamStep();
-}
 
 /* Speaking quiz has its own simplified entry through hub button too (skillId muhavara) */
 
@@ -6203,6 +6294,7 @@ function buildQGrid(){
   const wrap = document.getElementById('qgridWrap');
   document.getElementById('quizSide').style.display = '';
   if(currentQuiz.type==='writing'){ document.getElementById('quizSide').style.display='none'; return; }
+  if(FULL_EXAM && FULL_EXAM.active){ document.getElementById('quizSide').style.display='none'; return; }
   const noGrid = ['muhavara','istima','qiroa'].includes(currentQuiz.skillId);
   wrap.style.display = noGrid ? 'none' : '';
   grid.classList.toggle('qgrid-compact', currentQuiz.skillId==='grammatika');
@@ -6389,6 +6481,7 @@ function renderIstimaQuestionAnimated(){
 }
 
 /* ---------------- Istima: joriy qismga qarab render qilish (audio + savol) ---------------- */
+function fmtPlays(n){ return isFinite(n) ? String(n) : '∞'; }
 function renderIstimaPhase(){
   const body = document.getElementById('quizBody');
   const juz = currentQuiz.juz[currentQuiz.juzPointer];
@@ -6405,7 +6498,7 @@ function renderIstimaPhase(){
         </button>
         <div style="flex:1;">
           <div style="font-size:12.5px;font-weight:700;color:var(--text-dim);">${juz.audioUrl ? 'Audioni tinglang' : 'Bu qism uchun audio hali admin panelda kiritilmagan.'}</div>
-          <div id="istimaPlaysLeft" style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Qolgan marta: ${playsLeft} / ${juz.maxPlays}</div>
+          <div id="istimaPlaysLeft" style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Qolgan marta: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}</div>
         </div>
       </div>
       <audio id="istimaAudioEl" src="${juz.audioUrl||''}" preload="none" style="display:none;"></audio>
@@ -6466,7 +6559,7 @@ function playIstimaAudio(){
   el.play().catch(()=> toast('⚠️ Audio ijro etilmadi — URL manzilini tekshiring'));
   const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
   const leftEl = document.getElementById('istimaPlaysLeft');
-  if(leftEl) leftEl.textContent = `Qolgan marta: ${playsLeft} / ${juz.maxPlays}`;
+  if(leftEl) leftEl.textContent = `Qolgan marta: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
   const btn = document.getElementById('istimaPlayBtn');
   if(btn && playsLeft<=0){ btn.disabled = true; btn.style.opacity='.45'; btn.style.cursor='default'; }
 }
