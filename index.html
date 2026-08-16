@@ -1912,14 +1912,17 @@ async function clearAllQuestions(){
   }
 }
 
-/* Faqat joriy tanlangan bo'lim (adminActiveSkill) savollarini tozalaydi — boshqa bo'limlarga
-   tegishli savollar va mavzular ro'yxati tegilmaydi.
+/* Faqat joriy tanlangan bo'lim (adminActiveSkill) savollarini VA shu bo'limga tegishli
+   mavzular/matnlarni (Grammatika uchun grammar_topics, Qiroa uchun qiroa_texts) tozalaydi.
+   Istima/Muhavara/Kitaba'da alohida "mavzu" jadvali yo'q — shu bo'limlar uchun faqat
+   savollar o'chadi.
    TEZ YO'L: agar Supabase'da `admin_clear_section_questions(p_skill_id)` RPC funksiyasi
    yaratilgan bo'lsa, bitta so'rov bilan bir zumda o'chiradi (pastdagi SQL qarang).
    ZAXIRA YO'L: agar hali o'sha RPC yaratilmagan bo'lsa (404/"function does not exist"),
-   avtomatik ravishda eski — sekinroq, lekin har doim ishlaydigan — usulga o'tadi: shu
-   bo'limga tegishli savollarni ro'yxatdan o'tkazib, har birini alohida (mavjud
-   admin_delete_question RPC orqali) o'chiradi. */
+   avtomatik ravishda eski — sekinroq, lekin har doim ishlaydigan — usulga o'tadi: avval
+   shu bo'limga tegishli savollarni, so'ng (grammatika/qiroa uchun) mavzularni/matnlarni
+   birma-bir (mavjud admin_delete_question / admin_delete_grammar_topic /
+   admin_delete_qiroa_text RPC'lari orqali) o'chiradi. */
 async function clearSectionQuestionsOnBackendFast(skillId){
   if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
@@ -1934,29 +1937,57 @@ async function clearSectionQuestionsOnBackendFast(skillId){
       setLastBackendError(res.status, errText);
       return null;
     }
-    return await res.json(); // o'chirilgan savollar soni
+    return await res.json(); // { questions: N, topics: M }
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function clearSectionQuestionsOnBackend(skillId){
   const all = await loadQuestionsFromBackend();
   const rows = (all||[]).filter(r => r.skill_id === skillId);
-  let deleted = 0, failed = 0;
+  let deletedQ = 0, failedQ = 0;
   for(const r of rows){
     const ok = await deleteQuestionOnBackend(r.id);
-    if(ok) deleted++; else failed++;
+    if(ok) deletedQ++; else failedQ++;
   }
-  return { deleted, failed, total: rows.length };
+
+  let deletedT = 0, failedT = 0, totalT = 0;
+  if(skillId === 'grammatika'){
+    const topics = await loadGrammarTopicsFromBackend();
+    totalT = (topics||[]).length;
+    for(const t of (topics||[])){
+      const ok = await deleteGrammarTopicOnBackend(t.id);
+      if(ok) deletedT++; else failedT++;
+    }
+  } else if(skillId === 'qiroa'){
+    const texts = await loadQiroaTextsFromBackend();
+    totalT = (texts||[]).length;
+    for(const t of (texts||[])){
+      const ok = await deleteQiroaTextOnBackend(t.id);
+      if(ok !== null) deletedT++; else failedT++;
+    }
+  }
+
+  return { deletedQ, failedQ, totalQ: rows.length, deletedT, failedT, totalT };
+}
+function grammarQiroaTopicWord(skillId){
+  return skillId==='grammatika' ? "mavzu" : (skillId==='qiroa' ? "matn" : null);
 }
 async function clearCurrentSectionQuestions(){
   const skillName = SKILL_META[adminActiveSkill]?.name || adminActiveSkill;
-  if(!confirm(`⚠️ DIQQAT: Bu faqat "${skillName}" bo'limidagi BARCHA savollarni butunlay o'chiradi. Boshqa bo'limlar va mavzular ro'yxati o'zgarishsiz qoladi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
-  if(!confirm(`So'nggi tasdiq: haqiqatan ham "${skillName}" bo'limidagi barcha savollarni o'chirmoqchimisiz?`)) return;
+  const topicWord = grammarQiroaTopicWord(adminActiveSkill);
+  const topicsWarning = topicWord ? ` va barcha ${topicWord}larni (mavzular/matnlar ro'yxatini)` : '';
+  if(!confirm(`⚠️ DIQQAT: Bu faqat "${skillName}" bo'limidagi BARCHA savollarni${topicsWarning} butunlay o'chiradi. Boshqa bo'limlarga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
+  if(!confirm(`So'nggi tasdiq: haqiqatan ham "${skillName}" bo'limidagi barcha savollarni${topicsWarning} o'chirmoqchimisiz?`)) return;
 
   toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
 
   const fastResult = await clearSectionQuestionsOnBackendFast(adminActiveSkill);
   if(fastResult !== undefined && fastResult !== null){
-    toast(`🗑 "${skillName}" bo'limidan ${fastResult} ta savol o'chirildi`);
+    let msg = `🗑 "${skillName}" bo'limidan ${fastResult.questions ?? 0} ta savol`;
+    if(topicWord && fastResult.topics) msg += ` va ${fastResult.topics} ta ${topicWord}`;
+    msg += " o'chirildi";
+    toast(msg);
+    const liveTopics = await loadGrammarTopicsFromBackend();
+    applyLiveGrammarTopics(liveTopics);
     await refreshQiroaFromBackend();
     renderAdminQuestions();
     return;
@@ -1967,13 +1998,18 @@ async function clearCurrentSectionQuestions(){
   }
   // fastResult === undefined -> RPC hali yaratilmagan, zaxira (sekinroq) usulga o'tamiz
   const result = await clearSectionQuestionsOnBackend(adminActiveSkill);
-  if(result.total === 0){
-    toast(`ℹ️ "${skillName}" bo'limida savol topilmadi`);
-  } else if(result.failed === 0){
-    toast(`🗑 "${skillName}" bo'limidan ${result.deleted} ta savol o'chirildi`);
+  if(result.totalQ === 0 && result.totalT === 0){
+    toast(`ℹ️ "${skillName}" bo'limida o'chiriladigan narsa topilmadi`);
+  } else if(result.failedQ === 0 && result.failedT === 0){
+    let msg = `🗑 "${skillName}" bo'limidan ${result.deletedQ} ta savol`;
+    if(topicWord && result.totalT) msg += ` va ${result.deletedT} ta ${topicWord}`;
+    msg += " o'chirildi";
+    toast(msg);
   } else {
-    toast(`🗑 "${skillName}": ${result.deleted}/${result.total} ta o'chirildi, ${result.failed} tasi xato: ${window.LAST_BACKEND_ERROR}`, 8000);
+    toast(`🗑 "${skillName}": savollar ${result.deletedQ}/${result.totalQ}, ${topicWord||'mavzu'}lar ${result.deletedT}/${result.totalT} o'chirildi (ba'zilari xato berdi: ${window.LAST_BACKEND_ERROR})`, 9000);
   }
+  const liveTopics = await loadGrammarTopicsFromBackend();
+  applyLiveGrammarTopics(liveTopics);
   await refreshQiroaFromBackend();
   renderAdminQuestions();
 }
