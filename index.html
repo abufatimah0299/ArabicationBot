@@ -865,6 +865,22 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .data-table .row-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
 .data-table .row-btn.danger:hover{ border-color:var(--red); color:var(--red); }
 
+/* ---- Mavzu/test qatorlaridagi amal tugmalari (ko'rish/qo'shish/tahrirlash/o'chirish) ---- */
+.icon-btn-row{ display:flex; gap:8px; flex-shrink:0; }
+.icon-btn{
+  width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; border:1.5px solid; background:transparent; font-family:inherit; flex-shrink:0;
+  transition:.15s var(--ease);
+}
+.icon-btn svg{ width:17px; height:17px; }
+.icon-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); }
+.icon-btn:active{ transform:translateY(0) scale(.96); }
+.icon-btn:disabled{ opacity:.35; cursor:not-allowed; transform:none; filter:none; }
+.icon-btn.ib-view{ background:var(--green-bg); border-color:var(--green); color:var(--green); }
+.icon-btn.ib-add{ background:var(--istima-bg); border-color:var(--istima); color:var(--istima); }
+.icon-btn.ib-edit{ background:var(--amber-bg); border-color:var(--amber); color:var(--amber); }
+.icon-btn.ib-del{ background:var(--red-bg); border-color:var(--red); color:var(--red); }
+
 .skill-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .skill-chip{ font-family:inherit; cursor:pointer; border:1.5px solid var(--border); background:var(--card); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px; display:flex; align-items:center; gap:6px; color:var(--text-dim); transition:all .2s var(--ease); }
 .skill-chip.active{ color:var(--sk-color); background:var(--sk-bg); border-color:var(--sk-color); }
@@ -3292,11 +3308,11 @@ function renderAdminQuestions(){
           <div class="t-name">${t.name}</div>
           <div class="t-meta">${n} ta savol · ${t.ar}${cat?' · '+cat.name:''}</div>
         </div>
-        <div class="t-actions">
-          <button class="row-btn" onclick="viewTopicQuestions('grammatika','${t.id}')">Ko'rish</button>
-          <button class="row-btn" onclick="openAddQuestionModal('grammatika','${t.id}')">+ Savol</button>
-          <button class="row-btn" onclick="openEditTopicModal('${t.id}')">✏️</button>
-          <button class="row-btn" style="color:var(--red);" onclick="deleteTopic('${t.id}')">🗑️</button>
+        <div class="t-actions icon-btn-row">
+          <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('grammatika','${t.id}')">${IB_ICON_VIEW}</button>
+          <button class="icon-btn ib-add" title="Savol qo'shish" onclick="openAddQuestionModal('grammatika','${t.id}')">${IB_ICON_ADD}</button>
+          <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditTopicModal('${t.id}')">${IB_ICON_EDIT}</button>
+          <button class="icon-btn ib-del" title="O'chirish" onclick="deleteTopic('${t.id}')">${IB_ICON_DEL}</button>
         </div>
       </div>`;
     }).join('');
@@ -3316,11 +3332,11 @@ function renderAdminQuestions(){
                 <div class="t-meta" dir="rtl" style="text-align:left;direction:ltr;">${escapeHtml(excerpt)}${(t.passage||'').length>40?'…':''}</div>
                 <div class="t-meta">${n} / ${QIROA_MAX_Q_PER_TEST} ta savol</div>
               </div>
-              <div class="t-actions">
-                <button class="row-btn" onclick="openEditQiroaTextModal('${t.id}')">✏️ Matn</button>
-                <button class="row-btn" onclick="viewTopicQuestions('qiroa','${t.id}')">Ko'rish</button>
-                <button class="row-btn" ${n>=QIROA_MAX_Q_PER_TEST?'disabled title="Bu testda allaqachon 6 ta savol bor"':''} onclick="openAddQuestionModal('qiroa','${t.id}')">+ Savol</button>
-                <button class="row-btn" style="color:var(--red);" onclick="deleteQiroaTest('${t.id}')">🗑️</button>
+              <div class="t-actions icon-btn-row">
+                <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('qiroa','${t.id}')">${IB_ICON_VIEW}</button>
+                <button class="icon-btn ib-add" title="${n>=QIROA_MAX_Q_PER_TEST?"Bu testda allaqachon 6 ta savol bor":"Savol qo'shish"}" ${n>=QIROA_MAX_Q_PER_TEST?'disabled':''} onclick="openAddQuestionModal('qiroa','${t.id}')">${IB_ICON_ADD}</button>
+                <button class="icon-btn ib-edit" title="Matnni tahrirlash" onclick="openEditQiroaTextModal('${t.id}')">${IB_ICON_EDIT}</button>
+                <button class="icon-btn ib-del" title="O'chirish" onclick="deleteQiroaTest('${t.id}')">${IB_ICON_DEL}</button>
               </div>
             </div>`;
           }).join('')
@@ -3360,6 +3376,11 @@ function setAdminSkill(id){ adminActiveSkill = id; renderAdminQuestions(); }
 /* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
    qo'shish tugmalarini ko'rsatadi, backup/import/tozalash har doim bir xil qoladi. ---- */
 const AS_ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
+/* Mavzu/test qatorlaridagi amal tugmalari uchun umumiy ikonkalar */
+const IB_ICON_VIEW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/></svg>`;
+const IB_ICON_ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
+const IB_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+const IB_ICON_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
 function renderAdminActionsSheet(){
   const grid = document.getElementById('asGrid');
   const primary = document.getElementById('asPrimary');
