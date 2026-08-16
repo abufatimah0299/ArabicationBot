@@ -1122,11 +1122,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <div><div class="t">كان va uning opa-singillari</div><div class="s">10 ta test</div></div>
               <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
             </div>
-            <div class="lesson-item" onclick="startWriting()">
+            <div class="lesson-item" onclick="startKitabaExam()">
               <div class="lesson-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               </div>
-              <div><div class="t">Kitaba — Yozma topshiriq</div><div class="s">1 ta topshiriq</div></div>
+              <div><div class="t">Kitaba — Yozma topshiriq</div><div class="s">3 ta qism</div></div>
               <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
             </div>
             <button class="start-btn" data-view="attanal">Mashg'ulotni boshlash</button>
@@ -2391,6 +2391,53 @@ async function reorderGrammarTopicsOnBackend(orderedIds){
     return true;
   }catch(e){ setLastBackendError('—', e.message); return false; }
 }
+/* Kitaba (Yozma) mavzulari — 3 qism, har biri uchun alohida mavzular banki
+   (Supabase "writing_topics" jadvali, part_id ustuni: 'part1'/'part2'/'part3').
+   Admin panelda har bir qismga bir nechta arabcha mavzu kiritiladi; foydalanuvchi
+   imtihonni boshlaganda har qism uchun shu bankdan TASODIFIY bitta mavzu tanlanadi
+   (AI mavzu generatsiya qilmaydi — mavzular oldindan admin tomonidan yoziladi).
+   MOSLASHTIRING: bu funksiyalar ishlashi uchun Supabase'da `writing_topics` jadvali va
+   `admin_add_writing_topic` / `admin_edit_writing_topic` / `admin_delete_writing_topic`
+   RPC funksiyalari yaratilishi kerak (namuna migratsiya faylida keltirilgan). */
+async function loadWritingTopicsFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/writing_topics?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+async function addWritingTopicToBackend(partId, topicAr){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_writing_topic`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_part_id: partId, p_topic_ar: topicAr })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function editWritingTopicOnBackend(id, topicAr){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_writing_topic`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_topic_id: id, p_topic_ar: topicAr })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function deleteWritingTopicOnBackend(id){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_writing_topic`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_topic_id: id })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
 async function loadAdminUsersFromBackend(){
   if(!SESSION_TOKEN) return [];
   try{
@@ -2466,6 +2513,7 @@ async function bootApp(){
     await refreshQiroaFromBackend();
     await refreshIstimaFromBackend();
     await refreshSpeakingFromBackend();
+    await refreshKitabaFromBackend();
 
     if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
       const liveAdminUsers = await loadAdminUsersFromBackend();
@@ -2662,7 +2710,7 @@ const SKILLS = [
   {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
   {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
   {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
-  {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:30, mins:40, grad:'sb-kitaba', desc:"Ushbu bo'limda berilgan mavzu bo'yicha erkin matn yozasiz. Talab qilingan so'zlar sonini va vaqt chegarasini hisobga olib yozing."},
+  {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat: 1-qism (100+ so'z, 15 daqiqa), 2-qism (150+ so'z, 20 daqiqa), 3-qism (200+ so'z, 30 daqiqa). Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
 ];
 function applyBackendSkillScores(dash){
   if(!dash) return;
@@ -2759,7 +2807,7 @@ function openSkillIntro(id){
 }
 function beginPendingSkill(){
   if(!pendingSkillId) return;
-  if(pendingSkillId==='kitaba'){ startWriting(); }
+  if(pendingSkillId==='kitaba'){ startKitabaExam(); }
   else if(pendingSkillId==='muhavara'){ openMicCheck(); }
   else{ startQuiz(pendingSkillId); }
 }
@@ -3550,6 +3598,34 @@ function renderAdminQuestions(){
         </div>
       </div>`;
     }).join('');
+  } else if(adminActiveSkill==='kitaba'){
+    const total = KITABA_PARTS.reduce((s,p)=> s + (KITABA_TOPICS[p.id]?.length||0), 0);
+    countEl.textContent = `${KITABA_PARTS.length} ta qism · ${total} ta mavzu`;
+    list.innerHTML = KITABA_PARTS.map(p=>{
+      const topics = KITABA_TOPICS[p.id] || [];
+      const n = topics.length;
+      const rows = topics.length
+        ? topics.map(t=>`<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--kitaba);padding-inline-start:10px;">
+            <div>
+              <div class="t-meta" dir="rtl" style="text-align:left;direction:rtl;font-size:14px;color:var(--text);">${escapeHtml(t.topicAr)}</div>
+            </div>
+            <div class="t-actions icon-btn-row">
+              <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditKitabaTopicModal('${t.id}')">${IB_ICON_EDIT}</button>
+              <button class="icon-btn ib-del" title="O'chirish" onclick="deleteKitabaTopic('${t.id}')">${IB_ICON_DEL}</button>
+            </div>
+          </div>`).join('')
+        : `<div class="t-meta" style="margin-inline-start:14px;">Hali mavzu yo'q</div>`;
+      return `<div class="topic-row" style="align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="t-name">${p.name}</div>
+          <div class="t-meta">${n} ta mavzu · Kamida ${p.minWords} so'z · Vaqt: ${Math.round(p.seconds/60)} daqiqa</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${rows}</div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" onclick="openAddKitabaTopicModal('${p.id}')">+ Mavzu</button>
+        </div>
+      </div>`;
+    }).join('');
   } else {
     const bank = QUESTION_BANKS[adminActiveSkill];
     const n = bank?.questions?.length || 0;
@@ -3588,6 +3664,7 @@ function renderAdminActionsSheet(){
   const isGrammar = adminActiveSkill === 'grammatika';
   const isQiroa = adminActiveSkill === 'qiroa';
   const isIstima = adminActiveSkill === 'istima';
+  const isKitaba = adminActiveSkill === 'kitaba';
   let gridHtml = '', primaryHtml = '';
   if(isGrammar){
     gridHtml = `
@@ -3616,6 +3693,9 @@ function renderAdminActionsSheet(){
     primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddIstimaFullTestModal())">
         <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi test qo'shish</span>
       </button>`;
+  } else if(isKitaba){
+    gridHtml = '';
+    primaryHtml = `<div style="text-align:center;color:var(--text-faint);font-size:12.5px;font-weight:600;padding:10px 6px;">Mavzular har bir qism (1/2/3) qatoridagi "+ Mavzu" tugmasi orqali qo'shiladi.</div>`;
   } else {
     gridHtml = `
       <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddQuestionModal())">
@@ -4001,6 +4081,76 @@ async function deleteSpeakingQuestion(id){
   await refreshSpeakingFromBackend();
   renderAdminQuestions();
   toast("🗑 Savol o'chirildi");
+}
+
+/* ---- Kitaba: har bir qism (1/2/3) uchun mavzular banki — qo'shish / tahrirlash / o'chirish ----
+   Mavzular faqat arabcha kiritiladi (o'quvchi imtihonda ko'radigan matn shu). Har imtihon
+   boshlanganda shu bankdan tasodifiy bitta mavzu tanlanadi — bu yerda AI ishtirok etmaydi. */
+function openAddKitabaTopicModal(partId){
+  const part = KITABA_PARTS.find(p=>p.id===partId);
+  if(!part) return;
+  document.getElementById('modalTitle').textContent = `${part.name} — yangi mavzu`;
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddKitabaTopic(event,'${partId}')">
+      <p class="form-hint">Talab: kamida ${part.minWords} so'z, ${Math.round(part.seconds/60)} daqiqa. Imtihon boshlanganda bu qism uchun bankdagi mavzulardan tasodifiy bittasi tanlanadi.</p>
+      <div class="form-field">
+        <label>Mavzu matni (arabcha)</label>
+        <textarea id="ktTopicText" dir="rtl" style="min-height:90px;" placeholder="اُكْتُبْ عَنْ أَهَمِّيَّةِ تَعَلُّمِ اللُّغَةِ الْعَرَبِيَّةِ" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitAddKitabaTopic(e, partId){
+  e.preventDefault();
+  const topicAr = document.getElementById('ktTopicText').value.trim();
+  if(!topicAr) return false;
+  closeModal();
+  toast('⏳ Saqlanmoqda...');
+  const saved = await addWritingTopicToBackend(partId, topicAr);
+  if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  await refreshKitabaFromBackend();
+  renderAdminQuestions();
+  toast("✅ Mavzu qo'shildi");
+  return false;
+}
+function openEditKitabaTopicModal(id){
+  let t = null;
+  for(const p of KITABA_PARTS){ const found = (KITABA_TOPICS[p.id]||[]).find(x=>x.id===id); if(found){ t = found; break; } }
+  if(!t) return;
+  document.getElementById('modalTitle').textContent = "Mavzuni tahrirlash";
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditKitabaTopic(event,'${id}')">
+      <div class="form-field">
+        <label>Mavzu matni (arabcha)</label>
+        <textarea id="ktTopicEditText" dir="rtl" style="min-height:90px;" required>${escapeHtml(t.topicAr)}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitEditKitabaTopic(e, id){
+  e.preventDefault();
+  const topicAr = document.getElementById('ktTopicEditText').value.trim();
+  if(!topicAr) return false;
+  closeModal();
+  toast('⏳ Saqlanmoqda...');
+  const saved = await editWritingTopicOnBackend(id, topicAr);
+  if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  await refreshKitabaFromBackend();
+  renderAdminQuestions();
+  toast("✅ Yangilandi");
+  return false;
+}
+async function deleteKitabaTopic(id){
+  if(!confirm("Bu mavzuni butunlay o'chirmoqchimisiz?")) return;
+  const result = await deleteWritingTopicOnBackend(id);
+  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+  await refreshKitabaFromBackend();
+  renderAdminQuestions();
+  toast("🗑 Mavzu o'chirildi");
 }
 
 /* ================= Qiroa: YAXLIT "Test qo'shish" oynasi =================
@@ -5385,6 +5535,28 @@ async function refreshSpeakingFromBackend(){
   applyLiveSpeakingQuestions(rows);
 }
 
+/* ---------------- Kitaba (Yozma) — 3 qism, har biri o'z talablari bilan ---------------- */
+const KITABA_PARTS = [
+  {id:'part1', name:'1-qism', minWords:100, seconds:15*60},
+  {id:'part2', name:'2-qism', minWords:150, seconds:20*60},
+  {id:'part3', name:'3-qism', minWords:200, seconds:30*60},
+];
+/* KITABA_TOPICS[partId] = [ {id, partId, topicAr}, ... ] — admin panelda kiritilgan
+   mavzular banki, backenddan ("writing_topics" jadvali) yuklanadi. */
+let KITABA_TOPICS = { part1:[], part2:[], part3:[] };
+function applyLiveWritingTopics(rows){
+  KITABA_TOPICS = { part1:[], part2:[], part3:[] };
+  if(!Array.isArray(rows)) return;
+  rows.forEach(r=>{
+    if(!KITABA_TOPICS[r.part_id]) return;
+    KITABA_TOPICS[r.part_id].push({ id:r.id, partId:r.part_id, topicAr:r.topic_ar });
+  });
+}
+async function refreshKitabaFromBackend(){
+  const rows = await loadWritingTopicsFromBackend();
+  applyLiveWritingTopics(rows);
+}
+
 /* ---------------- Timer (overall, for reading/listening/writing) ---------------- */
 let timerInterval = null;
 function startTimer(seconds, onExpire){
@@ -5674,15 +5846,33 @@ function advanceAfterIstimaJuz(){
     finishQuiz();
   }
 }
-function startWriting(){
+/* Yozma (Kitaba) topshiriq — 3 qismdan iborat, HAMMASI BITTA sessiyada ketma-ket
+   ishlanadi (1-qism → 2-qism → 3-qism). Har bir qism uchun KITABA_TOPICS bankidan
+   (admin panelda kiritilgan) TASODIFIY bitta arabcha mavzu tanlanadi — AI mavzu
+   generatsiya qilmaydi. Har qism alohida AI tomonidan 0-10 ball bilan baholanadi,
+   3 qismning yig'indisi (0-30) umumiy Kitaba balli hisoblanadi. */
+function startKitabaExam(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
-  currentQuiz = {skillId:'kitaba', type:'writing', label:'Kitaba (Writing)', color:'var(--kitaba)', text:'', idx:0};
-  document.getElementById('quizTag').textContent = 'Kitaba (Writing)';
+  const parts = [];
+  for(const part of KITABA_PARTS){
+    const bank = KITABA_TOPICS[part.id] || [];
+    if(bank.length === 0){
+      toast(`⚠️ Kitaba ${part.name} uchun hali mavzu qo'shilmagan. Admin panelda qo'shing.`);
+      return;
+    }
+    const topic = bank[Math.floor(Math.random()*bank.length)];
+    parts.push({ part, topic, text:'', score:null, feedback:null, criteria:null, corrected:'' });
+  }
+  currentQuiz = {
+    skillId:'kitaba', type:'writing', label:'Kitaba (Yozma)', color:'var(--kitaba)',
+    questions: parts, idx:0, phase:'writing', startedAt:Date.now(),
+  };
+  document.getElementById('quizTag').textContent = 'Kitaba (Yozma)';
   document.getElementById('quizTag').style.background = 'var(--kitaba-bg)';
   document.getElementById('quizTag').style.color = 'var(--kitaba)';
   document.getElementById('quizSide').style.display = 'none';
   renderQuestion();
-  startTimer(15*60);
+  startTimer(currentQuiz.questions[0].part.seconds, ()=> forceSubmitWriting());
   showView('quiz');
 }
 function startFullExam(){ toast('To\'liq imtihon tez orada qo\'shiladi — hozircha bo\'lim testlarini sinab ko\'ring 🎓'); }
@@ -5712,20 +5902,35 @@ function renderQuestion(){
   const body = document.getElementById('quizBody');
   if(currentQuiz.type==='writing'){
     clearQuestionTimer();
+    const cur = currentQuiz.questions[currentQuiz.idx];
+    if(currentQuiz.phase === 'evaluating'){
+      body.innerHTML = `
+        <div class="prompt-box" style="text-align:center;">
+          <div class="lbl">${cur.part.name} — AI tomonidan tekshirilmoqda</div>
+          <div style="margin-top:14px;">⏳ Punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha baholanmoqda, biroz kuting...</div>
+        </div>
+      `;
+      return;
+    }
+    if(currentQuiz.phase === 'done'){
+      renderKitabaSummary();
+      return;
+    }
     body.innerHTML = `
+      <div class="q-sub">${cur.part.name} · ${currentQuiz.idx+1} / ${currentQuiz.questions.length}</div>
       <div class="prompt-box">
-        <div class="lbl">Yozma topshiriq</div>
-        <div style="font-family:var(--font-ar);font-size:19px;direction:rtl;text-align:right;margin-bottom:10px;">اُكْتُبْ عَنْ أَهَمِّيَّةِ تَعَلُّمِ اللُّغَةِ الْعَرَبِيَّةِ</div>
+        <div class="lbl">Mavzu</div>
+        <div style="font-family:var(--font-ar);font-size:19px;direction:rtl;text-align:right;margin-bottom:10px;">${cur.topic.topicAr}</div>
         <div class="lbl" style="margin-top:10px;">Talablar:</div>
-        <ul><li>150–200 so'z</li><li>Mavzudan chetga chiqmaslik</li><li>To'g'ri imlo va grammatikaga e'tibor berish</li></ul>
+        <ul><li>Kamida ${cur.part.minWords} so'z</li><li>Mavzudan chetga chiqmaslik</li><li>To'g'ri imlo va grammatikaga e'tibor berish</li></ul>
       </div>
-      <textarea class="write-area" id="writeArea" placeholder="Yozishni boshlang...">${currentQuiz.text||''}</textarea>
-      <div class="wordcount"><span id="wcount">0</span> / 200 so'z</div>
+      <textarea class="write-area" id="writeArea" placeholder="Yozishni boshlang...">${cur.text||''}</textarea>
+      <div class="wordcount"><span id="wcount">0</span> / ${cur.part.minWords}+ so'z</div>
       <button class="btn btn-primary" style="margin-top:14px;" onclick="submitWriting()">Yuborish</button>
     `;
     const ta = document.getElementById('writeArea');
     const wc = document.getElementById('wcount');
-    function count(){ const words = ta.value.trim().length ? ta.value.trim().split(/\\s+/).length : 0; wc.textContent = words; currentQuiz.text = ta.value; }
+    function count(){ const words = ta.value.trim().length ? ta.value.trim().split(/\s+/).length : 0; wc.textContent = words; cur.text = ta.value; }
     ta.addEventListener('input', count); count();
     return;
   }
@@ -6161,9 +6366,116 @@ function renderMuhavaraPhase(){
 }
 
 function submitWriting(){
+  const cur = currentQuiz.questions[currentQuiz.idx];
+  const text = (cur.text||'').trim();
+  const words = text.length ? text.split(/\s+/).length : 0;
+  const minCheck = Math.min(10, cur.part.minWords);
+  if(words < minCheck){
+    toast("⚠️ Yozganingiz juda qisqa — davom ettiring, kamida bir necha jumla yozing.", 4000);
+    return;
+  }
+  evaluateWritingAnswer(text);
+}
+/* Vaqt tugaganda (timer 0'ga yetganda) joriy qismni bor holicha (bo'sh bo'lsa ham)
+   avtomatik yuboradi — foydalanuvchi keyingi qismga o'tkazib yuboriladi. */
+function forceSubmitWriting(){
+  if(!currentQuiz || currentQuiz.phase !== 'writing') return;
+  const cur = currentQuiz.questions[currentQuiz.idx];
+  evaluateWritingAnswer((cur.text||'').trim());
+}
+/* Kitaba javobini backendga (Supabase Edge Function "evaluate-writing") yuboradi —
+   u matnni Groq AI'ga tekshirtirib, shu QISM uchun 0-10 ball + 6 mezon (punktuatsiya,
+   imlo, lug'at, matn tuzilishi, fikrlarning aniqligi, mavzuni ochish) + izoh va
+   tuzatilgan matn bilan javob qaytaradi. Har qism baholangach, agar navbatda yana
+   qism bo'lsa avtomatik o'sha qismga o'tiladi (o'z vaqt chegarasi bilan), aks holda
+   imtihon yakunlanadi. */
+async function evaluateWritingAnswer(text){
   clearInterval(timerInterval);
-  toast('Yozma topshiriq yuborildi ✅ Tekshiruvdan so\'ng natija profilingizda ko\'rinadi.');
-  showView('attanal');
+  const cur = currentQuiz.questions[currentQuiz.idx];
+  cur.text = text;
+  currentQuiz.phase = 'evaluating';
+  renderQuestion();
+  try{
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-writing`, {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: cur.part.minWords })
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok || !data || typeof data.score !== 'number'){
+      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
+      cur.score = 0; cur.feedback = "Texnik sabab bilan baholanmadi."; cur.criteria = null; cur.corrected = '';
+    } else {
+      cur.score = Math.max(0, Math.min(10, data.score));
+      cur.feedback = data.feedback || '';
+      cur.criteria = data.criteria || null;
+      cur.corrected = data.corrected_text || '';
+    }
+  }catch(e){
+    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
+    cur.score = 0; cur.feedback = "Tarmoq xatosi tufayli baholanmadi."; cur.criteria = null; cur.corrected = '';
+  }
+  if(currentQuiz.idx < currentQuiz.questions.length-1){
+    currentQuiz.idx++;
+    currentQuiz.phase = 'writing';
+    renderQuestion();
+    startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
+  } else {
+    finishKitabaExam();
+  }
+}
+function finishKitabaExam(){
+  clearInterval(timerInterval);
+  currentQuiz.phase = 'done';
+  const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
+  const maxScore = currentQuiz.questions.length * 10;
+  if(TELEGRAM_PROFILE.rawId){
+    submitQuizResultToBackend({ skillId:'kitaba', topicId:null, topicName: currentQuiz.label, correct: Math.round(totalScore), total: maxScore });
+  }
+  renderQuestion();
+}
+function renderKitabaSummary(){
+  const timerEl = document.getElementById('quizTimer');
+  if(timerEl) timerEl.textContent = '';
+  const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
+  const maxScore = currentQuiz.questions.length * 10;
+  const pct = Math.round((totalScore/maxScore)*100);
+  document.getElementById('quizBody').innerHTML = `
+    <div class="prompt-box" style="text-align:center;">
+      <div class="lbl">Natija</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;">${Math.round(totalScore*10)/10} / ${maxScore} ball</div>
+      <div style="color:var(--text-faint);font-size:13px;">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+      ${currentQuiz.questions.map(q=>`
+        <div class="topic-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="t-name" style="font-size:13px;">${q.part.name}</div>
+            <div style="font-weight:800;font-size:16px;">${q.score ?? 0}/10</div>
+          </div>
+          <div dir="rtl" style="font-family:var(--font-ar);font-size:15px;">${escapeHtml(q.topic.topicAr)}</div>
+          ${q.criteria ? `
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px;">
+            ${Object.entries(q.criteria).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;"><span>${escapeHtml(k)}</span><span>${escapeHtml(String(v))}</span></div>`).join('')}
+          </div>` : ''}
+          ${q.feedback ? `<div class="t-meta" style="color:var(--text-dim);margin-top:4px;">${escapeHtml(q.feedback)}</div>` : ''}
+          ${q.corrected ? `
+          <div style="margin-top:6px;">
+            <div class="t-name" style="font-size:12px;">Tavsiya etilgan tuzatilgan matn</div>
+            <div dir="rtl" style="margin-top:4px;font-family:var(--font-ar);font-size:14px;line-height:1.8;">${escapeHtml(q.corrected)}</div>
+          </div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="reviseWriting()">Qayta boshlash</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="showView('dashboard')">Bosh sahifaga qaytish</button>
+    </div>
+  `;
+}
+/* Natijadan keyin "Qayta boshlash" bosilsa — 3 qism uchun yangi (tasodifiy)
+   mavzular bilan butun imtihon qaytadan boshlanadi. */
+function reviseWriting(){
+  startKitabaExam();
 }
 
 /* ---------------- Finish / results ---------------- */
@@ -6665,6 +6977,7 @@ bootApp();
     // Qiroa matnlari/savollari — admin panel har safar shu funksiya chaqirilganda
     // (ochilganda, 30 soniyada bir, va ilova qayta faollashganda) yangilanib tursin.
     try { await refreshQiroaFromBackend(); } catch(e) { console.warn('Qiroa matnlari yuklanmadi:', e); }
+    try { await refreshKitabaFromBackend(); } catch(e) { console.warn('Kitaba mavzulari yuklanmadi:', e); }
 
     applyExamCardState();
     applyGrammarOrder();
