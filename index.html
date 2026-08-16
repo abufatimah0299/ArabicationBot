@@ -4697,8 +4697,16 @@ const GRAMMAR_TOPIC_BANKS = {};
    (ilova qayta ochilganda) ko'rinadi. Backend bo'sh bo'lsa, savollar ro'yxati bo'sh
    qoladi (static namunaviy savollar butunlay olib tashlangan).
    Har bir savolga backenddagi haqiqiy `id` (va skillId/topicId) ham biriktiriladi —
-   buni admin panelda tahrirlash/o'chirish/tartib almashtirish uchun ishlatamiz. */
+   buni admin panelda tahrirlash/o'chirish/tartib almashtirish uchun ishlatamiz.
+   MUHIM: bu funksiya ilova davomida (refreshQiroaFromBackend orqali) bir necha marta
+   qayta-qayta chaqiriladi. Oldin push() faqat qo'shar, hech qachon tozalamas edi —
+   shu sabab har chaqirilganda bir xil savollar ustma-ust qo'shilib, "klonlanib"
+   ko'payib borar edi. Shuning oldini olish uchun har safar avval barcha mahalliy
+   savol massivlarini bo'shatib, so'ng backenddan kelgan qatorlar bilan qayta to'ldiramiz. */
 function applyLiveQuestions(rows){
+  Object.keys(GRAMMAR_TOPIC_BANKS).forEach(topicId=>{ GRAMMAR_TOPIC_BANKS[topicId] = []; });
+  Object.values(QIROA_TEST_BY_ID).forEach(test=>{ test.questions = []; });
+  Object.keys(QUESTION_BANKS).forEach(skillId=>{ if(QUESTION_BANKS[skillId]) QUESTION_BANKS[skillId].questions = []; });
   if(!Array.isArray(rows) || !rows.length) return;
   rows.forEach(r=>{
     const item = { id: r.id, skillId: r.skill_id, topicId: r.topic_id || null, q: r.q, opts: r.opts, a: r.correct_index ?? r.a, exp: r.exp || '' };
