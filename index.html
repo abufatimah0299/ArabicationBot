@@ -3263,7 +3263,7 @@ function openBulkAddQuestionModal(){
           </select>
         </div>
         <div class="form-field">
-          <label>Yangi mavzular uchun kategoriya (mavzu mavjud bo'lmasa, shu kategoriya ostida avtomatik yaratiladi)</label>
+          <label>Standart kategoriya (JSON'da "category" ko'rsatilmagan yangi mavzular shu kategoriya ostida yaratiladi)</label>
           <select id="bqCategory">
             ${GRAMMAR_CATEGORIES.map(c=>`<option value="${c.id}">${c.name} (${c.ar})</option>`).join('')}
           </select>
@@ -3272,13 +3272,13 @@ function openBulkAddQuestionModal(){
       <div class="form-field">
         <label>Savollar (JSON massiv)</label>
         <textarea id="bqJson" rows="12" placeholder='[
-  {"topic":"Fe\\'l zamonlari","topicAr":"أزمنة الفعل","q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
-  {"topic":"Fe\\'l zamonlari","q":"...","opts":["...","...","...","..."],"a":2},
+  {"topic":"Fe\\'l zamonlari","topicAr":"أزمنة الفعل","category":"sarf","q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
+  {"topic":"Tinish belgilari","category":"tarqim","q":"...","opts":["...","...","...","..."],"a":2},
   {"q":"...","opts":["...","...","...","..."],"a":1}
 ]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
           Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
-          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yuqorida tanlangan kategoriya ostida avtomatik yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzudagi savollarni aralashtirib yozishingiz mumkin.` : ''}
+          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>tarqim</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
         </div>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Hammasini saqlash</button>
@@ -3315,7 +3315,7 @@ async function submitBulkQuestions(e){
       topicId: isGrammar ? (defaultTopicId || null) : null,
       topicName: isGrammar ? (row.topic || null) : null,
       topicAr: isGrammar ? (row.topicAr || null) : null,
-      category: isGrammar ? (category || null) : null,
+      category: isGrammar ? (row.category || category || null) : null,
       q: row.q, opts: row.opts, a: row.a, exp: row.exp || '',
     });
   }
