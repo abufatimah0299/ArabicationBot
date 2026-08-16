@@ -882,6 +882,62 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .admin-toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:12.5px; font-weight:700; padding:11px 20px; border-radius:12px; z-index:9999; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
 .admin-toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
+/* ---- Savollar banki: "Amallar" action-sheet ---- */
+.as-overlay{ z-index:260; align-items:flex-end; }
+@media (min-width:640px){ .as-overlay{ align-items:center; } }
+.as-box{
+  background:var(--card); border:1px solid var(--border); width:100%; max-width:420px;
+  border-radius:22px 22px 0 0; padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -10px 40px -10px rgba(0,0,0,0.5); max-height:86vh; overflow-y:auto;
+  animation:asUp .22s var(--ease);
+}
+@media (min-width:640px){ .as-box{ border-radius:22px; padding:20px; } }
+@keyframes asUp{ from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+.as-handle{ width:36px; height:4px; border-radius:99px; background:var(--border); margin:0 auto 14px; }
+@media (min-width:640px){ .as-handle{ display:none; } }
+.as-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; }
+.as-head h3{ font-size:14.5px; font-weight:800; }
+.as-close{ width:30px; height:30px; border-radius:9px; border:none; background:var(--bg); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-family:inherit; flex-shrink:0; }
+.as-close:hover{ background:var(--indigo-100); color:var(--indigo-700); }
+
+.as-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.as-card{
+  background:var(--card); border:1.5px solid var(--border); border-radius:16px; padding:16px 14px;
+  display:flex; align-items:center; gap:12px; cursor:pointer; font-family:inherit; text-align:start;
+  transition:.15s var(--ease); color:var(--text); width:100%;
+}
+.as-card:hover{ border-color:var(--indigo-500); transform:translateY(-1px); }
+.as-card .as-t{ font-weight:800; font-size:12.5px; line-height:1.25; }
+
+.as-icon{ width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.as-icon svg{ width:18px; height:18px; }
+.as-icon.g{ background:var(--green-bg); color:var(--green); }
+.as-icon.b{ background:var(--istima-bg); color:var(--istima); }
+.as-icon.r{ background:var(--red-bg); color:var(--red); }
+
+.as-primary{
+  width:100%; border:none; border-radius:16px; padding:17px 16px; margin-bottom:6px;
+  background:linear-gradient(135deg, var(--indigo-500), var(--indigo-700)); color:#fff;
+  display:flex; align-items:center; gap:12px; cursor:pointer; font-family:inherit;
+  font-weight:800; font-size:14.5px; text-align:start; box-shadow:var(--shadow);
+  transition:.15s var(--ease);
+}
+.as-primary:hover{ filter:brightness(1.06); transform:translateY(-1px); }
+.as-primary .as-icon{ background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.35); color:#fff; }
+
+.as-divider{ height:1px; background:var(--border); margin:14px 0; }
+
+.as-row{
+  width:100%; display:flex; align-items:center; gap:12px; padding:13px 12px; border-radius:14px;
+  border:1px solid var(--border); background:var(--card); cursor:pointer; font-family:inherit;
+  text-align:start; margin-bottom:9px; transition:.15s var(--ease); color:var(--text);
+}
+.as-row:last-child{ margin-bottom:0; }
+.as-row:hover{ border-color:var(--hover-border); background:var(--card-alt); }
+.as-row .as-t{ font-weight:800; font-size:13.5px; flex:1; min-width:0; }
+.as-row.danger .as-t{ color:var(--red); }
+.as-row .as-chev{ width:16px; height:16px; color:var(--text-faint); flex-shrink:0; }
+
 .toast{
   position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--indigo-900);
   color:#fff; padding:13px 22px; border-radius:12px; font-weight:700; font-size:13.5px; opacity:0; pointer-events:none;
@@ -1497,17 +1553,12 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
           <div class="skill-chip-row" id="adminSkillChips"></div>
           <div class="admin-toolbar">
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn" id="adminAddTopicBtn" style="display:none;" onclick="openAddTopicModal()">+ Yangi mavzu</button>
-              <button class="btn" id="adminBulkAddBtn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
-              <button class="btn btn-primary" id="adminAddQuestionBtn" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
-              <button class="btn btn-primary" id="adminAddQiroaTestBtn" style="display:none;" onclick="openAddQiroaFullTestModal()">+ Yangi test qo'shish</button>
-              <button class="btn" id="adminBulkQiroaTestBtn" style="display:none;" onclick="openBulkAddQiroaTestsModal()">+ Bir nechta test (JSON)</button>
-              <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (joriy bo'lim)</button>
-              <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (joriy bo'limga)</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="openAdminActionsSheet()" style="display:flex;align-items:center;gap:7px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Amallar
+              </button>
               <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
-              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearCurrentSectionQuestions()">🗑 Joriy bo'limni tozalash</button>
-              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllQuestions()">🗑 Barcha bo'limlarni tozalash</button>
             </div>
           </div>
           <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
@@ -1640,6 +1691,46 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Savollar banki: "Amallar" action-sheet -->
+<div class="modal-overlay as-overlay" id="adminActionsOverlay" onclick="if(event.target===this) closeAdminActionsSheet()">
+  <div class="as-box">
+    <div class="as-handle"></div>
+    <div class="as-head">
+      <h3>Savollar banki — amallar</h3>
+      <button class="as-close" onclick="closeAdminActionsSheet()">✕</button>
+    </div>
+
+    <div class="as-grid2" id="asGrid"></div>
+    <div id="asPrimary"></div>
+
+    <div class="as-divider"></div>
+
+    <button class="as-row" onclick="adminActionsSheetChoose(()=>exportAllQuestionsData())">
+      <span class="as-icon b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+      <span class="as-t">Backup (joriy bo'lim)</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    <button class="as-row" onclick="adminActionsSheetChoose(()=>document.getElementById('bqImportFileInput').click())">
+      <span class="as-icon b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V10m0 0-4 4m4-4 4 4"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+      <span class="as-t">Import (joriy bo'limga)</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+
+    <div class="as-divider"></div>
+
+    <button class="as-row danger" onclick="adminActionsSheetChoose(()=>clearCurrentSectionQuestions())">
+      <span class="as-icon r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
+      <span class="as-t">Joriy bo'limni tozalash</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+    <button class="as-row danger" onclick="adminActionsSheetChoose(()=>clearAllQuestions())">
+      <span class="as-icon r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></span>
+      <span class="as-t">Barcha bo'limlarni tozalash</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
   </div>
 </div>
 
@@ -3265,6 +3356,61 @@ function renderAdminQuestions(){
   }
 }
 function setAdminSkill(id){ adminActiveSkill = id; renderAdminQuestions(); }
+
+/* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
+   qo'shish tugmalarini ko'rsatadi, backup/import/tozalash har doim bir xil qoladi. ---- */
+const AS_ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
+function renderAdminActionsSheet(){
+  const grid = document.getElementById('asGrid');
+  const primary = document.getElementById('asPrimary');
+  if(!grid || !primary) return;
+  const isGrammar = adminActiveSkill === 'grammatika';
+  const isQiroa = adminActiveSkill === 'qiroa';
+  let gridHtml = '', primaryHtml = '';
+  if(isGrammar){
+    gridHtml = `
+      <button class="as-card" onclick="adminActionsSheetChoose(()=>openAddTopicModal())">
+        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Yangi mavzu</span>
+      </button>
+      <button class="as-card" onclick="adminActionsSheetChoose(()=>openBulkAddQuestionModal())">
+        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Ommaviy qo'shish</span>
+      </button>`;
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddQuestionModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi savol qo'shish</span>
+      </button>`;
+  } else if(isQiroa){
+    gridHtml = `
+      <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddQiroaTestsModal())">
+        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Bir nechta test (JSON)</span>
+      </button>`;
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddQiroaFullTestModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi test qo'shish</span>
+      </button>`;
+  } else {
+    gridHtml = `
+      <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddQuestionModal())">
+        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Ommaviy qo'shish</span>
+      </button>`;
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddQuestionModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi savol qo'shish</span>
+      </button>`;
+  }
+  grid.innerHTML = gridHtml;
+  primary.innerHTML = primaryHtml;
+}
+function openAdminActionsSheet(){
+  renderAdminActionsSheet();
+  document.getElementById('adminActionsOverlay').classList.add('show');
+}
+function closeAdminActionsSheet(){
+  document.getElementById('adminActionsOverlay').classList.remove('show');
+}
+/* Sheetdagi biror amalni tanlaganda: avval sheet yopiladi, so'ng haqiqiy funksiya chaqiriladi
+   (aks holda ochilayotgan yangi modal action-sheet ortida yashiringan bo'lib qolardi). */
+function adminActionsSheetChoose(fn){
+  closeAdminActionsSheet();
+  setTimeout(fn, 180);
+}
 
 /* ---- Grammatika mavzularini boshqarish (qo'shish / tahrirlash / o'chirish) ---- */
 function openAddTopicModal(){
