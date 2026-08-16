@@ -690,11 +690,26 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 }
 .rank-type-btn:hover{ border-color:var(--hover-border); color:var(--indigo-700); }
 .rank-type-btn.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
-#filterRankPeriod{ display:flex; flex-wrap:nowrap; gap:8px; }
-#filterRankPeriod .filter-chip{
-  flex:1 1 0; min-width:0; box-sizing:border-box; text-align:center; white-space:nowrap;
-  padding:10px 6px; font-size:12px;
+/* Reyting sahifasi tepasidagi "Davr" / "Mahorat" dropdown filtrlar (chiplar o'rniga,
+   joy tejash uchun) — label ustida kichik, tanlangan qiymat ostida katta harflarda. */
+.rank-filter-row{ display:flex; gap:10px; margin-bottom:16px; }
+.rank-dropdown{
+  flex:1 1 0; min-width:0; position:relative; border:1.5px solid var(--border); border-radius:14px;
+  padding:9px 32px 9px 14px; background:var(--card); box-sizing:border-box;
 }
+.rank-dropdown label{ display:block; font-size:10.5px; font-weight:700; color:var(--text-faint); margin-bottom:1px; }
+.rank-dropdown select{
+  appearance:none; -webkit-appearance:none; -moz-appearance:none; border:none; background:transparent; outline:none;
+  font-family:inherit; font-size:13.5px; font-weight:800; color:var(--text); width:100%; cursor:pointer; padding:0;
+}
+.rank-dropdown select:focus{ outline:none; }
+.rank-dropdown .chev{ position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-faint); }
+/* Reyting sarlavhasi qatoridagi (i) tugmasi */
+.rank-info-btn{
+  width:30px; height:30px; border-radius:9px; border:1.5px solid var(--border); background:var(--card);
+  color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+}
+.rank-info-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
 
 /* ---------- History ---------- */
 .history-item{ padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
@@ -730,11 +745,14 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 /* ---------- Rank ---------- */
 .rank-top-card{
   background:linear-gradient(135deg, var(--indigo-600), var(--indigo-900));
-  color:#fff; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  color:#fff; padding:18px 18px 16px; display:flex; flex-direction:column; gap:14px;
 }
-.rank-top-left{ display:flex; align-items:center; gap:12px; }
-.rank-num{ font-size:23px; font-weight:900; letter-spacing:-1px; }
-.rank-top-right{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+.rank-top-cols{ display:flex; align-items:stretch; }
+.rank-top-col{ flex:1; text-align:center; padding:0 6px; }
+.rank-top-col:not(:last-child){ border-inline-end:1px solid rgba(255,255,255,.2); }
+.rank-top-col .num{ font-size:21px; font-weight:900; letter-spacing:-0.5px; }
+.rank-top-col .lbl{ font-size:10.5px; font-weight:700; opacity:.85; margin-top:4px; }
+.rank-top-gap{ font-size:11.5px; font-weight:700; opacity:.9; text-align:center; }
 /* Reyting: mahorat (bo'lim) filtri — davr filtri bilan bir xil uslub, ranglar bilan */
 .rank-skill-filter{ margin-bottom:10px; }
 .rank-skill-filter .filter-chip{ display:flex; align-items:center; gap:6px; }
@@ -1560,34 +1578,57 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
       <!-- ============ RANK (reyting) ============ -->
       <div class="view" id="view-rank">
-        <div class="view-title">Reyting</div>
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;">
+          <div class="view-title" style="margin:0;">Imtihon reytingi</div>
+          <button type="button" class="rank-info-btn" title="Reyting qanday tuziladi" onclick="toast('ℹ️ Reyting siz to\'plagan XP asosida tuziladi. Ko\'proq test yeching — o\'rningiz yuqoriga ko\'tariladi.', 5000)">ⓘ</button>
+        </div>
 
         <div class="rank-type-toggle" id="rankTypeToggle">
           <button class="rank-type-btn active" data-type="tanal">At-Tanal</button>
+          <button class="rank-type-btn" data-type="cefr" onclick="toast('CEFR reytingi tez orada qo\'shiladi')">CEFR</button>
         </div>
 
-        <div class="section-title" style="margin-top:0;">Mahorat</div>
-        <div class="filter-group rank-skill-filter" id="filterRankSkill"></div>
+        <div class="rank-filter-row">
+          <div class="rank-dropdown">
+            <label>Davr</label>
+            <select id="rankPeriodSelect">
+              <option value="hafta">Haftalik</option>
+              <option value="oy">Oylik</option>
+              <option value="hammasi">Butun davr</option>
+            </select>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          <div class="rank-dropdown">
+            <label>Mahorat</label>
+            <select id="rankSkillSelect">
+              <option value="hammasi">Barchasi</option>
+            </select>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
 
         <div class="card rank-top-card">
-          <div class="rank-top-left">
-            <div class="rank-num" id="rankNum">#14</div>
-            <div>
-              <div style="font-weight:800;font-size:13.5px;">Sizning o'rningiz</div>
-              <div style="font-size:11.5px;opacity:.85;font-weight:600;" id="rankXpText">1 240 XP to'pladingiz</div>
+          <div class="rank-top-cols">
+            <div class="rank-top-col">
+              <div class="num" id="rankNum">—</div>
+              <div class="lbl">O'rningiz</div>
+            </div>
+            <div class="rank-top-col">
+              <div class="num" id="rankXpNum">—</div>
+              <div class="lbl">Yig'ilgan XP</div>
+            </div>
+            <div class="rank-top-col">
+              <div class="num" id="rankGapNum">—</div>
+              <div class="lbl">Keyingi o'ringacha</div>
             </div>
           </div>
-          <div class="rank-top-right">
-            <div style="font-size:11.5px;font-weight:700;opacity:.9;" id="rankGapText">Keyingi o'ringa: <b>60 XP</b> qoldi</div>
-            <div class="bar-bg" style="background:rgba(255,255,255,.28);width:150px;"><div class="bar-fill" id="rankGapBar" style="width:0%;background:#fff;"></div></div>
-          </div>
-        </div>
-
-        <div class="filter-bar" style="margin-top:18px;">
-          <div class="filter-group" id="filterRankPeriod">
-            <button class="filter-chip active" data-val="hafta">Haftalik</button>
-            <button class="filter-chip" data-val="oy">Oylik</button>
-            <button class="filter-chip" data-val="hammasi">Barcha davrlar</button>
+          <div>
+            <div class="rank-top-gap" id="rankGapText"></div>
+            <div class="bar-bg" style="background:rgba(255,255,255,.28);margin-top:6px;"><div class="bar-fill" id="rankGapBar" style="width:0%;background:#fff;"></div></div>
           </div>
         </div>
 
@@ -5516,8 +5557,9 @@ function renderLeaderboard(period, skill){
 function renderRankTop(period, skill){
   if(!rankLoaded){
     document.getElementById('rankNum').textContent = '—';
-    document.getElementById('rankXpText').textContent = 'Yuklanmoqda…';
-    document.getElementById('rankGapText').innerHTML = '';
+    document.getElementById('rankXpNum').textContent = '—';
+    document.getElementById('rankGapNum').textContent = '—';
+    document.getElementById('rankGapText').innerHTML = 'Yuklanmoqda…';
     document.getElementById('rankGapBar').style.width = '0%';
     return;
   }
@@ -5525,21 +5567,24 @@ function renderRankTop(period, skill){
   const me = data.find(u=>u.me);
   if(!me){
     document.getElementById('rankNum').textContent = '—';
-    document.getElementById('rankXpText').textContent = 'Hali XP to\'plamagansiz';
-    document.getElementById('rankGapText').innerHTML = '';
+    document.getElementById('rankXpNum').textContent = '—';
+    document.getElementById('rankGapNum').textContent = '—';
+    document.getElementById('rankGapText').innerHTML = 'Hali XP to\'plamagansiz';
     document.getElementById('rankGapBar').style.width = '0%';
     return;
   }
   const above = data[data.indexOf(me)-1];
   document.getElementById('rankNum').textContent = '#' + me.rank;
-  document.getElementById('rankXpText').textContent = me.xp.toLocaleString('ru-RU') + ' XP to\'pladingiz';
+  document.getElementById('rankXpNum').textContent = me.xp.toLocaleString('ru-RU');
   if(above){
     const gap = above.xp - me.xp;
     const pct = Math.max(4, Math.min(100, Math.round((me.xp/above.xp)*100)));
-    document.getElementById('rankGapText').innerHTML = `Keyingi o'ringa: <b>${gap} XP</b> qoldi`;
+    document.getElementById('rankGapNum').textContent = gap.toLocaleString('ru-RU');
+    document.getElementById('rankGapText').innerHTML = "Keyingi o'ringgacha qolgan XP";
     document.getElementById('rankGapBar').style.width = pct+'%';
   } else {
-    document.getElementById('rankGapText').innerHTML = `🎉 Siz ro'yxat boshida turibsiz!`;
+    document.getElementById('rankGapNum').textContent = '🏆';
+    document.getElementById('rankGapText').innerHTML = "🎉 Siz ro'yxat boshida turibsiz!";
     document.getElementById('rankGapBar').style.width = '100%';
   }
 }
@@ -5550,25 +5595,19 @@ function renderRank(period, skill){
   renderPodium(period, skill);
   renderLeaderboard(period, skill);
 }
-/* Mahorat filtri chiplarini SKILLS ro'yxatidan avtomatik yasaydi — shu bilan
-   bo'lim nomlari/ranglari boshqa joylar bilan (skill hub, tarix va h.k.) doim mos keladi. */
+/* Mahorat dropdown filtrini SKILLS ro'yxatidan avtomatik yasaydi — shu bilan
+   bo'lim nomlari boshqa joylar bilan (skill hub, tarix va h.k.) doim mos keladi. */
 (function initRankSkillFilter(){
-  const wrap = document.getElementById('filterRankSkill');
-  const chips = [`<button class="filter-chip active" data-val="hammasi">Barchasi</button>`]
-    .concat(SKILLS.map(s=>`<button class="filter-chip" data-val="${s.id}"><span class="dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</button>`));
-  wrap.innerHTML = chips.join('');
-  wrap.addEventListener('click', e=>{
-    const btn = e.target.closest('.filter-chip'); if(!btn) return;
-    wrap.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    renderRank(currentRankPeriod, btn.dataset.val);
+  const sel = document.getElementById('rankSkillSelect');
+  const opts = ['<option value="hammasi">Barchasi</option>']
+    .concat(SKILLS.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`));
+  sel.innerHTML = opts.join('');
+  sel.addEventListener('change', ()=>{
+    renderRank(currentRankPeriod, sel.value);
   });
 })();
-document.getElementById('filterRankPeriod').addEventListener('click', e=>{
-  const btn = e.target.closest('.filter-chip'); if(!btn) return;
-  document.querySelectorAll('#filterRankPeriod .filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderRank(btn.dataset.val, currentRankSkill);
+document.getElementById('rankPeriodSelect').addEventListener('change', e=>{
+  renderRank(e.target.value, currentRankSkill);
 });
 renderRank(currentRankPeriod, currentRankSkill);
 
