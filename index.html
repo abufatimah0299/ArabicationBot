@@ -3480,6 +3480,7 @@ async function submitNewQuestion(e){
 function openBulkAddQuestionModal(){
   const skillId = adminActiveSkill;
   const isGrammar = skillId === 'grammatika';
+  const isQiroa = skillId === 'qiroa';
   document.getElementById('modalTitle').textContent = "Savollarni ommaviy qo'shish";
   document.getElementById('modalBody').innerHTML = `
     <form id="adminBulkQForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkQuestions(event)">
@@ -3487,6 +3488,15 @@ function openBulkAddQuestionModal(){
         <label>Bo'lim</label>
         <select id="bqSkill" onchange="toggleBulkGrammarTopicField()">
           ${SKILLS.map(s=>`<option value="${s.id}" ${s.id===skillId?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field" id="bqJuzField" style="${isQiroa?'':'display:none;'}">
+        <label>Juz (bu ro'yxatdagi BARCHA savollar shu juzga qo'shiladi)</label>
+        <select id="bqJuz">
+          ${QIROA_JUZ.map(j=>{
+            const n = QIROA_JUZ_BANKS[j.id]?.length || 0;
+            return `<option value="${j.id}">${j.name} (${n}/${QIROA_MAX_Q_PER_JUZ})</option>`;
+          }).join('')}
         </select>
       </div>
       <div id="bqGrammarFields" style="${isGrammar?'':'display:none;'}display:flex;flex-direction:column;gap:14px;">
@@ -3515,6 +3525,7 @@ function openBulkAddQuestionModal(){
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
           Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
           ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>tarqim</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
+          ${isQiroa ? `Qiroa uchun: yuqorida tanlangan <b>Juz</b>ga qo'shiladi (bitta juzda ko'pi bilan ${QIROA_MAX_Q_PER_JUZ} ta savol bo'lishi kerak). Matn (passage) alohida — "📄 Matn" tugmasidan kiritiladi, bu yerga faqat savollar yoziladi.` : ''}
         </div>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Hammasini saqlash</button>
@@ -3523,15 +3534,23 @@ function openBulkAddQuestionModal(){
   document.getElementById('modalOverlay').classList.add('show');
 }
 function toggleBulkGrammarTopicField(){
-  const isGrammar = document.getElementById('bqSkill').value === 'grammatika';
-  document.getElementById('bqGrammarFields').style.display = isGrammar ? 'flex' : 'none';
+  const val = document.getElementById('bqSkill').value;
+  document.getElementById('bqGrammarFields').style.display = val==='grammatika' ? 'flex' : 'none';
+  const juzField = document.getElementById('bqJuzField');
+  if(juzField) juzField.style.display = val==='qiroa' ? '' : 'none';
 }
 async function submitBulkQuestions(e){
   e.preventDefault();
   const skillId = document.getElementById('bqSkill').value;
   const isGrammar = skillId === 'grammatika';
+  const isQiroa = skillId === 'qiroa';
   const defaultTopicId = isGrammar ? (document.getElementById('bqTopic')?.value || '') : '';
   const category = isGrammar ? (document.getElementById('bqCategory')?.value || '') : '';
+  const qiroaJuzId = isQiroa ? (document.getElementById('bqJuz')?.value || '') : '';
+  if(isQiroa && !qiroaJuzId){
+    toast("❌ Qiroa uchun avval Juz tanlang", 6000);
+    return false;
+  }
   let parsed;
   try{
     parsed = JSON.parse(document.getElementById('bqJson').value);
@@ -3539,6 +3558,14 @@ async function submitBulkQuestions(e){
   }catch(err){
     toast("❌ JSON noto'g'ri: " + err.message, 6000);
     return false;
+  }
+  if(isQiroa){
+    const existing = QIROA_JUZ_BANKS[qiroaJuzId]?.length || 0;
+    if(existing + parsed.length > QIROA_MAX_Q_PER_JUZ){
+      const juzName = QIROA_JUZ.find(j=>j.id===qiroaJuzId)?.name || 'Bu juz';
+      toast(`❌ ${juzName}da ${existing} ta savol bor, ${parsed.length} ta qo'shsangiz ${existing+parsed.length} ta bo'ladi — max ${QIROA_MAX_Q_PER_JUZ} ta bo'lishi kerak`, 7000);
+      return false;
+    }
   }
   const items = [];
   for(const [i, row] of parsed.entries()){
@@ -3548,7 +3575,7 @@ async function submitBulkQuestions(e){
     }
     items.push({
       skillId,
-      topicId: isGrammar ? (defaultTopicId || null) : null,
+      topicId: isGrammar ? (defaultTopicId || null) : (isQiroa ? qiroaJuzId : null),
       topicName: isGrammar ? (row.topic || null) : null,
       topicAr: isGrammar ? (row.topicAr || null) : null,
       category: isGrammar ? (row.category || category || null) : null,
