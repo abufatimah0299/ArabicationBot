@@ -3288,8 +3288,9 @@ function renderAdminQuestions(){
   const qiroaTestBtn = document.getElementById('adminAddQiroaTestBtn');
   const bulkQiroaTestBtn = document.getElementById('adminBulkQiroaTestBtn');
   const isQiroaTab = adminActiveSkill === 'qiroa';
-  if(bulkBtn) bulkBtn.style.display = isQiroaTab ? 'none' : '';
-  if(singleBtn) singleBtn.style.display = isQiroaTab ? 'none' : '';
+  const isIstimaTab = adminActiveSkill === 'istima';
+  if(bulkBtn) bulkBtn.style.display = (isQiroaTab || isIstimaTab) ? 'none' : '';
+  if(singleBtn) singleBtn.style.display = (isQiroaTab || isIstimaTab) ? 'none' : '';
   if(qiroaTestBtn) qiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
   if(bulkQiroaTestBtn) bulkQiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
 
@@ -3352,6 +3353,42 @@ function renderAdminQuestions(){
         </div>
       </div>`;
     }).join('');
+  } else if(adminActiveSkill==='istima'){
+    const totalTests = ISTIMA_JUZ.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]?.length||0), 0);
+    const totalQ = ISTIMA_JUZ.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]||[]).reduce((s2,t)=>s2+t.questions.length,0), 0);
+    countEl.textContent = `${ISTIMA_JUZ.length} ta qism · ${totalTests} ta test · ${totalQ} ta savol`;
+    list.innerHTML = ISTIMA_JUZ.map(j=>{
+      const tests = ISTIMA_TESTS[j.id] || [];
+      const testRows = tests.length
+        ? tests.map((t,idx)=>{
+            const n = t.questions.length;
+            const complete = n >= j.qCount;
+            return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--istima);padding-inline-start:10px;">
+              <div>
+                <div class="t-name" style="font-size:13px;">${j.name} · Test ${idx+1}</div>
+                <div class="t-meta">${t.audioUrl ? `<a href="${escapeHtml(t.audioUrl)}" target="_blank" rel="noopener" style="color:var(--istima);text-decoration:none;">🔊 Audio havolasi</a>` : '<span style="opacity:.6;">Audio URL kiritilmagan</span>'}</div>
+                <div class="t-meta">${n} / ${j.qCount} ta savol ${complete?'✅':''}</div>
+              </div>
+              <div class="t-actions icon-btn-row">
+                <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('istima','${t.id}')">${IB_ICON_VIEW}</button>
+                <button class="icon-btn ib-add" title="${n>=j.qCount?"Bu testda allaqachon savollar to'liq":"Savol qo'shish"}" ${n>=j.qCount?'disabled':''} onclick="openAddQuestionModal('istima','${t.id}')">${IB_ICON_ADD}</button>
+                <button class="icon-btn ib-edit" title="Audio URL'ni tahrirlash" onclick="openEditIstimaAudioModal('${t.id}')">${IB_ICON_EDIT}</button>
+                <button class="icon-btn ib-del" title="O'chirish" onclick="deleteIstimaTest('${t.id}')">${IB_ICON_DEL}</button>
+              </div>
+            </div>`;
+          }).join('')
+        : `<div class="t-meta" style="margin-inline-start:14px;">Hali test yo'q</div>`;
+      return `<div class="topic-row" style="align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="t-name">${j.name}</div>
+          <div class="t-meta">${tests.length} ta test · har testda ${j.qCount} ta savol · audio ${j.maxPlays} marta ijro etiladi</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${testRows}</div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" onclick="openAddIstimaFullTestModal('${j.id}')">+ Yangi test</button>
+        </div>
+      </div>`;
+    }).join('');
   } else {
     const bank = QUESTION_BANKS[adminActiveSkill];
     const n = bank?.questions?.length || 0;
@@ -3389,6 +3426,7 @@ function renderAdminActionsSheet(){
   if(!grid || !primary) return;
   const isGrammar = adminActiveSkill === 'grammatika';
   const isQiroa = adminActiveSkill === 'qiroa';
+  const isIstima = adminActiveSkill === 'istima';
   let gridHtml = '', primaryHtml = '';
   if(isGrammar){
     gridHtml = `
@@ -3407,6 +3445,14 @@ function renderAdminActionsSheet(){
         <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Bir nechta test (JSON)</span>
       </button>`;
     primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddQiroaFullTestModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi test qo'shish</span>
+      </button>`;
+  } else if(isIstima){
+    gridHtml = `
+      <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddIstimaTestsModal())">
+        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Bir nechta test (JSON)</span>
+      </button>`;
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddIstimaFullTestModal())">
         <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi test qo'shish</span>
       </button>`;
   } else {
@@ -3548,6 +3594,7 @@ function viewTopicQuestions(skillId, topicId){
 function getQuestionItems(skillId, topicId){
   if(skillId==='grammatika') return GRAMMAR_TOPIC_BANKS[topicId];
   if(skillId==='qiroa') return QIROA_TEST_BY_ID[topicId]?.questions;
+  if(skillId==='istima') return ISTIMA_TEST_BY_ID[topicId]?.questions;
   return QUESTION_BANKS[skillId]?.questions;
 }
 function renderTopicQuestionsModal(skillId, topicId, items){
@@ -3932,6 +3979,264 @@ async function submitBulkQiroaTests(e){
     toast(msg, 8000);
   } else {
     toast("⚠️ Matn(lar) saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR, 8000);
+  }
+  return false;
+}
+
+/* ================= Istima: tahrirlash / o'chirish ================= */
+function openEditIstimaAudioModal(testId){
+  const test = ISTIMA_TEST_BY_ID[testId];
+  if(!test) return;
+  const juz = ISTIMA_JUZ.find(j=>j.id===test.juzId);
+  document.getElementById('modalTitle').textContent = `${juz?.name||''} — audio URL'ni tahrirlash`;
+  document.getElementById('modalBody').innerHTML = `
+    <form id="istimaAudioForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditIstimaAudio(event,'${testId}')">
+      <div class="form-field">
+        <label>Audio fayl URL manzili</label>
+        <input type="url" id="istimaAudioUrlInput" placeholder="https://...supabase.co/storage/v1/object/public/istima/....mp3" value="${escapeHtml(test.audioUrl||'')}" required>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">Supabase Storage'dagi ochiq (public) audio faylining to'g'ridan-to'g'ri havolasi.</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitEditIstimaAudio(e, testId){
+  e.preventDefault();
+  const url = document.getElementById('istimaAudioUrlInput').value.trim();
+  if(!url){ toast('❌ Audio URL kiritilmagan'); return false; }
+  closeModal();
+  toast('⏳ Saqlanmoqda...');
+  const saved = await editIstimaAudioOnBackend(testId, url);
+  if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  await refreshIstimaFromBackend();
+  renderAdminQuestions();
+  toast("✅ Audio URL yangilandi");
+  return false;
+}
+async function deleteIstimaTest(testId){
+  const test = ISTIMA_TEST_BY_ID[testId];
+  if(!test) return;
+  const n = test.questions.length;
+  if(!confirm(`Bu testni (audio${n?` + ${n} ta savol`:''}) butunlay o'chirmoqchimisiz? Bu amalni orqaga qaytarib bo'lmaydi.`)) return;
+  const result = await deleteIstimaAudioOnBackend(testId);
+  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+  await refreshIstimaFromBackend();
+  renderAdminQuestions();
+  toast("🗑 Test o'chirildi");
+}
+
+/* ================= Istima: YAXLIT "Test qo'shish" oynasi =================
+   Qiroa'dagi bilan bir xil g'oya: Qism (juz) tanlanadi → Audio URL kiritiladi → shu audioga
+   tegishli savollar (1-qismda 1 ta, 2/3-qismda 6 ta), har birida 4 ta variant to'ldiriladi →
+   hammasi BITTA amal bilan (avval audio, so'ng savollar bulk) backendga yuboriladi. */
+function istimaQCountFor(juzId){
+  return (ISTIMA_JUZ.find(j=>j.id===juzId) || ISTIMA_JUZ[0]).qCount;
+}
+function openAddIstimaFullTestModal(presetJuzId){
+  const juzId0 = presetJuzId || ISTIMA_JUZ[0]?.id || '';
+  renderAddIstimaFullTestForm(juzId0);
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function renderAddIstimaFullTestForm(juzId){
+  const qCount = istimaQCountFor(juzId);
+  document.getElementById('modalTitle').textContent = "Yangi test qo'shish (Istima)";
+  const questionBlocks = Array.from({length:qCount}).map((_,i)=>`
+    <div class="card" style="padding:14px;border-color:var(--istima);">
+      <div style="font-weight:800;font-size:13px;color:var(--istima);margin-bottom:10px;">${i+1}-savol</div>
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="itQ${i}" dir="rtl" placeholder="مَاذَا سَمِعْتَ..." required></textarea>
+      </div>
+      <div class="form-field">
+        <label>Javob variantlari (to'g'risini belgilang)</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[0,1,2,3].map(k=>`
+            <div class="q-opt-row">
+              <input type="radio" name="itCorrect${i}" value="${k}" ${k===0?'checked':''} required>
+              <input type="text" id="itOpt${i}_${k}" placeholder="Variant ${k+1}" dir="rtl" required>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
+        <textarea id="itExp${i}" placeholder="Nima uchun bu javob to'g'ri..."></textarea>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <form id="istimaFullTestForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitIstimaFullTest(event)">
+      <p class="form-hint">Avval qismni tanlang, audio URL manzilini kiriting, so'ng shu audio bo'yicha ${qCount} ta savolni to'ldiring. "Saqlash" bosilganda audio va barcha savollar birgalikda (bitta test sifatida) qo'shiladi.</p>
+      <div class="form-field">
+        <label>Qism</label>
+        <select id="itJuz" onchange="renderAddIstimaFullTestForm(this.value)">
+          ${ISTIMA_JUZ.map(j=>`<option value="${j.id}" ${j.id===juzId?'selected':''}>${j.name} (${j.qCount} ta savol)</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Audio fayl URL manzili</label>
+        <input type="url" id="itAudioUrl" placeholder="https://...supabase.co/storage/v1/object/public/istima/....mp3" required>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">Supabase Storage'ga yuklangan ochiq (public) audio faylining to'g'ridan-to'g'ri havolasi.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${questionBlocks}
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Testni saqlash (audio + ${qCount} ta savol)</button>
+    </form>
+  `;
+}
+async function submitIstimaFullTest(e){
+  e.preventDefault();
+  const juzId = document.getElementById('itJuz').value;
+  const audioUrl = document.getElementById('itAudioUrl').value.trim();
+  const qCount = istimaQCountFor(juzId);
+  if(!audioUrl){
+    toast("❌ Audio URL manzilini kiriting");
+    return false;
+  }
+  const questions = [];
+  for(let i=0;i<qCount;i++){
+    const qText = document.getElementById(`itQ${i}`)?.value || '';
+    const opts = [0,1,2,3].map(k=>document.getElementById(`itOpt${i}_${k}`)?.value || '');
+    const correctEl = document.querySelector(`input[name="itCorrect${i}"]:checked`);
+    const exp = document.getElementById(`itExp${i}`)?.value || '';
+    if(!qText.trim() || opts.some(o=>!o.trim()) || !correctEl){
+      toast(`❌ ${i+1}-savolni (matn va barcha 4 variantni) to'liq to'ldiring`, 6000);
+      return false;
+    }
+    questions.push({ q:qText, opts, a:Number(correctEl.value), exp });
+  }
+  closeModal();
+  toast('⏳ Audio saqlanmoqda...');
+  const savedAudio = await addIstimaAudioToBackend(juzId, audioUrl);
+  if(!savedAudio){ toast("⚠️ Audio saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  const testId = Array.isArray(savedAudio) ? savedAudio[0]?.id : savedAudio?.id;
+  if(!testId){ toast("⚠️ Yangi audio id'si backenddan qaytmadi", 6000); return false; }
+
+  toast(`⏳ ${qCount} ta savol yuborilmoqda...`);
+  const items = questions.map(row => ({
+    skillId:'istima', topicId:testId,
+    q:row.q, opts:row.opts, a:row.a, exp:row.exp,
+  }));
+  const result = await saveQuestionsBulkWithTopicsToBackend(items);
+  await refreshIstimaFromBackend();
+  adminActiveSkill = 'istima';
+  renderAdminQuestions();
+  if(result){
+    const insertedCount = result.inserted_count ?? questions.length;
+    toast(`✅ Yangi test qo'shildi — audio + ${insertedCount} ta savol`, 6000);
+  } else {
+    toast("⚠️ Audio saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR + " — testga savollarni \"+ Savol\" tugmasi orqali qo'shishingiz mumkin", 8000);
+  }
+  return false;
+}
+
+/* ---- Istima: BIR NECHTA to'liq testni (har biri: qism + audio + savollar) bittada,
+   JSON massiv orqali qo'shish. */
+function openBulkAddIstimaTestsModal(){
+  document.getElementById('modalTitle').textContent = "Bir nechta test qo'shish (Istima, JSON)";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="bulkIstimaTestForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkIstimaTests(event)">
+      <p class="form-hint">Bir nechta TO'LIQ testni (har biri: qism + audio URL + savollar) bitta JSON massiv orqali kiriting.</p>
+      <div class="form-field">
+        <label>Testlar (JSON massiv)</label>
+        <textarea id="bitJson" rows="18" required style="font-family:monospace;font-size:12px;direction:ltr;" placeholder='[
+  {
+    "juz": "juz1",
+    "audioUrl": "https://.../audio1.mp3",
+    "questions": [
+      {"q":"...","opts":["...","...","...","..."],"a":0,"exp":"ixtiyoriy"}
+    ]
+  },
+  {
+    "juz": "juz2",
+    "audioUrl": "https://.../audio2.mp3",
+    "questions": [ "... 6 ta savol ..." ]
+  }
+]'></textarea>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
+          <b>juz</b> — ${ISTIMA_JUZ.map(j=>`<code>${j.id}</code> (${j.name}, ${j.qCount} ta savol)`).join(', ')}.<br>
+          <b>audioUrl</b> — shu testning audio fayl havolasi.<br>
+          <b>questions</b> — har biri <b>q</b> (savol), <b>opts</b> (4 ta variant), <b>a</b> (to'g'ri variant indeksi, 0-3), <b>exp</b> (izoh, ixtiyoriy). Savollar soni tanlangan qismga mos bo'lishi kerak (1-qism: 1 ta, 2/3-qism: 6 ta).
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Barcha testlarni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitBulkIstimaTests(e){
+  e.preventDefault();
+  let parsed;
+  try{
+    parsed = JSON.parse(document.getElementById('bitJson').value);
+    if(!Array.isArray(parsed) || !parsed.length) throw new Error("Bo'sh yoki massiv emas");
+  }catch(err){
+    toast("❌ JSON noto'g'ri: " + err.message, 6000);
+    return false;
+  }
+  for(const [i, t] of parsed.entries()){
+    const juzMeta = ISTIMA_JUZ.find(j=>j.id===t.juz);
+    if(!juzMeta){
+      toast(`❌ ${i+1}-testda "juz" noto'g'ri — ${ISTIMA_JUZ.map(j=>j.id).join('/')} dan biri bo'lishi kerak`, 7000);
+      return false;
+    }
+    if(!t.audioUrl || !String(t.audioUrl).trim()){
+      toast(`❌ ${i+1}-testda "audioUrl" kiritilmagan`, 6000);
+      return false;
+    }
+    if(!Array.isArray(t.questions) || t.questions.length !== juzMeta.qCount){
+      toast(`❌ ${i+1}-testda savollar soni noto'g'ri (${juzMeta.name} uchun ${juzMeta.qCount} ta bo'lishi kerak)`, 7000);
+      return false;
+    }
+    for(const [qi, row] of t.questions.entries()){
+      if(!row.q || !Array.isArray(row.opts) || row.opts.length !== 4 || typeof row.a !== 'number'){
+        toast(`❌ ${i+1}-test, ${qi+1}-savol formati noto'g'ri (q, opts[4], a talab qilinadi)`, 7000);
+        return false;
+      }
+    }
+  }
+
+  closeModal();
+  toast(`⏳ ${parsed.length} ta test (audio) yaratilmoqda...`);
+  const allItems = [];
+  let failedAudios = 0;
+  for(const [i, t] of parsed.entries()){
+    const savedAudio = await addIstimaAudioToBackend(t.juz, t.audioUrl);
+    if(!savedAudio){
+      failedAudios++;
+      toast(`⚠️ ${i+1}-test audiosi saqlanmadi: ` + window.LAST_BACKEND_ERROR, 7000);
+      continue;
+    }
+    const testId = Array.isArray(savedAudio) ? savedAudio[0]?.id : savedAudio?.id;
+    if(!testId){ failedAudios++; continue; }
+    t.questions.forEach(row=>{
+      allItems.push({ skillId:'istima', topicId:testId, q:row.q, opts:row.opts, a:row.a, exp:row.exp||'' });
+    });
+  }
+
+  if(!allItems.length){
+    await refreshIstimaFromBackend();
+    adminActiveSkill = 'istima';
+    renderAdminQuestions();
+    toast('⚠️ Hech qanday savol yuborilmadi', 6000);
+    return false;
+  }
+
+  toast(`⏳ ${allItems.length} ta savol yuborilmoqda...`);
+  const result = await saveQuestionsBulkWithTopicsToBackend(allItems);
+  await refreshIstimaFromBackend();
+  adminActiveSkill = 'istima';
+  renderAdminQuestions();
+  if(result){
+    const insertedCount = result.inserted_count ?? allItems.length;
+    const okTests = parsed.length - failedAudios;
+    let msg = `✅ ${okTests} ta test qo'shildi (${insertedCount} ta savol)`;
+    if(failedAudios>0) msg += ` — ${failedAudios} ta test audiosi saqlanmadi`;
+    toast(msg, 8000);
+  } else {
+    toast("⚠️ Audio(lar) saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR, 8000);
   }
   return false;
 }
@@ -4653,6 +4958,92 @@ async function refreshQiroaFromBackend(){
   applyLiveQuestions(liveQuestions);
 }
 
+/* ---------------- Istima: 3 qism (juz), har bir qismda BIR NECHTA "test" (audio+savollar) ----------------
+   1-qism: har bir test — 1 ta QISQA audio + shu audioga oid 1 ta savol (4 variant).
+   2-qism va 3-qism: har bir test — 1 ta UZUNROQ dialog audio + shu audioga oid 6 ta savol.
+   Bir foydalanuvchi Istima'ni ishlaganda, HAR BIR qismdan (agar shu qismda kamida bitta TO'LIQ
+   test — audio + kerakli sondagi savol bo'lsa) TASODIFIY bitta test tanlanadi, uning audiosi
+   cheklangan marta (maxPlays) ijro etiladi, so'ng shu testning savollari beriladi.
+   Backend: "istima_audio" jadvali (id, juz_id, audio_url) — qarang loadIstimaAudioFromBackend().
+   Savollar esa "questions" jadvalida skill_id='istima', topic_id = shu testning id'si orqali
+   bog'lanadi (applyLiveQuestions() ichida ISTIMA_TEST_BY_ID orqali joylashtiriladi). */
+const ISTIMA_JUZ = [
+  {id:'juz1', name:'1-qism', qCount:1, maxPlays:2},
+  {id:'juz2', name:'2-qism', qCount:6, maxPlays:2},
+  {id:'juz3', name:'3-qism', qCount:6, maxPlays:2},
+];
+/* ISTIMA_TESTS[juzId] = [ {id, juzId, audioUrl, questions:[...]} , ... ] */
+let ISTIMA_TESTS = { juz1:[], juz2:[], juz3:[] };
+/* Tez qidirish uchun: testId -> shu test obyekti (ISTIMA_TESTS ichidagilar bilan bir xil referens). */
+let ISTIMA_TEST_BY_ID = {};
+
+/* Barcha Istima audiolarini (testlarini) backenddan yuklaydi. */
+async function loadIstimaAudioFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/istima_audio?select=*&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+/* Backenddan kelgan istima_audio qatorlarini ISTIMA_TESTS / ISTIMA_TEST_BY_ID ichiga joylaydi.
+   DIQQAT: qiroa'dagi kabi, bu funksiya ham har chaqirilganda ISTIMA_TESTS'ni to'liq qayta quradi —
+   shu sabab har doim applyLiveIstimaAudio() dan KEYIN applyLiveQuestions() chaqirilishi kerak. */
+function applyLiveIstimaAudio(rows){
+  ISTIMA_TESTS = { juz1:[], juz2:[], juz3:[] };
+  ISTIMA_TEST_BY_ID = {};
+  if(!Array.isArray(rows)) return;
+  rows.forEach(r=>{
+    if(!ISTIMA_TESTS[r.juz_id]) return;
+    const test = { id: r.id, juzId: r.juz_id, audioUrl: r.audio_url || '', questions: [] };
+    ISTIMA_TESTS[r.juz_id].push(test);
+    ISTIMA_TEST_BY_ID[r.id] = test;
+  });
+}
+/* Yangi Istima audiosi (test) yaratadi — backendda "admin_add_istima_audio" RPC talab qilinadi. */
+async function addIstimaAudioToBackend(juzId, audioUrl){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_istima_audio`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_juz_id: juzId, p_audio_url: audioUrl })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // { id: '...' } kutiladi
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+/* Mavjud Istima audio URL'ini tahrirlaydi — backendda "admin_edit_istima_audio" RPC talab qilinadi. */
+async function editIstimaAudioOnBackend(testId, audioUrl){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_istima_audio`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_audio_id: testId, p_audio_url: audioUrl })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+/* Istima testini (audio + unga bog'liq barcha savollarni) o'chiradi — backendda
+   "admin_delete_istima_audio" RPC talab qilinadi (bog'liq savollarni ham kaskad o'chirishi kerak). */
+async function deleteIstimaAudioOnBackend(testId){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_istima_audio`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_audio_id: testId })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+/* Istima audio+savollarni backenddan qayta yuklab, mahalliy holatni yangilaydi. Tartib MUHIM:
+   avval testlar (bo'sh questions bilan), keyin savollar. */
+async function refreshIstimaFromBackend(){
+  const rows = await loadIstimaAudioFromBackend();
+  applyLiveIstimaAudio(rows);
+  const liveQuestions = await loadQuestionsFromBackend();
+  applyLiveQuestions(liveQuestions);
+}
+
 /* ---------------- Timer (overall, for reading/listening/writing) ---------------- */
 let timerInterval = null;
 function startTimer(seconds, onExpire){
@@ -4710,6 +5101,7 @@ const GRAMMAR_TOPIC_BANKS = {};
 function applyLiveQuestions(rows){
   Object.keys(GRAMMAR_TOPIC_BANKS).forEach(topicId=>{ GRAMMAR_TOPIC_BANKS[topicId] = []; });
   Object.values(QIROA_TEST_BY_ID).forEach(test=>{ test.questions = []; });
+  Object.values(ISTIMA_TEST_BY_ID).forEach(test=>{ test.questions = []; });
   Object.keys(QUESTION_BANKS).forEach(skillId=>{ if(QUESTION_BANKS[skillId]) QUESTION_BANKS[skillId].questions = []; });
   if(!Array.isArray(rows) || !rows.length) return;
   rows.forEach(r=>{
@@ -4719,6 +5111,8 @@ function applyLiveQuestions(rows){
       GRAMMAR_TOPIC_BANKS[r.topic_id].push(item);
     } else if(r.skill_id === 'qiroa' && r.topic_id && QIROA_TEST_BY_ID[r.topic_id]){
       QIROA_TEST_BY_ID[r.topic_id].questions.push(item);
+    } else if(r.skill_id === 'istima' && r.topic_id && ISTIMA_TEST_BY_ID[r.topic_id]){
+      ISTIMA_TEST_BY_ID[r.topic_id].questions.push(item);
     } else if(QUESTION_BANKS[r.skill_id]){
       if(!QUESTION_BANKS[r.skill_id].questions) QUESTION_BANKS[r.skill_id].questions = [];
       QUESTION_BANKS[r.skill_id].questions.push(item);
@@ -4788,6 +5182,7 @@ function applyLiveAdminUsers(rows){
 function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   if(skillId === 'qiroa'){ startQiroaQuiz(customLabel); return; }
+  if(skillId === 'istima'){ startIstimaQuiz(customLabel); return; }
   const bank = QUESTION_BANKS[skillId] || QUESTION_BANKS.grammatika;
   let questions = bank.questions;
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
@@ -4883,6 +5278,56 @@ function advanceAfterQiroaJuz(){
     finishQuiz();
   }
 }
+/* ---------------- Istima: qism-ma-qism audio + savollar oqimi ---------------- */
+function startIstimaQuiz(customLabel){
+  // Har bir qismdan (agar shu qismda kamida 1 ta TO'LIQ test — audio+kerakli sondagi
+  // savol bo'lsa) TASODIFIY bitta test tanlanadi.
+  const availableJuz = ISTIMA_JUZ
+    .map(meta => {
+      const tests = (ISTIMA_TESTS[meta.id]||[]).filter(t => t.questions.length === meta.qCount);
+      if(!tests.length) return null;
+      const picked = tests[Math.floor(Math.random()*tests.length)];
+      return { ...meta, audioUrl: picked.audioUrl || '', questions: picked.questions.map(q=>({...q, picked:null})) };
+    })
+    .filter(Boolean);
+  if(availableJuz.length === 0){
+    toast("⚠️ Istima bo'limi uchun hali audio/savollar to'liq qo'shilmagan. Admin panelda qo'shing.");
+    return;
+  }
+  let flat = [];
+  const juzMeta = availableJuz.map(j=>{
+    const startIdx = flat.length;
+    flat = flat.concat(j.questions);
+    return { id:j.id, name:j.name, audioUrl:j.audioUrl, maxPlays:j.maxPlays, startIdx, endIdx: flat.length-1 };
+  });
+  const skillMeta = SKILLS.find(s=>s.id==='istima');
+  currentQuiz = {
+    skillId:'istima', topicId:null, type:'listening-juz',
+    questions: flat, juz: juzMeta, juzPointer:0, playsUsed:0,
+    color: skillMeta.color, label: customLabel || skillMeta.name,
+    idx: juzMeta[0].startIdx, startedAt: Date.now(),
+  };
+  document.getElementById('quizTag').textContent = currentQuiz.label;
+  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
+  document.getElementById('quizTag').style.color = skillMeta.color;
+  buildQGrid();
+  showView('quiz');
+  startIstimaJuz();
+}
+function startIstimaJuz(){
+  currentQuiz.idx = currentQuiz.juz[currentQuiz.juzPointer].startIdx;
+  currentQuiz.playsUsed = 0;
+  renderQuestion();
+  updateQGrid();
+}
+function advanceAfterIstimaJuz(){
+  if(currentQuiz.juzPointer < currentQuiz.juz.length-1){
+    currentQuiz.juzPointer++;
+    startIstimaJuz();
+  } else {
+    finishQuiz();
+  }
+}
 function startWriting(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   currentQuiz = {skillId:'kitaba', type:'writing', label:'Kitaba (Writing)', color:'var(--kitaba)', text:'', idx:0};
@@ -4961,6 +5406,11 @@ function renderQuestion(){
     renderQiroaPhase();
     return;
   }
+  if(currentQuiz.skillId==='istima'){
+    clearQuestionTimer();
+    renderIstimaPhase();
+    return;
+  }
   const q = currentQuiz.questions[currentQuiz.idx];
   let html = '';
   if(currentQuiz.type==='reading' && currentQuiz.passage){
@@ -5003,11 +5453,22 @@ function nextQ(){
     else { clearInterval(timerInterval); advanceAfterQiroaJuz(); }
     return;
   }
+  if(currentQuiz.skillId==='istima'){
+    const juz = currentQuiz.juz[currentQuiz.juzPointer];
+    if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
+    else { advanceAfterIstimaJuz(); }
+    return;
+  }
   if(currentQuiz.idx < currentQuiz.questions.length-1){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
   else finishQuiz();
 }
 function prevQ(){
   if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
+    const juz = currentQuiz.juz[currentQuiz.juzPointer];
+    if(currentQuiz.idx > juz.startIdx){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
+    return;
+  }
+  if(currentQuiz.skillId==='istima'){
     const juz = currentQuiz.juz[currentQuiz.juzPointer];
     if(currentQuiz.idx > juz.startIdx){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
     return;
@@ -5047,6 +5508,61 @@ function renderQiroaPhase(){
       <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi juz →':'Keyingi →')}</button>
     </div>`;
   body.innerHTML = html;
+}
+
+/* ---------------- Istima: joriy qismga qarab render qilish (audio + savol) ---------------- */
+function renderIstimaPhase(){
+  const body = document.getElementById('quizBody');
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  const juzLabel = `${juz.name} / ${currentQuiz.juz.length}`;
+  const q = currentQuiz.questions[currentQuiz.idx];
+  const localNum = currentQuiz.idx - juz.startIdx + 1;
+  const localTotal = juz.endIdx - juz.startIdx + 1;
+  const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
+  const canPlay = !!juz.audioUrl && playsLeft > 0;
+  let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
+  html += `
+    <div class="prompt-box" style="display:flex;align-items:center;gap:14px;">
+      <button id="istimaPlayBtn" onclick="playIstimaAudio()" ${canPlay?'':'disabled'} style="width:44px;height:44px;border-radius:50%;background:var(--istima);border:none;color:#fff;cursor:${canPlay?'pointer':'default'};display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:${canPlay?'1':'.45'};">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div style="flex:1;">
+        <div style="font-size:12.5px;font-weight:700;color:var(--text-dim);">${juz.audioUrl ? 'Audioni tinglang' : 'Bu qism uchun audio hali admin panelda kiritilmagan.'}</div>
+        <div id="istimaPlaysLeft" style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Qolgan marta: ${playsLeft} / ${juz.maxPlays}</div>
+      </div>
+    </div>
+    <audio id="istimaAudioEl" src="${juz.audioUrl||''}" preload="none" style="display:none;"></audio>
+  `;
+  html += `<div class="q-text">${q.q}</div>`;
+  html += `<div class="options">` + q.opts.map((opt,oi)=>`
+    <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
+      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span>${opt}
+    </div>`).join('') + `</div>`;
+  const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
+  html += `<div class="q-nav-row">
+      <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===juz.startIdx?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
+      <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi qism →':'Keyingi →')}</button>
+    </div>`;
+  body.innerHTML = html;
+}
+/* Audio faqat cheklangan marta (juz.maxPlays) ijro etiladi. Savoldan-savolga o'tishda (shu
+   qism ichida) hisoblagich SAQLANIB qoladi — foydalanuvchi savollarni almashtirib, audioni
+   qayta-qayta tinglay olmaydi. DOM'ni to'liq qayta chizmasdan (renderQuestion chaqirmasdan)
+   faqat hisoblagich va tugma holatini yangilaymiz — aks holda <audio> elementi almashib,
+   ijro to'xtab qoladi. */
+function playIstimaAudio(){
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  if(!juz.audioUrl || currentQuiz.playsUsed >= juz.maxPlays) return;
+  const el = document.getElementById('istimaAudioEl');
+  if(!el) return;
+  currentQuiz.playsUsed++;
+  el.currentTime = 0;
+  el.play().catch(()=> toast('⚠️ Audio ijro etilmadi — URL manzilini tekshiring'));
+  const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
+  const leftEl = document.getElementById('istimaPlaysLeft');
+  if(leftEl) leftEl.textContent = `Qolgan marta: ${playsLeft} / ${juz.maxPlays}`;
+  const btn = document.getElementById('istimaPlayBtn');
+  if(btn && playsLeft<=0){ btn.disabled = true; btn.style.opacity='.45'; btn.style.cursor='default'; }
 }
 
 /* speaking recording mock */
