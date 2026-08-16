@@ -974,8 +974,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .as-row .as-chev{ width:16px; height:16px; color:var(--text-faint); flex-shrink:0; }
 
 .toast{
-  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--indigo-900);
-  color:#fff; padding:13px 22px; border-radius:12px; font-weight:700; font-size:13.5px; opacity:0; pointer-events:none;
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:color-mix(in srgb, var(--indigo-900) 62%, transparent);
+  color:#fff; padding:13px 22px; border-radius:20px; font-weight:700; font-size:13.5px; opacity:0; pointer-events:none;
+  text-align:center; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   transition:.25s; z-index:200; box-shadow:0 10px 30px -6px rgba(0,0,0,0.3);
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
