@@ -595,7 +595,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 }
 .gcat-nahv{ background:linear-gradient(120deg, #5A6EE8 0%, #33459E 100%); }
 .gcat-sarf{ background:linear-gradient(120deg, #8B6FE8 0%, #5B3FBE 100%); }
-.gcat-tarqim{ background:linear-gradient(120deg, #E8963F 0%, #C06B1B 100%); }
+.gcat-imlo{ background:linear-gradient(120deg, #E8963F 0%, #C06B1B 100%); }
 .gcat-xatolar{ background:linear-gradient(120deg, #E1554F 0%, #A82F2B 100%); }
 .grammar-cat-icon{
   width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center;
@@ -2488,7 +2488,7 @@ function beginPendingSkill(){
 const GRAMMAR_CATEGORIES = [
   {id:'nahv', name:'Nahv', ar:'النحو', desc:"Gap tuzilishi va i'rob qoidalari", icon:'<rect x="9" y="2" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>', color:'var(--istima)', bg:'var(--istima-bg)'},
   {id:'sarf', name:'Sarf', ar:'الصرف', desc:"So'z yasalishi va shakllanishi", icon:'<path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>', color:'var(--qiroa)', bg:'var(--qiroa-bg)'},
-  {id:'tarqim', name:'Tarqim belgilari', ar:'الترقيم', desc:'Tinish belgilaridan foydalanish', icon:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/>', color:'var(--muhavara)', bg:'var(--muhavara-bg)'},
+  {id:'imlo', name:'Imlo', ar:'الإملاء', desc:"To'g'ri yozish (imlo) qoidalari", icon:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h0c1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/>', color:'var(--muhavara)', bg:'var(--muhavara-bg)'},
   {id:'xatolar', name:'Umumiy xatolar', ar:'الأخطاء الشائعة', desc:"Ko'p uchraydigan xatolarni bartaraf etish", icon:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>', color:'var(--red)', bg:'var(--red-bg)'},
 ];
 /* STATIK MA'LUMOT OLIB TASHLANDI: mavzular ro'yxati endi to'liq backenddan
@@ -3813,12 +3813,12 @@ function openBulkAddQuestionModal(){
         <label>Savollar (JSON massiv)</label>
         <textarea id="bqJson" rows="12" placeholder='[
   {"topic":"Fe\\'l zamonlari","topicAr":"أزمنة الفعل","category":"sarf","q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
-  {"topic":"Tinish belgilari","category":"tarqim","q":"...","opts":["...","...","...","..."],"a":2},
+  {"topic":"Imlo qoidalari","category":"imlo","q":"...","opts":["...","...","...","..."],"a":2},
   {"q":"...","opts":["...","...","...","..."],"a":1}
 ]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
           Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
-          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>tarqim</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
+          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>imlo</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
           ${isQiroa ? `Qiroa uchun: yuqorida tanlangan <b>testga</b> (matnga) qo'shiladi — bitta testda ko'pi bilan ${QIROA_MAX_Q_PER_TEST} ta savol bo'lishi kerak. "Yangi matn" tanlansa, avval matn saqlanadi, so'ng shu savollar o'sha yangi matnga bog'lanadi.` : ''}
         </div>
       </div>
@@ -4418,6 +4418,43 @@ function applyLiveQuestions(rows){
   });
 }
 
+/* ---------------- Grammatika: umumiy imtihon uchun kategoriya bo'yicha taqsimot ----------------
+   Umumiy "Grammatika" testi (mavzu tanlanmasdan boshlanganda) 30 ta savoldan iborat bo'lishi
+   kerak: 15 ta النحو (nahv), 7 ta الصرف (sarf), 4 ta الإملاء (imlo), 4 ta الأخطاء الشائعة (xatolar).
+   Har bir kategoriyaga tegishli barcha mavzulardagi savollar birlashtiriladi, so'ng shu
+   kategoriyadan talab qilingan sondagi savol TASODIFIY tanlanadi. */
+const GRAMMAR_EXAM_DISTRIBUTION = { nahv: 15, sarf: 7, imlo: 4, xatolar: 4 };
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildGrammarExamQuestions(){
+  const byCategory = {};
+  GRAMMAR_TOPICS.forEach(t=>{
+    const cat = t.category;
+    if(!byCategory[cat]) byCategory[cat] = [];
+    const qs = GRAMMAR_TOPIC_BANKS[t.id] || [];
+    byCategory[cat] = byCategory[cat].concat(qs);
+  });
+  let result = [];
+  const shortage = [];
+  Object.keys(GRAMMAR_EXAM_DISTRIBUTION).forEach(cat=>{
+    const need = GRAMMAR_EXAM_DISTRIBUTION[cat];
+    const pool = shuffleArray(byCategory[cat] || []);
+    const picked = pool.slice(0, need);
+    if(picked.length < need){
+      const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===cat);
+      shortage.push(`${catMeta ? catMeta.name : cat}: ${picked.length}/${need}`);
+    }
+    result = result.concat(picked);
+  });
+  return { questions: shuffleArray(result), shortage };
+}
+
 /* Admin — real foydalanuvchilar ro'yxati. */
 let ADMIN_USERS = [];
 let adminUsersLoaded = false;
@@ -4447,6 +4484,12 @@ function startQuiz(skillId, customLabel, topicId){
   let questions = bank.questions;
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
     questions = GRAMMAR_TOPIC_BANKS[topicId];
+  } else if(skillId==='grammatika' && !topicId){
+    const built = buildGrammarExamQuestions();
+    questions = built.questions;
+    if(built.shortage.length){
+      toast(`⚠️ Ba'zi kategoriyalarda savollar yetarli emas: ${built.shortage.join(', ')}`, 6000);
+    }
   }
   if(!questions || !questions.length){
     toast("⚠️ Bu bo'lim/mavzu uchun hali savollar qo'shilmagan. Admin panelda qo'shing.");
@@ -4874,7 +4917,7 @@ bootApp();
     { id: 'cefr_mock', title: "CEFR Daraja testi (Mock imtihon)" }
   ];
 
-  const DEFAULT_GRAMMAR_ORDER = ['nahv', 'sarf', 'tarqim', 'xatolar'];
+  const DEFAULT_GRAMMAR_ORDER = ['nahv', 'sarf', 'imlo', 'xatolar'];
 
   let APP_CONFIG = {
     exam_cards: {},
