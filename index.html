@@ -5957,6 +5957,13 @@ function startMuhavaraPrep(){
   renderQuestion();
   startTimer(currentQuiz.questions[currentQuiz.idx].part.prepSecs, ()=> startMuhavaraRecording());
 }
+/* Foydalanuvchi tayyorgarlik vaqtini kutmasdan "Tayyorman" tugmasini bossa,
+   qolgan sanoqni bekor qilib, darhol yozib olishni boshlaydi. */
+function skipMuhavaraPrep(){
+  if(!currentQuiz || currentQuiz.phase !== 'prep') return;
+  clearInterval(timerInterval);
+  startMuhavaraRecording();
+}
 async function startMuhavaraRecording(){
   try{
     muhavaraStream = await navigator.mediaDevices.getUserMedia({audio:true});
@@ -6074,6 +6081,7 @@ function renderMuhavaraPhase(){
         <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
       </div>
       <div class="mic-hint" style="text-align:center;margin-top:16px;">Fikringizni tartiblang — tayyorgarlik vaqti tugagach yozib olish avtomatik boshlanadi.</div>
+      <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="skipMuhavaraPrep()">✅ Tayyorman, boshlayman</button>
     `;
     return;
   }
