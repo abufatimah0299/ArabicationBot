@@ -2592,10 +2592,6 @@ async function bootApp(){
   }
   renderGreetingFromProfile();
   applyProfileHeader(null);
-  Object.values(RANK_DATASETS).forEach(list=>{
-    const me = list.find(u=>u.me);
-    if(me) me.name = TELEGRAM_PROFILE.name || me.name;
-  });
 
   async function safeBootStep(label, fn){
     try{ await fn(); }
