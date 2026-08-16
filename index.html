@@ -1501,6 +1501,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <button class="btn" id="adminAddTopicBtn" style="display:none;" onclick="openAddTopicModal()">+ Yangi mavzu</button>
               <button class="btn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
               <button class="btn btn-primary" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
+              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllQuestions()">🗑 Hammasini tozalash</button>
             </div>
           </div>
           <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
@@ -1877,6 +1878,35 @@ async function saveQuestionsBulkWithTopicsToBackend(items){
     return await res.json();
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
+/* Barcha savollarni (hamma bo'lim, hamma mavzu) o'chirish — Supabase'da
+   `admin_clear_all_questions` RPC funksiyasi talab qilinadi. Mavzular
+   ro'yxati (grammar_topics) tegilmaydi, faqat savollarning o'zi o'chadi. */
+async function clearAllQuestionsOnBackend(){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_clear_all_questions`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // o'chirilgan savollar soni
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function clearAllQuestions(){
+  const countText = document.getElementById('adminQuestionsCount')?.textContent || '';
+  if(!confirm(`⚠️ DIQQAT: Bu BARCHA bo'limlardagi (Qiroa, Istima, Grammatika, Muhavara, Kitaba...) BARCHA savollarni butunlay o'chiradi (${countText}). Mavzular ro'yxati saqlanib qoladi, lekin ichidagi barcha savollar yo'qoladi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
+  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA savollarni butunlay o'chirmoqchimisiz?")) return;
+
+  const deletedCount = await clearAllQuestionsOnBackend();
+  if(deletedCount !== null){
+    toast(`🗑 ${deletedCount} ta savol o'chirildi`);
+    const liveQuestions = await loadQuestionsFromBackend();
+    applyLiveQuestions(liveQuestions);
+    renderAdminQuestions();
+  } else {
+    toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
+  }
+}
+
 /* Mavjud savolni tahrirlash — Supabase'da `admin_edit_question` RPC funksiyasi talab qilinadi. */
 async function updateQuestionOnBackend({id, q, opts, a, exp}){
   if(!SESSION_TOKEN || !id){ setLastBackendError('—', 'SESSION_TOKEN yoki id yo\'q'); return null; }
@@ -3265,6 +3295,7 @@ function openBulkAddQuestionModal(){
         <div class="form-field">
           <label>Standart kategoriya (JSON'da "category" ko'rsatilmagan yangi mavzular shu kategoriya ostida yaratiladi)</label>
           <select id="bqCategory">
+            <option value="">— tanlanmagan —</option>
             ${GRAMMAR_CATEGORIES.map(c=>`<option value="${c.id}">${c.name} (${c.ar})</option>`).join('')}
           </select>
         </div>
@@ -3322,9 +3353,13 @@ async function submitBulkQuestions(e){
   closeModal();
   toast(`⏳ ${items.length} ta savol yuborilmoqda...`);
 
-  const saved = await saveQuestionsBulkWithTopicsToBackend(items);
-  if(saved){
-    toast(`✅ ${items.length} ta savol qo'shildi — endi hamma foydalanuvchida ko'rinadi`);
+  const result = await saveQuestionsBulkWithTopicsToBackend(items);
+  if(result){
+    const insertedCount = result.inserted_count ?? 0;
+    const skippedCount = result.skipped_count ?? 0;
+    let msg = `✅ ${insertedCount} ta savol qo'shildi`;
+    if(skippedCount > 0) msg += ` — ${skippedCount} ta takroriy savol (allaqachon bor edi) o'tkazib yuborildi`;
+    toast(msg, 7000);
     // Yangi mavzular avtomatik yaratilgan bo'lishi mumkin — shu sabab mavzular va
     // savollarni backenddan to'liq qayta yuklab, ekranni yangilaymiz (optimistik
     // lokal qo'shish o'rniga — chunki mavzu id'lari oldindan noma'lum edi).
