@@ -1623,6 +1623,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input type="text" id="adminUserSearch" placeholder="Ism yoki username bo'yicha qidirish..." oninput="renderAdminUsers()">
           </div>
+          <div style="display:flex;justify-content:flex-end;margin:0 0 12px;">
+            <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="resetAllUsersXp()">
+              ↺ Barcha XP'larni 0'ga qaytarish
+            </button>
+          </div>
           <div class="card" style="padding:8px;overflow-x:auto;">
             <table class="data-table">
               <thead><tr><th>Foydalanuvchi</th><th>Daraja</th><th>XP</th><th>Oxirgi faollik</th><th></th></tr></thead>
@@ -3535,6 +3540,20 @@ function viewAdminUser(userId){
   document.getElementById('modalBody').innerHTML = `
     <div style="padding:14px 4px;">
       <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-bottom:16px;">${u.username} · ID: ${u.id} · Daraja: ${u.level}</div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:11px;color:var(--text-faint);font-weight:700;">Joriy XP</div>
+          <div style="font-size:22px;font-weight:900;" id="xpCurrentVal">${u.xp.toLocaleString()}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="xpAdjustAmount" min="1" step="1" placeholder="masalan: 50"
+            style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-weight:700;font-size:13px;font-family:inherit;">
+          <button type="button" class="icon-btn ib-add" title="XP qo'shish" onclick="applyUserXpAdjustment(${u.id},1)">${IB_ICON_ADD}</button>
+          <button type="button" class="icon-btn ib-del" title="XP ayirish" onclick="applyUserXpAdjustment(${u.id},-1)">${IB_ICON_MINUS}</button>
+        </div>
+      </div>
+
       ${SKILLS.map(s=>{
         const val = u.skills?.[s.id] ?? 0;
         const pct = Math.round((val/30)*100);
@@ -3550,6 +3569,58 @@ function viewAdminUser(userId){
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('show');
+}
+
+/* ---- Admin: foydalanuvchi XP'sini qo'lda +/- qilish ---- */
+async function adjustUserXpOnBackend(telegramId, delta){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_adjust_user_xp`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_telegram_id: telegramId, p_delta: delta })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // yangilangan xp qiymatini qaytaradi
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function applyUserXpAdjustment(userId, sign){
+  const input = document.getElementById('xpAdjustAmount');
+  const raw = Number(input?.value);
+  if(!raw || raw <= 0 || !Number.isFinite(raw)){ toast("⚠️ Avval to'g'ri (musbat) son kiriting"); return; }
+  const delta = sign * Math.round(raw);
+  const result = await adjustUserXpOnBackend(userId, delta);
+  if(result === null){ toast("⚠️ Xatolik: XP o'zgartirilmadi"); return; }
+  const newXp = Number(result?.xp ?? result) || 0;
+  const u = ADMIN_USERS.find(x=>x.id===userId);
+  if(u) u.xp = newXp;
+  toast(`✅ XP yangilandi: ${newXp.toLocaleString()}`);
+  if(input) input.value = '';
+  renderAdminUsers();
+  renderAdminPanel();
+  viewAdminUser(userId);
+}
+
+/* ---- Admin: BARCHA foydalanuvchilarning XP'sini 0'ga qaytarish ---- */
+async function resetAllUsersXpOnBackend(){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reset_all_xp`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // nechta foydalanuvchi ta'sirlanganini qaytaradi
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function resetAllUsersXp(){
+  const n = ADMIN_USERS.length;
+  if(!confirm(`⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning (${n} ta) XP'sini butunlay 0'ga qaytaradi. Reyting ro'yxati ham nolga tushadi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
+  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA foydalanuvchilarning XP'sini nolga tushirmoqchimisiz?")) return;
+  const result = await resetAllUsersXpOnBackend();
+  if(result === null){ toast("⚠️ Xatolik: XP tozalanmadi"); return; }
+  toast(`✅ ${n} ta foydalanuvchining XP'si 0'ga tushirildi`);
+  ADMIN_USERS = ADMIN_USERS.map(u=>({...u, xp:0}));
+  renderAdminUsers();
+  renderAdminPanel();
 }
 
 /* ---- 3) SAVOLLAR BANKI ---- */
@@ -3762,6 +3833,7 @@ const IB_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const IB_ICON_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
 const IB_ICON_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
 const IB_ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>`;
+const IB_ICON_MINUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>`;
 function renderAdminActionsSheet(){
   const grid = document.getElementById('asGrid');
   const primary = document.getElementById('asPrimary');
