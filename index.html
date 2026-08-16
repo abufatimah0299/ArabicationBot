@@ -2381,7 +2381,7 @@ function toast(msg, duration){
    haqiqiy foydalanuvchi ballari bilan almashtiriladi (renderSkillHub() qayta chaqiriladi). */
 const SKILLS = [
   {id:'grammatika', name:'Grammatika', ar:'القواعد', score:0, total:30, pct:0, color:'var(--grammatika)', bg:'var(--grammatika-bg)', icon:'📗', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-qiroa', desc:"Ushbu bo'limda arab tili grammatikasi (nahv, sarf va boshqa mavzular) bo'yicha savollarga javob berasiz. Har bir savol uchun 1 daqiqadan vaqt beriladi."},
-  {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:30, mins:35, grad:'sb-grammatika', desc:"Ushbu bo'limda arabcha matnni o'qib, mazmuni bo'yicha savollarga javob berasiz. Matnni diqqat bilan o'qing va har bir savol uchun eng to'g'ri javobni tanlang."},
+  {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
   {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:30, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-istima', desc:"Ushbu bo'limda audio orqali eshitiladigan suhbat yoki matn asosida savollarga javob berasiz. Audio faqat cheklangan marta ijro etiladi, shuning uchun diqqat bilan tinglang."},
   {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:30, mins:15, grad:'sb-muhavara', desc:"Ushbu bo'limda berilgan savolga ovozli javob berasiz. Mikrofon belgisini bosib, javobingizni belgilangan vaqt ichida yozib oling."},
   {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:30, mins:40, grad:'sb-kitaba', desc:"Ushbu bo'limda berilgan mavzu bo'yicha erkin matn yozasiz. Talab qilingan so'zlar sonini va vaqt chegarasini hisobga olib yozing."},
@@ -2929,7 +2929,8 @@ function renderAdminOverview(){
   const totalUsers = ADMIN_USERS.length;
   const totalXp = ADMIN_USERS.reduce((s,u)=>s+u.xp,0);
   const totalQuestions = Object.values(QUESTION_BANKS).reduce((s,b)=> s + (b.questions?.length||0), 0)
-    + Object.values(GRAMMAR_TOPIC_BANKS).reduce((s,arr)=> s + arr.length, 0);
+    + Object.values(GRAMMAR_TOPIC_BANKS).reduce((s,arr)=> s + arr.length, 0)
+    + Object.values(QIROA_JUZ_BANKS).reduce((s,arr)=> s + arr.length, 0);
   const activeToday = ADMIN_USERS.filter(u=>u.lastActive==='Bugun').length;
 
   const grid = document.getElementById('adminStatGrid');
@@ -3067,6 +3068,24 @@ function renderAdminQuestions(){
         </div>
       </div>`;
     }).join('');
+  } else if(adminActiveSkill==='qiroa'){
+    const total = QIROA_JUZ.reduce((s,j)=> s + (QIROA_JUZ_BANKS[j.id]?.length||0), 0);
+    countEl.textContent = `${QIROA_JUZ.length} ta juz · ${total} ta savol`;
+    list.innerHTML = QIROA_JUZ.map(j=>{
+      const n = QIROA_JUZ_BANKS[j.id]?.length || 0;
+      const hasPassage = !!(QIROA_PASSAGES[j.id] && QIROA_PASSAGES[j.id].trim());
+      return `<div class="topic-row">
+        <div>
+          <div class="t-name">${j.name}</div>
+          <div class="t-meta">${n} / ${QIROA_MAX_Q_PER_JUZ} ta savol · O'qish: ${j.readMins} daq · Savollar: ${j.qMins} daq ${hasPassage?'· 📄 matn kiritilgan':'· ⚠️ matn hali yo\u2018q'}</div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" onclick="openEditQiroaPassageModal('${j.id}')">📄 Matn</button>
+          <button class="row-btn" onclick="viewTopicQuestions('qiroa','${j.id}')">Ko'rish</button>
+          <button class="row-btn" ${n>=QIROA_MAX_Q_PER_JUZ?'disabled title="Bu juzda allaqachon 6 ta savol bor"':''} onclick="openAddQuestionModal('qiroa','${j.id}')">+ Savol</button>
+        </div>
+      </div>`;
+    }).join('');
   } else {
     const bank = QUESTION_BANKS[adminActiveSkill];
     const n = bank?.questions?.length || 0;
@@ -3199,7 +3218,9 @@ function viewTopicQuestions(skillId, topicId){
 }
 /* Savollar ro'yxatini beruvchi umumiy funksiya — edit/delete/move ham shundan foydalanadi. */
 function getQuestionItems(skillId, topicId){
-  return skillId==='grammatika' ? GRAMMAR_TOPIC_BANKS[topicId] : QUESTION_BANKS[skillId]?.questions;
+  if(skillId==='grammatika') return GRAMMAR_TOPIC_BANKS[topicId];
+  if(skillId==='qiroa') return QIROA_JUZ_BANKS[topicId];
+  return QUESTION_BANKS[skillId]?.questions;
 }
 function renderTopicQuestionsModal(skillId, topicId, items){
   document.getElementById('modalTitle').textContent = `Savollar (${items.length} ta)`;
@@ -3301,9 +3322,54 @@ async function moveQuestion(skillId, topicId, idx, dir){
   }
 }
 
+/* ---- Qiroa: har bir juz uchun matn (passage) tahrirlash ---- */
+function openEditQiroaPassageModal(juzId){
+  const juz = QIROA_JUZ.find(j=>j.id===juzId);
+  if(!juz) return;
+  document.getElementById('modalTitle').textContent = `${juz.name} — matn`;
+  document.getElementById('modalBody').innerHTML = `
+    <form id="qiroaPassageForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitQiroaPassage(event,'${juzId}')">
+      <p class="form-hint">Bu matn foydalanuvchiga "${juz.name}" savollaridan oldin, ${juz.readMins} daqiqa o'qish uchun ko'rsatiladi.</p>
+      <div class="form-field">
+        <label>Matn (arabcha)</label>
+        <textarea id="qiroaPassageText" dir="rtl" style="min-height:160px;" placeholder="نَصّ الْقِرَاءَة...">${escapeHtml(QIROA_PASSAGES[juzId]||'')}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitQiroaPassage(e, juzId){
+  e.preventDefault();
+  const text = document.getElementById('qiroaPassageText').value;
+  QIROA_PASSAGES[juzId] = text;
+  closeModal();
+  renderAdminQuestions();
+  if(!SESSION_TOKEN){ toast("⚠️ Faqat shu seansda saqlandi (Telegram orqali kirilmagan)"); return false; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_set_qiroa_passage`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_juz_id: juzId, p_passage: text })
+    });
+    if(!res.ok){ const t = await res.text(); toast("❌ Saqlanmadi: " + t.slice(0,180), 6000); return false; }
+    toast("✅ Matn saqlandi — endi hamma foydalanuvchida ko'rinadi");
+  }catch(err){
+    toast("❌ Saqlanmadi: " + err.message, 6000);
+  }
+  return false;
+}
+
 function openAddQuestionModal(presetSkill, presetTopic){
   const skillId = presetSkill || adminActiveSkill;
   const isGrammar = skillId === 'grammatika';
+  const isQiroa = skillId === 'qiroa';
+  if(isQiroa && presetTopic){
+    const n = QIROA_JUZ_BANKS[presetTopic]?.length || 0;
+    if(n >= QIROA_MAX_Q_PER_JUZ){
+      toast(`⚠️ ${QIROA_JUZ.find(j=>j.id===presetTopic)?.name||'Bu juz'}da allaqachon ${QIROA_MAX_Q_PER_JUZ} ta savol bor`);
+      return;
+    }
+  }
   document.getElementById('modalTitle').textContent = "Yangi savol qo'shish";
   document.getElementById('modalBody').innerHTML = `
     <form id="adminQForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitNewQuestion(event)">
@@ -3317,6 +3383,16 @@ function openAddQuestionModal(presetSkill, presetTopic){
         <label>Mavzu</label>
         <select id="qTopic">
           ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}" ${t.id===presetTopic?'selected':''}>${t.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field" id="qJuzField" style="${isQiroa?'':'display:none;'}">
+        <label>Juz</label>
+        <select id="qJuz">
+          ${QIROA_JUZ.map(j=>{
+            const n = QIROA_JUZ_BANKS[j.id]?.length || 0;
+            const full = n >= QIROA_MAX_Q_PER_JUZ;
+            return `<option value="${j.id}" ${j.id===presetTopic?'selected':''} ${full?'disabled':''}>${j.name} (${n}/${QIROA_MAX_Q_PER_JUZ})${full?' — to\u2018la':''}</option>`;
+          }).join('')}
         </select>
       </div>
       <div class="form-field">
@@ -3344,15 +3420,25 @@ function openAddQuestionModal(presetSkill, presetTopic){
   document.getElementById('modalOverlay').classList.add('show');
 }
 function toggleGrammarTopicField(){
-  const isGrammar = document.getElementById('qSkill').value === 'grammatika';
-  document.getElementById('qTopicField').style.display = isGrammar ? '' : 'none';
+  const val = document.getElementById('qSkill').value;
+  document.getElementById('qTopicField').style.display = val==='grammatika' ? '' : 'none';
+  document.getElementById('qJuzField').style.display = val==='qiroa' ? '' : 'none';
 }
 async function submitNewQuestion(e){
   e.preventDefault();
   const skillId = document.getElementById('qSkill').value;
-  const topicId = document.getElementById('qTopic')?.value;
+  const topicId = skillId==='grammatika'
+    ? document.getElementById('qTopic')?.value
+    : (skillId==='qiroa' ? document.getElementById('qJuz')?.value : null);
+  if(skillId==='qiroa'){
+    const n = QIROA_JUZ_BANKS[topicId]?.length || 0;
+    if(n >= QIROA_MAX_Q_PER_JUZ){
+      toast(`⚠️ ${QIROA_JUZ.find(j=>j.id===topicId)?.name||'Bu juz'}da allaqachon ${QIROA_MAX_Q_PER_JUZ} ta savol bor`);
+      return false;
+    }
+  }
   const newQ = {
-    id: null, skillId, topicId: skillId==='grammatika' ? topicId : null,
+    id: null, skillId, topicId: topicId || null,
     q: document.getElementById('qText').value,
     opts: [0,1,2,3].map(i=>document.getElementById('qOpt'+i).value),
     a: Number(document.querySelector('input[name="qCorrect"]:checked').value),
@@ -3364,6 +3450,9 @@ async function submitNewQuestion(e){
   if(skillId==='grammatika'){
     if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
     GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
+  } else if(skillId==='qiroa'){
+    if(!QIROA_JUZ_BANKS[topicId]) QIROA_JUZ_BANKS[topicId] = [];
+    QIROA_JUZ_BANKS[topicId].push(newQ);
   } else {
     if(!QUESTION_BANKS[skillId].questions) QUESTION_BANKS[skillId].questions = [];
     QUESTION_BANKS[skillId].questions.push(newQ);
@@ -3372,7 +3461,7 @@ async function submitNewQuestion(e){
   adminActiveSkill = skillId;
   renderAdminQuestions();
 
-  const saved = await saveQuestionToBackend({ skillId, topicId: skillId==='grammatika'?topicId:null, q:newQ.q, opts:newQ.opts, a:newQ.a, exp:newQ.exp });
+  const saved = await saveQuestionToBackend({ skillId, topicId, q:newQ.q, opts:newQ.opts, a:newQ.a, exp:newQ.exp });
   if(saved){
     // Backend id'sini shu savolga biriktiramiz — shu bilan uni darhol tahrirlash/o'chirish mumkin bo'ladi.
     const savedId = Array.isArray(saved) ? saved[0]?.id : saved?.id;
@@ -3797,16 +3886,29 @@ function saveProfile(){
 /* STATIK NAMUNAVIY SAVOLLAR OLIB TASHLANDI. Har bir bo'lim endi bo'sh boshlanadi va
    to'liq backenddan (Supabase "questions" jadvali) to'ldiriladi — qarang applyLiveQuestions(). */
 const QUESTION_BANKS = {
-  qiroa: { type:'reading', passage:'', questions:[] },
   istima:{ type:'listening', audioLabel:'', questions:[] },
   grammatika:{ type:'mcq', questions:[] },
 };
 let currentQuiz = null;
 const ARABIC_OPT_LETTERS = ['أ','ب','ج','د','هـ','و'];
 
+/* ---------------- Qiroa: 3 juz, har birida matn (passage) + 6 tadan savol ---------------- */
+/* Har bir juz: avval matn beriladi (readMins daqiqa, orqaga sanaladi), foydalanuvchi
+   xohlasa "Savollarga o'tish" tugmasi bilan vaqtdan oldin ham savollarga o'tishi mumkin.
+   Keyin shu juzning 6 ta savoliga umumiy qMins daqiqa beriladi. */
+const QIROA_JUZ = [
+  {id:'juz1', name:'1-juz', readMins:2, qMins:6},
+  {id:'juz2', name:'2-juz', readMins:5, qMins:6},
+  {id:'juz3', name:'3-juz', readMins:8, qMins:6},
+];
+const QIROA_MAX_Q_PER_JUZ = 6;
+let QIROA_JUZ_BANKS = { juz1:[], juz2:[], juz3:[] };
+/* Matnlar (passage) backenddan get_app_config() → qiroa_passages orqali keladi. */
+let QIROA_PASSAGES = { juz1:'', juz2:'', juz3:'' };
+
 /* ---------------- Timer (overall, for reading/listening/writing) ---------------- */
 let timerInterval = null;
-function startTimer(seconds){
+function startTimer(seconds, onExpire){
   clearInterval(timerInterval);
   let remaining = seconds;
   const el = document.getElementById('quizTimer');
@@ -3818,7 +3920,7 @@ function startTimer(seconds){
   render();
   timerInterval = setInterval(()=>{
     remaining--; render();
-    if(remaining<=0){ clearInterval(timerInterval); finishQuiz(); }
+    if(remaining<=0){ clearInterval(timerInterval); (onExpire||finishQuiz)(); }
   },1000);
 }
 
@@ -3860,6 +3962,8 @@ function applyLiveQuestions(rows){
     if(r.skill_id === 'grammatika' && r.topic_id){
       if(!GRAMMAR_TOPIC_BANKS[r.topic_id]) GRAMMAR_TOPIC_BANKS[r.topic_id] = [];
       GRAMMAR_TOPIC_BANKS[r.topic_id].push(item);
+    } else if(r.skill_id === 'qiroa' && r.topic_id && QIROA_JUZ_BANKS[r.topic_id]){
+      QIROA_JUZ_BANKS[r.topic_id].push(item);
     } else if(QUESTION_BANKS[r.skill_id]){
       if(!QUESTION_BANKS[r.skill_id].questions) QUESTION_BANKS[r.skill_id].questions = [];
       QUESTION_BANKS[r.skill_id].questions.push(item);
@@ -3891,6 +3995,7 @@ function applyLiveAdminUsers(rows){
 /* ---------------- Start quiz ---------------- */
 function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  if(skillId === 'qiroa'){ startQiroaQuiz(customLabel); return; }
   const bank = QUESTION_BANKS[skillId] || QUESTION_BANKS.grammatika;
   let questions = bank.questions;
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
@@ -3914,6 +4019,64 @@ function startQuiz(skillId, customLabel, topicId){
   renderQuestion();
   if(bank.type !== 'mcq'){ startTimer(currentQuiz.duration); }
   showView('quiz');
+}
+
+/* ---------------- Qiroa: juz-ma-juz o'qish + savollar oqimi ---------------- */
+function startQiroaQuiz(customLabel){
+  const availableJuz = QIROA_JUZ
+    .map(meta => ({ ...meta, passage: QIROA_PASSAGES[meta.id] || '', questions: (QIROA_JUZ_BANKS[meta.id]||[]).map(q=>({...q, picked:null})) }))
+    .filter(j => j.questions.length > 0);
+  if(availableJuz.length === 0){
+    toast("⚠️ Qiroa bo'limi uchun hali matn/savollar qo'shilmagan. Admin panelda qo'shing.");
+    return;
+  }
+  let flat = [];
+  const juzMeta = availableJuz.map(j=>{
+    const startIdx = flat.length;
+    flat = flat.concat(j.questions);
+    return { id:j.id, name:j.name, passage:j.passage, readMins:j.readMins, qMins:j.qMins, startIdx, endIdx: flat.length-1 };
+  });
+  const skillMeta = SKILLS.find(s=>s.id==='qiroa');
+  currentQuiz = {
+    skillId:'qiroa', topicId:null, type:'reading-juz',
+    questions: flat, juz: juzMeta, juzPointer:0, phase:'reading',
+    color: skillMeta.color, label: customLabel || skillMeta.name,
+    idx: juzMeta[0].startIdx, startedAt: Date.now(),
+  };
+  document.getElementById('quizTag').textContent = currentQuiz.label;
+  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
+  document.getElementById('quizTag').style.color = skillMeta.color;
+  buildQGrid();
+  showView('quiz');
+  startQiroaJuzReading();
+}
+function startQiroaJuzReading(){
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  currentQuiz.phase = 'reading';
+  currentQuiz.idx = juz.startIdx;
+  renderQuestion();
+  updateQGrid();
+  startTimer(juz.readMins*60, ()=> startQiroaJuzQuestions());
+}
+function startQiroaJuzQuestions(){
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  currentQuiz.phase = 'questions';
+  currentQuiz.idx = juz.startIdx;
+  renderQuestion();
+  updateQGrid();
+  startTimer(juz.qMins*60, ()=> advanceAfterQiroaJuz());
+}
+function skipQiroaReading(){
+  clearInterval(timerInterval);
+  startQiroaJuzQuestions();
+}
+function advanceAfterQiroaJuz(){
+  if(currentQuiz.juzPointer < currentQuiz.juz.length-1){
+    currentQuiz.juzPointer++;
+    startQiroaJuzReading();
+  } else {
+    finishQuiz();
+  }
 }
 function startWriting(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
@@ -3988,6 +4151,11 @@ function renderQuestion(){
     `;
     return;
   }
+  if(currentQuiz.skillId==='qiroa'){
+    clearQuestionTimer();
+    renderQiroaPhase();
+    return;
+  }
   const q = currentQuiz.questions[currentQuiz.idx];
   let html = '';
   if(currentQuiz.type==='reading' && currentQuiz.passage){
@@ -4024,10 +4192,57 @@ function pickOption(oi){
   updateQGrid();
 }
 function nextQ(){
+  if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
+    const juz = currentQuiz.juz[currentQuiz.juzPointer];
+    if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
+    else { clearInterval(timerInterval); advanceAfterQiroaJuz(); }
+    return;
+  }
   if(currentQuiz.idx < currentQuiz.questions.length-1){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
   else finishQuiz();
 }
-function prevQ(){ if(currentQuiz.idx>0){ currentQuiz.idx--; renderQuestion(); updateQGrid(); } }
+function prevQ(){
+  if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
+    const juz = currentQuiz.juz[currentQuiz.juzPointer];
+    if(currentQuiz.idx > juz.startIdx){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
+    return;
+  }
+  if(currentQuiz.idx>0){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
+}
+
+/* ---------------- Qiroa: joriy juz/fazaga qarab render qilish ---------------- */
+function renderQiroaPhase(){
+  const body = document.getElementById('quizBody');
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  const juzLabel = `${juz.name} / ${currentQuiz.juz.length}`;
+
+  if(currentQuiz.phase==='reading'){
+    body.innerHTML = `
+      <div class="q-sub">${juzLabel} · Matnni o'qing — savollar avtomatik boshlanadi, yoki tayyor bo'lsangiz oldinroq o'ting</div>
+      <div class="passage">${juz.passage ? juz.passage : '<span style="opacity:.5;">Bu juz uchun matn hali admin panelda kiritilmagan.</span>'}</div>
+      <div class="q-nav-row" style="justify-content:center;">
+        <button class="btn btn-primary" onclick="skipQiroaReading()">Savollarga o'tish →</button>
+      </div>
+    `;
+    return;
+  }
+
+  const q = currentQuiz.questions[currentQuiz.idx];
+  const localNum = currentQuiz.idx - juz.startIdx + 1;
+  const localTotal = juz.endIdx - juz.startIdx + 1;
+  let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
+  html += `<div class="q-text">${q.q}</div>`;
+  html += `<div class="options">` + q.opts.map((opt,oi)=>`
+    <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
+      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span>${opt}
+    </div>`).join('') + `</div>`;
+  const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
+  html += `<div class="q-nav-row">
+      <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===juz.startIdx?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
+      <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi juz →':'Keyingi →')}</button>
+    </div>`;
+  body.innerHTML = html;
+}
 
 /* speaking recording mock */
 let recTimer=null, recSeconds=0;
@@ -4535,8 +4750,10 @@ bootApp();
           exam_cards: cfg.exam_cards || {},
           grammar_order: cfg.grammar_order || []
         };
+        QIROA_PASSAGES = { juz1:'', juz2:'', juz3:'', ...(cfg.qiroa_passages||{}) };
 
         localSet('arab_app_config_cache', APP_CONFIG);
+        localSet('arab_qiroa_passages_cache', QIROA_PASSAGES);
       }
     } catch (e) {
       console.warn('App config yuklanmadi, fallback ishlatiladi:', e);
@@ -4551,10 +4768,12 @@ bootApp();
           grammar_order: localGet('arab_ext_grammar_order', DEFAULT_GRAMMAR_ORDER)
         };
       }
+      QIROA_PASSAGES = localGet('arab_qiroa_passages_cache', { juz1:'', juz2:'', juz3:'' });
     }
 
     applyExamCardState();
     applyGrammarOrder();
+    if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminQuestions();
   }
 
   function getCardState(cardId) {
