@@ -1499,8 +1499,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button class="btn" id="adminAddTopicBtn" style="display:none;" onclick="openAddTopicModal()">+ Yangi mavzu</button>
-              <button class="btn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
-              <button class="btn btn-primary" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
+              <button class="btn" id="adminBulkAddBtn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
+              <button class="btn btn-primary" id="adminAddQuestionBtn" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
+              <button class="btn btn-primary" id="adminAddQiroaTestBtn" style="display:none;" onclick="openAddQiroaFullTestModal()">+ Yangi test qo'shish</button>
               <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (yuklab olish)</button>
               <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (yuklash)</button>
               <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
@@ -3042,6 +3043,17 @@ function renderAdminQuestions(){
   const addTopicBtn = document.getElementById('adminAddTopicBtn');
   if(addTopicBtn) addTopicBtn.style.display = adminActiveSkill==='grammatika' ? '' : 'none';
 
+  // Qiroa bo'limida "savol qo'shish"/"ommaviy qo'shish" o'rniga bitta "Test qo'shish"
+  // tugmasi ko'rsatiladi (Juz → Matn → 6 savol birgalikda saqlanadi). Boshqa bo'limlarda
+  // eski ikkita tugma (Ommaviy qo'shish / Yangi savol qo'shish) o'zgarishsiz qoladi.
+  const bulkBtn = document.getElementById('adminBulkAddBtn');
+  const singleBtn = document.getElementById('adminAddQuestionBtn');
+  const qiroaTestBtn = document.getElementById('adminAddQiroaTestBtn');
+  const isQiroaTab = adminActiveSkill === 'qiroa';
+  if(bulkBtn) bulkBtn.style.display = isQiroaTab ? 'none' : '';
+  if(singleBtn) singleBtn.style.display = isQiroaTab ? 'none' : '';
+  if(qiroaTestBtn) qiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
+
   if(adminActiveSkill==='grammatika'){
     const total = GRAMMAR_TOPICS.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
     countEl.textContent = `${GRAMMAR_TOPICS.length} ta mavzu · ${total} ta savol`;
@@ -3097,7 +3109,7 @@ function renderAdminQuestions(){
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${testRows}</div>
         </div>
         <div class="t-actions">
-          <button class="row-btn" onclick="openAddQiroaTextModal('${j.id}')">+ Yangi matn</button>
+          <button class="row-btn" onclick="openAddQiroaFullTestModal('${j.id}')">+ Yangi test</button>
         </div>
       </div>`;
     }).join('');
@@ -3407,6 +3419,105 @@ async function deleteQiroaTest(testId){
   await refreshQiroaFromBackend();
   renderAdminQuestions();
   toast("🗑 Test o'chirildi");
+}
+
+/* ================= Qiroa: YAXLIT "Test qo'shish" oynasi =================
+   Faqat Qiroa bo'limi uchun: Juz tanlanadi → Matn kiritiladi → shu matn bo'yicha
+   6 ta savol, har birida 4 ta variant to'ldiriladi → hammasi BITTA amal bilan
+   (avval matn, so'ng 6 savol bulk) backendga yuboriladi. Boshqa bo'limlarga
+   (Grammatika, Istima, Muhavara, Kitaba) bu funksiya umuman ta'sir qilmaydi —
+   ular eski openAddQuestionModal() / openBulkAddQuestionModal() orqali ishlaydi. */
+function openAddQiroaFullTestModal(presetJuzId){
+  const juzId0 = presetJuzId || QIROA_JUZ[0]?.id || '';
+  document.getElementById('modalTitle').textContent = "Yangi test qo'shish (Qiroa)";
+  const questionBlocks = Array.from({length:QIROA_MAX_Q_PER_TEST}).map((_,i)=>`
+    <div class="card" style="padding:14px;border-color:var(--qiroa);">
+      <div style="font-weight:800;font-size:13px;color:var(--qiroa);margin-bottom:10px;">${i+1}-savol</div>
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="qtQ${i}" dir="rtl" placeholder="أَيْنَ ذَهَبَ..." required></textarea>
+      </div>
+      <div class="form-field">
+        <label>Javob variantlari (to'g'risini belgilang)</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[0,1,2,3].map(k=>`
+            <div class="q-opt-row">
+              <input type="radio" name="qtCorrect${i}" value="${k}" ${k===0?'checked':''} required>
+              <input type="text" id="qtOpt${i}_${k}" placeholder="Variant ${k+1}" dir="rtl" required>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
+        <textarea id="qtExp${i}" placeholder="Nima uchun bu javob to'g'ri..."></textarea>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <form id="qiroaFullTestForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitQiroaFullTest(event)">
+      <p class="form-hint">Avval juzni tanlang, matnni kiriting, so'ng shu matn bo'yicha 6 ta savolni to'ldiring. "Saqlash" bosilganda matn va barcha 6 ta savol birgalikda (bitta test sifatida) qo'shiladi.</p>
+      <div class="form-field">
+        <label>Juz</label>
+        <select id="qtJuz">
+          ${QIROA_JUZ.map(j=>`<option value="${j.id}" ${j.id===juzId0?'selected':''}>${j.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Matn (arabcha)</label>
+        <textarea id="qtPassage" dir="rtl" style="min-height:150px;" placeholder="نَصّ الْقِرَاءَة..." required></textarea>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${questionBlocks}
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Testni saqlash (matn + 6 savol)</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitQiroaFullTest(e){
+  e.preventDefault();
+  const juzId = document.getElementById('qtJuz').value;
+  const passage = document.getElementById('qtPassage').value;
+  if(!passage.trim()){
+    toast("❌ Matnni kiriting");
+    return false;
+  }
+  const questions = [];
+  for(let i=0;i<QIROA_MAX_Q_PER_TEST;i++){
+    const qText = document.getElementById(`qtQ${i}`)?.value || '';
+    const opts = [0,1,2,3].map(k=>document.getElementById(`qtOpt${i}_${k}`)?.value || '');
+    const correctEl = document.querySelector(`input[name="qtCorrect${i}"]:checked`);
+    const exp = document.getElementById(`qtExp${i}`)?.value || '';
+    if(!qText.trim() || opts.some(o=>!o.trim()) || !correctEl){
+      toast(`❌ ${i+1}-savolni (matn va barcha 4 variantni) to'liq to'ldiring`, 6000);
+      return false;
+    }
+    questions.push({ q:qText, opts, a:Number(correctEl.value), exp });
+  }
+  closeModal();
+  toast('⏳ Matn saqlanmoqda...');
+  const savedText = await addQiroaTextToBackend(juzId, passage);
+  if(!savedText){ toast("⚠️ Matn saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  const testId = Array.isArray(savedText) ? savedText[0]?.id : savedText?.id;
+  if(!testId){ toast("⚠️ Yangi matn id'si backenddan qaytmadi", 6000); return false; }
+
+  toast('⏳ 6 ta savol yuborilmoqda...');
+  const items = questions.map(row => ({
+    skillId:'qiroa', topicId:testId,
+    q:row.q, opts:row.opts, a:row.a, exp:row.exp,
+  }));
+  const result = await saveQuestionsBulkWithTopicsToBackend(items);
+  await refreshQiroaFromBackend();
+  adminActiveSkill = 'qiroa';
+  renderAdminQuestions();
+  if(result){
+    const insertedCount = result.inserted_count ?? questions.length;
+    toast(`✅ Yangi test qo'shildi — matn + ${insertedCount} ta savol`, 6000);
+  } else {
+    toast("⚠️ Matn saqlandi, lekin savollar yuborilmadi: " + window.LAST_BACKEND_ERROR + " — testga savollarni \"+ Savol\" tugmasi orqali qo'shishingiz mumkin", 8000);
+  }
+  return false;
 }
 
 function openAddQuestionModal(presetSkill, presetTopic){
