@@ -2617,7 +2617,7 @@ function toast(msg, duration){
 const SKILLS = [
   {id:'grammatika', name:'Grammatika', ar:'القواعد', score:0, total:30, pct:0, color:'var(--grammatika)', bg:'var(--grammatika-bg)', icon:'📗', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-qiroa', desc:"Ushbu bo'limda arab tili grammatikasi (nahv, sarf va boshqa mavzular) bo'yicha savollarga javob berasiz. Har bir savol uchun 1 daqiqadan vaqt beriladi."},
   {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
-  {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:30, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-istima', desc:"Ushbu bo'limda audio orqali eshitiladigan suhbat yoki matn asosida savollarga javob berasiz. Audio faqat cheklangan marta ijro etiladi, shuning uchun diqqat bilan tinglang."},
+  {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
   {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:30, mins:15, grad:'sb-muhavara', desc:"Ushbu bo'limda berilgan savolga ovozli javob berasiz. Mikrofon belgisini bosib, javobingizni belgilangan vaqt ichida yozib oling."},
   {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:30, mins:40, grad:'sb-kitaba', desc:"Ushbu bo'limda berilgan mavzu bo'yicha erkin matn yozasiz. Talab qilingan so'zlar sonini va vaqt chegarasini hisobga olib yozing."},
 ];
@@ -4245,6 +4245,7 @@ function openAddQuestionModal(presetSkill, presetTopic){
   const skillId = presetSkill || adminActiveSkill;
   const isGrammar = skillId === 'grammatika';
   const isQiroa = skillId === 'qiroa';
+  const isIstima = skillId === 'istima';
   if(isQiroa && presetTopic){
     const n = QIROA_TEST_BY_ID[presetTopic]?.questions.length || 0;
     if(n >= QIROA_MAX_Q_PER_TEST){
@@ -4252,9 +4253,22 @@ function openAddQuestionModal(presetSkill, presetTopic){
       return;
     }
   }
+  if(isIstima && presetTopic){
+    const test = ISTIMA_TEST_BY_ID[presetTopic];
+    const cap = test ? istimaQCountFor(test.juzId) : 0;
+    if(test && test.questions.length >= cap){
+      toast(`⚠️ Bu testda allaqachon ${cap} ta savol bor`);
+      return;
+    }
+  }
   const allTests = QIROA_JUZ.flatMap(j => (QIROA_TESTS[j.id]||[]).map((t,idx)=>({...t, juzName:j.name, label:`${j.name} · Test ${idx+1}`})));
   if(isQiroa && !allTests.length){
     toast("⚠️ Avval Qiroa bo'limida biror juzga matn (test) qo'shing — \"+ Yangi matn\"", 6000);
+    return;
+  }
+  const allIstimaTests = ISTIMA_JUZ.flatMap(j => (ISTIMA_TESTS[j.id]||[]).map((t,idx)=>({...t, juzName:j.name, cap:j.qCount, label:`${j.name} · Test ${idx+1}`})));
+  if(isIstima && !allIstimaTests.length){
+    toast("⚠️ Avval Istima bo'limida biror qismga test (audio) qo'shing — \"+ Yangi test\"", 6000);
     return;
   }
   document.getElementById('modalTitle').textContent = "Yangi savol qo'shish";
@@ -4279,6 +4293,16 @@ function openAddQuestionModal(presetSkill, presetTopic){
             const n = t.questions.length;
             const full = n >= QIROA_MAX_Q_PER_TEST;
             return `<option value="${t.id}" ${t.id===presetTopic?'selected':''} ${full?'disabled':''}>${t.label} (${n}/${QIROA_MAX_Q_PER_TEST})${full?' — to\u2018la':''}</option>`;
+          }).join('')}
+        </select>
+      </div>
+      <div class="form-field" id="qIstimaField" style="${isIstima?'':'display:none;'}">
+        <label>Test (audio)</label>
+        <select id="qIstima">
+          ${allIstimaTests.map(t=>{
+            const n = t.questions.length;
+            const full = n >= t.cap;
+            return `<option value="${t.id}" ${t.id===presetTopic?'selected':''} ${full?'disabled':''}>${t.label} (${n}/${t.cap})${full?' — to\u2018la':''}</option>`;
           }).join('')}
         </select>
       </div>
@@ -4310,17 +4334,29 @@ function toggleGrammarTopicField(){
   const val = document.getElementById('qSkill').value;
   document.getElementById('qTopicField').style.display = val==='grammatika' ? '' : 'none';
   document.getElementById('qJuzField').style.display = val==='qiroa' ? '' : 'none';
+  const istimaField = document.getElementById('qIstimaField');
+  if(istimaField) istimaField.style.display = val==='istima' ? '' : 'none';
 }
 async function submitNewQuestion(e){
   e.preventDefault();
   const skillId = document.getElementById('qSkill').value;
   const topicId = skillId==='grammatika'
     ? document.getElementById('qTopic')?.value
-    : (skillId==='qiroa' ? document.getElementById('qJuz')?.value : null);
+    : skillId==='qiroa' ? document.getElementById('qJuz')?.value
+    : skillId==='istima' ? document.getElementById('qIstima')?.value
+    : null;
   if(skillId==='qiroa'){
     const n = QIROA_TEST_BY_ID[topicId]?.questions.length || 0;
     if(n >= QIROA_MAX_Q_PER_TEST){
       toast(`⚠️ Bu testda allaqachon ${QIROA_MAX_Q_PER_TEST} ta savol bor`);
+      return false;
+    }
+  }
+  if(skillId==='istima'){
+    const test = ISTIMA_TEST_BY_ID[topicId];
+    const cap = test ? istimaQCountFor(test.juzId) : 0;
+    if(test && test.questions.length >= cap){
+      toast(`⚠️ Bu testda allaqachon ${cap} ta savol bor`);
       return false;
     }
   }
@@ -4339,6 +4375,8 @@ async function submitNewQuestion(e){
     GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
   } else if(skillId==='qiroa'){
     if(QIROA_TEST_BY_ID[topicId]) QIROA_TEST_BY_ID[topicId].questions.push(newQ);
+  } else if(skillId==='istima'){
+    if(ISTIMA_TEST_BY_ID[topicId]) ISTIMA_TEST_BY_ID[topicId].questions.push(newQ);
   } else {
     if(!QUESTION_BANKS[skillId].questions) QUESTION_BANKS[skillId].questions = [];
     QUESTION_BANKS[skillId].questions.push(newQ);
@@ -5317,6 +5355,10 @@ function startIstimaQuiz(customLabel){
 function startIstimaJuz(){
   currentQuiz.idx = currentQuiz.juz[currentQuiz.juzPointer].startIdx;
   currentQuiz.playsUsed = 0;
+  currentQuiz.phase = 'listening';
+  clearInterval(timerInterval); clearQuestionTimer();
+  const tEl = document.getElementById('quizTimer');
+  if(tEl){ tEl.textContent = '⏱ —:—'; tEl.style.color=''; tEl.style.borderColor=''; }
   renderQuestion();
   updateQGrid();
 }
@@ -5515,24 +5557,37 @@ function renderIstimaPhase(){
   const body = document.getElementById('quizBody');
   const juz = currentQuiz.juz[currentQuiz.juzPointer];
   const juzLabel = `${juz.name} / ${currentQuiz.juz.length}`;
+
+  if(currentQuiz.phase === 'listening'){
+    const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
+    const canPlay = !!juz.audioUrl && playsLeft > 0;
+    body.innerHTML = `
+      <div class="q-sub">${juzLabel} · Audioni tinglang</div>
+      <div class="prompt-box" style="display:flex;align-items:center;gap:14px;">
+        <button id="istimaPlayBtn" onclick="playIstimaAudio()" ${canPlay?'':'disabled'} style="width:44px;height:44px;border-radius:50%;background:var(--istima);border:none;color:#fff;cursor:${canPlay?'pointer':'default'};display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:${canPlay?'1':'.45'};">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div style="flex:1;">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text-dim);">${juz.audioUrl ? 'Audioni tinglang' : 'Bu qism uchun audio hali admin panelda kiritilmagan.'}</div>
+          <div id="istimaPlaysLeft" style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Qolgan marta: ${playsLeft} / ${juz.maxPlays}</div>
+        </div>
+      </div>
+      <audio id="istimaAudioEl" src="${juz.audioUrl||''}" preload="none" style="display:none;"></audio>
+      <div class="q-nav-row" style="justify-content:center;">
+        <button class="btn btn-primary" onclick="skipIstimaListening()">Savollarga o'tish →</button>
+      </div>
+      <div style="text-align:center;font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:10px;">Audio tugagach savollar avtomatik boshlanadi (har savol uchun 1 daqiqa) — yoki tayyor bo'lsangiz oldinroq o'ting.</div>
+    `;
+    const el = document.getElementById('istimaAudioEl');
+    if(el) el.onended = handleIstimaAudioEnded;
+    return;
+  }
+
+  // phase === 'questions'
   const q = currentQuiz.questions[currentQuiz.idx];
   const localNum = currentQuiz.idx - juz.startIdx + 1;
   const localTotal = juz.endIdx - juz.startIdx + 1;
-  const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
-  const canPlay = !!juz.audioUrl && playsLeft > 0;
   let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
-  html += `
-    <div class="prompt-box" style="display:flex;align-items:center;gap:14px;">
-      <button id="istimaPlayBtn" onclick="playIstimaAudio()" ${canPlay?'':'disabled'} style="width:44px;height:44px;border-radius:50%;background:var(--istima);border:none;color:#fff;cursor:${canPlay?'pointer':'default'};display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:${canPlay?'1':'.45'};">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      </button>
-      <div style="flex:1;">
-        <div style="font-size:12.5px;font-weight:700;color:var(--text-dim);">${juz.audioUrl ? 'Audioni tinglang' : 'Bu qism uchun audio hali admin panelda kiritilmagan.'}</div>
-        <div id="istimaPlaysLeft" style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;">Qolgan marta: ${playsLeft} / ${juz.maxPlays}</div>
-      </div>
-    </div>
-    <audio id="istimaAudioEl" src="${juz.audioUrl||''}" preload="none" style="display:none;"></audio>
-  `;
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
     <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
@@ -5544,12 +5599,28 @@ function renderIstimaPhase(){
       <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi qism →':'Keyingi →')}</button>
     </div>`;
   body.innerHTML = html;
+  startQuestionTimer(); // har savol uchun 1 daqiqa — vaqt tugasa avtomatik keyingisiga o'tadi
 }
-/* Audio faqat cheklangan marta (juz.maxPlays) ijro etiladi. Savoldan-savolga o'tishda (shu
-   qism ichida) hisoblagich SAQLANIB qoladi — foydalanuvchi savollarni almashtirib, audioni
-   qayta-qayta tinglay olmaydi. DOM'ni to'liq qayta chizmasdan (renderQuestion chaqirmasdan)
-   faqat hisoblagich va tugma holatini yangilaymiz — aks holda <audio> elementi almashib,
-   ijro to'xtab qoladi. */
+/* Audio "tugadi" hodisasi: agar imkoni bo'lgan marta (maxPlays) ijro etilib bo'lgan bo'lsa,
+   savollarga avtomatik o'tamiz. Agar hali qayta tinglash imkoni qolgan bo'lsa, foydalanuvchi
+   o'zi qayta tinglashi yoki "Savollarga o'tish" tugmasini bosishi mumkin. */
+function handleIstimaAudioEnded(){
+  const juz = currentQuiz.juz[currentQuiz.juzPointer];
+  const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
+  if(playsLeft <= 0) advanceIstimaToQuestions();
+}
+function skipIstimaListening(){ advanceIstimaToQuestions(); }
+function advanceIstimaToQuestions(){
+  if(!currentQuiz || currentQuiz.phase !== 'listening') return;
+  const el = document.getElementById('istimaAudioEl');
+  if(el){ el.onended = null; el.pause(); }
+  currentQuiz.phase = 'questions';
+  renderQuestion();
+  updateQGrid();
+}
+/* Audio faqat cheklangan marta (juz.maxPlays) ijro etiladi. DOM'ni to'liq qayta chizmasdan
+   (renderQuestion chaqirmasdan) faqat hisoblagich va tugma holatini yangilaymiz — aks holda
+   <audio> elementi almashib, ijro to'xtab qoladi. */
 function playIstimaAudio(){
   const juz = currentQuiz.juz[currentQuiz.juzPointer];
   if(!juz.audioUrl || currentQuiz.playsUsed >= juz.maxPlays) return;
