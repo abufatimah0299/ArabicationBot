@@ -2427,6 +2427,8 @@ async function bootApp(){
     applyLiveGrammarTopics(liveTopics);
 
     await refreshQiroaFromBackend();
+    await refreshIstimaFromBackend();
+    await refreshSpeakingFromBackend();
 
     if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
       const liveAdminUsers = await loadAdminUsersFromBackend();
@@ -2582,6 +2584,8 @@ function fireConfetti(){
 }
 function goBack(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
+  if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
   viewHistory.pop();
   const prev = viewHistory[viewHistory.length-1] || 'attanal';
   showView(prev, false);
@@ -2618,7 +2622,7 @@ const SKILLS = [
   {id:'grammatika', name:'Grammatika', ar:'القواعد', score:0, total:30, pct:0, color:'var(--grammatika)', bg:'var(--grammatika-bg)', icon:'📗', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-qiroa', desc:"Ushbu bo'limda arab tili grammatikasi (nahv, sarf va boshqa mavzular) bo'yicha savollarga javob berasiz. Har bir savol uchun 1 daqiqadan vaqt beriladi."},
   {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
   {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
-  {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:30, mins:15, grad:'sb-muhavara', desc:"Ushbu bo'limda berilgan savolga ovozli javob berasiz. Mikrofon belgisini bosib, javobingizni belgilangan vaqt ichida yozib oling."},
+  {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
   {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:30, mins:40, grad:'sb-kitaba', desc:"Ushbu bo'limda berilgan mavzu bo'yicha erkin matn yozasiz. Talab qilingan so'zlar sonini va vaqt chegarasini hisobga olib yozing."},
 ];
 function applyBackendSkillScores(dash){
@@ -3289,8 +3293,9 @@ function renderAdminQuestions(){
   const bulkQiroaTestBtn = document.getElementById('adminBulkQiroaTestBtn');
   const isQiroaTab = adminActiveSkill === 'qiroa';
   const isIstimaTab = adminActiveSkill === 'istima';
-  if(bulkBtn) bulkBtn.style.display = (isQiroaTab || isIstimaTab) ? 'none' : '';
-  if(singleBtn) singleBtn.style.display = (isQiroaTab || isIstimaTab) ? 'none' : '';
+  const isMuhavaraTab = adminActiveSkill === 'muhavara';
+  if(bulkBtn) bulkBtn.style.display = (isQiroaTab || isIstimaTab || isMuhavaraTab) ? 'none' : '';
+  if(singleBtn) singleBtn.style.display = (isQiroaTab || isIstimaTab || isMuhavaraTab) ? 'none' : '';
   if(qiroaTestBtn) qiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
   if(bulkQiroaTestBtn) bulkQiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
 
@@ -3386,6 +3391,34 @@ function renderAdminQuestions(){
         </div>
         <div class="t-actions">
           <button class="row-btn" onclick="openAddIstimaFullTestModal('${j.id}')">+ Yangi test</button>
+        </div>
+      </div>`;
+    }).join('');
+  } else if(adminActiveSkill==='muhavara'){
+    const total = MUHAVARA_PARTS.reduce((s,p)=> s + (MUHAVARA_QUESTIONS[p.id]?.length||0), 0);
+    countEl.textContent = `${MUHAVARA_PARTS.length} ta qism · ${total} / ${MUHAVARA_PARTS.length*MUHAVARA_MAX_Q_PER_PART} ta savol`;
+    list.innerHTML = MUHAVARA_PARTS.map(p=>{
+      const qs = MUHAVARA_QUESTIONS[p.id] || [];
+      const n = qs.length;
+      const rows = qs.length
+        ? qs.map(q=>`<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--muhavara);padding-inline-start:10px;">
+            <div>
+              <div class="t-meta" dir="rtl" style="text-align:left;direction:rtl;font-size:14px;color:var(--text);">${escapeHtml(q.prompt)}</div>
+            </div>
+            <div class="t-actions icon-btn-row">
+              <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditSpeakingQuestionModal('${q.id}')">${IB_ICON_EDIT}</button>
+              <button class="icon-btn ib-del" title="O'chirish" onclick="deleteSpeakingQuestion('${q.id}')">${IB_ICON_DEL}</button>
+            </div>
+          </div>`).join('')
+        : `<div class="t-meta" style="margin-inline-start:14px;">Hali savol yo'q</div>`;
+      return `<div class="topic-row" style="align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="t-name">${p.name}</div>
+          <div class="t-meta">${n} / ${MUHAVARA_MAX_Q_PER_PART} ta savol · Tayyorgarlik: ${p.prepSecs}s · Javob: ${p.answerSecs}s</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${rows}</div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" ${n>=MUHAVARA_MAX_Q_PER_PART?'disabled title="Bu qismda allaqachon 2 ta savol bor"':''} onclick="openAddSpeakingQuestionModal('${p.id}')">+ Savol</button>
         </div>
       </div>`;
     }).join('');
@@ -3769,6 +3802,77 @@ async function deleteQiroaTest(testId){
   await refreshQiroaFromBackend();
   renderAdminQuestions();
   toast("🗑 Test o'chirildi");
+}
+
+/* ---- Muhavara: savol qo'shish / tahrirlash / o'chirish (ochiq savol, variant yo'q) ---- */
+function openAddSpeakingQuestionModal(partId){
+  const part = MUHAVARA_PARTS.find(p=>p.id===partId);
+  if(!part) return;
+  const n = MUHAVARA_QUESTIONS[partId]?.length || 0;
+  if(n >= MUHAVARA_MAX_Q_PER_PART){
+    toast(`⚠️ ${part.name}da allaqachon ${MUHAVARA_MAX_Q_PER_PART} ta savol bor`);
+    return;
+  }
+  document.getElementById('modalTitle').textContent = `${part.name} — yangi savol`;
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddSpeakingQuestion(event,'${partId}')">
+      <p class="form-hint">Javob vaqti: ${part.answerSecs} soniya. Savol ochiq — variant kerak emas, AI foydalanuvchi javobini tinglab (matnga o'girib) baholaydi.</p>
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="spQText" dir="rtl" style="min-height:100px;" placeholder="مَاذَا تَفْعَلُ فِي وَقْتِ فَرَاغِكَ؟" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitAddSpeakingQuestion(e, partId){
+  e.preventDefault();
+  const prompt = document.getElementById('spQText').value;
+  closeModal();
+  toast('⏳ Saqlanmoqda...');
+  const saved = await addSpeakingQuestionToBackend(partId, prompt);
+  if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  await refreshSpeakingFromBackend();
+  renderAdminQuestions();
+  toast("✅ Savol qo'shildi");
+  return false;
+}
+function openEditSpeakingQuestionModal(id){
+  let q = null;
+  for(const p of MUHAVARA_PARTS){ const found = (MUHAVARA_QUESTIONS[p.id]||[]).find(x=>x.id===id); if(found){ q = found; break; } }
+  if(!q) return;
+  document.getElementById('modalTitle').textContent = "Savolni tahrirlash";
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditSpeakingQuestion(event,'${id}')">
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="spQEditText" dir="rtl" style="min-height:100px;" required>${escapeHtml(q.prompt)}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+async function submitEditSpeakingQuestion(e, id){
+  e.preventDefault();
+  const prompt = document.getElementById('spQEditText').value;
+  closeModal();
+  toast('⏳ Saqlanmoqda...');
+  const saved = await editSpeakingQuestionOnBackend(id, prompt);
+  if(!saved){ toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000); return false; }
+  await refreshSpeakingFromBackend();
+  renderAdminQuestions();
+  toast("✅ Yangilandi");
+  return false;
+}
+async function deleteSpeakingQuestion(id){
+  if(!confirm("Bu savolni butunlay o'chirmoqchimisiz?")) return;
+  const result = await deleteSpeakingQuestionOnBackend(id);
+  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+  await refreshSpeakingFromBackend();
+  renderAdminQuestions();
+  toast("🗑 Savol o'chirildi");
 }
 
 /* ================= Qiroa: YAXLIT "Test qo'shish" oynasi =================
@@ -5082,6 +5186,77 @@ async function refreshIstimaFromBackend(){
   applyLiveQuestions(liveQuestions);
 }
 
+/* ---------------- Muhavara (Speaking): 3 qism, har birida 2 tadan savol (jami 6) ----------------
+   Qiroa/Istima'dan farqi: bu yerda "test" tushunchasi yo'q — har qismda ANIQ 2 ta savol bo'lib,
+   TEST BOSHLANGANDA HAMMASI (6 tasi ham) ketma-ket beriladi (tasodifiy tanlanmaydi).
+   Har savol uchun: avval prepSecs soniya tayyorgarlik (yozib olinmaydi), so'ng answerSecs soniya
+   davomida ovoz yoziladi. Savollar ochiq (variant/to'g'ri javob yo'q) — shuning uchun umumiy
+   "questions" jadvali o'rniga alohida "speaking_questions" jadvali ishlatiladi.
+   Backend: "speaking_questions" jadvali (id, part_id, prompt) — qarang loadSpeakingQuestionsFromBackend().
+   Baholash: har javob ovozi Supabase Edge Function ("evaluate-speaking") orqali Groq AI'ga
+   yuboriladi, u matnga o'giradi (Whisper) va 0-5 ball + izoh bilan baholaydi (LLM). */
+const MUHAVARA_PARTS = [
+  {id:'part1', name:'1-qism', prepSecs:60, answerSecs:30},
+  {id:'part2', name:'2-qism', prepSecs:60, answerSecs:45},
+  {id:'part3', name:'3-qism', prepSecs:60, answerSecs:60},
+];
+const MUHAVARA_MAX_Q_PER_PART = 2;
+/* MUHAVARA_QUESTIONS[partId] = [ {id, partId, prompt}, ... ] (ko'pi bilan 2 tadan) */
+let MUHAVARA_QUESTIONS = { part1:[], part2:[], part3:[] };
+
+async function loadSpeakingQuestionsFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/speaking_questions?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
+    return res.ok ? await res.json() : [];
+  }catch(e){ console.error(e); return []; }
+}
+function applyLiveSpeakingQuestions(rows){
+  MUHAVARA_QUESTIONS = { part1:[], part2:[], part3:[] };
+  if(!Array.isArray(rows)) return;
+  rows.forEach(r=>{
+    if(!MUHAVARA_QUESTIONS[r.part_id]) return;
+    MUHAVARA_QUESTIONS[r.part_id].push({ id:r.id, partId:r.part_id, prompt:r.prompt });
+  });
+}
+/* Yangi Muhavara savoli qo'shadi — backendda "admin_add_speaking_question" RPC talab qilinadi. */
+async function addSpeakingQuestionToBackend(partId, prompt){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_speaking_question`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_part_id: partId, p_prompt: prompt })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function editSpeakingQuestionOnBackend(id, prompt){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_edit_speaking_question`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_question_id: id, p_prompt: prompt })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function deleteSpeakingQuestionOnBackend(id){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_speaking_question`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_question_id: id })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function refreshSpeakingFromBackend(){
+  const rows = await loadSpeakingQuestionsFromBackend();
+  applyLiveSpeakingQuestions(rows);
+}
+
 /* ---------------- Timer (overall, for reading/listening/writing) ---------------- */
 let timerInterval = null;
 function startTimer(seconds, onExpire){
@@ -5221,6 +5396,7 @@ function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   if(skillId === 'qiroa'){ startQiroaQuiz(customLabel); return; }
   if(skillId === 'istima'){ startIstimaQuiz(customLabel); return; }
+  if(skillId === 'muhavara'){ startMuhavaraQuiz(customLabel); return; }
   const bank = QUESTION_BANKS[skillId] || QUESTION_BANKS.grammatika;
   let questions = bank.questions;
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
@@ -5426,21 +5602,7 @@ function renderQuestion(){
     return;
   }
   if(currentQuiz.skillId==='muhavara'){
-    clearQuestionTimer();
-    body.innerHTML = `
-      <div class="prompt-box">
-        <div class="lbl">Savol</div>
-        <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">مَاذَا تَفْعَلُ فِي وَقْتِ فَرَاغِكَ؟</div>
-      </div>
-      <div class="mic-wrap">
-        <div class="mic-circle" id="micCircle" onclick="toggleRecording()">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
-        </div>
-        <div class="mic-time" id="micTime">00:00 / 00:30</div>
-        <div class="mic-hint">Javobingizni yozib oling. Sizning javobingiz 30 soniyagacha yozib olinadi.</div>
-        <button class="btn btn-primary" style="margin-top:20px;" onclick="submitSpeaking()">Yozishni yakunlash</button>
-      </div>
-    `;
+    renderMuhavaraPhase();
     return;
   }
   if(currentQuiz.skillId==='qiroa'){
@@ -5636,28 +5798,190 @@ function playIstimaAudio(){
   if(btn && playsLeft<=0){ btn.disabled = true; btn.style.opacity='.45'; btn.style.cursor='default'; }
 }
 
-/* speaking recording mock */
-let recTimer=null, recSeconds=0;
-function toggleRecording(){
-  const circle = document.getElementById('micCircle');
-  if(!circle.classList.contains('recording')){
-    circle.classList.add('recording'); recSeconds=0;
-    recTimer = setInterval(()=>{
-      recSeconds++;
-      document.getElementById('micTime').textContent = String(recSeconds).padStart(2,'0')+':00'.slice(0,0)+ '' ;
-      document.getElementById('micTime').textContent = `00:${String(recSeconds).padStart(2,'0')} / 00:30`;
-      if(recSeconds>=30){ clearInterval(recTimer); circle.classList.remove('recording'); }
-    },1000);
+/* ================= Muhavara (Speaking) — mikrofon + Groq AI baholash ================= */
+/* Oqim: har savol uchun avval "tayyorgarlik" (prepSecs, yozib olinmaydi), so'ng
+   "yozib olish" (answerSecs, MediaRecorder orqali) fazasi bo'ladi. Yozib olish tugagach
+   audio Supabase Edge Function'ga (evaluate-speaking) yuboriladi — u Groq Whisper bilan
+   matnga o'giradi va Groq LLM bilan 0-5 ball + izoh qaytaradi. 6 savol tugagach umumiy
+   ball (max 30, boshqa bo'limlar bilan bir xil shkala) backendga yoziladi. */
+let muhavaraStream = null;
+let muhavaraRecorder = null;
+let muhavaraChunks = [];
+
+function startMuhavaraQuiz(customLabel){
+  const flat = [];
+  MUHAVARA_PARTS.forEach(part=>{
+    (MUHAVARA_QUESTIONS[part.id]||[]).forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
+  });
+  if(flat.length === 0){
+    toast("⚠️ Muhavara bo'limi uchun hali savollar qo'shilmagan. Admin panelda qo'shing.");
+    return;
+  }
+  const skillMeta = SKILLS.find(s=>s.id==='muhavara');
+  currentQuiz = {
+    skillId:'muhavara', topicId:null, type:'speaking',
+    questions: flat, idx:0, phase:'prep',
+    color: skillMeta.color, label: customLabel || skillMeta.name,
+    startedAt: Date.now(),
+  };
+  document.getElementById('quizTag').textContent = currentQuiz.label;
+  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
+  document.getElementById('quizTag').style.color = skillMeta.color;
+  document.getElementById('quizSide').style.display = 'none';
+  showView('quiz');
+  startMuhavaraPrep();
+}
+function startMuhavaraPrep(){
+  currentQuiz.phase = 'prep';
+  renderQuestion();
+  startTimer(currentQuiz.questions[currentQuiz.idx].part.prepSecs, ()=> startMuhavaraRecording());
+}
+async function startMuhavaraRecording(){
+  try{
+    muhavaraStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    toast("🎤 Mikrofonga ruxsat berilmadi. Brauzer sozlamalaridan ruxsat bering va qayta urinib ko'ring.", 6000);
+    currentQuiz.phase = 'prep';
+    renderQuestion();
+    return;
+  }
+  currentQuiz.phase = 'recording';
+  renderQuestion();
+  muhavaraChunks = [];
+  muhavaraRecorder = new MediaRecorder(muhavaraStream);
+  muhavaraRecorder.ondataavailable = e=>{ if(e.data.size>0) muhavaraChunks.push(e.data); };
+  muhavaraRecorder.onstop = ()=>{
+    muhavaraStream.getTracks().forEach(t=>t.stop());
+    muhavaraStream = null;
+    const blob = new Blob(muhavaraChunks, { type: muhavaraRecorder.mimeType || 'audio/webm' });
+    evaluateMuhavaraAnswer(blob);
+  };
+  muhavaraRecorder.start();
+  startTimer(currentQuiz.questions[currentQuiz.idx].part.answerSecs, ()=> stopMuhavaraRecording());
+}
+function stopMuhavaraRecording(){
+  clearInterval(timerInterval);
+  if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ muhavaraRecorder.stop(); }
+}
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onloadend = ()=> resolve(String(reader.result).split(',')[1] || '');
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+async function evaluateMuhavaraAnswer(blob){
+  currentQuiz.phase = 'evaluating';
+  renderQuestion();
+  const q = currentQuiz.questions[currentQuiz.idx];
+  try{
+    const base64 = await blobToBase64(blob);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-speaking`, {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({
+        audio_base64: base64, mime_type: blob.type || 'audio/webm',
+        prompt: q.prompt, part_id: q.part.id, question_id: q.id,
+      })
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok || !data || typeof data.score !== 'number'){
+      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
+      q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = data?.transcript || '';
+    } else {
+      q.score = Math.max(0, Math.min(5, data.score));
+      q.feedback = data.feedback || '';
+      q.transcript = data.transcript || '';
+    }
+  }catch(e){
+    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
+    q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = '';
+  }
+  if(currentQuiz.idx < currentQuiz.questions.length-1){
+    currentQuiz.idx++;
+    startMuhavaraPrep();
   } else {
-    circle.classList.remove('recording'); clearInterval(recTimer);
+    finishMuhavaraQuiz();
   }
 }
-function submitSpeaking(){
-  clearInterval(recTimer);
+function finishMuhavaraQuiz(){
   clearInterval(timerInterval);
-  toast('Javobingiz yuborildi ✅');
-  showView('attanal');
+  const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
+  const maxScore = currentQuiz.questions.length * 5;
+  if(TELEGRAM_PROFILE.rawId){
+    submitQuizResultToBackend({ skillId:'muhavara', topicId:null, topicName: currentQuiz.label, correct: totalScore, total: maxScore });
+  }
+  renderMuhavaraSummary(totalScore, maxScore);
 }
+function renderMuhavaraSummary(totalScore, maxScore){
+  const timerEl = document.getElementById('quizTimer');
+  if(timerEl) timerEl.textContent = '';
+  const pct = Math.round((totalScore/maxScore)*100);
+  document.getElementById('quizBody').innerHTML = `
+    <div class="prompt-box" style="text-align:center;">
+      <div class="lbl">Natija</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;">${totalScore} / ${maxScore} ball</div>
+      <div style="color:var(--text-faint);font-size:13px;">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+      ${currentQuiz.questions.map((q,i)=>`
+        <div class="topic-row" style="align-items:flex-start;">
+          <div style="flex:1;">
+            <div class="t-name" style="font-size:13px;">${q.part.name} · Savol ${i+1}</div>
+            <div dir="rtl" style="font-size:15px;margin:6px 0;">${escapeHtml(q.prompt)}</div>
+            ${q.transcript?`<div class="t-meta" style="margin-top:4px;">Sizning javobingiz: "${escapeHtml(q.transcript)}"</div>`:''}
+            ${q.feedback?`<div class="t-meta" style="margin-top:4px;color:var(--text-dim);">${escapeHtml(q.feedback)}</div>`:''}
+          </div>
+          <div style="font-weight:800;font-size:16px;flex-shrink:0;">${q.score ?? 0}/5</div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="showView('dashboard')">Bosh sahifaga qaytish</button>
+  `;
+}
+function renderMuhavaraPhase(){
+  clearQuestionTimer();
+  const body = document.getElementById('quizBody');
+  const q = currentQuiz.questions[currentQuiz.idx];
+  const num = `${q.part.name} · Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}`;
+
+  if(currentQuiz.phase==='prep'){
+    body.innerHTML = `
+      <div class="q-sub">${num} · Tayyorgarlik — javob vaqti avtomatik boshlanadi</div>
+      <div class="prompt-box">
+        <div class="lbl">Savol</div>
+        <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
+      </div>
+      <div class="mic-hint" style="text-align:center;margin-top:16px;">Fikringizni tartiblang — tayyorgarlik vaqti tugagach yozib olish avtomatik boshlanadi.</div>
+    `;
+    return;
+  }
+  if(currentQuiz.phase==='recording'){
+    body.innerHTML = `
+      <div class="q-sub">${num} · Yozib olinmoqda</div>
+      <div class="prompt-box">
+        <div class="lbl">Savol</div>
+        <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
+      </div>
+      <div class="mic-wrap">
+        <div class="mic-circle recording" id="micCircle">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+        </div>
+        <div class="mic-hint">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
+        <button class="btn btn-outline" style="margin-top:20px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
+      </div>
+    `;
+    return;
+  }
+  body.innerHTML = `
+    <div class="q-sub">${num} · AI baholamoqda</div>
+    <div class="prompt-box" style="text-align:center;">
+      <div class="lbl">Javobingiz Groq AI'ga yuborildi</div>
+      <div style="margin-top:14px;">⏳ Baholanmoqda, biroz kuting...</div>
+    </div>
+  `;
+}
+
 function submitWriting(){
   clearInterval(timerInterval);
   toast('Yozma topshiriq yuborildi ✅ Tekshiruvdan so\'ng natija profilingizda ko\'rinadi.');
