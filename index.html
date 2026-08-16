@@ -2795,6 +2795,7 @@ function fireConfetti(){
 }
 function goBack(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  if(FULL_EXAM && FULL_EXAM.active){ FULL_EXAM = null; toast("To'liq imtihon bekor qilindi", 2000); }
   if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
   if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
   stopMuhavaraLevelMeter();
@@ -5531,6 +5532,76 @@ const QUESTION_BANKS = {
 let currentQuiz = null;
 const ARABIC_OPT_LETTERS = ['أ','ب','ج','د','هـ','و'];
 
+/* ---------------- To'liq At-Tanal imtihoni (5 mahorat ketma-ket) ----------------
+   FULL_EXAM.active=true bo'lganda har bir mahorat (grammatika->qiroa->istima->
+   muhavara->kitaba) o'z odatdagi oqimi bilan ishga tushadi, lekin har biri
+   tugagach ORALIQ natija ekrani ko'rsatilmaydi — o'rniga darhol keyingi
+   mahoratga o'tiladi. Har bir mahorat natijasi (correct/total) FULL_EXAM.results
+   ichida to'planadi, oxirida esa umumiy (5 mahorat yig'indisi) natija ekrani
+   ko'rsatiladi. Har bir mahorat baribir alohida-alohida backendga (odatdagidek)
+   yoziladi — shu sabab bu funksiya alohida backend jadvali talab qilmaydi. */
+const FULL_EXAM_ORDER = ['grammatika','qiroa','istima','muhavara','kitaba'];
+let FULL_EXAM = null;
+function runFullExamStep(){
+  if(!FULL_EXAM || !FULL_EXAM.active) return;
+  const skillId = FULL_EXAM.order[FULL_EXAM.stepIndex];
+  if(!skillId){ showFullExamResults(); return; }
+  if(skillId==='muhavara'){ openMicCheck(); return; }
+  if(skillId==='kitaba'){ startKitabaExam(); return; }
+  startQuiz(skillId);
+}
+function advanceFullExam(){
+  if(!FULL_EXAM) return;
+  const finishedId = FULL_EXAM.order[FULL_EXAM.stepIndex];
+  FULL_EXAM.stepIndex++;
+  const nextId = FULL_EXAM.order[FULL_EXAM.stepIndex];
+  clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  if(!nextId){ showFullExamResults(); return; }
+  const finishedMeta = SKILLS.find(s=>s.id===finishedId);
+  const nextMeta = SKILLS.find(s=>s.id===nextId);
+  toast(`✅ ${finishedMeta?finishedMeta.name:finishedId} yakunlandi. Keyingi bo'lim: ${nextMeta?nextMeta.name:nextId}`, 2200);
+  setTimeout(runFullExamStep, 1400);
+}
+function showFullExamResults(){
+  const timerEl = document.getElementById('quizTimer');
+  if(timerEl) timerEl.textContent = '';
+  const tagEl = document.getElementById('quizTag');
+  if(tagEl){ tagEl.textContent = "To'liq At-Tanal imtihoni — natija"; tagEl.style.background='var(--indigo-100)'; tagEl.style.color='var(--indigo-700)'; }
+  const side = document.getElementById('quizSide');
+  if(side) side.style.display = 'none';
+  let sumCorrect = 0, sumTotal = 0;
+  const rows = FULL_EXAM.order.map(id=>{
+    const r = FULL_EXAM.results[id] || {correct:0, total:0};
+    sumCorrect += (r.correct||0); sumTotal += (r.total||0);
+    const meta = SKILLS.find(s=>s.id===id);
+    const pct = r.total ? Math.round((r.correct/r.total)*100) : 0;
+    return `
+      <div class="topic-row" style="align-items:center;">
+        <div style="flex:1;">
+          <div class="t-name" style="font-size:13px;">${meta?meta.name:id}</div>
+          <div class="t-meta">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+        </div>
+        <div style="font-weight:800;font-size:16px;flex-shrink:0;">${Math.round((r.correct||0)*10)/10}/${Math.round((r.total||0)*10)/10}</div>
+      </div>`;
+  }).join('');
+  const overallPct = sumTotal ? Math.round((sumCorrect/sumTotal)*100) : 0;
+  const body = document.getElementById('quizBody');
+  body.innerHTML = `
+    <div class="prompt-box" style="text-align:center;">
+      <div class="lbl">Umumiy natija</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;">${Math.round(sumCorrect*10)/10} / ${Math.round(sumTotal*10)/10} ball</div>
+      <div style="color:var(--text-faint);font-size:13px;">${overallPct}% · ${getCEFRLevel(overallPct)} daraja</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">${rows}</div>
+    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="finishFullExamAndGoHome()">Bosh sahifaga qaytish</button>
+  `;
+  if(overallPct>=60) fireConfetti();
+}
+function finishFullExamAndGoHome(){
+  FULL_EXAM = null;
+  showView('dashboard');
+}
+
 /* ---------------- Qiroa: 3 juz, har bir juzda BIR NECHTA "test" (matn+6 savol) ---------------- */
 /* Har bir juz ichida bir nechta mustaqil "test" bo'lishi mumkin (masalan 1-juzda 10 ta test).
    Har bir test — o'z matni (passage) va o'sha matnga tegishli 6 ta savoldan iborat YAXLIT
@@ -6118,7 +6189,12 @@ function startKitabaExam(){
   startTimer(currentQuiz.questions[0].part.seconds, ()=> forceSubmitWriting());
   showView('quiz');
 }
-function startFullExam(){ toast('To\'liq imtihon tez orada qo\'shiladi — hozircha bo\'lim testlarini sinab ko\'ring 🎓'); }
+function startFullExam(){
+  if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  FULL_EXAM = { active:true, order: FULL_EXAM_ORDER.slice(), stepIndex:0, results:{} };
+  toast("🎓 To'liq At-Tanal imtihoni boshlandi: 1/5 — Grammatika", 2200);
+  runFullExamStep();
+}
 
 /* Speaking quiz has its own simplified entry through hub button too (skillId muhavara) */
 
@@ -6575,6 +6651,11 @@ function finishMuhavaraQuiz(){
   if(TELEGRAM_PROFILE.rawId){
     submitQuizResultToBackend({ skillId:'muhavara', topicId:null, topicName: currentQuiz.label, correct: totalScore, total: maxScore });
   }
+  if(FULL_EXAM && FULL_EXAM.active){
+    FULL_EXAM.results.muhavara = { correct: totalScore, total: maxScore, label: currentQuiz.label };
+    advanceFullExam();
+    return;
+  }
   renderMuhavaraSummary(totalScore, maxScore);
 }
 function renderMuhavaraSummary(totalScore, maxScore){
@@ -6720,6 +6801,11 @@ function finishKitabaExam(){
   if(TELEGRAM_PROFILE.rawId){
     submitQuizResultToBackend({ skillId:'kitaba', topicId:null, topicName: currentQuiz.label, correct: Math.round(totalScore), total: maxScore });
   }
+  if(FULL_EXAM && FULL_EXAM.active){
+    FULL_EXAM.results.kitaba = { correct: totalScore, total: maxScore, label: currentQuiz.label };
+    advanceFullExam();
+    return;
+  }
   renderQuestion();
 }
 function renderKitabaSummary(){
@@ -6793,6 +6879,12 @@ function finishQuiz(){
       topicName: currentQuiz.label,
       correct, total
     });
+  }
+
+  if(FULL_EXAM && FULL_EXAM.active){
+    FULL_EXAM.results[currentQuiz.skillId] = { correct, total, label: currentQuiz.label };
+    advanceFullExam();
+    return;
   }
 
   document.getElementById('resultTopic').textContent = currentQuiz.label || 'Test natijasi';
