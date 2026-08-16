@@ -471,6 +471,17 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   transition:transform .09s ease-out, opacity .09s ease-out;
 }
 .mic-ring2{ border-width:2px; border-color:var(--muhavara); }
+/* Ovoz balandligiga (tempga) qarab "nafas oladigan" yumshoq nur halqalari —
+   markazdan tashqariga tarqaladi, rangi eski --muhavara rangida qoladi. */
+.mic-glow{
+  position:absolute; border-radius:50%; pointer-events:none; z-index:0;
+  background: radial-gradient(circle, color-mix(in srgb, var(--muhavara) 60%, transparent) 0%, color-mix(in srgb, var(--muhavara) 18%, transparent) 55%, transparent 75%);
+  opacity:0; transform:scale(1);
+  transition:transform .09s ease-out, opacity .09s ease-out;
+}
+.mic-glow1{ inset:-16px; }
+.mic-glow2{ inset:-40px; }
+.mic-glow3{ inset:-68px; }
 .mic-time{ margin-top:16px; font-weight:800; font-size:15px; color:var(--text-dim);}
 .mic-hint{ margin-top:6px; font-size:12.5px; color:var(--text-faint); font-weight:600;}
 textarea.write-area{
@@ -6309,20 +6320,42 @@ function startMuhavaraLevelMeter(){
     analyser.fftSize = 512;
     source.connect(analyser);
     const data = new Uint8Array(analyser.frequencyBinCount);
+    const startedAt = Date.now();
     function tick(){
       const ring = document.getElementById('micRing');
       const ring2 = document.getElementById('micRing2');
+      const glow1 = document.getElementById('micGlow1');
+      const glow2 = document.getElementById('micGlow2');
+      const glow3 = document.getElementById('micGlow3');
       if(!ring || !currentQuiz || currentQuiz.phase !== 'recording'){ muhavaraLevelRaf = null; return; }
       analyser.getByteTimeDomainData(data);
       let sum = 0;
       for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
       const rms = Math.sqrt(sum/data.length);
       const level = Math.min(1, rms*5.5);
+      // Doimiy, sokin "nafas olish" tempi (jim turgan paytda ham halqalar butunlay
+      // to'xtab qolmasin — GIF'dagi kabi uzluksiz pulsatsiya), gapirganda esa haqiqiy
+      // ovoz balandligi ustiga qo'shilib, halqalar sezilarli kattalashadi.
+      const t = (Date.now() - startedAt) / 1000;
+      const idle = 0.5 + 0.5 * Math.sin(t * 2.2);
+      const boosted = Math.max(level, idle * 0.22);
       ring.style.opacity = (0.15 + level*0.75).toFixed(2);
       ring.style.transform = `scale(${(1 + level*0.5).toFixed(3)})`;
       if(ring2){
         ring2.style.opacity = (0.10 + level*0.5).toFixed(2);
         ring2.style.transform = `scale(${(1 + level*0.9).toFixed(3)})`;
+      }
+      if(glow1){
+        glow1.style.opacity = (0.32 + boosted*0.55).toFixed(2);
+        glow1.style.transform = `scale(${(1 + boosted*0.35).toFixed(3)})`;
+      }
+      if(glow2){
+        glow2.style.opacity = (0.20 + boosted*0.45).toFixed(2);
+        glow2.style.transform = `scale(${(1 + boosted*0.55).toFixed(3)})`;
+      }
+      if(glow3){
+        glow3.style.opacity = (0.10 + boosted*0.35).toFixed(2);
+        glow3.style.transform = `scale(${(1 + boosted*0.8).toFixed(3)})`;
       }
       muhavaraLevelRaf = requestAnimationFrame(tick);
     }
@@ -6440,6 +6473,9 @@ function renderMuhavaraPhase(){
       </div>
       <div class="mic-wrap">
         <div class="mic-circle-wrap">
+          <div class="mic-glow mic-glow3" id="micGlow3"></div>
+          <div class="mic-glow mic-glow2" id="micGlow2"></div>
+          <div class="mic-glow mic-glow1" id="micGlow1"></div>
           <div class="mic-ring" id="micRing"></div>
           <div class="mic-ring mic-ring2" id="micRing2"></div>
           <div class="mic-circle recording" id="micCircle">
