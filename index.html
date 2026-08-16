@@ -3541,7 +3541,7 @@ function viewAdminUser(userId){
     <div style="padding:14px 4px;">
       <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-bottom:16px;">${u.username} · ID: ${u.id} · Daraja: ${u.level}</div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:6px;">
         <div>
           <div style="font-size:11px;color:var(--text-faint);font-weight:700;">Joriy XP</div>
           <div style="font-size:22px;font-weight:900;" id="xpCurrentVal">${u.xp.toLocaleString()}</div>
@@ -3552,6 +3552,9 @@ function viewAdminUser(userId){
           <button type="button" class="icon-btn ib-add" title="XP qo'shish" onclick="applyUserXpAdjustment(${u.id},1)">${IB_ICON_ADD}</button>
           <button type="button" class="icon-btn ib-del" title="XP ayirish" onclick="applyUserXpAdjustment(${u.id},-1)">${IB_ICON_MINUS}</button>
         </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-faint);font-weight:600;margin-bottom:18px;">
+        ℹ️ Daraja (${u.level}) — CEFR imtihon natijasi, XP'ga bog'liq emas. XP — faqat bo'limlardagi faollik ko'rsatkichi.
       </div>
 
       ${SKILLS.map(s=>{
@@ -3613,7 +3616,7 @@ async function resetAllUsersXpOnBackend(){
 }
 async function resetAllUsersXp(){
   const n = ADMIN_USERS.length;
-  if(!confirm(`⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning (${n} ta) XP'sini butunlay 0'ga qaytaradi. Reyting ro'yxati ham nolga tushadi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
+  if(!confirm(`⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning (${n} ta) XP'sini butunlay 0'ga qaytaradi. Reyting ro'yxati ham nolga tushadi. (Daraja — A1–C2 — bunga ta'sir qilmaydi, u alohida CEFR imtihon natijasi.) Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
   if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA foydalanuvchilarning XP'sini nolga tushirmoqchimisiz?")) return;
   const result = await resetAllUsersXpOnBackend();
   if(result === null){ toast("⚠️ Xatolik: XP tozalanmadi"); return; }
