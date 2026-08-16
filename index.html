@@ -1503,10 +1503,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <button class="btn btn-primary" id="adminAddQuestionBtn" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
               <button class="btn btn-primary" id="adminAddQiroaTestBtn" style="display:none;" onclick="openAddQiroaFullTestModal()">+ Yangi test qo'shish</button>
               <button class="btn" id="adminBulkQiroaTestBtn" style="display:none;" onclick="openBulkAddQiroaTestsModal()">+ Bir nechta test (JSON)</button>
-              <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (yuklab olish)</button>
-              <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (yuklash)</button>
+              <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (joriy bo'lim)</button>
+              <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (joriy bo'limga)</button>
               <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
-              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllQuestions()">🗑 Hammasini tozalash</button>
+              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearCurrentSectionQuestions()">🗑 Joriy bo'limni tozalash</button>
+              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllQuestions()">🗑 Barcha bo'limlarni tozalash</button>
             </div>
           </div>
           <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
@@ -1911,6 +1912,38 @@ async function clearAllQuestions(){
   }
 }
 
+/* Faqat joriy tanlangan bo'lim (adminActiveSkill) savollarini tozalaydi — boshqa bo'limlarga
+   tegishli savollar va mavzular ro'yxati tegilmaydi. Bitta umumiy RPC yo'qligi sababli
+   (backendda faqat "hammasini tozalash" RPC bor), shu bo'limga tegishli savollarni
+   ro'yxatdan o'tkazib, har birini alohida (mavjud admin_delete_question RPC orqali) o'chiradi. */
+async function clearSectionQuestionsOnBackend(skillId){
+  const all = await loadQuestionsFromBackend();
+  const rows = (all||[]).filter(r => r.skill_id === skillId);
+  let deleted = 0, failed = 0;
+  for(const r of rows){
+    const ok = await deleteQuestionOnBackend(r.id);
+    if(ok) deleted++; else failed++;
+  }
+  return { deleted, failed, total: rows.length };
+}
+async function clearCurrentSectionQuestions(){
+  const skillName = SKILL_META[adminActiveSkill]?.name || adminActiveSkill;
+  if(!confirm(`⚠️ DIQQAT: Bu faqat "${skillName}" bo'limidagi BARCHA savollarni butunlay o'chiradi. Boshqa bo'limlar va mavzular ro'yxati o'zgarishsiz qoladi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
+  if(!confirm(`So'nggi tasdiq: haqiqatan ham "${skillName}" bo'limidagi barcha savollarni o'chirmoqchimisiz?`)) return;
+
+  toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
+  const result = await clearSectionQuestionsOnBackend(adminActiveSkill);
+  if(result.total === 0){
+    toast(`ℹ️ "${skillName}" bo'limida savol topilmadi`);
+  } else if(result.failed === 0){
+    toast(`🗑 "${skillName}" bo'limidan ${result.deleted} ta savol o'chirildi`);
+  } else {
+    toast(`🗑 "${skillName}": ${result.deleted}/${result.total} ta o'chirildi, ${result.failed} tasi xato: ${window.LAST_BACKEND_ERROR}`, 8000);
+  }
+  await refreshQiroaFromBackend();
+  renderAdminQuestions();
+}
+
 /* ---------- Savollar bazasini backup qilish (yuklab olish) va qayta yuklash (import) ----------
    Backup fayli "bulk-add-with-topics" formatida saqlanadi (skillId, topic nomi, topicAr,
    category, q, opts, a, exp) — shu tufayli AI orqali tuzatilgandan keyin ham xuddi shu
@@ -1926,6 +1959,8 @@ function downloadJSONFile(filename, dataObj){
 }
 
 async function exportAllQuestionsData(){
+  const targetSkill = adminActiveSkill;
+  const skillName = SKILL_META[targetSkill]?.name || targetSkill;
   toast('⏳ Ma\'lumotlar yuklanmoqda...');
   const [topics, questions] = await Promise.all([
     loadGrammarTopicsFromBackend(),
@@ -1934,30 +1969,38 @@ async function exportAllQuestionsData(){
   const topicsById = {};
   (topics||[]).forEach(t => { topicsById[t.id] = t; });
 
-  const items = (questions||[]).map(q => {
-    const t = q.topic_id ? topicsById[q.topic_id] : null;
-    return {
-      skillId: q.skill_id,
-      topic: t ? t.name : null,
-      topicAr: t ? t.ar : null,
-      category: t ? t.category : null,
-      q: q.q,
-      opts: q.opts,
-      a: q.correct_index,
-      exp: q.exp || '',
-    };
-  });
+  const items = (questions||[])
+    .filter(q => q.skill_id === targetSkill)
+    .map(q => {
+      const t = q.topic_id ? topicsById[q.topic_id] : null;
+      return {
+        skillId: q.skill_id,
+        topic: t ? t.name : null,
+        topicAr: t ? t.ar : null,
+        category: t ? t.category : null,
+        q: q.q,
+        opts: q.opts,
+        a: q.correct_index,
+        exp: q.exp || '',
+      };
+    });
+
+  if(!items.length){
+    toast(`⚠️ "${skillName}" bo'limida hali savol yo'q — backup qilinadigan narsa topilmadi`, 6000);
+    return;
+  }
 
   const payload = {
     exported_at: new Date().toISOString(),
     app: 'Arabication',
     format: 'bulk_add_with_topics_v1',
+    skillId: targetSkill,
     count: items.length,
     questions: items,
   };
   const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-  downloadJSONFile(`arabication-savollar-backup-${stamp}.json`, payload);
-  toast(`✅ ${items.length} ta savol backup qilindi (yuklab olindi)`);
+  downloadJSONFile(`arabication-${targetSkill}-backup-${stamp}.json`, payload);
+  toast(`✅ "${skillName}" bo'limidan ${items.length} ta savol backup qilindi (yuklab olindi)`);
 }
 
 async function importQuestionsFromFile(event){
@@ -1980,9 +2023,24 @@ async function importQuestionsFromFile(event){
     return;
   }
 
-  if(!confirm(`Faylda ${rows.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud bo'lgan savollar avtomatik o'tkazib yuboriladi, takrorlanmaydi)`)) return;
+  const targetSkill = adminActiveSkill;
+  const skillName = SKILL_META[targetSkill]?.name || targetSkill;
 
-  const items = rows.map(row => ({
+  const matching = rows.filter(row => (row.skillId || row.skill_id) === targetSkill);
+  const foreignCount = rows.length - matching.length;
+
+  if(!matching.length){
+    toast(`❌ Faylda "${skillName}" bo'limiga tegishli savol topilmadi (fayl boshqa bo'lim uchun bo'lishi mumkin — avval to'g'ri bo'limni tanlang)`, 8000);
+    return;
+  }
+
+  let confirmMsg = `Faylda "${skillName}" bo'limiga tegishli ${matching.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud bo'lgan savollar avtomatik o'tkazib yuboriladi, takrorlanmaydi)`;
+  if(foreignCount > 0){
+    confirmMsg += `\n\n⚠️ Diqqat: faylda yana ${foreignCount} ta boshqa bo'limlarga tegishli savol bor — joriy bo'lim ("${skillName}") tanlanganligi sababli ular IMPORT QILINMAYDI. Ularni qo'shish uchun avval admin panelda tegishli bo'limni tanlab, shu faylni qayta import qiling.`;
+  }
+  if(!confirm(confirmMsg)) return;
+
+  const items = matching.map(row => ({
     skillId: row.skillId || row.skill_id,
     topicId: row.topicId || null,
     topicName: row.topic || row.topicName || null,
@@ -2013,7 +2071,8 @@ async function importQuestionsFromFile(event){
     }
   }
 
-  let msg = `✅ Import tugadi: ${totalInserted} ta qo'shildi, ${totalSkipped} ta takroriy o'tkazib yuborildi`;
+  let msg = `✅ "${skillName}" uchun import tugadi: ${totalInserted} ta qo'shildi, ${totalSkipped} ta takroriy o'tkazib yuborildi`;
+  if(foreignCount > 0) msg += `, ${foreignCount} ta boshqa bo'limga tegishli savol e'tiborga olinmadi`;
   if(failed > 0) msg += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
   toast(msg, 9000);
 
