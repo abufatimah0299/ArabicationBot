@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arabication — Arab tili platformasi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 (function(){
@@ -94,7 +94,7 @@ html[data-theme="light"]{
 *{box-sizing:border-box; margin:0; padding:0;}
 :root{ --ease:cubic-bezier(.22,.9,.32,1); }
 body{
-  font-family:'Cairo', sans-serif;
+  font-family:'Graphik Arabic', sans-serif;
   background:var(--bg);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
@@ -769,7 +769,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .form-field label{ font-size:12.5px; font-weight:700; color:var(--text-dim); }
 .form-field input, .form-field select, .form-field textarea{
   padding:11px 13px; border:1px solid var(--border); border-radius:11px; background:var(--card);
-  color:var(--text); font-family:'Cairo',sans-serif; font-size:13.5px;
+  color:var(--text); font-family:'Graphik Arabic',sans-serif; font-size:13.5px;
 }
 .form-field textarea{ resize:vertical; min-height:80px; line-height:1.5; }
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus{ outline:none; border-color:var(--indigo-500); }
@@ -4224,11 +4224,11 @@ function openEditProfile(){
     <div style="display:flex;flex-direction:column;gap:14px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:700;color:var(--text-dim);">Ism</span>
-        <input type="text" id="editNameInput" value="${currentName}" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Cairo',sans-serif;font-size:14px;">
+        <input type="text" id="editNameInput" value="${currentName}" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:700;color:var(--text-dim);">Telegram ID</span>
-        <input type="text" value="${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Cairo',sans-serif;font-size:14px;background:var(--bg);color:var(--text-faint);">
+        <input type="text" value="${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;background:var(--bg);color:var(--text-faint);">
       </label>
       <button class="btn btn-primary" style="margin-top:6px;" onclick="saveProfile()">Saqlash</button>
     </div>
