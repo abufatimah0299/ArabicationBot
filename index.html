@@ -1913,9 +1913,30 @@ async function clearAllQuestions(){
 }
 
 /* Faqat joriy tanlangan bo'lim (adminActiveSkill) savollarini tozalaydi — boshqa bo'limlarga
-   tegishli savollar va mavzular ro'yxati tegilmaydi. Bitta umumiy RPC yo'qligi sababli
-   (backendda faqat "hammasini tozalash" RPC bor), shu bo'limga tegishli savollarni
-   ro'yxatdan o'tkazib, har birini alohida (mavjud admin_delete_question RPC orqali) o'chiradi. */
+   tegishli savollar va mavzular ro'yxati tegilmaydi.
+   TEZ YO'L: agar Supabase'da `admin_clear_section_questions(p_skill_id)` RPC funksiyasi
+   yaratilgan bo'lsa, bitta so'rov bilan bir zumda o'chiradi (pastdagi SQL qarang).
+   ZAXIRA YO'L: agar hali o'sha RPC yaratilmagan bo'lsa (404/"function does not exist"),
+   avtomatik ravishda eski — sekinroq, lekin har doim ishlaydigan — usulga o'tadi: shu
+   bo'limga tegishli savollarni ro'yxatdan o'tkazib, har birini alohida (mavjud
+   admin_delete_question RPC orqali) o'chiradi. */
+async function clearSectionQuestionsOnBackendFast(skillId){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_clear_section_questions`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_skill_id: skillId })
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      // RPC hali Supabase'da yaratilmagan — chaqiruvchi funksiya buni ko'rib, eski usulga o'tkazadi.
+      if(res.status === 404 || /function .* does not exist|PGRST202/i.test(errText)) return undefined;
+      setLastBackendError(res.status, errText);
+      return null;
+    }
+    return await res.json(); // o'chirilgan savollar soni
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
 async function clearSectionQuestionsOnBackend(skillId){
   const all = await loadQuestionsFromBackend();
   const rows = (all||[]).filter(r => r.skill_id === skillId);
@@ -1932,6 +1953,19 @@ async function clearCurrentSectionQuestions(){
   if(!confirm(`So'nggi tasdiq: haqiqatan ham "${skillName}" bo'limidagi barcha savollarni o'chirmoqchimisiz?`)) return;
 
   toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
+
+  const fastResult = await clearSectionQuestionsOnBackendFast(adminActiveSkill);
+  if(fastResult !== undefined && fastResult !== null){
+    toast(`🗑 "${skillName}" bo'limidan ${fastResult} ta savol o'chirildi`);
+    await refreshQiroaFromBackend();
+    renderAdminQuestions();
+    return;
+  }
+  if(fastResult === null){
+    toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
+    return;
+  }
+  // fastResult === undefined -> RPC hali yaratilmagan, zaxira (sekinroq) usulga o'tamiz
   const result = await clearSectionQuestionsOnBackend(adminActiveSkill);
   if(result.total === 0){
     toast(`ℹ️ "${skillName}" bo'limida savol topilmadi`);
