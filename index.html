@@ -376,6 +376,12 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .skill-intro-meta span{ display:flex; align-items:center; gap:6px; }
 .skill-intro-meta svg{ width:15px; height:15px; opacity:.8; }
 .skill-intro-btn{ margin-top:28px; padding:13px 36px; font-size:14px; border:none; }
+.mic-check-box{ width:100%; max-width:380px; margin-top:22px; }
+.mic-level-track{ width:100%; height:14px; border-radius:8px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
+.mic-level-fill{ height:100%; width:0%; border-radius:8px; background:linear-gradient(90deg, var(--muhavara), #22C57F); transition:width .08s linear; }
+.mic-check-status{ margin-top:12px; font-size:13px; font-weight:700; color:var(--text-dim); text-align:center; }
+.mic-check-status.ok{ color:#22C57F; }
+.mic-check-status.err{ color:var(--red); }
 @media (max-width:520px){
   .skill-intro-card{ padding:30px 20px; }
 }
@@ -1150,6 +1156,31 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <p class="skill-intro-desc" id="skillIntroDesc"></p>
             <div class="skill-intro-meta" id="skillIntroMeta"></div>
             <button class="btn btn-primary skill-intro-btn" id="skillIntroBtn" onclick="beginPendingSkill()">Testni boshlash</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ MIC CHECK SCREEN (Muhovara boshlanishidan oldin) ============ -->
+      <div class="view" id="view-miccheck">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div class="skill-intro-wrap">
+          <div class="card skill-intro-card">
+            <div class="skill-intro-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M9 22h6"/></svg>
+            </div>
+            <div class="skill-intro-title-uz">Mikrofonni tekshirish</div>
+            <p class="skill-intro-desc">Muhovara (Speaking) bo'limida har bir javobingiz ovoz orqali yoziladi. Imtihonni boshlashdan oldin mikrofoningiz ishlayotganiga ishonch hosil qiling.</p>
+
+            <div class="mic-check-box">
+              <div class="mic-level-track"><div class="mic-level-fill" id="micLevelFill"></div></div>
+              <div class="mic-check-status" id="micCheckStatus">Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring</div>
+            </div>
+
+            <button class="btn btn-primary skill-intro-btn" id="micCheckBtn" onclick="runMicCheck()">🎤 Mikrofonni tekshirish</button>
+            <button class="btn btn-primary skill-intro-btn" id="micStartExamBtn" style="display:none;" onclick="confirmMicCheckAndStartMuhavara()">Imtihonni boshlash</button>
           </div>
         </div>
       </div>
@@ -2470,7 +2501,7 @@ function toggleTheme(){
 })();
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','skillintro','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
+const views = ['dashboard','attanal','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
@@ -2496,6 +2527,7 @@ function isAttanalLocked(){
 }
 
 function showView(name, push=true){
+  if(name !== 'miccheck'){ try{ stopMicCheckStream(); }catch(e){} }
   const cardId = VIEW_CARD_MAP[name];
   if(cardId){
     const st = getExamCardLockState(cardId);
@@ -2721,7 +2753,96 @@ function openSkillIntro(id){
 function beginPendingSkill(){
   if(!pendingSkillId) return;
   if(pendingSkillId==='kitaba'){ startWriting(); }
+  else if(pendingSkillId==='muhavara'){ openMicCheck(); }
   else{ startQuiz(pendingSkillId); }
+}
+
+/* ---------------- Mikrofonni tekshirish (Muhovara boshlanishidan oldin) ----------------
+   Speaking bo'limi butunlay ovoz yozishga tayanadi — shuning uchun test boshlanishidan
+   oldin, prep vaqti behuda ketmasligi uchun, mikrofon ruxsati va ishlashini alohida
+   ekranda tekshiramiz. Faqat ruxsat berilgani emas, balki haqiqatan ham signal
+   kelayotgani (RMS darajasi) tekshiriladi. */
+let micCheckStream = null;
+let micCheckAudioCtx = null;
+let micCheckRaf = null;
+let micCheckConfirmed = false;
+let micCheckTimeoutHandled = false;
+function openMicCheck(){
+  micCheckConfirmed = false;
+  micCheckTimeoutHandled = false;
+  const statusEl = document.getElementById('micCheckStatus');
+  statusEl.className = 'mic-check-status';
+  statusEl.textContent = "Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring";
+  document.getElementById('micLevelFill').style.width = '0%';
+  const btn = document.getElementById('micCheckBtn');
+  btn.style.display = ''; btn.disabled = false; btn.textContent = '🎤 Mikrofonni tekshirish';
+  document.getElementById('micStartExamBtn').style.display = 'none';
+  showView('miccheck');
+}
+function stopMicCheckStream(){
+  if(micCheckRaf){ cancelAnimationFrame(micCheckRaf); micCheckRaf = null; }
+  if(micCheckStream){ micCheckStream.getTracks().forEach(t=>t.stop()); micCheckStream = null; }
+  if(micCheckAudioCtx){ try{ micCheckAudioCtx.close(); }catch(e){} micCheckAudioCtx = null; }
+}
+async function runMicCheck(){
+  const statusEl = document.getElementById('micCheckStatus');
+  const btn = document.getElementById('micCheckBtn');
+  const fill = document.getElementById('micLevelFill');
+  stopMicCheckStream();
+  micCheckConfirmed = false;
+  micCheckTimeoutHandled = false;
+  btn.disabled = true;
+  statusEl.className = 'mic-check-status';
+  statusEl.textContent = "Ruxsat so'ralmoqda...";
+  try{
+    micCheckStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    btn.disabled = false;
+    btn.textContent = '🎤 Qayta urinish';
+    statusEl.className = 'mic-check-status err';
+    statusEl.textContent = "❌ Mikrofonga ruxsat berilmadi. Brauzer/Telegram sozlamalaridan ruxsat berib, qayta urinib ko'ring.";
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = '🔴 Tinglanmoqda...';
+  statusEl.textContent = "Endi biror narsa gapiring — ovoz darajasi pastda ko'rinadi";
+  micCheckAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = micCheckAudioCtx.createMediaStreamSource(micCheckStream);
+  const analyser = micCheckAudioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  source.connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  let peak = 0;
+  const startedAt = Date.now();
+  function tick(){
+    analyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
+    const rms = Math.sqrt(sum/data.length);
+    const level = Math.min(100, Math.round(rms*260));
+    fill.style.width = level+'%';
+    if(level > peak) peak = level;
+    if(!micCheckConfirmed && peak > 12){
+      micCheckConfirmed = true;
+      statusEl.className = 'mic-check-status ok';
+      statusEl.textContent = "✅ Mikrofon ishlayapti! Imtihonni boshlashingiz mumkin.";
+      btn.style.display = 'none';
+      document.getElementById('micStartExamBtn').style.display = '';
+    }
+    if(!micCheckConfirmed && !micCheckTimeoutHandled && Date.now()-startedAt > 8000){
+      micCheckTimeoutHandled = true;
+      statusEl.className = 'mic-check-status err';
+      statusEl.textContent = "🔇 Ovoz eshitilmayapti. Mikrofon tanlovini tekshiring yoki baribir davom eting.";
+      btn.textContent = '🎤 Qayta urinish';
+      document.getElementById('micStartExamBtn').style.display = '';
+    }
+    micCheckRaf = requestAnimationFrame(tick);
+  }
+  tick();
+}
+function confirmMicCheckAndStartMuhavara(){
+  stopMicCheckStream();
+  startQuiz('muhavara');
 }
 
 /* ---------------- Grammar topics ---------------- */
