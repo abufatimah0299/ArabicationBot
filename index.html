@@ -455,9 +455,15 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px -8px rgba(18,167,104,0.55); cursor:pointer;
   transition:.15s;
 }
+.mic-circle-wrap{ position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center; }
+.mic-circle{ position:relative; z-index:2; }
 .mic-circle:active{ transform:scale(0.95); }
-.mic-circle.recording{ animation:pulse 1.4s infinite; }
-@keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(219,107,62,0.45), 0 10px 30px -8px rgba(18,167,104,0.55);} 70%{ box-shadow:0 0 0 22px rgba(219,107,62,0), 0 10px 30px -8px rgba(18,167,104,0.55);} 100%{ box-shadow:0 0 0 0 rgba(219,107,62,0), 0 10px 30px -8px rgba(18,167,104,0.55);} }
+.mic-ring{
+  position:absolute; inset:0; border-radius:50%; border:3px solid var(--muhavara);
+  opacity:0; transform:scale(1); pointer-events:none; z-index:1;
+  transition:transform .09s ease-out, opacity .09s ease-out;
+}
+.mic-ring2{ border-width:2px; border-color:var(--muhavara); }
 .mic-time{ margin-top:16px; font-weight:800; font-size:15px; color:var(--text-dim);}
 .mic-hint{ margin-top:6px; font-size:12.5px; color:var(--text-faint); font-weight:600;}
 textarea.write-area{
@@ -2618,6 +2624,7 @@ function goBack(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
   if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
+  stopMuhavaraLevelMeter();
   viewHistory.pop();
   const prev = viewHistory[viewHistory.length-1] || 'attanal';
   showView(prev, false);
@@ -5975,10 +5982,12 @@ async function startMuhavaraRecording(){
   }
   currentQuiz.phase = 'recording';
   renderQuestion();
+  startMuhavaraLevelMeter();
   muhavaraChunks = [];
   muhavaraRecorder = new MediaRecorder(muhavaraStream);
   muhavaraRecorder.ondataavailable = e=>{ if(e.data.size>0) muhavaraChunks.push(e.data); };
   muhavaraRecorder.onstop = ()=>{
+    stopMuhavaraLevelMeter();
     muhavaraStream.getTracks().forEach(t=>t.stop());
     muhavaraStream = null;
     const blob = new Blob(muhavaraChunks, { type: muhavaraRecorder.mimeType || 'audio/webm' });
@@ -5986,6 +5995,42 @@ async function startMuhavaraRecording(){
   };
   muhavaraRecorder.start();
   startTimer(currentQuiz.questions[currentQuiz.idx].part.answerSecs, ()=> stopMuhavaraRecording());
+}
+/* Yozib olish paytida haqiqiy ovoz balandligini o'lchab, mic doirasi atrofidagi
+   halqalarni jonlantiradi — foydalanuvchi mikrofon ishlayotganini ko'rib turadi. */
+let muhavaraLevelAudioCtx = null;
+let muhavaraLevelRaf = null;
+function startMuhavaraLevelMeter(){
+  try{
+    muhavaraLevelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = muhavaraLevelAudioCtx.createMediaStreamSource(muhavaraStream);
+    const analyser = muhavaraLevelAudioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    function tick(){
+      const ring = document.getElementById('micRing');
+      const ring2 = document.getElementById('micRing2');
+      if(!ring || !currentQuiz || currentQuiz.phase !== 'recording'){ muhavaraLevelRaf = null; return; }
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
+      const rms = Math.sqrt(sum/data.length);
+      const level = Math.min(1, rms*5.5);
+      ring.style.opacity = (0.15 + level*0.75).toFixed(2);
+      ring.style.transform = `scale(${(1 + level*0.5).toFixed(3)})`;
+      if(ring2){
+        ring2.style.opacity = (0.10 + level*0.5).toFixed(2);
+        ring2.style.transform = `scale(${(1 + level*0.9).toFixed(3)})`;
+      }
+      muhavaraLevelRaf = requestAnimationFrame(tick);
+    }
+    tick();
+  }catch(e){ /* halqa ishlamasa ham yozib olishning o'ziga ta'sir qilmaydi */ }
+}
+function stopMuhavaraLevelMeter(){
+  if(muhavaraLevelRaf){ cancelAnimationFrame(muhavaraLevelRaf); muhavaraLevelRaf = null; }
+  if(muhavaraLevelAudioCtx){ try{ muhavaraLevelAudioCtx.close(); }catch(e){} muhavaraLevelAudioCtx = null; }
 }
 function stopMuhavaraRecording(){
   clearInterval(timerInterval);
@@ -6093,8 +6138,12 @@ function renderMuhavaraPhase(){
         <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
       </div>
       <div class="mic-wrap">
-        <div class="mic-circle recording" id="micCircle">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+        <div class="mic-circle-wrap">
+          <div class="mic-ring" id="micRing"></div>
+          <div class="mic-ring mic-ring2" id="micRing2"></div>
+          <div class="mic-circle recording" id="micCircle">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+          </div>
         </div>
         <div class="mic-hint">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
         <button class="btn btn-outline" style="margin-top:20px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
