@@ -1357,7 +1357,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <button class="filter-chip" data-val="Qiroa">Qiroa</button>
             <button class="filter-chip" data-val="Istima">Istima</button>
             <button class="filter-chip" data-val="Grammatika">Grammatika</button>
-            <button class="filter-chip" data-val="Muhavara">Muhavara</button>
+            <button class="filter-chip" data-val="Muhovara">Muhovara</button>
             <button class="filter-chip" data-val="Kitaba">Kitaba</button>
           </div>
           <div class="filter-group" id="filterDate">
@@ -1950,9 +1950,45 @@ async function submitQuizResultToBackend({skillId, topicId, topicName, correct, 
         p_topic_name: topicName||null, p_correct: correct, p_total: total
       })
     });
-    if(!res.ok){ console.error("Natija yuborilmadi:", await res.text()); return null; }
-    return await res.json();
-  }catch(e){ console.error(e); return null; }
+    if(!res.ok){
+      const errText = await res.text();
+      console.error("Natija yuborilmadi:", errText);
+      toast("⚠️ Natija tarixga saqlanmadi: " + errText.slice(0,140), 7000);
+      return null;
+    }
+    const data = await res.json();
+    // Natija backendga muvaffaqiyatli yozilgach, Tarix/Xatolarim va mahorat foizlarini
+    // (skill hub'dagi halqalar) darhol qayta yuklaymiz — aks holda foydalanuvchi ilovani
+    // qayta ochmaguncha eski (bo'sh/eskirgan) ma'lumotni ko'rib turadi.
+    refreshHistoryAndScoresFromBackend();
+    return data;
+  }catch(e){
+    console.error(e);
+    toast("⚠️ Tarmoq xatosi: natija saqlanmadi", 7000);
+    return null;
+  }
+}
+
+/* Har bir mahorat (grammatika, qiroa, istima, muhavara, kitaba) bo'yicha test/imtihon
+   tugab, natija submit_quiz_result orqali backendga yozilgach chaqiriladi: Tarix
+   (quiz_attempts), Xatolarim va dashboarddagi mahorat foizlarini qaytadan yuklab,
+   ekranni yangi ma'lumot bilan qayta chizadi. */
+async function refreshHistoryAndScoresFromBackend(){
+  if(!TELEGRAM_PROFILE.rawId) return;
+  try{
+    const [history, errors, dash] = await Promise.all([
+      loadHistoryFromBackend(TELEGRAM_PROFILE.rawId),
+      loadErrorsFromBackend(TELEGRAM_PROFILE.rawId),
+      loadDashboardFromBackend(TELEGRAM_PROFILE.rawId),
+    ]);
+    window.HISTORY_DATA_LIVE = history;
+    window.USER_ERRORS_LIVE = errors;
+    applyLiveHistory();
+    applyLiveErrors();
+    applyBackendSkillScores(dash);
+    applyProfileStats(dash);
+    applyProfileHeader(dash);
+  }catch(e){ console.error('[refreshHistoryAndScoresFromBackend]', e); }
 }
 
 async function loadHistoryFromBackend(userId){
