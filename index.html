@@ -1501,6 +1501,9 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <button class="btn" id="adminAddTopicBtn" style="display:none;" onclick="openAddTopicModal()">+ Yangi mavzu</button>
               <button class="btn" onclick="openBulkAddQuestionModal()">+ Ommaviy qo'shish</button>
               <button class="btn btn-primary" onclick="openAddQuestionModal()">+ Yangi savol qo'shish</button>
+              <button class="btn btn-outline" onclick="exportAllQuestionsData()">⬇️ Backup (yuklab olish)</button>
+              <button class="btn btn-outline" onclick="document.getElementById('bqImportFileInput').click()">⬆️ Import (yuklash)</button>
+              <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
               <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllQuestions()">🗑 Hammasini tozalash</button>
             </div>
           </div>
@@ -1905,6 +1908,119 @@ async function clearAllQuestions(){
   } else {
     toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
   }
+}
+
+/* ---------- Savollar bazasini backup qilish (yuklab olish) va qayta yuklash (import) ----------
+   Backup fayli "bulk-add-with-topics" formatida saqlanadi (skillId, topic nomi, topicAr,
+   category, q, opts, a, exp) — shu tufayli AI orqali tuzatilgandan keyin ham xuddi shu
+   faylni o'zgarishsiz qayta import qilish mumkin. Import paytida allaqachon mavjud
+   savollar avtomatik o'tkazib yuboriladi (takrorlanmaydi). */
+function downloadJSONFile(filename, dataObj){
+  const blob = new Blob([JSON.stringify(dataObj, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function exportAllQuestionsData(){
+  toast('⏳ Ma\'lumotlar yuklanmoqda...');
+  const [topics, questions] = await Promise.all([
+    loadGrammarTopicsFromBackend(),
+    loadQuestionsFromBackend(),
+  ]);
+  const topicsById = {};
+  (topics||[]).forEach(t => { topicsById[t.id] = t; });
+
+  const items = (questions||[]).map(q => {
+    const t = q.topic_id ? topicsById[q.topic_id] : null;
+    return {
+      skillId: q.skill_id,
+      topic: t ? t.name : null,
+      topicAr: t ? t.ar : null,
+      category: t ? t.category : null,
+      q: q.q,
+      opts: q.opts,
+      a: q.correct_index,
+      exp: q.exp || '',
+    };
+  });
+
+  const payload = {
+    exported_at: new Date().toISOString(),
+    app: 'Arabication',
+    format: 'bulk_add_with_topics_v1',
+    count: items.length,
+    questions: items,
+  };
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  downloadJSONFile(`arabication-savollar-backup-${stamp}.json`, payload);
+  toast(`✅ ${items.length} ta savol backup qilindi (yuklab olindi)`);
+}
+
+async function importQuestionsFromFile(event){
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+
+  let parsed;
+  try{
+    const text = await file.text();
+    parsed = JSON.parse(text);
+  }catch(err){
+    toast('❌ Fayl JSON formatida emas: ' + err.message, 6000);
+    return;
+  }
+
+  const rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.questions) ? parsed.questions : null);
+  if(!rows || !rows.length){
+    toast('❌ Faylda savollar topilmadi ("questions" massivi kerak)', 6000);
+    return;
+  }
+
+  if(!confirm(`Faylda ${rows.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud bo'lgan savollar avtomatik o'tkazib yuboriladi, takrorlanmaydi)`)) return;
+
+  const items = rows.map(row => ({
+    skillId: row.skillId || row.skill_id,
+    topicId: row.topicId || null,
+    topicName: row.topic || row.topicName || null,
+    topicAr: row.topicAr || null,
+    category: row.category || null,
+    q: row.q, opts: row.opts, a: (typeof row.a === 'number' ? row.a : row.correct_index),
+    exp: row.exp || '',
+  })).filter(it => it.skillId && it.q && Array.isArray(it.opts));
+
+  if(!items.length){
+    toast('❌ Faylda yaroqli savollar topilmadi', 6000);
+    return;
+  }
+
+  toast(`⏳ ${items.length} ta savol yuklanmoqda...`);
+
+  // Katta fayllarda backend timeout bo'lmasligi uchun bo'lib-bo'lib (chunklab) yuboramiz.
+  const CHUNK = 150;
+  let totalInserted = 0, totalSkipped = 0, failed = 0;
+  for(let i=0; i<items.length; i+=CHUNK){
+    const chunk = items.slice(i, i+CHUNK);
+    const result = await saveQuestionsBulkWithTopicsToBackend(chunk);
+    if(result){
+      totalInserted += result.inserted_count ?? 0;
+      totalSkipped += result.skipped_count ?? 0;
+    } else {
+      failed += chunk.length;
+    }
+  }
+
+  let msg = `✅ Import tugadi: ${totalInserted} ta qo'shildi, ${totalSkipped} ta takroriy o'tkazib yuborildi`;
+  if(failed > 0) msg += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+  toast(msg, 9000);
+
+  const liveTopics = await loadGrammarTopicsFromBackend();
+  applyLiveGrammarTopics(liveTopics);
+  const liveQuestions = await loadQuestionsFromBackend();
+  applyLiveQuestions(liveQuestions);
+  renderAdminQuestions();
 }
 
 /* Mavjud savolni tahrirlash — Supabase'da `admin_edit_question` RPC funksiyasi talab qilinadi. */
