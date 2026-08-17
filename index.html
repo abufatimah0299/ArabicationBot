@@ -721,6 +721,34 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .cd-option:last-child{ margin-bottom:0; }
 .cd-option:hover{ background:var(--card-alt); color:var(--text); }
 .cd-option.active{ background:var(--indigo-100); color:var(--indigo-700); }
+/* ---- Ko'p tanlovli (multi-select) custom dropdown — "Qaysi bo'lim(lar)dan savol tushdi?"
+   uchun. Bir xil cd- vizual uslubdan foydalanadi, lekin panel tanlashda yopilmaydi va
+   har bir option checkbox bilan ko'rsatiladi. ---- */
+.cd-option-multi{ display:flex; align-items:center; gap:10px; }
+.cd-option-multi .cdm-box{
+  width:18px; height:18px; border-radius:6px; border:1.5px solid var(--border); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; transition:.12s var(--ease); box-sizing:border-box;
+}
+.cd-option-multi.active .cdm-box{ background:var(--indigo-700); border-color:var(--indigo-700); }
+.cd-option-multi .cdm-box svg{ width:12px; height:12px; opacity:0; transition:.12s var(--ease); }
+.cd-option-multi.active .cdm-box svg{ opacity:1; }
+.cd-value.placeholder{ color:var(--text-faint); font-weight:700; }
+/* ---- Imtihon xabari formasi: mahoratga qarab dinamik yoziladigan qismlar ---- */
+.rep-section-blocks{ display:flex; flex-direction:column; gap:12px; }
+.rep-section-block{ border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; background:var(--card-alt); }
+.rep-section-block .rsb-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.rep-section-block .rsb-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.rep-section-block .rsb-title{ font-size:13px; font-weight:800; }
+.rep-section-block .rsb-sub{ font-size:11px; color:var(--text-faint); font-weight:600; margin:-4px 0 8px 17px; }
+.rep-section-block textarea, .rep-section-block input{
+  width:100%; box-sizing:border-box; border:1.5px solid var(--border); border-radius:10px; padding:9px 11px;
+  background:var(--card); color:var(--text); font-family:inherit; font-size:13px; font-weight:600; outline:none;
+}
+.rep-section-block textarea:focus, .rep-section-block input:focus{ border-color:var(--indigo-500); }
+.rep-section-block textarea{ resize:vertical; min-height:56px; line-height:1.5; }
+.rep-kitaba-parts{ display:flex; flex-direction:column; gap:8px; }
+.rep-kitaba-parts label{ font-size:11.5px; font-weight:700; color:var(--text-dim); }
+.rep-empty-hint{ font-size:12px; color:var(--text-faint); font-weight:600; padding:10px 2px; text-align:center; }
 /* Reyting sarlavhasi qatoridagi (i) tugmasi */
 .rank-info-btn{
   width:30px; height:30px; border-radius:9px; border:1.5px solid var(--border); background:var(--card);
@@ -3540,65 +3568,219 @@ function escapeHtml(value){
 
 /* ================= Haqiqiy imtihon xabari (foydalanuvchi -> admin) ================= */
 const EXAM_SECTIONS = ['Qiroa','Istima','Grammatika','Muhavara','Kitaba'];
+const EXAM_TYPES = [
+  {value:'at-Tanal', label:'At-Tanal'},
+  {value:'CEFR', label:'CEFR'},
+  {value:'Boshqa', label:'Boshqa'}
+];
+/* O'zbekiston viloyatlari (12 ta) — shahar matn maydoni o'rniga tanlash uchun */
+const UZ_REGIONS = [
+  "Andijon","Buxoro","Farg'ona","Jizzax","Xorazm","Namangan",
+  "Navoiy","Qashqadaryo","Samarqand","Sirdaryo","Surxondaryo","Toshkent"
+];
+/* Har bir bo'lim tanlanganda pastda chiqadigan yozish maydoni — mahoratga mos
+   sarlavha/izoh/placeholder bilan. Maqsad: variant emas, faqat mavzu va savol soni. */
+const EXAM_SECTION_META = {
+  Qiroa: {
+    color:'var(--qiroa)',
+    sub:"Qaysi juzdan matn keldi? Mavzusi va savollar soni",
+    placeholder:"Masalan: 6-juz, dengiz haqida matn, 5 ta savol keldi"
+  },
+  Istima: {
+    color:'var(--istima)',
+    sub:"Qaysi qismda, qanday mavzuda audio keldi?",
+    placeholder:"Masalan: 2-qism, do'kondagi suhbat mavzusida, 4 ta savol"
+  },
+  Grammatika: {
+    color:'var(--grammatika)',
+    sub:"Qaysi mavzu(lar)dan savollar tushdi?",
+    placeholder:"Masalan: كان mavzusidan 3 ta savol, fe'l zamonlaridan 2 ta savol"
+  },
+  Muhavara: {
+    color:'var(--muhavara)',
+    sub:"Qanday mavzuda savol/suhbat berildi?",
+    placeholder:"Masalan: oila va kasb tanlash haqida savollar berildi"
+  },
+  Kitaba: {
+    color:'var(--kitaba)',
+    sub:"Har bir qism bo'yicha mavzuni alohida yozing",
+    placeholder:""
+  }
+};
 /* Backendga ulanish uchun: submit_exam_report (yuborish) va admin_list_exam_reports
    (adminlar uchun ro'yxat) RPC'lari orqali ishlaydi. Quyidagi massiv faqat
    backenddan javob kelmagan holatlar uchun bo'sh boshlanadi. */
 let examReports = [];
 let examChipSelection = [];
+let examRepType = 'at-Tanal';
+let examRepRegion = '';
+let examSectionTexts = {};      // {Qiroa:'...', Istima:'...', Grammatika:'...', Muhavara:'...'}
+let examKitabaParts = {1:'',2:'',3:''};
 
 function openExamReportModal(){
   examChipSelection = [];
+  examRepType = 'at-Tanal';
+  examRepRegion = '';
+  examSectionTexts = {};
+  examKitabaParts = {1:'',2:'',3:''};
   document.getElementById('modalTitle').textContent = "Haqiqiy imtihonga kirdingizmi?";
   document.getElementById('modalBody').innerHTML = `
     <p class="form-hint" style="margin-bottom:16px;">Ma'lumotlaringiz faqat administratorlarga ko'rinadi va boshqa o'quvchilarga tayyorgarlik uchun yordam beradi.</p>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div class="form-field">
         <label>Imtihon turi</label>
-        <select id="repType">
-          <option value="at-Tanal">At-Tanal</option>
-          <option value="CEFR">CEFR</option>
-          <option value="Boshqa">Boshqa</option>
-        </select>
+        <div class="rank-type-toggle" id="repTypeToggle">
+          ${EXAM_TYPES.map((t,i)=>`<button type="button" class="rank-type-btn ${i===0?'active':''}" data-val="${t.value}">${t.label}</button>`).join('')}
+        </div>
       </div>
       <div class="form-field">
         <label>Imtihon sanasi</label>
         <input type="date" id="repDate">
       </div>
       <div class="form-field">
-        <label>Shahar / Markaz (ixtiyoriy)</label>
-        <input type="text" id="repCenter" placeholder="Masalan: Toshkent, IX markaz">
+        <label>Viloyat (ixtiyoriy)</label>
+        <div class="rank-dropdown" id="repRegionDropdown"></div>
       </div>
       <div class="form-field">
         <label>Qaysi bo'lim(lar)dan savol tushdi?</label>
-        <div class="chip-select" id="repSectionChips">
-          ${EXAM_SECTIONS.map(s=>`<button type="button" class="filter-chip" data-val="${s}">${s}</button>`).join('')}
-        </div>
+        <div class="rank-dropdown" id="repSectionDropdown" style="padding:0;"></div>
       </div>
       <div class="form-field">
         <label>Xona / Parta raqami (ixtiyoriy)</label>
         <input type="text" id="repSeat" placeholder="Masalan: B-14">
       </div>
-      <div class="form-field">
+      <div class="form-field" id="repSectionBlocksWrap" style="display:none;">
         <label>Qanday savollar tushganini yozib bering</label>
-        <textarea id="repText" placeholder="Masalan: Grammatikada كان mavzusidan 3 ta savol, Kitaba qismida..."></textarea>
+        <p class="form-hint" style="margin:-4px 0 2px;">Javob variantlarini emas, mavzu va savollar sonini yozing.</p>
+        <div class="rep-section-blocks" id="repSectionBlocks"></div>
       </div>
       <button class="btn btn-primary btn-block" onclick="submitExamReport()">Yuborish</button>
     </div>
   `;
-  document.getElementById('repSectionChips').addEventListener('click', e=>{
-    const btn = e.target.closest('.filter-chip'); if(!btn) return;
-    btn.classList.toggle('active');
-    const val = btn.dataset.val;
-    examChipSelection = examChipSelection.includes(val) ? examChipSelection.filter(s=>s!==val) : [...examChipSelection, val];
+  initCustomDropdown('repRegionDropdown', {
+    label:'Viloyat',
+    options:[{value:'', label:"Tanlanmagan"}, ...UZ_REGIONS.map(r=>({value:r, label:r}))],
+    value:'',
+    onChange:(val)=>{ examRepRegion = val; }
+  });
+  document.getElementById('repTypeToggle').addEventListener('click', e=>{
+    const btn = e.target.closest('.rank-type-btn'); if(!btn) return;
+    document.querySelectorAll('#repTypeToggle .rank-type-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    examRepType = btn.dataset.val;
+  });
+  renderExamSectionDropdown();
+  renderExamSectionBlocks();
+  document.getElementById('repSectionBlocks').addEventListener('input', e=>{
+    if(e.target.id === 'repKitaba1') examKitabaParts[1] = e.target.value;
+    else if(e.target.id === 'repKitaba2') examKitabaParts[2] = e.target.value;
+    else if(e.target.id === 'repKitaba3') examKitabaParts[3] = e.target.value;
+    else if(e.target.id && e.target.id.startsWith('repSec_')) examSectionTexts[e.target.id.slice(7)] = e.target.value;
   });
   document.getElementById('modalOverlay').classList.add('show');
 }
+
+/* ---- Bo'lim(lar) tanlash uchun ko'p tanlovli custom dropdown ---- */
+function renderExamSectionDropdown(){
+  const wrap = document.getElementById('repSectionDropdown');
+  if(!wrap) return;
+  const label = examChipSelection.length
+    ? examChipSelection.join(', ')
+    : "Bo'lim(lar)ni tanlang";
+  wrap.innerHTML = `
+    <button type="button" class="cd-trigger" id="repSectionTrigger" style="padding:11px 34px 11px 14px;">
+      <span class="cd-value ${examChipSelection.length?'':'placeholder'}">${escapeHtml(label)}</span>
+    </button>
+    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="right:14px;"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="cd-panel" id="repSectionPanel">
+      ${EXAM_SECTIONS.map(s=>{
+        const active = examChipSelection.includes(s);
+        return `<button type="button" class="cd-option cd-option-multi ${active?'active':''}" data-sec="${s}">
+          <span class="cdm-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>${s}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  wrap.classList.add('cd-wrap');
+  const trigger = document.getElementById('repSectionTrigger');
+  const panel = document.getElementById('repSectionPanel');
+  trigger.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p!==panel) p.classList.remove('show'); });
+    panel.classList.toggle('show');
+  });
+  panel.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const opt = e.target.closest('.cd-option-multi'); if(!opt) return;
+    const sec = opt.dataset.sec;
+    examChipSelection = examChipSelection.includes(sec)
+      ? examChipSelection.filter(s=>s!==sec)
+      : [...examChipSelection, sec];
+    renderExamSectionDropdown();
+    document.getElementById('repSectionPanel').classList.add('show');
+    renderExamSectionBlocks();
+  });
+}
+
+/* ---- Tanlangan bo'limlarga qarab pastda mahoratga mos yozish maydonlarini chizadi ---- */
+function renderExamSectionBlocks(){
+  const outerWrap = document.getElementById('repSectionBlocksWrap');
+  const holder = document.getElementById('repSectionBlocks');
+  if(!outerWrap || !holder) return;
+  if(examChipSelection.length===0){
+    outerWrap.style.display = 'none';
+    holder.innerHTML = '';
+    return;
+  }
+  outerWrap.style.display = '';
+  holder.innerHTML = examChipSelection.map(sec=>{
+    const meta = EXAM_SECTION_META[sec] || {color:'var(--indigo-700)', sub:'', placeholder:''};
+    if(sec === 'Kitaba'){
+      return `
+        <div class="rep-section-block">
+          <div class="rsb-head"><span class="rsb-dot" style="background:${meta.color}"></span><span class="rsb-title">Kitaba</span></div>
+          <div class="rsb-sub">${meta.sub}</div>
+          <div class="rep-kitaba-parts">
+            <div><label>1-qism mavzusi</label><input type="text" id="repKitaba1" placeholder="Masalan: oila haqida" value="${escapeHtml(examKitabaParts[1]||'')}"></div>
+            <div><label>2-qism mavzusi</label><input type="text" id="repKitaba2" placeholder="Masalan: sayohat haqida" value="${escapeHtml(examKitabaParts[2]||'')}"></div>
+            <div><label>3-qism mavzusi</label><input type="text" id="repKitaba3" placeholder="Masalan: ta'lim haqida" value="${escapeHtml(examKitabaParts[3]||'')}"></div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="rep-section-block">
+        <div class="rsb-head"><span class="rsb-dot" style="background:${meta.color}"></span><span class="rsb-title">${sec}</span></div>
+        <div class="rsb-sub">${meta.sub}</div>
+        <textarea id="repSec_${sec}" placeholder="${escapeHtml(meta.placeholder)}">${escapeHtml(examSectionTexts[sec]||'')}</textarea>
+      </div>`;
+  }).join('');
+}
+
+function collectExamSectionText(){
+  const parts = [];
+  examChipSelection.forEach(sec=>{
+    if(sec === 'Kitaba'){
+      const k1 = (document.getElementById('repKitaba1')||{}).value?.trim() || '';
+      const k2 = (document.getElementById('repKitaba2')||{}).value?.trim() || '';
+      const k3 = (document.getElementById('repKitaba3')||{}).value?.trim() || '';
+      const kitabaLine = ['1-qism: '+k1, '2-qism: '+k2, '3-qism: '+k3].filter((_,i)=>[k1,k2,k3][i]).join('; ');
+      if(kitabaLine) parts.push(`Kitaba — ${kitabaLine}`);
+    } else {
+      const el = document.getElementById('repSec_'+sec);
+      const v = el ? el.value.trim() : '';
+      if(v) parts.push(`${sec}: ${v}`);
+    }
+  });
+  return parts.join('\n');
+}
+
 async function submitExamReport(){
-  const type = document.getElementById('repType').value;
+  const type = examRepType;
   const date = document.getElementById('repDate').value;
-  const center = document.getElementById('repCenter').value.trim();
+  const center = examRepRegion;
   const seat = document.getElementById('repSeat').value.trim();
-  const text = document.getElementById('repText').value.trim();
+  const text = collectExamSectionText();
   if(!date || examChipSelection.length===0 || !text){
     toast("Iltimos, sana, bo'lim va savollar haqida ma'lumotni to'ldiring");
     return;
