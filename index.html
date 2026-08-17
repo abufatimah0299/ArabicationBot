@@ -916,6 +916,16 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .admin-tab.tab-teal{ background:linear-gradient(135deg, #12A768 0%, #0A3A26 100%); }
 .admin-tab.tab-orange{ background:linear-gradient(135deg, #EB8C5E 0%, #7A3A1C 100%); }
 .admin-tab.tab-slate{ background:linear-gradient(135deg, #647468 0%, #2A332C 100%); }
+.admin-tab.tab-pink{ background:linear-gradient(135deg, #EC6FA8 0%, #7A2350 100%); }
+.community-card{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
+.community-avatar{ width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--indigo-100); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:var(--indigo-700); }
+.community-info{ flex:1; min-width:0; }
+.community-name{ font-weight:800; font-size:14px; color:var(--text); display:flex; align-items:center; gap:5px; }
+.community-desc{ font-size:12px; color:var(--text-faint); font-weight:600; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.community-subs{ font-size:11.5px; color:var(--text-faint); font-weight:700; margin-top:3px; }
+.community-open-btn{ font-family:inherit; cursor:pointer; border:none; background:var(--green); color:#fff; font-weight:800; font-size:12.5px; padding:9px 16px; border-radius:99px; flex-shrink:0; }
+.community-admin-row{ padding:14px; border-radius:14px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
+.community-admin-edit-form input, .community-admin-edit-form textarea{ width:100%; margin-bottom:8px; }
 .admin-panel-body{ animation:fadein .25s ease; }
 
 .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
@@ -1547,11 +1557,23 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <div class="si-text"><div class="t">Admin panel</div><div class="s">Savollar, foydalanuvchilar va xabarlarni boshqarish</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
+          <div class="settings-item" data-view="hamjamiyat">
+            <div class="si-icon" style="background:#FCE4EF;color:#C23574;">🤝</div>
+            <div class="si-text"><div class="t">Hamjamiyat</div><div class="s">Bizning kanallar va guruhlar</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
           <div class="settings-item" data-view="sozlamalar">
             <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">⚙️</div>
             <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma, mavzu va hisob sozlamalari</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-hamjamiyat">
+        <div class="view-title">Hamjamiyat</div>
+        <div id="communityCardsList">
+          <div class="loading-inline"><span class="loading-spinner"></span>Yuklanmoqda…</div>
         </div>
       </div>
 
@@ -1704,6 +1726,13 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
               <div class="admin-tab-title">Grammatika tartibi</div>
               <div class="admin-tab-sub">Tartibni sudrab o'zgartirish</div>
             </button>
+            <button class="admin-tab tab-pink" data-atab="community" onclick="openAdminPanelModal('community')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Hamjamiyat</div>
+              <div class="admin-tab-sub">Kanal/guruh kartalari</div>
+            </button>
             <button class="admin-tab tab-slate" data-atab="admins" onclick="openAdminPanelModal('admins')" style="display:none;">
               <div class="admin-tab-top">
                 <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m2 20 2-10 5 4 3-7 3 7 5-4 2 10Z"/><path d="M4 20h16"/></svg></span>
@@ -1792,6 +1821,21 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     Mavzularni ushlab sudrab tartibini o'zgartiring. Tartib avtomatik saqlanadi va foydalanuvchiga darhol ta'sir qiladi.
   </p>
   <ul id="grammarOrderList" class="grammar-sortable"></ul>
+</div>
+
+<!-- HAMJAMIYAT BOSHQARUVI -->
+<div class="admin-panel-body" id="adminTab-community" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+    Faqat nom, izoh va kanal linkini kiriting — rasm va obunachi soni avtomatik tortib olinadi (kanal ochiq/public bo'lishi kerak).
+  </p>
+  <div class="card" style="padding:16px;margin-bottom:16px;">
+    <div style="font-weight:800;font-size:13.5px;margin-bottom:12px;">+ Yangi karta qo'shish</div>
+    <div class="form-field"><label>Nomi</label><input type="text" id="ccNewName" placeholder="Masalan: Noon Academy"></div>
+    <div class="form-field"><label>Izoh</label><input type="text" id="ccNewDesc" placeholder="Masalan: C2 ustozlar akademiyasi"></div>
+    <div class="form-field"><label>Telegram link</label><input type="text" id="ccNewLink" placeholder="https://t.me/username"></div>
+    <button class="btn btn-primary" style="margin-top:8px;" onclick="addCommunityCardAdmin()" id="ccAddBtn">+ Qo'shish va aniqlash</button>
+  </div>
+  <div id="communityAdminList"></div>
 </div>
 
 <!-- 7) XABAR YUBORISH -->
@@ -2812,7 +2856,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','sozlamalar','rank','admin'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
@@ -2870,6 +2914,7 @@ function showView(name, push=true){
   const activeEl = document.getElementById('view-'+name);
   if(activeEl) runEntranceAnimations(activeEl);
   if(name==='admin') renderAdminPanel();
+  if(name==='hamjamiyat') renderCommunityView();
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
   // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
@@ -3586,7 +3631,7 @@ function renderAdminPanel(){
 const ADMIN_TAB_TITLES = {
   overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki',
   reports:'Imtihon xabarlari', examcards:'Imtihon cardlari', gramorder:'Grammatika tartibi',
-  sendmsg:'Xabar yuborish', admins:'Adminlar'
+  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat'
 };
 function openAdminPanelModal(tab){
   showAdminTab(tab);
@@ -7583,7 +7628,8 @@ bootApp();
       if (cfg) {
         APP_CONFIG = {
           exam_cards: cfg.exam_cards || {},
-          grammar_order: cfg.grammar_order || []
+          grammar_order: cfg.grammar_order || [],
+          community_cards: cfg.community_cards || []
         };
 
         localSet('arab_app_config_cache', APP_CONFIG);
@@ -7595,10 +7641,12 @@ bootApp();
 
       if (cached) {
         APP_CONFIG = cached;
+        if (!APP_CONFIG.community_cards) APP_CONFIG.community_cards = [];
       } else {
         APP_CONFIG = {
           exam_cards: localGet('arab_ext_exam_cards', {}),
-          grammar_order: localGet('arab_ext_grammar_order', DEFAULT_GRAMMAR_ORDER)
+          grammar_order: localGet('arab_ext_grammar_order', DEFAULT_GRAMMAR_ORDER),
+          community_cards: []
         };
       }
     }
@@ -7610,6 +7658,7 @@ bootApp();
 
     applyExamCardState();
     applyGrammarOrder();
+    renderCommunityView();
     if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminQuestions();
   }
 
@@ -8149,7 +8198,7 @@ bootApp();
         baseShowAdminTab(tab);
       }
 
-      ['examcards', 'gramorder', 'sendmsg', 'admins'].forEach(t => {
+      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community'].forEach(t => {
         const el = document.getElementById('adminTab-' + t);
         if (el) {
           el.style.display = (t === tab) ? '' : 'none';
@@ -8164,6 +8213,7 @@ bootApp();
       if (tab === 'gramorder') renderGrammarOrderAdmin();
       if (tab === 'sendmsg') renderSentMessages();
       if (tab === 'admins') renderAdminAdminsList();
+      if (tab === 'community') renderCommunityAdmin();
     };
   }
 
@@ -8245,6 +8295,222 @@ bootApp();
       }
     });
   }
+
+  /* ================= HAMJAMIYAT ================= */
+
+  const COMMUNITY_FN_URL = `${SUPABASE_URL}/functions/v1/community-card-info`;
+  let ADMIN_COMMUNITY_CARDS = [];
+
+  function formatMemberCount(n) {
+    if (n === null || n === undefined) return '';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K obunachi';
+    return n + ' obunachi';
+  }
+
+  function openCommunityLink(link) {
+    const tg = window.Telegram?.WebApp;
+    if (tg?.openTelegramLink && /t\.me|telegram\.me/i.test(link)) {
+      tg.openTelegramLink(link);
+    } else if (tg?.openLink) {
+      tg.openLink(link);
+    } else {
+      window.open(link, '_blank');
+    }
+  }
+  window.openCommunityLink = openCommunityLink;
+
+  function renderCommunityView() {
+    const box = document.getElementById('communityCardsList');
+    if (!box) return;
+    const cards = (APP_CONFIG.community_cards || []);
+    if (!cards.length) {
+      box.innerHTML = `<p style="font-size:13px;color:var(--text-faint);font-weight:600;">Hozircha hamjamiyat kartalari qo'shilmagan.</p>`;
+      return;
+    }
+    box.innerHTML = cards.map(c => `
+      <div class="community-card">
+        ${c.avatar_url
+          ? `<img class="community-avatar" src="${c.avatar_url}" alt="">`
+          : `<div class="community-avatar">${(c.name || '?').trim().charAt(0).toUpperCase()}</div>`
+        }
+        <div class="community-info">
+          <div class="community-name">${c.name || ''}</div>
+          <div class="community-desc">${c.description || ''}</div>
+          <div class="community-subs">${formatMemberCount(c.member_count)}</div>
+        </div>
+        <button class="community-open-btn" onclick="openCommunityLink('${(c.telegram_link || '').replace(/'/g, "\\'")}')">Ochish</button>
+      </div>
+    `).join('');
+  }
+  window.renderCommunityView = renderCommunityView;
+
+  async function renderCommunityAdmin() {
+    const box = document.getElementById('communityAdminList');
+    if (!box) return;
+    box.innerHTML = `<div class="loading-inline"><span class="loading-spinner"></span>Yuklanmoqda…</div>`;
+    try {
+      const rows = await rpc('admin_list_community_cards', {});
+      ADMIN_COMMUNITY_CARDS = Array.isArray(rows) ? rows : [];
+    } catch (e) {
+      box.innerHTML = `<p style="color:var(--red);font-size:13px;">Yuklab bo'lmadi: ${(e.message || '').slice(0, 150)}</p>`;
+      return;
+    }
+    if (!ADMIN_COMMUNITY_CARDS.length) {
+      box.innerHTML = `<p style="font-size:13px;color:var(--text-faint);font-weight:600;">Hali karta qo'shilmagan.</p>`;
+      return;
+    }
+    box.innerHTML = ADMIN_COMMUNITY_CARDS.map((c, i) => `
+      <div class="community-admin-row" id="ccRow-${c.id}">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${c.avatar_url
+            ? `<img class="community-avatar" style="width:40px;height:40px;" src="${c.avatar_url}" alt="">`
+            : `<div class="community-avatar" style="width:40px;height:40px;font-size:15px;">${(c.name || '?').trim().charAt(0).toUpperCase()}</div>`
+          }
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:800;font-size:13.5px;">${c.name}${c.visible ? '' : ' <span style="color:var(--red);font-size:11px;">(yashirilgan)</span>'}</div>
+            <div style="font-size:11.5px;color:var(--text-faint);font-weight:600;">${c.description || ''}</div>
+            <div style="font-size:11px;color:var(--text-faint);font-weight:600;">${formatMemberCount(c.member_count) || 'son aniqlanmagan'} · ${c.telegram_link}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+          <button class="row-btn" onclick="moveCommunityCardAdmin('${c.id}','up')" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="row-btn" onclick="moveCommunityCardAdmin('${c.id}','down')" ${i === ADMIN_COMMUNITY_CARDS.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="row-btn" onclick="refreshCommunityCardAdmin('${c.id}')">🔄 Yangilash</button>
+          <button class="row-btn" onclick="toggleCommunityCardVisible('${c.id}', ${!c.visible})">${c.visible ? '🙈 Yashirish' : '👁 Ko\'rsatish'}</button>
+          <button class="row-btn" onclick="toggleCommunityEditForm('${c.id}')">✏️ Tahrirlash</button>
+          <button class="row-btn danger" onclick="deleteCommunityCardAdmin('${c.id}')">🗑 O'chirish</button>
+        </div>
+        <div id="ccEdit-${c.id}" style="display:none;margin-top:10px;" class="community-admin-edit-form">
+          <input type="text" id="ccEditName-${c.id}" value="${(c.name || '').replace(/"/g, '&quot;')}" placeholder="Nomi">
+          <input type="text" id="ccEditDesc-${c.id}" value="${(c.description || '').replace(/"/g, '&quot;')}" placeholder="Izoh">
+          <input type="text" id="ccEditLink-${c.id}" value="${(c.telegram_link || '').replace(/"/g, '&quot;')}" placeholder="Telegram link">
+          <button class="btn btn-primary" onclick="saveCommunityCardAdmin('${c.id}')">Saqlash</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  window.renderCommunityAdmin = renderCommunityAdmin;
+
+  window.toggleCommunityEditForm = function (id) {
+    const el = document.getElementById('ccEdit-' + id);
+    if (el) el.style.display = (el.style.display === 'none') ? '' : 'none';
+  };
+
+  window.addCommunityCardAdmin = async function () {
+    const name = document.getElementById('ccNewName').value.trim();
+    const desc = document.getElementById('ccNewDesc').value.trim();
+    const link = document.getElementById('ccNewLink').value.trim();
+    if (!name || !link) { toast('Nomi va linkni kiriting'); return; }
+
+    const btn = document.getElementById('ccAddBtn');
+    btn.disabled = true; btn.textContent = 'Qo\'shilmoqda…';
+
+    try {
+      const newId = await rpc('admin_add_community_card', {
+        p_name: name, p_description: desc, p_telegram_link: link
+      });
+
+      try {
+        const res = await fetch(COMMUNITY_FN_URL, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ card_id: newId, telegram_link: link })
+        });
+        const data = await res.json();
+        if (!res.ok) toast('Karta qo\'shildi, lekin avtomatik aniqlanmadi: ' + (data.error || ''), 4000);
+      } catch (e) {
+        toast('Karta qo\'shildi, lekin rasm/son aniqlanmadi', 3000);
+      }
+
+      document.getElementById('ccNewName').value = '';
+      document.getElementById('ccNewDesc').value = '';
+      document.getElementById('ccNewLink').value = '';
+      toast('✅ Qo\'shildi');
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    } finally {
+      btn.disabled = false; btn.textContent = '+ Qo\'shish va aniqlash';
+    }
+  };
+
+  window.refreshCommunityCardAdmin = async function (id) {
+    const card = ADMIN_COMMUNITY_CARDS.find(c => c.id === id);
+    if (!card) return;
+    toast('Yangilanmoqda…', 1500);
+    try {
+      const res = await fetch(COMMUNITY_FN_URL, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ card_id: id, telegram_link: card.telegram_link })
+      });
+      const data = await res.json();
+      if (!res.ok) { toast('❌ ' + (data.error || 'Xato'), 4000); return; }
+      toast('✅ Yangilandi');
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.toggleCommunityCardVisible = async function (id, newVisible) {
+    const card = ADMIN_COMMUNITY_CARDS.find(c => c.id === id);
+    if (!card) return;
+    try {
+      await rpc('admin_update_community_card', {
+        p_id: id, p_name: card.name, p_description: card.description,
+        p_telegram_link: card.telegram_link, p_visible: newVisible
+      });
+      toast('✅ Saqlandi');
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.saveCommunityCardAdmin = async function (id) {
+    const name = document.getElementById('ccEditName-' + id).value.trim();
+    const desc = document.getElementById('ccEditDesc-' + id).value.trim();
+    const link = document.getElementById('ccEditLink-' + id).value.trim();
+    const card = ADMIN_COMMUNITY_CARDS.find(c => c.id === id);
+    if (!name || !link) { toast('Nomi va linkni kiriting'); return; }
+    try {
+      await rpc('admin_update_community_card', {
+        p_id: id, p_name: name, p_description: desc,
+        p_telegram_link: link, p_visible: card ? card.visible : true
+      });
+      toast('✅ Saqlandi');
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.deleteCommunityCardAdmin = async function (id) {
+    if (!confirm('Ushbu kartani butunlay o\'chirmoqchimisiz?')) return;
+    try {
+      await rpc('admin_delete_community_card', { p_id: id });
+      toast('✅ O\'chirildi');
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.moveCommunityCardAdmin = async function (id, direction) {
+    try {
+      await rpc('admin_move_community_card', { p_id: id, p_direction: direction });
+      await renderCommunityAdmin();
+      await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
 
   initRealAdminExtension();
 
