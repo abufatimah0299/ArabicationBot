@@ -444,6 +444,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   display:flex; align-items:center; justify-content:center; font-family:var(--font-ar); font-size:calc(13px * var(--exam-font-scale));
   font-weight:800; color:var(--text-dim); background:var(--card);
 }
+.opt-text{ flex:1; text-align:right; }
 .option.selected .opt-circle{ border-color:var(--indigo-700); background:var(--indigo-700); color:#fff; }
 .option.correct .opt-circle{ border-color:var(--green); background:var(--green); color:#fff; }
 .option.incorrect .opt-circle{ border-color:var(--red); background:var(--red); color:#fff; }
@@ -6979,7 +6980,7 @@ function renderQuestion(){
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
     <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
-      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span>${opt}
+      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   html += `<div class="q-nav-row">
       <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
@@ -7050,7 +7051,7 @@ function renderQiroaPhase(){
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
     <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
-      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span>${opt}
+      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
   html += `<div class="q-nav-row">
@@ -7122,7 +7123,7 @@ function renderIstimaPhase(){
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
     <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
-      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span>${opt}
+      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
   html += `<div class="q-nav-row">
