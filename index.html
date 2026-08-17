@@ -3886,7 +3886,7 @@ let adminActiveSkill = 'qiroa';
 let adminSubFilter = 'all';
 function renderAdminSkillFilters(){
   const skillSel = document.getElementById('adminSkillSelect');
-  skillSel.innerHTML = SKILLS.map(s=>`<option value="${s.id}" ${s.id===adminActiveSkill?'selected':''}>${s.icon} ${s.name}</option>`).join('');
+  skillSel.innerHTML = SKILLS.map(s=>`<option value="${s.id}" ${s.id===adminActiveSkill?'selected':''}>${s.name}</option>`).join('');
 
   const subLabel = document.getElementById('adminSubFilterLabel');
   const subSel = document.getElementById('adminSubFilterSelect');
