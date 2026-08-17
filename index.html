@@ -963,6 +963,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .icon-btn.ib-add{ background:var(--istima-bg); border-color:var(--istima); color:var(--istima); }
 .icon-btn.ib-edit{ background:var(--amber-bg); border-color:var(--amber); color:var(--amber); }
 .icon-btn.ib-del{ background:var(--red-bg); border-color:var(--red); color:var(--red); }
+.icon-btn.ib-menu{ background:var(--card-alt); border-color:var(--border); color:var(--text-dim); }
+.icon-btn.ib-menu:hover{ border-color:var(--hover-border); color:var(--text); }
 
 .skill-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .skill-chip{ font-family:inherit; cursor:pointer; border:1.5px solid var(--border); background:var(--card); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px; display:flex; align-items:center; gap:6px; color:var(--text-dim); transition:all .2s var(--ease); }
@@ -1785,7 +1787,18 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
         <!-- 3) SAVOLLAR BANKI -->
         <div class="admin-panel-body" id="adminTab-questions" style="display:none;">
-          <div class="skill-chip-row" id="adminSkillChips"></div>
+          <div class="rank-filter-row" id="adminSkillFilterRow">
+            <div class="rank-dropdown">
+              <label>Mahorat</label>
+              <select id="adminSkillSelect" onchange="setAdminSkill(this.value)"></select>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="rank-dropdown" id="adminSubFilterWrap">
+              <label id="adminSubFilterLabel">Kategoriya</label>
+              <select id="adminSubFilterSelect" onchange="setAdminSubFilter(this.value)"></select>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
           <div class="admin-toolbar">
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
             <div style="display:flex;gap:8px;">
@@ -1981,6 +1994,18 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
       <span class="as-t">Barcha bo'limlarni tozalash</span>
       <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- Mavzu/test qatorlari uchun umumiy 3-nuqtali "Amallar" menyusi -->
+<div class="modal-overlay as-overlay" id="rowMenuOverlay" onclick="if(event.target===this) closeRowMenu()">
+  <div class="as-box">
+    <div class="as-handle"></div>
+    <div class="as-head">
+      <h3 id="rowMenuTitle">Amallar</h3>
+      <button class="as-close" onclick="closeRowMenu()">✕</button>
+    </div>
+    <div id="rowMenuList" style="display:flex;flex-direction:column;gap:9px;"></div>
   </div>
 </div>
 
@@ -3858,60 +3883,62 @@ async function clearAllExamHistory(){
 
 /* ---- 3) SAVOLLAR BANKI ---- */
 let adminActiveSkill = 'qiroa';
+let adminSubFilter = 'all';
+function renderAdminSkillFilters(){
+  const skillSel = document.getElementById('adminSkillSelect');
+  skillSel.innerHTML = SKILLS.map(s=>`<option value="${s.id}" ${s.id===adminActiveSkill?'selected':''}>${s.icon} ${s.name}</option>`).join('');
+
+  const subLabel = document.getElementById('adminSubFilterLabel');
+  const subSel = document.getElementById('adminSubFilterSelect');
+  const subWrap = document.getElementById('adminSubFilterWrap');
+  let subItems = [];
+  if(adminActiveSkill==='grammatika'){ subLabel.textContent = 'Kategoriya'; subItems = GRAMMAR_CATEGORIES; }
+  else if(adminActiveSkill==='qiroa'){ subLabel.textContent = 'Juz'; subItems = QIROA_JUZ; }
+  else if(adminActiveSkill==='istima'){ subLabel.textContent = 'Qism'; subItems = ISTIMA_JUZ; }
+  else if(adminActiveSkill==='muhavara'){ subLabel.textContent = 'Qism'; subItems = MUHAVARA_PARTS; }
+  else if(adminActiveSkill==='kitaba'){ subLabel.textContent = 'Qism'; subItems = KITABA_PARTS; }
+  else { subItems = []; }
+
+  if(subWrap) subWrap.style.display = subItems.length ? '' : 'none';
+  subSel.innerHTML = `<option value="all">Barchasi</option>` + subItems.map(it=>`<option value="${it.id}" ${it.id===adminSubFilter?'selected':''}>${it.name}</option>`).join('');
+}
 function renderAdminQuestions(){
-  const chips = document.getElementById('adminSkillChips');
-  chips.innerHTML = SKILLS.map(s=>`
-    <button class="skill-chip ${s.id===adminActiveSkill?'active':''}" style="--sk-color:${s.color};--sk-bg:${s.bg};" onclick="setAdminSkill('${s.id}')">${s.icon} ${s.name}</button>
-  `).join('');
+  renderAdminSkillFilters();
 
   const list = document.getElementById('adminQuestionsList');
   const countEl = document.getElementById('adminQuestionsCount');
-  const addTopicBtn = document.getElementById('adminAddTopicBtn');
-  if(addTopicBtn) addTopicBtn.style.display = adminActiveSkill==='grammatika' ? '' : 'none';
-
-  // Qiroa bo'limida "savol qo'shish"/"ommaviy qo'shish" o'rniga bitta "Test qo'shish"
-  // tugmasi ko'rsatiladi (Juz → Matn → 6 savol birgalikda saqlanadi). Boshqa bo'limlarda
-  // eski ikkita tugma (Ommaviy qo'shish / Yangi savol qo'shish) o'zgarishsiz qoladi.
-  const bulkBtn = document.getElementById('adminBulkAddBtn');
-  const singleBtn = document.getElementById('adminAddQuestionBtn');
-  const qiroaTestBtn = document.getElementById('adminAddQiroaTestBtn');
-  const bulkQiroaTestBtn = document.getElementById('adminBulkQiroaTestBtn');
-  const isQiroaTab = adminActiveSkill === 'qiroa';
-  const isIstimaTab = adminActiveSkill === 'istima';
-  const isMuhavaraTab = adminActiveSkill === 'muhavara';
-  if(bulkBtn) bulkBtn.style.display = (isQiroaTab || isIstimaTab || isMuhavaraTab) ? 'none' : '';
-  if(singleBtn) singleBtn.style.display = (isQiroaTab || isIstimaTab || isMuhavaraTab) ? 'none' : '';
-  if(qiroaTestBtn) qiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
-  if(bulkQiroaTestBtn) bulkQiroaTestBtn.style.display = isQiroaTab ? '' : 'none';
 
   if(adminActiveSkill==='grammatika'){
-    const total = GRAMMAR_TOPICS.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
-    countEl.textContent = `${GRAMMAR_TOPICS.length} ta mavzu · ${total} ta savol`;
-    if(GRAMMAR_TOPICS.length===0){
-      list.innerHTML = `<div class="placeholder-card"><h3>Hali mavzu yo'q</h3><p>"+ Yangi mavzu" tugmasi orqali birinchi grammatika mavzusini qo'shing, so'ng unga savollar kiriting.</p></div>`;
+    const topics = adminSubFilter==='all' ? GRAMMAR_TOPICS : GRAMMAR_TOPICS.filter(t=>t.category===adminSubFilter);
+    const total = topics.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
+    countEl.textContent = `${topics.length} ta mavzu · ${total} ta savol`;
+    if(topics.length===0){
+      list.innerHTML = `<div class="placeholder-card"><h3>Hali mavzu yo'q</h3><p>"Amallar" tugmasi orqali birinchi grammatika mavzusini qo'shing, so'ng unga savollar kiriting.</p></div>`;
       return;
     }
-    list.innerHTML = GRAMMAR_TOPICS.map(t=>{
+    list.innerHTML = topics.map(t=>{
       const n = GRAMMAR_TOPIC_BANKS[t.id]?.length || 0;
       const cat = GRAMMAR_CATEGORIES.find(c=>c.id===t.category);
+      const menu = rowMenuBtn([
+        {icon:IB_ICON_VIEW, label:"Ko'rish", run:()=>viewTopicQuestions('grammatika', t.id)},
+        {icon:IB_ICON_ADD, label:"Savol qo'shish", run:()=>openAddQuestionModal('grammatika', t.id)},
+        {icon:IB_ICON_EDIT, label:'Tahrirlash', run:()=>openEditTopicModal(t.id)},
+        {icon:IB_ICON_DEL, label:"O'chirish", danger:true, run:()=>deleteTopic(t.id)},
+      ], t.name);
       return `<div class="topic-row">
         <div>
           <div class="t-name">${t.name}</div>
           <div class="t-meta">${n} ta savol · ${t.ar}${cat?' · '+cat.name:''}</div>
         </div>
-        <div class="t-actions icon-btn-row">
-          <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('grammatika','${t.id}')">${IB_ICON_VIEW}</button>
-          <button class="icon-btn ib-add" title="Savol qo'shish" onclick="openAddQuestionModal('grammatika','${t.id}')">${IB_ICON_ADD}</button>
-          <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditTopicModal('${t.id}')">${IB_ICON_EDIT}</button>
-          <button class="icon-btn ib-del" title="O'chirish" onclick="deleteTopic('${t.id}')">${IB_ICON_DEL}</button>
-        </div>
+        <div class="t-actions">${menu}</div>
       </div>`;
     }).join('');
   } else if(adminActiveSkill==='qiroa'){
-    const totalTests = QIROA_JUZ.reduce((s,j)=> s + (QIROA_TESTS[j.id]?.length||0), 0);
-    const totalQ = QIROA_JUZ.reduce((s,j)=> s + (QIROA_TESTS[j.id]||[]).reduce((s2,t)=>s2+t.questions.length,0), 0);
-    countEl.textContent = `${QIROA_JUZ.length} ta juz · ${totalTests} ta test · ${totalQ} ta savol`;
-    list.innerHTML = QIROA_JUZ.map(j=>{
+    const juzList = adminSubFilter==='all' ? QIROA_JUZ : QIROA_JUZ.filter(j=>j.id===adminSubFilter);
+    const totalTests = juzList.reduce((s,j)=> s + (QIROA_TESTS[j.id]?.length||0), 0);
+    const totalQ = juzList.reduce((s,j)=> s + (QIROA_TESTS[j.id]||[]).reduce((s2,t)=>s2+t.questions.length,0), 0);
+    countEl.textContent = `${juzList.length} ta juz · ${totalTests} ta test · ${totalQ} ta savol`;
+    list.innerHTML = juzList.map(j=>{
       const tests = QIROA_TESTS[j.id] || [];
       const testRows = tests.length
         ? tests.map((t,idx)=>{
@@ -3920,18 +3947,19 @@ function renderAdminQuestions(){
             const excerptLine = t.title
               ? `📌 ${escapeHtml(t.title)}`
               : `${escapeHtml(excerpt)}${(t.passage||'').length>40?'…':''}`;
+            const menu = rowMenuBtn([
+              {icon:IB_ICON_VIEW, label:"Ko'rish", run:()=>viewTopicQuestions('qiroa', t.id)},
+              {icon:IB_ICON_ADD, label:"Savol qo'shish", disabled:n>=QIROA_MAX_Q_PER_TEST, run:()=>openAddQuestionModal('qiroa', t.id)},
+              {icon:IB_ICON_EDIT, label:'Matnni tahrirlash', run:()=>openEditQiroaTextModal(t.id)},
+              {icon:IB_ICON_DEL, label:"O'chirish", danger:true, run:()=>deleteQiroaTest(t.id)},
+            ], `${j.name} · Test ${idx+1}`);
             return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--qiroa);padding-inline-start:10px;">
               <div>
                 <div class="t-name" style="font-size:13px;">${j.name} · Test ${idx+1}</div>
                 <div class="t-meta" dir="rtl" style="text-align:left;direction:ltr;">${excerptLine}</div>
                 <div class="t-meta">${n} / ${QIROA_MAX_Q_PER_TEST} ta savol</div>
               </div>
-              <div class="t-actions icon-btn-row">
-                <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('qiroa','${t.id}')">${IB_ICON_VIEW}</button>
-                <button class="icon-btn ib-add" title="${n>=QIROA_MAX_Q_PER_TEST?"Bu testda allaqachon 6 ta savol bor":"Savol qo'shish"}" ${n>=QIROA_MAX_Q_PER_TEST?'disabled':''} onclick="openAddQuestionModal('qiroa','${t.id}')">${IB_ICON_ADD}</button>
-                <button class="icon-btn ib-edit" title="Matnni tahrirlash" onclick="openEditQiroaTextModal('${t.id}')">${IB_ICON_EDIT}</button>
-                <button class="icon-btn ib-del" title="O'chirish" onclick="deleteQiroaTest('${t.id}')">${IB_ICON_DEL}</button>
-              </div>
+              <div class="t-actions">${menu}</div>
             </div>`;
           }).join('')
         : `<div class="t-meta" style="margin-inline-start:14px;">Hali test yo'q</div>`;
@@ -3941,33 +3969,32 @@ function renderAdminQuestions(){
           <div class="t-meta">${tests.length} ta test · O'qish: ${j.readMins} daq · Savollar: ${j.qMins} daq</div>
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${testRows}</div>
         </div>
-        <div class="t-actions">
-          <button class="row-btn" onclick="openAddQiroaFullTestModal('${j.id}')">+ Yangi test</button>
-        </div>
       </div>`;
     }).join('');
   } else if(adminActiveSkill==='istima'){
-    const totalTests = ISTIMA_JUZ.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]?.length||0), 0);
-    const totalQ = ISTIMA_JUZ.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]||[]).reduce((s2,t)=>s2+t.questions.length,0), 0);
-    countEl.textContent = `${ISTIMA_JUZ.length} ta qism · ${totalTests} ta test · ${totalQ} ta savol`;
-    list.innerHTML = ISTIMA_JUZ.map(j=>{
+    const juzList = adminSubFilter==='all' ? ISTIMA_JUZ : ISTIMA_JUZ.filter(j=>j.id===adminSubFilter);
+    const totalTests = juzList.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]?.length||0), 0);
+    const totalQ = juzList.reduce((s,j)=> s + (ISTIMA_TESTS[j.id]||[]).reduce((s2,t)=>s2+t.questions.length,0), 0);
+    countEl.textContent = `${juzList.length} ta qism · ${totalTests} ta test · ${totalQ} ta savol`;
+    list.innerHTML = juzList.map(j=>{
       const tests = ISTIMA_TESTS[j.id] || [];
       const testRows = tests.length
         ? tests.map((t,idx)=>{
             const n = t.questions.length;
             const complete = n >= j.qCount;
+            const menu = rowMenuBtn([
+              {icon:IB_ICON_VIEW, label:"Ko'rish", run:()=>viewTopicQuestions('istima', t.id)},
+              {icon:IB_ICON_ADD, label:"Savol qo'shish", disabled:n>=j.qCount, run:()=>openAddQuestionModal('istima', t.id)},
+              {icon:IB_ICON_EDIT, label:"Audio URL'ni tahrirlash", run:()=>openEditIstimaAudioModal(t.id)},
+              {icon:IB_ICON_DEL, label:"O'chirish", danger:true, run:()=>deleteIstimaTest(t.id)},
+            ], `${j.name} · Test ${idx+1}`);
             return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--istima);padding-inline-start:10px;">
               <div>
                 <div class="t-name" style="font-size:13px;">${j.name} · Test ${idx+1}</div>
                 <div class="t-meta">${t.audioUrl ? `<a href="${escapeHtml(t.audioUrl)}" target="_blank" rel="noopener" style="color:var(--istima);text-decoration:none;">🔊 Audio havolasi</a>` : '<span style="opacity:.6;">Audio URL kiritilmagan</span>'}</div>
                 <div class="t-meta">${n} / ${j.qCount} ta savol ${complete?'✅':''}</div>
               </div>
-              <div class="t-actions icon-btn-row">
-                <button class="icon-btn ib-view" title="Ko'rish" onclick="viewTopicQuestions('istima','${t.id}')">${IB_ICON_VIEW}</button>
-                <button class="icon-btn ib-add" title="${n>=j.qCount?"Bu testda allaqachon savollar to'liq":"Savol qo'shish"}" ${n>=j.qCount?'disabled':''} onclick="openAddQuestionModal('istima','${t.id}')">${IB_ICON_ADD}</button>
-                <button class="icon-btn ib-edit" title="Audio URL'ni tahrirlash" onclick="openEditIstimaAudioModal('${t.id}')">${IB_ICON_EDIT}</button>
-                <button class="icon-btn ib-del" title="O'chirish" onclick="deleteIstimaTest('${t.id}')">${IB_ICON_DEL}</button>
-              </div>
+              <div class="t-actions">${menu}</div>
             </div>`;
           }).join('')
         : `<div class="t-meta" style="margin-inline-start:14px;">Hali test yo'q</div>`;
@@ -3977,64 +4004,64 @@ function renderAdminQuestions(){
           <div class="t-meta">${tests.length} ta test · har testda ${j.qCount} ta savol · audio ${j.maxPlays} marta ijro etiladi</div>
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${testRows}</div>
         </div>
-        <div class="t-actions">
-          <button class="row-btn" onclick="openAddIstimaFullTestModal('${j.id}')">+ Yangi test</button>
-        </div>
       </div>`;
     }).join('');
   } else if(adminActiveSkill==='muhavara'){
-    const total = MUHAVARA_PARTS.reduce((s,p)=> s + (MUHAVARA_QUESTIONS[p.id]?.length||0), 0);
-    countEl.textContent = `${MUHAVARA_PARTS.length} ta qism · ${total} / ${MUHAVARA_PARTS.length*MUHAVARA_MAX_Q_PER_PART} ta savol`;
-    list.innerHTML = MUHAVARA_PARTS.map(p=>{
+    const partsList = adminSubFilter==='all' ? MUHAVARA_PARTS : MUHAVARA_PARTS.filter(p=>p.id===adminSubFilter);
+    const total = partsList.reduce((s,p)=> s + (MUHAVARA_QUESTIONS[p.id]?.length||0), 0);
+    countEl.textContent = `${partsList.length} ta qism · ${total} ta savol`;
+    list.innerHTML = partsList.map(p=>{
       const qs = MUHAVARA_QUESTIONS[p.id] || [];
       const n = qs.length;
       const rows = qs.length
-        ? qs.map(q=>`<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--muhavara);padding-inline-start:10px;">
+        ? qs.map(q=>{
+            const menu = rowMenuBtn([
+              {icon:IB_ICON_EDIT, label:'Tahrirlash', run:()=>openEditSpeakingQuestionModal(q.id)},
+              {icon:IB_ICON_DEL, label:"O'chirish", danger:true, run:()=>deleteSpeakingQuestion(q.id)},
+            ], p.name);
+            return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--muhavara);padding-inline-start:10px;">
             <div>
               <div class="t-meta" dir="rtl" style="text-align:left;direction:rtl;font-size:14px;color:var(--text);">${escapeHtml(q.prompt)}</div>
             </div>
-            <div class="t-actions icon-btn-row">
-              <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditSpeakingQuestionModal('${q.id}')">${IB_ICON_EDIT}</button>
-              <button class="icon-btn ib-del" title="O'chirish" onclick="deleteSpeakingQuestion('${q.id}')">${IB_ICON_DEL}</button>
-            </div>
-          </div>`).join('')
+            <div class="t-actions">${menu}</div>
+          </div>`;}).join('')
         : `<div class="t-meta" style="margin-inline-start:14px;">Hali savol yo'q</div>`;
       return `<div class="topic-row" style="align-items:flex-start;">
         <div style="flex:1;">
           <div class="t-name">${p.name}</div>
-          <div class="t-meta">${n} / ${MUHAVARA_MAX_Q_PER_PART} ta savol · Tayyorgarlik: ${p.prepSecs}s · Javob: ${p.answerSecs}s</div>
+          <div class="t-meta">${n} ta savol (bank) · Imtihonda: ${MUHAVARA_MAX_Q_PER_PART} ta tasodifiy · Tayyorgarlik: ${p.prepSecs}s · Javob: ${p.answerSecs}s</div>
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${rows}</div>
         </div>
         <div class="t-actions">
-          <button class="row-btn" ${n>=MUHAVARA_MAX_Q_PER_PART?'disabled title="Bu qismda allaqachon 2 ta savol bor"':''} onclick="openAddSpeakingQuestionModal('${p.id}')">+ Savol</button>
+          <button class="row-btn" onclick="openAddSpeakingQuestionModal('${p.id}')">+ Savol</button>
         </div>
       </div>`;
     }).join('');
   } else if(adminActiveSkill==='kitaba'){
-    const total = KITABA_PARTS.reduce((s,p)=> s + (KITABA_TOPICS[p.id]?.length||0), 0);
-    countEl.textContent = `${KITABA_PARTS.length} ta qism · ${total} ta mavzu`;
-    list.innerHTML = KITABA_PARTS.map(p=>{
+    const partsList = adminSubFilter==='all' ? KITABA_PARTS : KITABA_PARTS.filter(p=>p.id===adminSubFilter);
+    const total = partsList.reduce((s,p)=> s + (KITABA_TOPICS[p.id]?.length||0), 0);
+    countEl.textContent = `${partsList.length} ta qism · ${total} ta mavzu`;
+    list.innerHTML = partsList.map(p=>{
       const topics = KITABA_TOPICS[p.id] || [];
       const n = topics.length;
       const rows = topics.length
-        ? topics.map(t=>`<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--kitaba);padding-inline-start:10px;">
+        ? topics.map(t=>{
+            const menu = rowMenuBtn([
+              {icon:IB_ICON_EDIT, label:'Tahrirlash', run:()=>openEditKitabaTopicModal(t.id)},
+              {icon:IB_ICON_DEL, label:"O'chirish", danger:true, run:()=>deleteKitabaTopic(t.id)},
+            ], p.name);
+            return `<div class="topic-row" style="margin-inline-start:14px;border-inline-start:2px solid var(--kitaba);padding-inline-start:10px;">
             <div>
               <div class="t-meta" dir="rtl" style="text-align:left;direction:rtl;font-size:14px;color:var(--text);">${escapeHtml(t.topicAr)}</div>
             </div>
-            <div class="t-actions icon-btn-row">
-              <button class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditKitabaTopicModal('${t.id}')">${IB_ICON_EDIT}</button>
-              <button class="icon-btn ib-del" title="O'chirish" onclick="deleteKitabaTopic('${t.id}')">${IB_ICON_DEL}</button>
-            </div>
-          </div>`).join('')
+            <div class="t-actions">${menu}</div>
+          </div>`;}).join('')
         : `<div class="t-meta" style="margin-inline-start:14px;">Hali mavzu yo'q</div>`;
       return `<div class="topic-row" style="align-items:flex-start;">
         <div style="flex:1;">
           <div class="t-name">${p.name}</div>
           <div class="t-meta">${n} ta mavzu · Kamida ${p.minWords} so'z · Vaqt: ${Math.round(p.seconds/60)} daqiqa</div>
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">${rows}</div>
-        </div>
-        <div class="t-actions">
-          <button class="row-btn" onclick="openAddKitabaTopicModal('${p.id}')">+ Mavzu</button>
         </div>
       </div>`;
     }).join('');
@@ -4043,7 +4070,7 @@ function renderAdminQuestions(){
     const n = bank?.questions?.length || 0;
     countEl.textContent = `${n} ta savol`;
     if(n===0){
-      list.innerHTML = `<div class="placeholder-card"><h3>Hali savol yo'q</h3><p>"Yangi savol qo'shish" tugmasi orqali qo'shing.</p></div>`;
+      list.innerHTML = `<div class="placeholder-card"><h3>Hali savol yo'q</h3><p>"Amallar" tugmasi orqali qo'shing.</p></div>`;
       return;
     }
     list.innerHTML = `<div class="topic-row">
@@ -4057,7 +4084,8 @@ function renderAdminQuestions(){
     </div>`;
   }
 }
-function setAdminSkill(id){ adminActiveSkill = id; renderAdminQuestions(); }
+function setAdminSkill(id){ adminActiveSkill = id; adminSubFilter = 'all'; renderAdminQuestions(); }
+function setAdminSubFilter(val){ adminSubFilter = val; renderAdminQuestions(); }
 
 /* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
    qo'shish tugmalarini ko'rsatadi, backup/import/tozalash har doim bir xil qoladi. ---- */
@@ -4067,6 +4095,39 @@ const IB_ICON_VIEW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const IB_ICON_ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
 const IB_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
 const IB_ICON_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+const IB_ICON_DOTS = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
+/* ---- Mavzu/test qatorlari uchun umumiy 3-nuqtali "Amallar" menyusi ----
+   Har bir qator o'z amallar ro'yxatini (ko'rish/qo'shish/tahrirlash/o'chirish)
+   ROW_MENU_REGISTRY'ga ro'yxatdan o'tkazadi, tugma bosilganda shu ro'yxat
+   pastdan chiqadigan action-sheet'da jadval qilib ko'rsatiladi. */
+let ROW_MENU_REGISTRY = {};
+let ROW_MENU_SEQ = 0;
+function rowMenuBtn(items, title){
+  const id = 'rm' + (++ROW_MENU_SEQ);
+  ROW_MENU_REGISTRY[id] = { items, title: title || 'Amallar' };
+  return `<button type="button" class="icon-btn ib-menu" title="Amallar" onclick="openRowMenu('${id}')">${IB_ICON_DOTS}</button>`;
+}
+function openRowMenu(id){
+  const entry = ROW_MENU_REGISTRY[id];
+  if(!entry) return;
+  document.getElementById('rowMenuTitle').textContent = entry.title;
+  const list = document.getElementById('rowMenuList');
+  list.innerHTML = entry.items.map((it,i)=>`
+    <button type="button" class="as-row ${it.danger?'danger':''}" ${it.disabled?'disabled style="opacity:.4;cursor:not-allowed;"':''} onclick="rowMenuChoose('${id}',${i})">
+      <span class="as-icon ${it.danger?'r':'b'}">${it.icon}</span>
+      <span class="as-t">${it.label}</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>`).join('');
+  document.getElementById('rowMenuOverlay').classList.add('show');
+}
+function closeRowMenu(){ document.getElementById('rowMenuOverlay').classList.remove('show'); }
+function rowMenuChoose(id, i){
+  const entry = ROW_MENU_REGISTRY[id];
+  const it = entry && entry.items[i];
+  closeRowMenu();
+  if(!it || it.disabled) return;
+  setTimeout(()=>{ it.run(); }, 180);
+}
 const IB_ICON_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
 const IB_ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>`;
 const IB_ICON_MINUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>`;
@@ -4078,6 +4139,7 @@ function renderAdminActionsSheet(){
   const isQiroa = adminActiveSkill === 'qiroa';
   const isIstima = adminActiveSkill === 'istima';
   const isKitaba = adminActiveSkill === 'kitaba';
+  const isMuhavara = adminActiveSkill === 'muhavara';
   let gridHtml = '', primaryHtml = '';
   if(isGrammar){
     gridHtml = `
@@ -4108,7 +4170,14 @@ function renderAdminActionsSheet(){
       </button>`;
   } else if(isKitaba){
     gridHtml = '';
-    primaryHtml = `<div style="text-align:center;color:var(--text-faint);font-size:12.5px;font-weight:600;padding:10px 6px;">Mavzular har bir qism (1/2/3) qatoridagi "+ Mavzu" tugmasi orqali qo'shiladi.</div>`;
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddKitabaTopicModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi mavzu qo'shish</span>
+      </button>`;
+  } else if(isMuhavara){
+    gridHtml = '';
+    primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddSpeakingQuestionModal())">
+        <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi savol qo'shish</span>
+      </button>`;
   } else {
     gridHtml = `
       <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddQuestionModal())">
@@ -4437,19 +4506,24 @@ async function deleteQiroaTest(testId){
   toast("🗑 Test o'chirildi");
 }
 
-/* ---- Muhavara: savol qo'shish / tahrirlash / o'chirish (ochiq savol, variant yo'q) ---- */
-function openAddSpeakingQuestionModal(partId){
-  const part = MUHAVARA_PARTS.find(p=>p.id===partId);
+/* ---- Muhavara: savol qo'shish / tahrirlash / o'chirish (ochiq savol, variant yo'q) ----
+   Bu yer — savollar BANKI: har qismga istalgancha savol qo'shish mumkin (cheklov yo'q),
+   imtihonda esa shu bankdan tasodifiy MUHAVARA_MAX_Q_PER_PART tadan savol tanlanadi
+   (qarang: startMuhavaraQuiz). */
+function openAddSpeakingQuestionModal(presetPartId){
+  const partId0 = presetPartId || MUHAVARA_PARTS[0]?.id;
+  const part = MUHAVARA_PARTS.find(p=>p.id===partId0);
   if(!part) return;
-  const n = MUHAVARA_QUESTIONS[partId]?.length || 0;
-  if(n >= MUHAVARA_MAX_Q_PER_PART){
-    toast(`⚠️ ${part.name}da allaqachon ${MUHAVARA_MAX_Q_PER_PART} ta savol bor`);
-    return;
-  }
-  document.getElementById('modalTitle').textContent = `${part.name} — yangi savol`;
+  document.getElementById('modalTitle').textContent = "Yangi savol qo'shish (Muhovara)";
   document.getElementById('modalBody').innerHTML = `
-    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddSpeakingQuestion(event,'${partId}')">
-      <p class="form-hint">Javob vaqti: ${part.answerSecs} soniya. Savol ochiq — variant kerak emas, AI foydalanuvchi javobini tinglab (matnga o'girib) baholaydi.</p>
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddSpeakingQuestion(event)">
+      <div class="form-field">
+        <label>Qism</label>
+        <select id="spPart" onchange="renderAddSpeakingHint(this.value)">
+          ${MUHAVARA_PARTS.map(p=>`<option value="${p.id}" ${p.id===partId0?'selected':''}>${p.name}</option>`).join('')}
+        </select>
+      </div>
+      <p class="form-hint" id="spQHint">Javob vaqti: ${part.answerSecs} soniya. Savol ochiq — variant kerak emas, AI foydalanuvchi javobini tinglab (matnga o'girib) baholaydi.</p>
       <div class="form-field">
         <label>Savol matni (arabcha)</label>
         <textarea id="spQText" dir="rtl" style="min-height:100px;" placeholder="مَاذَا تَفْعَلُ فِي وَقْتِ فَرَاغِكَ؟" required></textarea>
@@ -4459,8 +4533,14 @@ function openAddSpeakingQuestionModal(partId){
   `;
   document.getElementById('modalOverlay').classList.add('show');
 }
-async function submitAddSpeakingQuestion(e, partId){
+function renderAddSpeakingHint(partId){
+  const part = MUHAVARA_PARTS.find(p=>p.id===partId);
+  const hint = document.getElementById('spQHint');
+  if(part && hint) hint.textContent = `Javob vaqti: ${part.answerSecs} soniya. Savol ochiq — variant kerak emas, AI foydalanuvchi javobini tinglab (matnga o'girib) baholaydi.`;
+}
+async function submitAddSpeakingQuestion(e){
   e.preventDefault();
+  const partId = document.getElementById('spPart').value;
   const prompt = document.getElementById('spQText').value;
   closeModal();
   toast('⏳ Saqlanmoqda...');
@@ -4511,13 +4591,20 @@ async function deleteSpeakingQuestion(id){
 /* ---- Kitaba: har bir qism (1/2/3) uchun mavzular banki — qo'shish / tahrirlash / o'chirish ----
    Mavzular faqat arabcha kiritiladi (o'quvchi imtihonda ko'radigan matn shu). Har imtihon
    boshlanganda shu bankdan tasodifiy bitta mavzu tanlanadi — bu yerda AI ishtirok etmaydi. */
-function openAddKitabaTopicModal(partId){
-  const part = KITABA_PARTS.find(p=>p.id===partId);
+function openAddKitabaTopicModal(presetPartId){
+  const partId0 = presetPartId || KITABA_PARTS[0]?.id;
+  const part = KITABA_PARTS.find(p=>p.id===partId0);
   if(!part) return;
-  document.getElementById('modalTitle').textContent = `${part.name} — yangi mavzu`;
+  document.getElementById('modalTitle').textContent = "Yangi mavzu qo'shish (Kitaba)";
   document.getElementById('modalBody').innerHTML = `
-    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddKitabaTopic(event,'${partId}')">
-      <p class="form-hint">Talab: kamida ${part.minWords} so'z, ${Math.round(part.seconds/60)} daqiqa. Imtihon boshlanganda bu qism uchun bankdagi mavzulardan tasodifiy bittasi tanlanadi.</p>
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddKitabaTopic(event)">
+      <div class="form-field">
+        <label>Qism</label>
+        <select id="ktPart" onchange="renderAddKitabaTopicHint(this.value)">
+          ${KITABA_PARTS.map(p=>`<option value="${p.id}" ${p.id===partId0?'selected':''}>${p.name}</option>`).join('')}
+        </select>
+      </div>
+      <p class="form-hint" id="ktTopicHint">Talab: kamida ${part.minWords} so'z, ${Math.round(part.seconds/60)} daqiqa. Imtihon boshlanganda bu qism uchun bankdagi mavzulardan tasodifiy bittasi tanlanadi.</p>
       <div class="form-field">
         <label>Mavzu matni (arabcha)</label>
         <textarea id="ktTopicText" dir="rtl" style="min-height:90px;" placeholder="اُكْتُبْ عَنْ أَهَمِّيَّةِ تَعَلُّمِ اللُّغَةِ الْعَرَبِيَّةِ" required></textarea>
@@ -4527,8 +4614,14 @@ function openAddKitabaTopicModal(partId){
   `;
   document.getElementById('modalOverlay').classList.add('show');
 }
-async function submitAddKitabaTopic(e, partId){
+function renderAddKitabaTopicHint(partId){
+  const part = KITABA_PARTS.find(p=>p.id===partId);
+  const hint = document.getElementById('ktTopicHint');
+  if(part && hint) hint.textContent = `Talab: kamida ${part.minWords} so'z, ${Math.round(part.seconds/60)} daqiqa. Imtihon boshlanganda bu qism uchun bankdagi mavzulardan tasodifiy bittasi tanlanadi.`;
+}
+async function submitAddKitabaTopic(e){
   e.preventDefault();
+  const partId = document.getElementById('ktPart').value;
   const topicAr = document.getElementById('ktTopicText').value.trim();
   if(!topicAr) return false;
   closeModal();
@@ -6758,9 +6851,12 @@ let muhavaraRecorder = null;
 let muhavaraChunks = [];
 
 function startMuhavaraQuiz(customLabel){
+  // Har qism uchun bankdan tasodifiy MUHAVARA_MAX_Q_PER_PART tadan savol tanlanadi
+  // (bank o'zi cheklanmagan — admin xohlagancha savol qo'shishi mumkin).
   const flat = [];
   MUHAVARA_PARTS.forEach(part=>{
-    (MUHAVARA_QUESTIONS[part.id]||[]).forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
+    const pool = shuffleArray(MUHAVARA_QUESTIONS[part.id] || []);
+    pool.slice(0, MUHAVARA_MAX_Q_PER_PART).forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
   });
   if(flat.length === 0){
     toast("⚠️ Muhavara bo'limi uchun hali savollar qo'shilmagan. Admin panelda qo'shing.");
@@ -8446,11 +8542,13 @@ bootApp();
         body: JSON.stringify({ card_id: id, telegram_link: card.telegram_link })
       });
       const data = await res.json();
+      alert('STATUS: ' + res.status + '\n\nJAVOB: ' + JSON.stringify(data, null, 2));
       if (!res.ok) { toast('❌ ' + (data.error || 'Xato'), 4000); return; }
       toast('✅ Yangilandi');
       await renderCommunityAdmin();
       await loadAppConfig();
     } catch (e) {
+      alert('CATCH XATOSI: ' + e.message);
       toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
     }
   };
