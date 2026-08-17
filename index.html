@@ -1860,6 +1860,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     Umumiy grammatika bo'limi kartalari
   </p>
   <div id="grammarLockAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+  <p style="font-size:12px;color:var(--text-faint);font-weight:700;margin:20px 0 10px;">
+    Pastki menyu tugmalari
+  </p>
+  <div id="navBtnAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <!-- 6) GRAMMATIKA TARTIBI -->
@@ -2936,8 +2941,20 @@ let viewHistory = ['dashboard'];
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
    cardning o'zini bosishni emas. Admin panelda saqlangan holatni to'g'ridan-to'g'ri
    localStorage'dan o'qiydi, shuning uchun tarmoq/auth kutilmasdan, sinxron ishlaydi
-   va sahifa ochilgan zahotiyoq to'g'ri natija beradi. */
-const VIEW_CARD_MAP = { attanal: 'attanal_full' };
+   va sahifa ochilgan zahotiyoq to'g'ri natija beradi.
+   NAVBTN_* — pastki menyu (bottom-nav) tugmalari uchun ham xuddi shu mexanizm,
+   faqat cardId'lar 'navbtn_<view>' prefiksi bilan (qarang: REAL ADMIN EXTENSION,
+   NAV_BTN_CONFIG / applyNavBtnLockState) — shuning uchun bitta umumiy
+   exam_cards saqlash joyi orqali ham cardlar, ham grammatika, ham menyu
+   tugmalari boshqariladi. */
+const VIEW_CARD_MAP = {
+  attanal: 'attanal_full',
+  dashboard: 'navbtn_dashboard',
+  imtihon: 'navbtn_imtihon',
+  grammar: 'navbtn_grammar',
+  rank: 'navbtn_rank',
+  profil: 'navbtn_profil'
+};
 function getExamCardLockState(cardId){
   try{
     const cfg = JSON.parse(localStorage.getItem('arab_app_config_cache'));
@@ -7914,6 +7931,25 @@ bootApp();
         z-index:11;
       }
 
+      /* Pastki menyu (bottom-nav) tugmalari uchun qulf holati — card'lardan farqli
+         o'laroq bu kichik tugma, shuning uchun blur overlay o'rniga xiralashtirish +
+         burchakda kichik qulf belgisi ishlatiladi. */
+      .bn-btn.is-locked{
+        opacity:.35;
+        pointer-events:none;
+        position:relative;
+      }
+
+      .bn-btn.is-locked::after{
+        content:'🔒';
+        position:absolute;
+        top:2px;
+        right:calc(50% - 26px);
+        font-size:10px;
+        line-height:1;
+        pointer-events:none;
+      }
+
       /* userMsgBell endi tepadagi topbar'da, dark-mode tugmasi yonida (.theme-toggle
          klassidan uslub oladi) — pastki fixed FAB o'rniga. Faqat badge shu yerda. */
       #userMsgBell{ font-size:16px; }
@@ -8123,6 +8159,7 @@ bootApp();
     applyExamCardState();
     applyGrammarOrder();
     applyGrammarCardLockState();
+    applyNavBtnLockState();
     renderCommunityView();
     if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminQuestions();
   }
@@ -8252,22 +8289,112 @@ bootApp();
     }).join('');
   }
 
-  // Qulflangan cardga bosishni bloklash (imtihon cardlari + grammatika kategoriya cardlari)
+  // Qulflangan cardga bosishni bloklash (imtihon cardlari + grammatika kategoriya
+  // cardlari + pastki menyu tugmalari)
   document.addEventListener('click', function (e) {
     const card = e.target.closest('[data-card-id]');
     const gramWrap = !card ? e.target.closest('.grammar-cat-wrap[data-cat]') : null;
+    const navBtn = (!card && !gramWrap) ? e.target.closest('.bn-btn[data-view]') : null;
 
-    if (!card && !gramWrap) return;
+    if (!card && !gramWrap && !navBtn) return;
 
-    const cardId = card ? card.dataset.cardId : grammarCardId(gramWrap.dataset.cat);
+    let cardId;
+    if (card) cardId = card.dataset.cardId;
+    else if (gramWrap) cardId = grammarCardId(gramWrap.dataset.cat);
+    else cardId = navBtnCardId(navBtn.dataset.view);
+
     const state = getCardState(cardId);
 
     if (state && state.locked) {
       e.preventDefault();
       e.stopImmediatePropagation();
       toast('🔒 Bu bo‘lim hozircha qulflangan');
+    } else if (state && state.visible === false) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toast("Bu bo'lim vaqtincha mavjud emas");
     }
   }, true);
+
+  /* ---------- bottom-nav (pastki menyu) tugmalari (lock/hide) ---------- */
+
+  const NAV_BTN_CONFIG = [
+    { id: 'dashboard', title: 'Bosh sahifa' },
+    { id: 'imtihon', title: 'Imtihon' },
+    { id: 'grammar', title: 'Testlar (Grammatika)' },
+    { id: 'rank', title: 'Reyting' },
+    { id: 'profil', title: 'Profil' }
+  ];
+
+  function navBtnCardId(viewId) {
+    return 'navbtn_' + viewId;
+  }
+
+  function applyNavBtnLockState() {
+    NAV_BTN_CONFIG.forEach(btn => {
+      const el = document.querySelector('.bn-btn[data-view="' + btn.id + '"]');
+      if (!el) return;
+
+      const state = getCardState(navBtnCardId(btn.id));
+
+      el.hidden = !state.visible;
+      el.classList.toggle('is-locked', !!state.locked);
+    });
+  }
+  window.applyNavBtnLockState = applyNavBtnLockState;
+
+  window.toggleNavBtnCard = async function (viewId, field, value) {
+    const cardId = navBtnCardId(viewId);
+
+    if (!APP_CONFIG.exam_cards[cardId]) {
+      APP_CONFIG.exam_cards[cardId] = {
+        visible: true,
+        locked: false
+      };
+    }
+
+    APP_CONFIG.exam_cards[cardId][field] = value;
+
+    renderNavBtnAdmin();
+    applyNavBtnLockState();
+
+    await saveExamCard(cardId);
+  };
+
+  function renderNavBtnAdmin() {
+    const list = document.getElementById('navBtnAdminList');
+    if (!list) return;
+
+    list.innerHTML = NAV_BTN_CONFIG.map(btn => {
+      const state = getCardState(navBtnCardId(btn.id));
+
+      return `
+        <div class="admin-ext-row">
+          <strong style="font-size:13px;">${btn.title}</strong>
+
+          <div class="admin-ext-toggles">
+            <label>
+              <input
+                type="checkbox"
+                ${state.visible ? 'checked' : ''}
+                onchange="toggleNavBtnCard('${btn.id}', 'visible', this.checked)"
+              >
+              Ko‘rinsin
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                ${state.locked ? 'checked' : ''}
+                onchange="toggleNavBtnCard('${btn.id}', 'locked', this.checked)"
+              >
+              🔒 Qulflangan
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
   /* ---------- grammar category cards (lock/hide) ---------- */
 
@@ -8758,7 +8885,7 @@ bootApp();
         btn.classList.toggle('active', btn.dataset.atab === tab);
       });
 
-      if (tab === 'examcards') { renderExamCardAdmin(); renderGrammarLockAdmin(); }
+      if (tab === 'examcards') { renderExamCardAdmin(); renderGrammarLockAdmin(); renderNavBtnAdmin(); }
       if (tab === 'gramorder') renderGrammarOrderAdmin();
       if (tab === 'sendmsg') renderSentMessages();
       if (tab === 'admins') renderAdminAdminsList();
@@ -8816,6 +8943,7 @@ bootApp();
       applyExamCardState();
       applyGrammarOrder();
       applyGrammarCardLockState();
+      applyNavBtnLockState();
     }
 
     await waitForAuth();
@@ -8825,6 +8953,7 @@ bootApp();
     renderExamCardAdmin();
     renderGrammarOrderAdmin();
     renderGrammarLockAdmin();
+    renderNavBtnAdmin();
 
     await refreshUserMessages();
 
