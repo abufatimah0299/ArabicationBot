@@ -2400,6 +2400,20 @@ async function clearSectionQuestionsOnBackendFast(skillId){
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function clearSectionQuestionsOnBackend(skillId){
+  // Muhovara (Speaking) savollari "questions" jadvalida emas, alohida
+  // "speaking_questions" jadvalida saqlanadi — shu sabab bu bo'lim uchun
+  // butunlay boshqa yuklash/o'chirish funksiyalari ishlatiladi.
+  if(skillId === 'muhavara'){
+    const rows = await loadSpeakingQuestionsFromBackend();
+    let deletedQ = 0, failedQ = 0;
+    for(const r of (rows||[])){
+      const ok = await deleteSpeakingQuestionOnBackend(r.id);
+      if(ok !== null) deletedQ++; else failedQ++;
+    }
+    await refreshSpeakingFromBackend();
+    return { deletedQ, failedQ, totalQ: (rows||[]).length, deletedT:0, failedT:0, totalT:0 };
+  }
+
   const all = await loadQuestionsFromBackend();
   const rows = (all||[]).filter(r => r.skill_id === skillId);
   let deletedQ = 0, failedQ = 0;
@@ -2439,7 +2453,10 @@ async function clearCurrentSectionQuestions(){
 
   toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
 
-  const fastResult = await clearSectionQuestionsOnBackendFast(adminActiveSkill);
+  // Muhovara uchun tezkor RPC (admin_clear_section_questions) "questions" jadvalini
+  // nazarda tutadi va speaking_questions'ni bilmasligi mumkin — shu sabab bu bo'lim
+  // uchun to'g'ridan-to'g'ri (har doim ishonchli ishlaydigan) sekin usulga o'tamiz.
+  const fastResult = adminActiveSkill === 'muhavara' ? undefined : await clearSectionQuestionsOnBackendFast(adminActiveSkill);
   if(fastResult !== undefined && fastResult !== null){
     let msg = `🗑 "${skillName}" bo'limidan ${fastResult.questions ?? 0} ta savol`;
     if(topicWord && fastResult.topics) msg += ` va ${fastResult.topics} ta ${topicWord}`;
@@ -2491,6 +2508,35 @@ async function exportAllQuestionsData(){
   const targetSkill = adminActiveSkill;
   const skillName = SKILL_META[targetSkill]?.name || targetSkill;
   toast('⏳ Ma\'lumotlar yuklanmoqda...');
+
+  // Muhovara (Speaking) savollari "questions" jadvalida emas — alohida
+  // "speaking_questions" jadvalida (part_id, prompt) saqlanadi, shu sabab
+  // bu bo'lim uchun butunlay boshqa formatda backup qilinadi.
+  if(targetSkill === 'muhavara'){
+    const rows = await loadSpeakingQuestionsFromBackend();
+    const items = (rows||[]).map(r => ({
+      skillId: 'muhavara',
+      partId: r.part_id,
+      prompt: r.prompt,
+    }));
+    if(!items.length){
+      toast(`⚠️ "${skillName}" bo'limida hali savol yo'q — backup qilinadigan narsa topilmadi`, 6000);
+      return;
+    }
+    const payload = {
+      exported_at: new Date().toISOString(),
+      app: 'Arabication',
+      format: 'speaking_questions_v1',
+      skillId: targetSkill,
+      count: items.length,
+      questions: items,
+    };
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    downloadJSONFile(`arabication-${targetSkill}-backup-${stamp}.json`, payload);
+    toast(`✅ "${skillName}" bo'limidan ${items.length} ta savol backup qilindi (yuklab olindi)`);
+    return;
+  }
+
   const [topics, questions] = await Promise.all([
     loadGrammarTopicsFromBackend(),
     loadQuestionsFromBackend(),
@@ -2554,6 +2600,36 @@ async function importQuestionsFromFile(event){
 
   const targetSkill = adminActiveSkill;
   const skillName = SKILL_META[targetSkill]?.name || targetSkill;
+
+  // Muhovara (Speaking) savollari alohida "speaking_questions" jadvaliga
+  // (part_id, prompt) admin_add_speaking_question RPC orqali qo'shiladi —
+  // oddiy q/opts/a formatidagi bulk-import bu yerga to'g'ri kelmaydi.
+  if(targetSkill === 'muhavara'){
+    const matchingSpeaking = rows.filter(row => (row.skillId || row.skill_id) === 'muhavara' && row.partId && row.prompt);
+    const foreignCountSpeaking = rows.length - matchingSpeaking.length;
+    if(!matchingSpeaking.length){
+      toast(`❌ Faylda "${skillName}" bo'limiga tegishli savol topilmadi`, 8000);
+      return;
+    }
+    let confirmMsgSpeaking = `Faylda "${skillName}" bo'limiga tegishli ${matchingSpeaking.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi?`;
+    if(foreignCountSpeaking > 0){
+      confirmMsgSpeaking += `\n\n⚠️ Diqqat: faylda yana ${foreignCountSpeaking} ta boshqa bo'limlarga tegishli savol bor — ular IMPORT QILINMAYDI.`;
+    }
+    if(!confirm(confirmMsgSpeaking)) return;
+
+    toast(`⏳ ${matchingSpeaking.length} ta savol yuklanmoqda...`);
+    let inserted = 0, failed = 0;
+    for(const row of matchingSpeaking){
+      const ok = await addSpeakingQuestionToBackend(row.partId, row.prompt);
+      if(ok !== null) inserted++; else failed++;
+    }
+    let msgSpeaking = `✅ "${skillName}" uchun import tugadi: ${inserted} ta qo'shildi`;
+    if(failed > 0) msgSpeaking += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+    toast(msgSpeaking, 9000);
+    await refreshSpeakingFromBackend();
+    renderAdminQuestions();
+    return;
+  }
 
   const matching = rows.filter(row => (row.skillId || row.skill_id) === targetSkill);
   const foreignCount = rows.length - matching.length;
