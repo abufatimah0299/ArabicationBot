@@ -433,7 +433,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .options{ display:flex; flex-direction:column; gap:10px; }
 .option{
   display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px; border:1.5px solid var(--border);
-  cursor:pointer; direction:rtl; font-family:var(--font-ar); font-size:calc(17px * var(--exam-font-scale)); transition:.12s;
+  cursor:pointer; direction:rtl; flex-direction:row-reverse; font-family:var(--font-ar); font-size:calc(17px * var(--exam-font-scale)); transition:.12s;
 }
 .option:hover{ border-color:var(--indigo-500); }
 .option.selected{ border-color:var(--indigo-700); background:var(--indigo-100); }
@@ -1884,7 +1884,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
   <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
     Foydalanuvchiga xabar yuboring. Xabar foydalanuvchi ekranida 🔔 qo'ng'iroq sifatida ko'rinadi.
   </p>
-  <form class="admin-msg-form" id="adminMsgForm" onsubmit="return sendAdminMessage(event)">
+  <form class="admin-msg-form" id="adminMsgForm">
     <div class="form-field">
       <label>Foydalanuvchi ID (yoki "all" — hammasiga)</label>
       <input type="text" id="msgUserId" placeholder="Masalan: 5400174077 yoki all" required>
@@ -2834,6 +2834,17 @@ async function bootApp(){
     await safeBootStep('Grammatika mavzulari', async ()=>{
       const liveTopics = await loadGrammarTopicsFromBackend();
       applyLiveGrammarTopics(liveTopics);
+    });
+
+    // MUHIM: savollarning o'zi (barcha bo'limlar uchun — grammatika, qiroa, istima va h.k.)
+    // shu yerda, mustaqil qadam sifatida yuklanadi. Ilgari bu faqat refreshQiroaFromBackend()/
+    // refreshIstimaFromBackend() ichida "yashiringan" edi — agar o'sha funksiyalar o'z ichidagi
+    // Qiroa matni yoki Istima audiosini yuklashda xatoga uchrasa, pastdagi applyLiveQuestions()
+    // qatoriga navbat kelmay, GRAMMATIKA (va boshqa bo'limlar) savollari ham sababsiz bo'sh
+    // qolib qolardi. Endi bu ikkalasidan mustaqil.
+    await safeBootStep('Savollar banki', async ()=>{
+      const liveQuestions = await loadQuestionsFromBackend();
+      applyLiveQuestions(liveQuestions);
     });
 
     await safeBootStep('Qiroa', refreshQiroaFromBackend);
@@ -7723,14 +7734,6 @@ bootApp();
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {}
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
   }
 
   async function rpc(name, body) {
