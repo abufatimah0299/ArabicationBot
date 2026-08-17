@@ -1855,6 +1855,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     Cardlarni yashirish/ko'rsatish yoki qulflash/ochish foydalanuvchi ekranida darhol aks etadi.
   </p>
   <div id="examCardAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+  <p style="font-size:12px;color:var(--text-faint);font-weight:700;margin:20px 0 10px;">
+    Umumiy grammatika bo'limi kartalari
+  </p>
+  <div id="grammarLockAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <!-- 6) GRAMMATIKA TARTIBI -->
@@ -3373,6 +3378,10 @@ function renderGrammarCategories(){
       </div>
     </div>`;
   }).join('');
+  /* Grammatika cardlari admin panelda yashirilgan/qulflangan bo'lishi mumkin — bu holat
+     localStorage/backend'dan keladi (qarang: REAL ADMIN EXTENSION, applyGrammarCardLockState).
+     innerHTML har safar qayta yozilganda shu holatni qayta tiklab qo'yamiz. */
+  if(typeof window.applyGrammarCardLockState === 'function') window.applyGrammarCardLockState();
 }
 function toggleGrammarCat(id){
   const w = document.querySelector(`.grammar-cat-wrap[data-cat="${id}"]`);
@@ -7865,6 +7874,46 @@ bootApp();
         z-index:11;
       }
 
+      /* Grammatika kategoriya cardlari uchun ham xuddi shu qulf uslubi (.exam-card.is-locked
+         bilan bir xil mantiq) — .grammar-cat-wrap allaqachon border-radius:22px va
+         overflow:hidden ega, shuning uchun overlay to'g'ridan-to'g'ri shu elementga tushadi. */
+      .grammar-cat-wrap.is-locked{
+        opacity:1;
+        pointer-events:none;
+        position:relative;
+      }
+
+      .grammar-cat-wrap.is-locked::after{
+        content:'';
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        border-radius:22px;
+        background:rgba(20,20,30,.38);
+        backdrop-filter:blur(6px);
+        -webkit-backdrop-filter:blur(6px);
+        pointer-events:auto;
+        cursor:not-allowed;
+        z-index:10;
+      }
+
+      .grammar-cat-wrap.is-locked::before{
+        content:'';
+        position:absolute;
+        inset:0;
+        margin:auto;
+        width:40px;
+        height:40px;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+        background-repeat:no-repeat;
+        background-position:center;
+        background-size:contain;
+        filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));
+        pointer-events:none;
+        z-index:11;
+      }
+
       /* userMsgBell endi tepadagi topbar'da, dark-mode tugmasi yonida (.theme-toggle
          klassidan uslub oladi) — pastki fixed FAB o'rniga. Faqat badge shu yerda. */
       #userMsgBell{ font-size:16px; }
@@ -8073,6 +8122,7 @@ bootApp();
 
     applyExamCardState();
     applyGrammarOrder();
+    applyGrammarCardLockState();
     renderCommunityView();
     if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminQuestions();
   }
@@ -8202,12 +8252,15 @@ bootApp();
     }).join('');
   }
 
-  // Qulflangan cardga bosishni bloklash
+  // Qulflangan cardga bosishni bloklash (imtihon cardlari + grammatika kategoriya cardlari)
   document.addEventListener('click', function (e) {
     const card = e.target.closest('[data-card-id]');
-    if (!card) return;
+    const gramWrap = !card ? e.target.closest('.grammar-cat-wrap[data-cat]') : null;
 
-    const state = getCardState(card.dataset.cardId);
+    if (!card && !gramWrap) return;
+
+    const cardId = card ? card.dataset.cardId : grammarCardId(gramWrap.dataset.cat);
+    const state = getCardState(cardId);
 
     if (state && state.locked) {
       e.preventDefault();
@@ -8215,6 +8268,87 @@ bootApp();
       toast('🔒 Bu bo‘lim hozircha qulflangan');
     }
   }, true);
+
+  /* ---------- grammar category cards (lock/hide) ---------- */
+
+  function grammarCardId(catId) {
+    return 'grammar_' + catId;
+  }
+
+  function grammarCardConfigList() {
+    const cats = (typeof GRAMMAR_CATEGORIES !== 'undefined') ? GRAMMAR_CATEGORIES : [];
+    return cats.map(c => ({ id: grammarCardId(c.id), catId: c.id, title: c.name + ' (' + c.ar + ')' }));
+  }
+
+  function applyGrammarCardLockState() {
+    const cats = (typeof GRAMMAR_CATEGORIES !== 'undefined') ? GRAMMAR_CATEGORIES : [];
+
+    cats.forEach(cat => {
+      const el = document.querySelector('.grammar-cat-wrap[data-cat="' + cat.id + '"]');
+      if (!el) return;
+
+      const state = getCardState(grammarCardId(cat.id));
+
+      el.hidden = !state.visible;
+      el.classList.toggle('is-locked', !!state.locked);
+    });
+  }
+  window.applyGrammarCardLockState = applyGrammarCardLockState;
+
+  window.toggleGrammarCard = async function (catId, field, value) {
+    const cardId = grammarCardId(catId);
+
+    if (!APP_CONFIG.exam_cards[cardId]) {
+      APP_CONFIG.exam_cards[cardId] = {
+        visible: true,
+        locked: false
+      };
+    }
+
+    APP_CONFIG.exam_cards[cardId][field] = value;
+
+    renderGrammarLockAdmin();
+    applyGrammarCardLockState();
+
+    await saveExamCard(cardId);
+  };
+
+  function renderGrammarLockAdmin() {
+    const list = document.getElementById('grammarLockAdminList');
+    if (!list) return;
+
+    const cards = grammarCardConfigList();
+
+    list.innerHTML = cards.map(card => {
+      const state = getCardState(card.id);
+
+      return `
+        <div class="admin-ext-row">
+          <strong style="font-size:13px;">${card.title}</strong>
+
+          <div class="admin-ext-toggles">
+            <label>
+              <input
+                type="checkbox"
+                ${state.visible ? 'checked' : ''}
+                onchange="toggleGrammarCard('${card.catId}', 'visible', this.checked)"
+              >
+              Ko‘rinsin
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                ${state.locked ? 'checked' : ''}
+                onchange="toggleGrammarCard('${card.catId}', 'locked', this.checked)"
+              >
+              🔒 Qulflangan
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
   /* ---------- grammar order ---------- */
 
@@ -8624,7 +8758,7 @@ bootApp();
         btn.classList.toggle('active', btn.dataset.atab === tab);
       });
 
-      if (tab === 'examcards') renderExamCardAdmin();
+      if (tab === 'examcards') { renderExamCardAdmin(); renderGrammarLockAdmin(); }
       if (tab === 'gramorder') renderGrammarOrderAdmin();
       if (tab === 'sendmsg') renderSentMessages();
       if (tab === 'admins') renderAdminAdminsList();
@@ -8681,6 +8815,7 @@ bootApp();
       };
       applyExamCardState();
       applyGrammarOrder();
+      applyGrammarCardLockState();
     }
 
     await waitForAuth();
@@ -8689,6 +8824,7 @@ bootApp();
 
     renderExamCardAdmin();
     renderGrammarOrderAdmin();
+    renderGrammarLockAdmin();
 
     await refreshUserMessages();
 
