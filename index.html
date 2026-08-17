@@ -704,6 +704,23 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 }
 .rank-dropdown select:focus{ outline:none; }
 .rank-dropdown .chev{ position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-faint); }
+
+/* ---- Custom dropdown (native <select> popup'ini to'liq stillash mumkin emasligi
+   sababli — o'zimizning JS bilan yasalgan, ilova dizayniga mos ochilma ro'yxat) ---- */
+.cd-trigger{ all:unset; display:block; width:100%; box-sizing:border-box; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:800; color:var(--text); }
+.cd-value{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cd-panel{
+  position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--card); border:1.5px solid var(--border);
+  border-radius:14px; box-shadow:var(--shadow); padding:6px; z-index:80; max-height:260px; overflow-y:auto; display:none;
+}
+.cd-panel.show{ display:block; animation:asUp .15s var(--ease); }
+.cd-option{
+  display:block; width:100%; text-align:start; padding:10px 12px; border-radius:10px; border:none; background:transparent;
+  font-family:inherit; font-size:13px; font-weight:700; color:var(--text-dim); cursor:pointer; margin-bottom:2px; transition:.12s var(--ease);
+}
+.cd-option:last-child{ margin-bottom:0; }
+.cd-option:hover{ background:var(--card-alt); color:var(--text); }
+.cd-option.active{ background:var(--indigo-100); color:var(--indigo-700); }
 /* Reyting sarlavhasi qatoridagi (i) tugmasi */
 .rank-info-btn{
   width:30px; height:30px; border-radius:9px; border:1.5px solid var(--border); background:var(--card);
@@ -1617,22 +1634,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         </div>
 
         <div class="rank-filter-row">
-          <div class="rank-dropdown">
-            <label>Davr</label>
-            <select id="rankPeriodSelect">
-              <option value="hafta">Haftalik</option>
-              <option value="oy">Oylik</option>
-              <option value="hammasi">Butun davr</option>
-            </select>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          </div>
-          <div class="rank-dropdown">
-            <label>Mahorat</label>
-            <select id="rankSkillSelect">
-              <option value="hammasi">Barchasi</option>
-            </select>
-            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          </div>
+          <div class="rank-dropdown" id="rankPeriodDropdown"></div>
+          <div class="rank-dropdown" id="rankSkillDropdown"></div>
         </div>
 
         <div class="card rank-top-card">
@@ -1788,16 +1791,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         <!-- 3) SAVOLLAR BANKI -->
         <div class="admin-panel-body" id="adminTab-questions" style="display:none;">
           <div class="rank-filter-row" id="adminSkillFilterRow">
-            <div class="rank-dropdown">
-              <label>Mahorat</label>
-              <select id="adminSkillSelect" onchange="setAdminSkill(this.value)"></select>
-              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-            </div>
-            <div class="rank-dropdown" id="adminSubFilterWrap">
-              <label id="adminSubFilterLabel">Kategoriya</label>
-              <select id="adminSubFilterSelect" onchange="setAdminSubFilter(this.value)"></select>
-              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-            </div>
+            <div class="rank-dropdown" id="adminSkillDropdown"></div>
+            <div class="rank-dropdown" id="adminSubFilterDropdown"></div>
           </div>
           <div class="admin-toolbar">
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:700;" id="adminQuestionsCount"></div>
@@ -3885,22 +3880,30 @@ async function clearAllExamHistory(){
 let adminActiveSkill = 'qiroa';
 let adminSubFilter = 'all';
 function renderAdminSkillFilters(){
-  const skillSel = document.getElementById('adminSkillSelect');
-  skillSel.innerHTML = SKILLS.map(s=>`<option value="${s.id}" ${s.id===adminActiveSkill?'selected':''}>${s.name}</option>`).join('');
+  let subLabel = 'Kategoriya', subItems = [];
+  if(adminActiveSkill==='grammatika'){ subLabel = 'Kategoriya'; subItems = GRAMMAR_CATEGORIES; }
+  else if(adminActiveSkill==='qiroa'){ subLabel = 'Juz'; subItems = QIROA_JUZ; }
+  else if(adminActiveSkill==='istima'){ subLabel = 'Qism'; subItems = ISTIMA_JUZ; }
+  else if(adminActiveSkill==='muhavara'){ subLabel = 'Qism'; subItems = MUHAVARA_PARTS; }
+  else if(adminActiveSkill==='kitaba'){ subLabel = 'Qism'; subItems = KITABA_PARTS; }
 
-  const subLabel = document.getElementById('adminSubFilterLabel');
-  const subSel = document.getElementById('adminSubFilterSelect');
-  const subWrap = document.getElementById('adminSubFilterWrap');
-  let subItems = [];
-  if(adminActiveSkill==='grammatika'){ subLabel.textContent = 'Kategoriya'; subItems = GRAMMAR_CATEGORIES; }
-  else if(adminActiveSkill==='qiroa'){ subLabel.textContent = 'Juz'; subItems = QIROA_JUZ; }
-  else if(adminActiveSkill==='istima'){ subLabel.textContent = 'Qism'; subItems = ISTIMA_JUZ; }
-  else if(adminActiveSkill==='muhavara'){ subLabel.textContent = 'Qism'; subItems = MUHAVARA_PARTS; }
-  else if(adminActiveSkill==='kitaba'){ subLabel.textContent = 'Qism'; subItems = KITABA_PARTS; }
-  else { subItems = []; }
+  initCustomDropdown('adminSkillDropdown', {
+    label: 'Mahorat',
+    options: SKILLS.map(s=>({value:s.id, label:s.name})),
+    value: adminActiveSkill,
+    onChange: (val)=> setAdminSkill(val),
+  });
 
+  const subWrap = document.getElementById('adminSubFilterDropdown');
   if(subWrap) subWrap.style.display = subItems.length ? '' : 'none';
-  subSel.innerHTML = `<option value="all">Barchasi</option>` + subItems.map(it=>`<option value="${it.id}" ${it.id===adminSubFilter?'selected':''}>${it.name}</option>`).join('');
+  if(subItems.length){
+    initCustomDropdown('adminSubFilterDropdown', {
+      label: subLabel,
+      options: [{value:'all', label:'Barchasi'}].concat(subItems.map(it=>({value:it.id, label:it.name}))),
+      value: adminSubFilter,
+      onChange: (val)=> setAdminSubFilter(val),
+    });
+  }
 }
 function renderAdminQuestions(){
   renderAdminSkillFilters();
@@ -4128,6 +4131,59 @@ function rowMenuChoose(id, i){
   if(!it || it.disabled) return;
   setTimeout(()=>{ it.run(); }, 180);
 }
+
+/* ---- Custom dropdown (native <select> popup'ini ilova dizayniga mos qilib
+   bo'yash mumkin emasligi sababli — to'liq JS bilan yasalgan almashtiruvchi). ----
+   initCustomDropdown('wrapId', { label, options:[{value,label}], value, onChange }) */
+let CUSTOM_DROPDOWN_STATE = {};
+function initCustomDropdown(id, config){
+  CUSTOM_DROPDOWN_STATE[id] = { ...config };
+  renderCustomDropdown(id);
+}
+function updateCustomDropdown(id, patch){
+  const st = CUSTOM_DROPDOWN_STATE[id];
+  if(!st) return;
+  Object.assign(st, patch);
+  renderCustomDropdown(id);
+}
+function renderCustomDropdown(id){
+  const st = CUSTOM_DROPDOWN_STATE[id];
+  const wrap = document.getElementById(id);
+  if(!st || !wrap) return;
+  wrap.classList.add('cd-wrap');
+  const opt = st.options.find(o=>o.value===st.value) || st.options[0];
+  wrap.innerHTML = `
+    <label>${escapeHtml(st.label)}</label>
+    <button type="button" class="cd-trigger"><span class="cd-value">${escapeHtml(opt?opt.label:'')}</span></button>
+    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="cd-panel" id="${id}__panel">
+      ${st.options.map(o=>`<button type="button" class="cd-option ${o.value===st.value?'active':''}" data-dd-id="${id}" data-dd-val="${escapeHtml(o.value)}">${escapeHtml(o.label)}</button>`).join('')}
+    </div>
+  `;
+}
+document.addEventListener('click', (e)=>{
+  const optBtn = e.target.closest('.cd-option');
+  if(optBtn){
+    const id = optBtn.dataset.ddId, val = optBtn.dataset.ddVal;
+    const st = CUSTOM_DROPDOWN_STATE[id];
+    if(st){
+      st.value = val;
+      renderCustomDropdown(id);
+      if(st.onChange) st.onChange(val);
+    }
+    return;
+  }
+  const trigger = e.target.closest('.cd-trigger');
+  if(trigger){
+    const wrapEl = trigger.closest('.cd-wrap');
+    const panel = wrapEl ? document.getElementById(wrapEl.id + '__panel') : null;
+    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p !== panel) p.classList.remove('show'); });
+    if(panel) panel.classList.toggle('show');
+    return;
+  }
+  document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
+});
+
 const IB_ICON_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
 const IB_ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>`;
 const IB_ICON_MINUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>`;
@@ -5733,19 +5789,23 @@ function renderRank(period, skill){
   renderPodium(period, skill);
   renderLeaderboard(period, skill);
 }
-/* Mahorat dropdown filtrini SKILLS ro'yxatidan avtomatik yasaydi — shu bilan
-   bo'lim nomlari boshqa joylar bilan (skill hub, tarix va h.k.) doim mos keladi. */
-(function initRankSkillFilter(){
-  const sel = document.getElementById('rankSkillSelect');
-  const opts = ['<option value="hammasi">Barchasi</option>']
-    .concat(SKILLS.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`));
-  sel.innerHTML = opts.join('');
-  sel.addEventListener('change', ()=>{
-    renderRank(currentRankPeriod, sel.value);
-  });
-})();
-document.getElementById('rankPeriodSelect').addEventListener('change', e=>{
-  renderRank(e.target.value, currentRankSkill);
+/* Mahorat va Davr filtrlarini custom dropdown (JS) sifatida yasaydi — SKILLS
+   ro'yxatidan avtomatik, shu bilan bo'lim nomlari boshqa joylar bilan mos keladi. */
+initCustomDropdown('rankSkillDropdown', {
+  label: 'Mahorat',
+  options: [{value:'hammasi', label:'Barchasi'}].concat(SKILLS.map(s=>({value:s.id, label:s.name}))),
+  value: currentRankSkill,
+  onChange: (val)=> renderRank(currentRankPeriod, val),
+});
+initCustomDropdown('rankPeriodDropdown', {
+  label: 'Davr',
+  options: [
+    {value:'hafta', label:'Haftalik'},
+    {value:'oy', label:'Oylik'},
+    {value:'hammasi', label:'Butun davr'},
+  ],
+  value: currentRankPeriod,
+  onChange: (val)=> renderRank(val, currentRankSkill),
 });
 renderRank(currentRankPeriod, currentRankSkill);
 
