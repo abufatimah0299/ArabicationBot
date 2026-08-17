@@ -1638,6 +1638,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <div class="si-text"><div class="t">Mavzu</div><div class="s" id="themeSettingSub">Qorong'i mavzu</div></div>
             <label class="switch"><input type="checkbox" id="themeSettingSwitch" onchange="toggleTheme()"><span class="switch-track"></span></label>
           </div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">🖼️</div>
+            <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
+            <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
+          </div>
           <div class="settings-item" onclick="toast('Chiqish tasdiqlash oynasi tez orada')">
             <div class="si-icon" style="background:var(--red-bg);color:var(--red);">🚪</div>
             <div class="si-text"><div class="t" style="color:var(--red);">Akkauntdan chiqish</div></div>
@@ -1657,8 +1662,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         </div>
 
         <div class="rank-type-toggle" id="rankTypeToggle">
-          <button class="rank-type-btn active" data-type="tanal">At-Tanal</button>
-          <button class="rank-type-btn" data-type="cefr" onclick="toast('CEFR reytingi tez orada qo\'shiladi')">CEFR</button>
+          <button type="button" class="rank-type-btn active" data-type="tanal">At-Tanal</button>
+          <button type="button" class="rank-type-btn" data-type="cefr">CEFR</button>
         </div>
 
         <div class="rank-filter-row">
@@ -2875,6 +2880,9 @@ function toggleTheme(){
   let saved = null;
   try{ saved = localStorage.getItem('arabication-theme'); }catch(e){}
   applyTheme(saved==='light' ? 'light' : 'dark');
+})();
+(function initAvatarSetting(){
+  applyAvatarSetting();
 })();
 
 /* ---------------- Imtihon matn o'lchami (barcha bo'limlar uchun umumiy) ----------------
@@ -5806,18 +5814,20 @@ let rankLoaded = false;
 /* Backenddan kelgan xom leaderboard qatorlari shu yerda saqlanadi — davr (hafta/oy/
    hammasi) va mahorat (grammatika/qiroa/istima/muhavara/kitaba/hammasi) filtrlari
    endi RENDER vaqtida qo'llanadi (pastga qarang: sortedRank), shu sabab ular
-   kombinatsiyalanib ishlay oladi.
-   MUHIM: bu yerda xp=0 bo'lgan foydalanuvchilarni ELIMINATSIYA QILMAYMIZ — chunki
-   ko'plab yangi foydalanuvchilar hali XP to'plamagan bo'lishi mumkin, lekin baribir
-   reytingda (0-o'rinda) ko'rinishi kerak. */
+   kombinatsiyalanib ishlay oladi. Endi tepadagi "Imtihon turi" (At-Tanal/CEFR)
+   tugmalari ham xuddi shunday haqiqiy filtr sifatida ishlaydi (pastga qarang:
+   currentRankType, renderRank).
+   MUHIM: XP=0 bo'lgan foydalanuvchilar reytingda umuman ko'rsatilmaydi — faqat
+   kamida 1 XP to'plagan foydalanuvchilar ro'yxatga kiradi (pastga qarang: sortedRank). */
 let RANK_RAW_ROWS = [];
 function applyLiveLeaderboard(rows){
   rankLoaded = true; // backenddan javob (bo'sh bo'lsa ham) keldi — endi "Yuklanmoqda" ko'rsatilmaydi
   RANK_RAW_ROWS = Array.isArray(rows) ? rows : [];
-  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod, currentRankSkill);
+  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 }
 let currentRankPeriod = 'hafta';
 let currentRankSkill = 'hammasi'; // 'hammasi' yoki SKILLS ichidagi id (grammatika/qiroa/istima/muhavara/kitaba)
+let currentRankType = 'tanal';    // 'tanal' yoki 'cefr' — tepadagi Imtihon turi filtri
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 /* Mahorat (bo'lim) va davrga qarab XP ustuni nomini tanlaydi.
    DIQQAT: hozirgi leaderboard_view'da faqat umumiy XP bor (total_xp) — mahorat va
@@ -5864,20 +5874,28 @@ function sortedRank(period, skill){
       me: String(rid) === String(myId),
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
-  });
+  })
+  .filter(u=>u.xp > 0); // XP to'plamagan foydalanuvchilar reytingda ko'rsatilmaydi
   return list.sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
 }
 /* Profil rasmi bor bo'lsa uni, bo'lmasa harflardan iborat rangli doirani chizadi.
-   Rasm yuklanmasa (buzilgan URL va h.k.) avtomatik harflarga qaytadi. */
+   Rasm yuklanmasa (buzilgan URL va h.k.) avtomatik harflarga qaytadi.
+   O'zingizning qatoringizda "Profil rasmini ko'rsatish" sozlamasi o'chirilgan bo'lsa,
+   reyting/podiumda ham rasm o'rniga harf ko'rsatiladi. */
 function rankAvatarHTML(u, color){
   const initialsText = escapeHtml(initials(u.name));
-  if(u.photo){
+  const hideOwnPhoto = u.me && !getShowAvatarSetting();
+  if(u.photo && !hideOwnPhoto){
     return `<img src="${escapeHtml(u.photo)}" alt="" data-fallback="${initialsText}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:this.dataset.fallback}))">`;
   }
   return initialsText;
 }
-function renderPodium(period, skill){
+function renderPodium(period, skill, type){
   const podiumEl = document.getElementById('podium');
+  if(type === 'cefr'){
+    podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;">CEFR reytingi tez orada qo'shiladi</div>`;
+    return;
+  }
   if(!rankLoaded){
     podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Reyting yuklanmoqda…</div>`;
     return;
@@ -5900,8 +5918,12 @@ function renderPodium(period, skill){
     </div>`;
   }).join('');
 }
-function renderLeaderboard(period, skill){
+function renderLeaderboard(period, skill, type){
   const listEl = document.getElementById('leaderboardList');
+  if(type === 'cefr'){
+    listEl.innerHTML = `<div class="loading-inline">CEFR reytingi tez orada qo'shiladi</div>`;
+    return;
+  }
   if(!rankLoaded){
     listEl.innerHTML = Array.from({length:5}).map(()=>`
       <div class="skel-row">
@@ -5930,7 +5952,15 @@ function renderLeaderboard(period, skill){
     </div>
   `).join('');
 }
-function renderRankTop(period, skill){
+function renderRankTop(period, skill, type){
+  if(type === 'cefr'){
+    document.getElementById('rankNum').textContent = '—';
+    document.getElementById('rankXpNum').textContent = '—';
+    document.getElementById('rankGapNum').textContent = '—';
+    document.getElementById('rankGapText').innerHTML = "CEFR reytingi tez orada qo'shiladi";
+    document.getElementById('rankGapBar').style.width = '0%';
+    return;
+  }
   if(!rankLoaded){
     document.getElementById('rankNum').textContent = '—';
     document.getElementById('rankXpNum').textContent = '—';
@@ -5964,20 +5994,31 @@ function renderRankTop(period, skill){
     document.getElementById('rankGapBar').style.width = '100%';
   }
 }
-function renderRank(period, skill){
+function renderRank(period, skill, type){
   currentRankPeriod = period;
   currentRankSkill = skill;
-  renderRankTop(period, skill);
-  renderPodium(period, skill);
-  renderLeaderboard(period, skill);
+  currentRankType = type || currentRankType || 'tanal';
+  renderRankTop(period, skill, currentRankType);
+  renderPodium(period, skill, currentRankType);
+  renderLeaderboard(period, skill, currentRankType);
 }
+/* Tepadagi "Imtihon turi" (At-Tanal/CEFR) — endi Davr/Mahorat dropdownlari kabi
+   haqiqiy filtr sifatida ishlaydi: bosilganda holat (currentRankType) o'zgaradi
+   va reyting shu turga mos qayta chiziladi. CEFR uchun hozircha backendda
+   ma'lumot yo'q, shu sabab tegishli "tez orada" holati ko'rsatiladi. */
+document.getElementById('rankTypeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('.rank-type-btn'); if(!btn) return;
+  document.querySelectorAll('#rankTypeToggle .rank-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRank(currentRankPeriod, currentRankSkill, btn.dataset.type);
+});
 /* Mahorat va Davr filtrlarini custom dropdown (JS) sifatida yasaydi — SKILLS
    ro'yxatidan avtomatik, shu bilan bo'lim nomlari boshqa joylar bilan mos keladi. */
 initCustomDropdown('rankSkillDropdown', {
   label: 'Mahorat',
   options: [{value:'hammasi', label:'Barchasi'}].concat(SKILLS.map(s=>({value:s.id, label:s.name}))),
   value: currentRankSkill,
-  onChange: (val)=> renderRank(currentRankPeriod, val),
+  onChange: (val)=> renderRank(currentRankPeriod, val, currentRankType),
 });
 initCustomDropdown('rankPeriodDropdown', {
   label: 'Davr',
@@ -5987,9 +6028,9 @@ initCustomDropdown('rankPeriodDropdown', {
     {value:'hammasi', label:'Butun davr'},
   ],
   value: currentRankPeriod,
-  onChange: (val)=> renderRank(val, currentRankSkill),
+  onChange: (val)=> renderRank(val, currentRankSkill, currentRankType),
 });
-renderRank(currentRankPeriod, currentRankSkill);
+renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 
 /* ================= PROFILE ================= */
 /* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
@@ -6067,7 +6108,7 @@ function openEditProfile(){
   document.getElementById('modalOverlay').classList.add('show');
 }
 function avatarContent(){
-  if(TELEGRAM_PROFILE.photoUrl){
+  if(TELEGRAM_PROFILE.photoUrl && getShowAvatarSetting()){
     return `<img src="${TELEGRAM_PROFILE.photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
   }
   const initial = (TELEGRAM_PROFILE.name || '?').trim().charAt(0).toUpperCase();
@@ -6082,6 +6123,38 @@ function saveProfile(){
   document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}`;
   closeModal();
   toast('Profil yangilandi ✅');
+}
+
+/* ---------------- Profil rasmini ko'rsatish / yashirish sozlamasi ----------------
+   localStorage'da saqlanadi (mavzu tanlovi kabi) — yoqilgan bo'lsa (default holat)
+   Telegram profil rasmi header, profil sahifasi va reyting(sizning qatoringiz)da
+   ko'rinadi; o'chirilsa hamma joyda ism harfidan iborat doiraga almashadi. */
+function getShowAvatarSetting(){
+  let v = null;
+  try{ v = localStorage.getItem('arabication-show-avatar'); }catch(e){}
+  return v !== 'off'; // default: yoqilgan
+}
+function applyAvatarSetting(){
+  const on = getShowAvatarSetting();
+  const sw = document.getElementById('avatarSettingSwitch');
+  const sub = document.getElementById('avatarSettingSub');
+  if(sw) sw.checked = on;
+  if(sub) sub.textContent = on ? "Telegram profil rasmingiz ko'rinadi" : "Profil rasmingiz o'rniga harf ko'rsatiladi";
+  try{
+    const topAvatar = document.getElementById('topAvatar');
+    if(topAvatar) topAvatar.innerHTML = avatarContent();
+    const pa = document.getElementById('profileAvatar');
+    if(pa) pa.innerHTML = avatarContent();
+    if(document.getElementById('view-rank')?.classList.contains('active')){
+      renderRank(currentRankPeriod, currentRankSkill, currentRankType);
+    }
+  }catch(e){ /* TELEGRAM_PROFILE hali ishga tushmagan bo'lishi mumkin — bootApp keyinroq chaqiradi */ }
+}
+function toggleAvatarVisibility(){
+  const next = getShowAvatarSetting() ? 'off' : 'on';
+  try{ localStorage.setItem('arabication-show-avatar', next); }catch(e){}
+  applyAvatarSetting();
+  toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
 }
 
 /* ---------------- Question banks ---------------- */
