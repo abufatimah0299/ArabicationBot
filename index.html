@@ -115,50 +115,15 @@ body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-n
 .option, .filter-chip, .rank-type-btn, .detail-btn, .icon-edit-btn, .form-field input, .form-field select, .form-field textarea{
   transition:background-color .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
 }
-.app{ display:flex; min-height:100vh; }
+.app{ display:flex; justify-content:center; min-height:100vh; width:100%; }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar (yashirilgan) ---------- */
 .sidebar{
-  width:246px; flex-shrink:0;
-  background:rgba(23,35,29,0.82);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  border-inline-end:1px solid var(--border);
-  display:flex; flex-direction:column; padding:22px 16px;
-  position:sticky; top:0; height:100vh; z-index:40;
-  order:1;
+  display:none !important;
 }
-html[data-theme="light"] .sidebar{
-  background:rgba(255,255,255,0.85);
-}
-.main{ order:2; }
-.brand{ display:flex; align-items:center; gap:12px; padding:4px 8px 22px 8px; }
-.brand-mark{
-  width:40px; height:40px; border-radius:12px;
-  background:linear-gradient(155deg, var(--indigo-600), var(--indigo-900));
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
-  color:#fff; font-family:'Amiri', serif; font-weight:700; font-size:20px;
-  box-shadow:0 4px 12px -3px rgba(18,167,104,0.35);
-}
-.brand-mark img{ width:100%; height:100%; object-fit:cover; display:block; }
-.brand-text{ font-weight:800; font-size:16.5px; line-height:1.15; letter-spacing:-0.2px;}
-.brand-sub{ font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px;}
-
-nav.navlist{ display:flex; flex-direction:column; gap:4px; margin-top:6px; }
-.navlink{
-  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px;
-  color:var(--text-dim); font-weight:600; font-size:14px; cursor:pointer;
-  border:none; background:none; width:100%; text-align:left; direction:ltr; flex-direction:row; justify-content:flex-start;
-  transition:all .2s var(--ease);
-}
-.navlink svg{ width:20px; height:20px; flex-shrink:0; }
-.navlink:hover{ background:var(--indigo-100); color:var(--indigo-500); transform:translateX(2px); }
-.navlink.active{ background:var(--indigo-700); color:#fff; box-shadow:0 4px 12px -3px rgba(18,167,104,0.45);}
-
-.sidebar-bottom{ margin-top:auto; }
 
 /* ---------- Topbar ---------- */
-.main{ flex:1; min-width:0; }
+.main{ flex:1; min-width:0; width:100%; max-width:880px; margin:0 auto; }
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
   padding:20px 32px; gap:16px; flex-wrap:nowrap;
@@ -1728,71 +1693,74 @@ html[data-theme="light"] .toast-item{
 .back-row:hover{ color:var(--indigo-700); }
 .back-row svg{ width:16px; height:16px; }
 
-/* Responsive */
+/* Responsive & Bottom Nav */
 .overlay{ display:none; }
-.bottom-nav{ display:none; }
+.menu-btn{ display:none !important; }
+.bottom-nav{
+  display:flex !important;
+  align-items:flex-end;
+  justify-content:space-around;
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(580px, calc(100vw - 24px));
+  bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  z-index:45;
+  background:rgba(20,35,28,0.85);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:28px;
+  padding:10px 4px 8px 4px;
+  box-shadow:0 12px 36px -8px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.25);
+}
+html[data-theme="light"] .bottom-nav{
+  background:rgba(255,255,255,0.88);
+  border:1px solid rgba(22,100,68,0.12);
+  box-shadow:0 12px 34px -8px rgba(22,100,68,0.14), 0 2px 8px rgba(22,100,68,0.04);
+}
+.bn-btn{
+  flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:2px 2px;
+  background:none; border:none; font-family:inherit; color:var(--text-faint); cursor:pointer;
+  font-size:11px; font-weight:700; border-radius:12px; position:relative; overflow:visible;
+}
+.bn-btn span{
+  transition:color .25s var(--ease), font-weight .2s var(--ease);
+  white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:100%;
+  line-height:1.1; margin-top:0px;
+}
+.bn-icon{
+  width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:var(--text-faint); flex-shrink:0;
+  transition:transform .35s var(--ease), background .3s var(--ease), box-shadow .35s var(--ease), color .3s var(--ease);
+}
+.bn-btn svg{ width:21px; height:21px; flex-shrink:0; }
+.bn-btn:active .bn-icon{ transform:scale(.92); }
+.bn-btn.active:active .bn-icon{ transform:translateY(-20px) scale(1.05); }
+.bn-btn.active{ color:var(--indigo-500); }
+.bn-btn.active span{ color:var(--indigo-500); font-weight:800; }
+.bn-btn.active .bn-icon{
+  transform:translateY(-20px) scale(1.12);
+  background:linear-gradient(155deg, var(--indigo-500), var(--indigo-700));
+  color:#fff;
+  box-shadow:0 0 0 6px var(--card-alt), 0 10px 22px -6px rgba(18,167,104,0.45);
+  animation:bnPop .45s var(--ease);
+}
+@keyframes bnPop{
+  0%{ transform:translateY(-8px) scale(.88); }
+  55%{ transform:translateY(-24px) scale(1.16); }
+  100%{ transform:translateY(-20px) scale(1.12); }
+}
+.content{ padding:0 16px calc(116px + env(safe-area-inset-bottom, 0px)) 16px; }
+
 @media (max-width:980px){
   .grid5{ grid-template-columns:repeat(2,1fr); }
   .grid4{ grid-template-columns:repeat(2,1fr); }
   .grid3{ grid-template-columns:1fr; }
   .grid2{ grid-template-columns:1fr; }
   .quiz-wrap{ grid-template-columns:1fr; }
-  .sidebar{ position:fixed; inset-inline-start:0; transform:translateX(-110%); transition:.25s; box-shadow:0 0 0 100vmax rgba(0,0,0,0); width:250px; }
-  .sidebar.open{ transform:translateX(0); }
-  .menu-btn{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--card); cursor:pointer; color:var(--text); }
-  .content{ padding:0 16px calc(116px + env(safe-area-inset-bottom, 0px)) 16px; }
   .topbar{ padding:16px; }
-  .overlay.show{ display:block; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:35; }
-  .bottom-nav{
-    display:flex; align-items:flex-end; justify-content:space-around;
-    position:fixed; inset-inline-start:12px; inset-inline-end:12px;
-    bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:45;
-    background:rgba(20,35,28,0.85);
-    backdrop-filter:blur(24px);
-    -webkit-backdrop-filter:blur(24px);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:28px;
-    padding:10px 4px 8px 4px;
-    box-shadow:0 12px 36px -8px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.25);
-  }
-  html[data-theme="light"] .bottom-nav{
-    background:rgba(255,255,255,0.88);
-    border:1px solid rgba(22,100,68,0.12);
-    box-shadow:0 12px 34px -8px rgba(22,100,68,0.14), 0 2px 8px rgba(22,100,68,0.04);
-  }
-  .bn-btn{
-    flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:2px; padding:2px 2px;
-    background:none; border:none; font-family:inherit; color:var(--text-faint); cursor:pointer;
-    font-size:11px; font-weight:700; border-radius:12px; position:relative; overflow:visible;
-  }
-  .bn-btn span{
-    transition:color .25s var(--ease), font-weight .2s var(--ease);
-    white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:100%;
-    line-height:1.1; margin-top:0px;
-  }
-  .bn-icon{
-    width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    color:var(--text-faint); flex-shrink:0;
-    transition:transform .35s var(--ease), background .3s var(--ease), box-shadow .35s var(--ease), color .3s var(--ease);
-  }
-  .bn-btn svg{ width:21px; height:21px; flex-shrink:0; }
-  .bn-btn:active .bn-icon{ transform:scale(.92); }
-  .bn-btn.active:active .bn-icon{ transform:translateY(-20px) scale(1.05); }
-  .bn-btn.active{ color:var(--indigo-500); }
-  .bn-btn.active span{ color:var(--indigo-500); font-weight:800; }
-  .bn-btn.active .bn-icon{
-    transform:translateY(-20px) scale(1.12);
-    background:linear-gradient(155deg, var(--indigo-500), var(--indigo-700));
-    color:#fff;
-    box-shadow:0 0 0 6px var(--card-alt), 0 10px 22px -6px rgba(18,167,104,0.45);
-    animation:bnPop .45s var(--ease);
-  }
-  @keyframes bnPop{
-    0%{ transform:translateY(-8px) scale(.88); }
-    55%{ transform:translateY(-24px) scale(1.16); }
-    100%{ transform:translateY(-20px) scale(1.12); }
-  }
 }
 </style>
 </head>
@@ -1847,9 +1815,6 @@ html[data-theme="light"] .toast-item{
   <main class="main">
     <div class="topbar hero-banner" id="mainTopbar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="menu-btn" id="menuBtn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
         <div class="hello" id="topGreeting">
           <h1 id="greetingName">Assalomu alaykum! 👋</h1>
           <p id="greetingSub">Yuklanmoqda...</p>
@@ -1871,33 +1836,6 @@ html[data-theme="light"] .toast-item{
 
       <!-- ============ DASHBOARD ============ -->
       <div class="view active" id="view-dashboard">
-        <div class="grid3 stagger" style="grid-template-columns:1fr;">
-          <div class="card" style="padding:20px;">
-            <h3 style="font-size:14.5px;font-weight:800;margin-bottom:14px;">Bugungi mashg'ulot</h3>
-            <div class="lesson-item" onclick="startQuiz('istima', 'Istima — Kundalik suhbat')">
-              <div class="lesson-icon" style="background:var(--istima-bg);color:var(--istima);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-              </div>
-              <div><div class="t">Istima — 10 savol</div><div class="s">8 daqiqa</div></div>
-              <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-            </div>
-            <div class="lesson-item" onclick="openTopic('kan-va-opa-singillari')">
-              <div class="lesson-icon" style="background:var(--indigo-100);color:var(--indigo-700);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              </div>
-              <div><div class="t">كان va uning opa-singillari</div><div class="s">10 ta test</div></div>
-              <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-            </div>
-            <div class="lesson-item" onclick="startKitabaExam()">
-              <div class="lesson-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              </div>
-              <div><div class="t">Kitaba — Yozma topshiriq</div><div class="s">3 ta qism</div></div>
-              <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-            </div>
-            <button class="start-btn" data-view="attanal">Mashg'ulotni boshlash</button>
-          </div>
-        </div>
       </div>
 
       <!-- ============ AT-TANAL HUB ============ -->
@@ -2238,9 +2176,6 @@ html[data-theme="light"] .toast-item{
           </div>
         </div>
 
-        <div class="section-title">O'rganish statistikasi</div>
-        <div class="grid4 stagger" id="profileStats"></div>
-
         <div class="card settings-list">
           <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
             <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">🛠️</div>
@@ -2254,7 +2189,7 @@ html[data-theme="light"] .toast-item{
           </div>
           <div class="settings-item" data-view="sozlamalar">
             <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">⚙️</div>
-            <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma, mavzu va hisob sozlamalari</div></div>
+            <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma va profil sozlamalari</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
         </div>
@@ -2277,18 +2212,9 @@ html[data-theme="light"] .toast-item{
             <label class="switch"><input type="checkbox" checked onchange="toast(this.checked ? 'Eslatmalar yoqildi' : 'Eslatmalar o\'chirildi')"><span class="switch-track"></span></label>
           </div>
           <div class="settings-item">
-            <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🌐</div>
-            <div class="si-text"><div class="t">Mavzu</div><div class="s" id="themeSettingSub">Qorong'i mavzu</div></div>
-            <label class="switch"><input type="checkbox" id="themeSettingSwitch" onchange="toggleTheme()"><span class="switch-track"></span></label>
-          </div>
-          <div class="settings-item">
             <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">🖼️</div>
             <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
-          </div>
-          <div class="settings-item" onclick="toast('Chiqish tasdiqlash oynasi tez orada')">
-            <div class="si-icon" style="background:var(--red-bg);color:var(--red);">🚪</div>
-            <div class="si-text"><div class="t" style="color:var(--red);">Akkauntdan chiqish</div></div>
           </div>
         </div>
       </div>
@@ -3788,14 +3714,19 @@ document.querySelectorAll('[data-view]').forEach(el=>{
   el.addEventListener('click', ()=> showView(el.dataset.view));
 });
 
-/* mobile sidebar */
+/* mobile sidebar (agar mavjud bo'lsa) */
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
-document.getElementById('menuBtn').addEventListener('click', ()=>{
-  sidebar.classList.add('open'); overlay.classList.add('show');
-});
-overlay.addEventListener('click', closeSidebar);
-function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+const menuBtn = document.getElementById('menuBtn');
+if(menuBtn && sidebar && overlay){
+  menuBtn.addEventListener('click', ()=>{
+    sidebar.classList.add('open'); overlay.classList.add('show');
+  });
+}
+if(overlay){
+  overlay.addEventListener('click', closeSidebar);
+}
+function closeSidebar(){ if(sidebar) sidebar.classList.remove('open'); if(overlay) overlay.classList.remove('show'); }
 
 /* view-dashboard is default active in HTML already */
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
@@ -4889,6 +4820,48 @@ async function clearAllExamHistory(){
 }
 
 /* ---- 3) SAVOLLAR BANKI ---- */
+/* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
+   qo'shish tugmalarini ko'rsatadi, backup/import/tozalash har doim bir xil qoladi. ---- */
+const AS_ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
+/* Mavzu/test qatorlaridagi amal tugmalari uchun umumiy ikonkalar */
+const IB_ICON_VIEW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/></svg>`;
+const IB_ICON_ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
+const IB_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+const IB_ICON_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+const IB_ICON_DOTS = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
+/* ---- Mavzu/test qatorlari uchun umumiy 3-nuqtali "Amallar" menyusi ----
+   Har bir qator o'z amallar ro'yxatini (ko'rish/qo'shish/tahrirlash/o'chirish)
+   ROW_MENU_REGISTRY'ga ro'yxatdan o'tkazadi, tugma bosilganda shu ro'yxat
+   pastdan chiqadigan action-sheet'da jadval qilib ko'rsatiladi. */
+let ROW_MENU_REGISTRY = {};
+let ROW_MENU_SEQ = 0;
+function rowMenuBtn(items, title){
+  const id = 'rm' + (++ROW_MENU_SEQ);
+  ROW_MENU_REGISTRY[id] = { items, title: title || 'Amallar' };
+  return `<button type="button" class="icon-btn ib-menu" title="Amallar" onclick="openRowMenu('${id}')">${IB_ICON_DOTS}</button>`;
+}
+function openRowMenu(id){
+  const entry = ROW_MENU_REGISTRY[id];
+  if(!entry) return;
+  document.getElementById('rowMenuTitle').textContent = entry.title;
+  const list = document.getElementById('rowMenuList');
+  list.innerHTML = entry.items.map((it,i)=>`
+    <button type="button" class="as-row ${it.danger?'danger':''}" ${it.disabled?'disabled style="opacity:.4;cursor:not-allowed;"':''} onclick="rowMenuChoose('${id}',${i})">
+      <span class="as-icon ${it.danger?'r':'b'}">${it.icon}</span>
+      <span class="as-t">${it.label}</span>
+      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>`).join('');
+  document.getElementById('rowMenuOverlay').classList.add('show');
+}
+function closeRowMenu(){ document.getElementById('rowMenuOverlay').classList.remove('show'); }
+function rowMenuChoose(id, i){
+  const entry = ROW_MENU_REGISTRY[id];
+  const it = entry && entry.items[i];
+  closeRowMenu();
+  if(!it || it.disabled) return;
+  setTimeout(()=>{ it.run(); }, 180);
+}
+
 let adminActiveSkill = 'qiroa';
 let adminSubFilter = 'all';
 function renderAdminSkillFilters(){
@@ -5102,48 +5075,6 @@ function renderAdminQuestions(){
 }
 function setAdminSkill(id){ adminActiveSkill = id; adminSubFilter = 'all'; renderAdminQuestions(); }
 function setAdminSubFilter(val){ adminSubFilter = val; renderAdminQuestions(); }
-
-/* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
-   qo'shish tugmalarini ko'rsatadi, backup/import/tozalash har doim bir xil qoladi. ---- */
-const AS_ICON_PLUS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
-/* Mavzu/test qatorlaridagi amal tugmalari uchun umumiy ikonkalar */
-const IB_ICON_VIEW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/></svg>`;
-const IB_ICON_ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`;
-const IB_ICON_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
-const IB_ICON_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
-const IB_ICON_DOTS = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
-/* ---- Mavzu/test qatorlari uchun umumiy 3-nuqtali "Amallar" menyusi ----
-   Har bir qator o'z amallar ro'yxatini (ko'rish/qo'shish/tahrirlash/o'chirish)
-   ROW_MENU_REGISTRY'ga ro'yxatdan o'tkazadi, tugma bosilganda shu ro'yxat
-   pastdan chiqadigan action-sheet'da jadval qilib ko'rsatiladi. */
-let ROW_MENU_REGISTRY = {};
-let ROW_MENU_SEQ = 0;
-function rowMenuBtn(items, title){
-  const id = 'rm' + (++ROW_MENU_SEQ);
-  ROW_MENU_REGISTRY[id] = { items, title: title || 'Amallar' };
-  return `<button type="button" class="icon-btn ib-menu" title="Amallar" onclick="openRowMenu('${id}')">${IB_ICON_DOTS}</button>`;
-}
-function openRowMenu(id){
-  const entry = ROW_MENU_REGISTRY[id];
-  if(!entry) return;
-  document.getElementById('rowMenuTitle').textContent = entry.title;
-  const list = document.getElementById('rowMenuList');
-  list.innerHTML = entry.items.map((it,i)=>`
-    <button type="button" class="as-row ${it.danger?'danger':''}" ${it.disabled?'disabled style="opacity:.4;cursor:not-allowed;"':''} onclick="rowMenuChoose('${id}',${i})">
-      <span class="as-icon ${it.danger?'r':'b'}">${it.icon}</span>
-      <span class="as-t">${it.label}</span>
-      <svg class="as-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-    </button>`).join('');
-  document.getElementById('rowMenuOverlay').classList.add('show');
-}
-function closeRowMenu(){ document.getElementById('rowMenuOverlay').classList.remove('show'); }
-function rowMenuChoose(id, i){
-  const entry = ROW_MENU_REGISTRY[id];
-  const it = entry && entry.items[i];
-  closeRowMenu();
-  if(!it || it.disabled) return;
-  setTimeout(()=>{ it.run(); }, 180);
-}
 
 /* ---- Custom dropdown (native <select> popup'ini ilova dizayniga mos qilib
    bo'yash mumkin emasligi sababli — to'liq JS bilan yasalgan almashtiruvchi). ----
@@ -7418,7 +7349,8 @@ async function addSpeakingQuestionToBackend(partId, prompt){
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Bir nechta Muhavara savolini bittada qo'shadi — backendda "admin_bulk_add_speaking_questions"
-   RPC talab qilinadi (kutilayotgan p_items: [{part_id, prompt}, ...]). */
+   RPC bo'lsa bitta so'rovda yuboradi, agar bazada bu funksiya hali yaratilmagan bo'lsa (404/PGRST202),
+   avtomatik ravishda "admin_add_speaking_question" orqali bittalab qo'shib chiqadi (fallback). */
 async function saveSpeakingQuestionsBulkToBackend(items){
   if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
@@ -7426,9 +7358,34 @@ async function saveSpeakingQuestionsBulkToBackend(items){
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({ p_items: items.map(it => ({ part_id: it.partId, prompt: it.prompt })) })
     });
-    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    const text = await res.text();
-    return text ? JSON.parse(text) : true;
+    if(res.ok){
+      const text = await res.text();
+      return text ? JSON.parse(text) : true;
+    }
+    // Agar admin_bulk_add_speaking_questions bazada mavjud bo'lmasa (404/PGRST202),
+    // avtomatik fallback: mavjud admin_add_speaking_question orqali birma-bir yuborish
+    if(res.status === 404 || res.status === 400){
+      let count = 0;
+      let lastErr = null;
+      for(const it of items){
+        const singleRes = await addSpeakingQuestionToBackend(it.partId, it.prompt);
+        if(singleRes){
+          count++;
+        } else {
+          lastErr = window.LAST_BACKEND_ERROR;
+        }
+      }
+      if(count > 0){
+        return { inserted_count: count };
+      }
+      if(lastErr){
+        setLastBackendError(res.status, lastErr);
+      }
+      return null;
+    }
+    const errText = await res.text();
+    setLastBackendError(res.status, errText);
+    return null;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function editSpeakingQuestionOnBackend(id, prompt){
