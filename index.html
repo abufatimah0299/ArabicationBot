@@ -65,11 +65,9 @@
   --radius-lg:24px;
   --shadow:0 4px 18px -4px rgba(0,0,0,0.35), 0 12px 36px -8px rgba(3,18,12,0.55);
   --shadow-lg:0 8px 24px -4px rgba(0,0,0,0.4), 0 24px 56px -10px rgba(3,18,12,0.65);
-  --font-sans:'Onest', sans-serif;
-  --font-ar:'Noto Sans Arabic', sans-serif;
-  --font-ar-bold:'Noto Sans Arabic', sans-serif;
-  --font-ar-card:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
-  --font-user-name:'Graphik Arabic', 'Noto Sans Arabic', 'Onest', sans-serif;
+  --font-sans:'Onest', 'Graphik Arabic', sans-serif;
+  --font-ar:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
+  --font-ar-bold:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
 }
 /* ---------- Light mode palette (Warm pastel with emerald glow) ---------- */
 html[data-theme="light"]{
@@ -109,7 +107,7 @@ html[data-theme="light"]{
 :root{ --ease:cubic-bezier(.22,.9,.32,1); }
 button, input, select, textarea{ font-family:var(--font-sans); }
 body{
-  font-family:var(--font-sans);
+  font-family:'Onest', 'Graphik Arabic', sans-serif;
   font-feature-settings:"cv02","cv03","cv04","cv11";
   background-color:#ffffff;
   background-image:
@@ -412,7 +410,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 }
 .skill-banner-icon svg{ width:26px; height:26px; }
 .skill-banner-title{ font-size:17.5px; font-weight:600; margin-bottom:7px; letter-spacing:-0.2px; }
-.skill-banner-title.ar{ font-family:var(--font-ar-card); font-size:23px; font-weight:600; }
+.skill-banner-title.ar{ font-family:var(--font-ar-bold); font-size:23px; font-weight:600; }
 .skill-banner-meta{ display:flex; align-items:center; gap:14px; font-size:12px; font-weight:600; opacity:.92; flex-wrap:wrap; }
 .skill-banner-meta span{ display:flex; align-items:center; gap:5px; white-space:nowrap; }
 .skill-banner-meta svg{ width:13px; height:13px; opacity:.9; flex-shrink:0; }
@@ -438,7 +436,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 }
 .skill-intro-icon svg{ width:32px; height:32px; }
 .skill-intro-title-wrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-.skill-intro-title-ar{ font-family:var(--font-ar-card); font-size:28px; font-weight:600; line-height:1.2; }
+.skill-intro-title-ar{ font-family:var(--font-ar-bold); font-size:28px; font-weight:600; line-height:1.2; }
 .skill-intro-title-uz{ font-size:15px; color:var(--text-dim); font-weight:600; }
 .skill-intro-desc{ font-size:14px; color:var(--text-dim); font-weight:500; line-height:1.65; margin:16px 0; }
 .skill-intro-meta{
@@ -1036,7 +1034,7 @@ html[data-theme="light"] .topic-item:hover{
 .topic-item:hover .topic-icon{ transform:scale(1.05); }
 .topic-icon svg{ width:18px; height:18px; }
 .topic-item .t{ font-size:14px; font-weight:600; }
-.topic-item .t.ar{ font-family:var(--font-ar-card); font-size:16px; font-weight:600; }
+.topic-item .t.ar{ font-family:var(--font-ar-bold); font-size:16px; font-weight:600; }
 .topic-item .s{ font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:2px;}
 .topic-mini{ margin-inline-start:auto; display:flex; align-items:center; gap:12px;}
 .topic-mini .pct{ font-size:12.5px; font-weight:600; color:var(--indigo-700);}
@@ -1086,7 +1084,7 @@ html[data-theme="light"] .topic-item:hover{
 }
 .grammar-cat-icon svg{ width:24px; height:24px; }
 .grammar-cat-main{ flex:1; min-width:0; position:relative; z-index:1; }
-.grammar-cat-name{ font-family:var(--font-ar-card); font-size:19px; font-weight:600; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.grammar-cat-name{ font-family:var(--font-ar-bold); font-size:19px; font-weight:600; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .grammar-cat-desc{ font-size:12px; color:rgba(255,255,255,0.82); font-weight:600; margin-top:4px; }
 .grammar-cat-pct{ font-size:15px; font-weight:600; flex-shrink:0; position:relative; z-index:1; }
 .grammar-cat-chev{ width:18px; height:18px; flex-shrink:0; transition:transform .35s cubic-bezier(0.16, 1, 0.3, 1); position:relative; z-index:1; }
@@ -1330,7 +1328,7 @@ html[data-theme="light"] .topic-item:hover{
 .podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:16px; overflow:hidden; border:2px solid rgba(255,255,255,0.2); }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; border-color:#E3A83F; box-shadow:0 0 16px rgba(227,168,63,0.4); }
 .podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
-.podium-name{ font-family:var(--font-user-name); font-size:12.5px; font-weight:500; margin-top:4px; }
+.podium-name{ font-size:12.5px; font-weight:600; margin-top:4px; }
 .podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:14px; transition:background-color .2s var(--ease), transform .15s var(--ease); }
@@ -1339,7 +1337,7 @@ html[data-theme="light"] .topic-item:hover{
 .lb-rank{ width:26px; text-align:center; font-weight:600; font-size:13px; color:var(--text-faint); flex-shrink:0; font-variant-numeric: tabular-nums; }
 .lb-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:12.5px; flex-shrink:0; overflow:hidden; }
 .lb-info{ flex:1; min-width:0; }
-.lb-info .n{ font-family:var(--font-user-name); font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
+.lb-info .n{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:600; }
 .lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:1px; }
 .lb-xp{ font-weight:600; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; }
@@ -1575,6 +1573,14 @@ html[data-theme="light"] .topic-item:hover{
 }
 .admin-tab.tab-pink:hover{
   box-shadow:0 8px 24px -2px rgba(219,39,119,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-cyan{
+  background:linear-gradient(135deg, #22D3EE 0%, #0891B2 60%, #0E7490 100%);
+  box-shadow:0 5px 16px -2px rgba(8,145,178,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-cyan:hover{
+  box-shadow:0 8px 24px -2px rgba(8,145,178,0.45), 0 3px 8px rgba(0,0,0,0.06);
 }
 .community-card{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
 .community-avatar{ width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--indigo-100); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:18px; color:var(--indigo-700); }
@@ -1960,39 +1966,26 @@ html[data-theme="light"] .bottom-nav{
 
 .dash-greeting-sub {
   font-family: 'Onest', sans-serif;
-  font-size: 17px;
+  font-size: 16.5px;
   font-weight: 500;
   color: #7E8B9B;
   letter-spacing: -0.015em;
-  margin-bottom: 10px;
-  line-height: 1.4;
+  margin-bottom: 8px;
+  line-height: 1.35;
 }
 
 html[data-theme="dark"] .dash-greeting-sub {
   color: #94A3B8;
 }
 
-.dash-user-nick,
-.user-display-name,
-#profileName,
-.rank-user-name,
-.u-name,
-.user-nick-text {
-  font-family: var(--font-user-name);
-  font-weight: 500;
-  color: inherit;
-  display: inline-block;
-  unicode-bidi: plaintext;
-}
-
 .dash-main-heading {
   font-family: 'Onest', sans-serif;
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight:600;
   color: #0F172A;
-  line-height: 1.42;
-  letter-spacing: -0.02em;
-  max-width: 560px;
+  line-height: 1.28;
+  letter-spacing: -0.03em;
+  max-width: 500px;
 }
 
 html[data-theme="dark"] .dash-main-heading {
@@ -2016,13 +2009,12 @@ html[data-theme="dark"] .dash-main-heading {
     height: 38px;
   }
   .dash-greeting-sub {
-    font-size: 16px;
-    margin-bottom: 8px;
-    line-height: 1.4;
+    font-size: 15.5px;
+    margin-bottom: 6px;
   }
   .dash-main-heading {
-    font-size: 26.5px;
-    line-height: 1.38;
+    font-size: 25px;
+    line-height: 1.26;
   }
 }
 </style>
@@ -2119,7 +2111,7 @@ html[data-theme="dark"] .dash-main-heading {
 
         <div class="card" style="margin-top:22px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
           <div>
-            <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;">To'liq At-Tanal imtihoni</h3>
+            <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;font-family:var(--font-ar-bold);">To'liq At-Tanal imtihoni</h3>
             <p style="font-size:13px;color:var(--text-dim);font-weight:600;max-width:420px;">5 mahorat bo'yicha to'liq imtihon topshirib, o'z bilimingizni sinang.</p>
           </div>
           <button class="btn btn-primary" onclick="openFullExamIntro()">Imtihonni boshlash 🎓</button>
@@ -2635,6 +2627,14 @@ html[data-theme="dark"] .dash-main-heading {
               <div class="admin-tab-title">Adminlar</div>
               <div class="admin-tab-sub">Huquqlarni boshqarish</div>
             </button>
+            <button class="admin-tab tab-cyan" data-atab="skilllimits" onclick="openAdminPanelModal('skilllimits')" style="display:none;">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                <span class="admin-tab-badge">Cheklangan</span>
+              </div>
+              <div class="admin-tab-title">Kunlik limitlar</div>
+              <div class="admin-tab-sub">Mahorat bo'yicha limit</div>
+            </button>
           </div>
         </div>
 
@@ -2787,6 +2787,14 @@ html[data-theme="dark"] .dash-main-heading {
   </div>
   <div class="section-title" style="margin-top:0;">Adminlar ro'yxati</div>
   <div id="adminAdminsList"></div>
+</div>
+
+<!-- 9) MAHORATLAR BO'YICHA KUNLIK LIMIT -->
+<div class="admin-panel-body" id="adminTab-skilllimits" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
+    Har bir mahorat (bo'lim) bo'yicha kuniga necha marta test/mashq topshirish mumkinligini shu yerdan belgilaysiz. 0 yoki bo'sh qoldirilsa — limit yo'q hisoblanadi. O'zgartirishlar darhol saqlanadi.
+  </p>
+  <div id="skillLimitsAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
         </div>
@@ -2989,10 +2997,16 @@ function setSuperAdminUI(isSuper){
   window.IS_SUPER_ADMIN = !!isSuper;
   const tabBtn = document.querySelector('#adminTabs [data-atab="admins"]');
   if(tabBtn) tabBtn.style.display = isSuper ? '' : 'none';
+  const limitsTabBtn = document.querySelector('#adminTabs [data-atab="skilllimits"]');
+  if(limitsTabBtn) limitsTabBtn.style.display = isSuper ? '' : 'none';
   // Agar hozir aynan shu tab ochiq bo'lsa-yu, huquq yo'q bo'lib qolsa — umumiy bo'limga qaytaramiz.
   if(!isSuper){
     const pane = document.getElementById('adminTab-admins');
     if(pane && pane.style.display !== 'none'){
+      showAdminTab('overview');
+    }
+    const limitsPane = document.getElementById('adminTab-skilllimits');
+    if(limitsPane && limitsPane.style.display !== 'none'){
       showAdminTab('overview');
     }
   }
@@ -3639,39 +3653,32 @@ async function loadAdminUsersFromBackend(){
 }
 
 function renderGreetingFromProfile(){
-  let fullName = '';
+  let firstName = '';
   if (TELEGRAM_PROFILE.name && TELEGRAM_PROFILE.name !== 'Mehmon' && TELEGRAM_PROFILE.name !== 'Foydalanuvchi') {
-    fullName = TELEGRAM_PROFILE.name.trim();
-  } else if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-    const u = window.Telegram.WebApp.initDataUnsafe.user;
-    fullName = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.first_name || '';
+    firstName = TELEGRAM_PROFILE.name.trim().split(' ')[0];
+  } else if (window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name) {
+    firstName = window.Telegram.WebApp.initDataUnsafe.user.first_name.trim();
   } else if (TELEGRAM_PROFILE.username) {
-    fullName = TELEGRAM_PROFILE.username.replace(/^@/, '').trim();
+    firstName = TELEGRAM_PROFILE.username.replace(/^@/, '').trim();
   }
 
   const dashGreeting = document.getElementById('dashGreetingName');
   if(dashGreeting) {
-    dashGreeting.innerHTML = fullName
-      ? `Assalamu alaykum <span class="dash-user-nick">${escapeHtml(fullName)}</span>!`
-      : `Assalamu alaykum!`;
+    dashGreeting.textContent = firstName ? `Assalamu alaykum ${firstName}!` : `Assalamu alaykum!`;
   }
 
   const dashAvatar = document.getElementById('dashUserAvatar');
   if(dashAvatar) dashAvatar.innerHTML = avatarContent();
 
   const gName = document.getElementById('greetingName');
-  if(gName) {
-    gName.innerHTML = fullName
-      ? `Assalomu alaykum, <span class="user-display-name">${escapeHtml(fullName)}</span>! 👋`
-      : `Assalomu alaykum! 👋`;
-  }
+  if(gName) gName.textContent = firstName ? `Assalomu alaykum, ${firstName}! 👋` : `Assalomu alaykum! 👋`;
 
   const topAvatar = document.getElementById('topAvatar');
   if(topAvatar) topAvatar.innerHTML = avatarContent();
   const pa = document.getElementById('profileAvatar');
   if(pa) pa.innerHTML = avatarContent();
   const pn = document.getElementById('profileName');
-  if(pn) pn.innerHTML = escapeHtml(TELEGRAM_PROFILE.name || (fullName || 'Foydalanuvchi'));
+  if(pn) pn.textContent = TELEGRAM_PROFILE.name || (firstName || 'Foydalanuvchi');
   const pt = document.getElementById('profileTelegram');
   if(pt) pt.textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id}`;
 
@@ -3686,11 +3693,9 @@ function renderGreetingFromProfile(){
 
 async function bootApp(){
   const user = await tgInitAndAuth();
-  let customSavedName = '';
-  try { customSavedName = localStorage.getItem('arabication-custom-name') || ''; } catch(e){}
   if(user){
     TELEGRAM_PROFILE = {
-      name: customSavedName || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+      name: [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
       username: user.username ? `@${user.username}` : '',
       id: String(user.id),
       rawId: user.id,
@@ -3698,7 +3703,7 @@ async function bootApp(){
     };
   } else {
     // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
-    TELEGRAM_PROFILE = { name: customSavedName || 'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
+    TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
   }
   renderGreetingFromProfile();
   applyProfileHeader(null);
@@ -4910,7 +4915,7 @@ function renderAdminPanel(){
 const ADMIN_TAB_TITLES = {
   overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki',
   reports:'Imtihon xabarlari', examcards:'Imtihon cardlari', gramorder:'Grammatika tartibi',
-  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat'
+  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat', skilllimits:'Kunlik limitlar'
 };
 function openAdminPanelModal(tab){
   showAdminTab(tab);
@@ -7235,7 +7240,7 @@ let TELEGRAM_PROFILE = {
 };
 function openEditProfile(){
   document.getElementById('modalTitle').textContent = 'Profilni tahrirlash';
-  const currentName = TELEGRAM_PROFILE.name || document.getElementById('profileName')?.textContent || '';
+  const currentName = document.getElementById('profileName').textContent;
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:18px;">
       <div class="avatar" style="width:64px;height:64px;font-size:22px;" id="editAvatarPreview">${avatarContent()}</div>
@@ -7243,12 +7248,12 @@ function openEditProfile(){
     </div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism / Nik</span>
-        <input type="text" id="editNameInput" value="${escapeHtml(currentName)}" dir="auto" placeholder="Ism yoki nik kiriting" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:var(--font-user-name);font-weight:500;font-size:15px;">
+        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism</span>
+        <input type="text" id="editNameInput" value="${currentName}" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ID</span>
-        <input type="text" value="${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id || '-'}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:var(--font-sans);font-size:14px;background:var(--bg);color:var(--text-faint);">
+        <input type="text" value="${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;background:var(--bg);color:var(--text-faint);">
       </label>
       <button class="btn btn-primary" style="margin-top:6px;" onclick="saveProfile()">Saqlash</button>
     </div>
@@ -7266,10 +7271,9 @@ function saveProfile(){
   const newName = document.getElementById('editNameInput').value.trim();
   if(newName){
     TELEGRAM_PROFILE.name = newName;
-    try{ localStorage.setItem('arabication-custom-name', newName); }catch(e){}
     renderGreetingFromProfile();
   }
-  document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id || '-'}`;
+  document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}`;
   closeModal();
   toast('Profil yangilandi ✅');
 }
@@ -10209,13 +10213,105 @@ bootApp();
     }
   };
 
+  /* ---------- mahoratlar bo'yicha kunlik limit (faqat super admin) ---------- */
+
+  const SKILL_LIMIT_META = [
+    { id: 'grammatika', name: 'Grammatika', ar: '\u0627\u0644\u0642\u0648\u0627\u0639\u062f', icon: '\ud83d\udcd7' },
+    { id: 'qiroa',      name: 'Qiroa',       ar: '\u0627\u0644\u0642\u0631\u0627\u0621\u0629', icon: '\ud83d\udcd6' },
+    { id: 'istima',     name: 'Istima',      ar: '\u0627\u0644\u0627\u0633\u062a\u0645\u0627\u0639', icon: '\ud83c\udfa7' },
+    { id: 'muhavara',   name: 'Muhovara',    ar: '\u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629', icon: '\ud83c\udf99\ufe0f' },
+    { id: 'kitaba',     name: 'Kitaba',      ar: '\u0627\u0644\u0643\u062a\u0627\u0628\u0629', icon: '\u270d\ufe0f' }
+  ];
+
+  let SKILL_DAILY_LIMITS = {};
+
+  async function loadSkillDailyLimits() {
+    try {
+      const rows = await rpc('admin_list_skill_daily_limits');
+      const map = {};
+      (Array.isArray(rows) ? rows : []).forEach(r => {
+        map[r.skill_id] = (r.daily_limit === null || r.daily_limit === undefined) ? 0 : Number(r.daily_limit);
+      });
+      SKILL_DAILY_LIMITS = map;
+      localSet('arab_ext_skill_daily_limits', map);
+    } catch (e) {
+      console.warn('Kunlik limitlar yuklanmadi, keshdan olinadi:', e);
+      SKILL_DAILY_LIMITS = localGet('arab_ext_skill_daily_limits', {});
+      throw e;
+    }
+  }
+
+  async function renderSkillLimitsAdmin() {
+    const wrap = document.getElementById('skillLimitsAdminList');
+    if (!wrap) return;
+
+    if (!window.IS_SUPER_ADMIN) {
+      wrap.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Bu bo\u2018lim faqat bosh administratorlar uchun.</p>';
+      return;
+    }
+
+    wrap.innerHTML = '<p style="color:var(--text-faint);font-size:13px;">Yuklanmoqda...</p>';
+
+    let loadError = null;
+    try {
+      await loadSkillDailyLimits();
+    } catch (e) {
+      loadError = e;
+    }
+
+    wrap.innerHTML = SKILL_LIMIT_META.map(s => {
+      const current = SKILL_DAILY_LIMITS[s.id] ?? 0;
+      return `
+      <div class="report-item" data-skill-limit-row="${s.id}">
+        <div class="report-head">
+          <span style="font-weight:600;font-size:13.5px;">${s.icon} ${escapeHtml(s.name)}</span>
+          <span class="report-meta" style="font-family:var(--font-ar-bold);">${s.ar}</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-field" style="flex:1;min-width:160px;margin:0;">
+            <label>Kunlik limit (0 = cheksiz)</label>
+            <input type="number" min="0" step="1" inputmode="numeric" id="skillLimitInput_${s.id}" value="${current}" style="width:100%;">
+          </div>
+          <button class="btn btn-primary" style="height:44px;" onclick="saveSkillDailyLimit('${s.id}')">Saqlash</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (loadError) {
+      wrap.insertAdjacentHTML('afterbegin', `<p style="color:var(--red);font-size:12.5px;font-weight:600;margin-bottom:4px;">\u26a0\ufe0f Serverdan yangilanmadi, oxirgi saqlangan qiymatlar ko\u2018rsatilmoqda: ${escapeHtml((loadError.message || 'Supabase xatosi').slice(0, 160))}</p>`);
+    }
+  }
+
+  window.saveSkillDailyLimit = async function (skillId) {
+    if (!window.IS_SUPER_ADMIN) {
+      toast('Ruxsat yo\u2018q: bu amal faqat bosh administratorlar uchun');
+      return;
+    }
+    const input = document.getElementById('skillLimitInput_' + skillId);
+    const raw = (input?.value ?? '').trim();
+    if (raw !== '' && (!/^\d+$/.test(raw))) {
+      toast('Limit faqat 0 yoki musbat butun son bo\u2018lishi kerak');
+      return;
+    }
+    const value = raw === '' ? 0 : Number(raw);
+    try {
+      await rpc('admin_set_skill_daily_limit', { p_skill_id: skillId, p_daily_limit: value });
+      SKILL_DAILY_LIMITS[skillId] = value;
+      localSet('arab_ext_skill_daily_limits', SKILL_DAILY_LIMITS);
+      toast('\u2705 Kunlik limit saqlandi');
+    } catch (e) {
+      console.error(e);
+      toast('\u274c Saqlanmadi: ' + (e.message || 'Supabase xatosi').slice(0, 180), 5000);
+    }
+  };
+
   /* ---------- admin tab override ---------- */
 
   function overrideShowAdminTab() {
     const baseShowAdminTab = window.showAdminTab;
 
     window.showAdminTab = function (tab) {
-      if (tab === 'admins' && !window.IS_SUPER_ADMIN) {
+      if ((tab === 'admins' || tab === 'skilllimits') && !window.IS_SUPER_ADMIN) {
         toast('Bu bo\u2018lim faqat bosh administratorlar uchun');
         tab = 'overview';
       }
@@ -10224,7 +10320,7 @@ bootApp();
         baseShowAdminTab(tab);
       }
 
-      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community'].forEach(t => {
+      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community', 'skilllimits'].forEach(t => {
         const el = document.getElementById('adminTab-' + t);
         if (el) {
           el.style.display = (t === tab) ? '' : 'none';
@@ -10240,6 +10336,7 @@ bootApp();
       if (tab === 'sendmsg') renderSentMessages();
       if (tab === 'admins') renderAdminAdminsList();
       if (tab === 'community') renderCommunityAdmin();
+      if (tab === 'skilllimits') renderSkillLimitsAdmin();
     };
   }
 
