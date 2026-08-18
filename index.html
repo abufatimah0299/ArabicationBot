@@ -2491,7 +2491,7 @@ function contactSupport(){
 }
 
 /* ================= iOS-Style Toast Notification ================= */
-function showToast(title, message, type = 'success') {
+function showToast(title, message, type = 'success', duration = 5000) {
   let container = document.getElementById('ios-toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -2551,7 +2551,7 @@ function showToast(title, message, type = 'success') {
     });
   });
 
-  timer = setTimeout(dismiss, 5000);
+  timer = setTimeout(dismiss, duration || 5000);
 }
 
 // Global wrapper for legacy calls: toast(message, duration)
@@ -2559,8 +2559,8 @@ function toast(msg, duration) {
   if (!msg) return;
   const isErr = msg.includes('❌') || msg.includes('⚠️') || msg.toLowerCase().includes('xato') || msg.toLowerCase().includes('error');
   const cleanMsg = msg.replace(/^[❌⚠️✅⏳🔤🔒\s]+/, '').trim();
-  const title = isErr ? 'Xabarnoma' : (msg.includes('✅') ? 'Muvaffaqiyatli' : 'Arabication');
-  showToast(title, cleanMsg || msg, isErr ? 'error' : 'success');
+  const title = isErr ? 'Xatolik' : (msg.includes('✅') ? 'Muvaffaqiyatli' : 'Arabication');
+  showToast(title, cleanMsg || msg, isErr ? 'error' : 'success', duration || 5000);
 }
 
 function authHeaders(){
@@ -3583,15 +3583,6 @@ function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.rem
 
 /* view-dashboard is default active in HTML already */
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
-
-/* ---------------- Toast ---------------- */
-function toast(msg, duration){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(()=> t.classList.remove('show'), duration || 2200);
-}
 
 /* ---------------- Skill hub ---------------- */
 /* Boshlang'ich (default) qiymatlar 0 — bular loadDashboardFromBackend() orqali
