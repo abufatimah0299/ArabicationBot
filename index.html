@@ -436,7 +436,39 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .quiz-wrap{ display:grid; grid-template-columns:1fr 260px; gap:18px; align-items:start; }
 .quiz-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
 .quiz-head .tag{ font-size:12px; font-weight:800; padding:4px 10px; border-radius:8px; }
-.quiz-head .timer{ font-size:13px; font-weight:700; color:var(--text-dim); border:1.5px solid transparent; border-radius:8px; padding:2px 8px; transition:color .3s var(--ease), border-color .3s var(--ease); }
+.quiz-head .timer{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-dim);
+  border:1.5px solid var(--border);
+  background:var(--bg);
+  border-radius:8px;
+  padding:3px 9px;
+  min-width:78px;
+  box-sizing:border-box;
+  justify-content:center;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+  transition:color .3s var(--ease), border-color .3s var(--ease), background .3s var(--ease);
+}
+.quiz-head .timer .timer-icon{
+  flex-shrink:0;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+}
+.quiz-head .timer .timer-digits{
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+  min-width:38px;
+  text-align:left;
+  display:inline-block;
+  letter-spacing:0.5px;
+}
 .quiz-body{ padding:8px 26px 26px 26px; }
 /* Istima: savol almashganda silliq slide+fade transition (faqat #quizBody kontenti uchun —
    header, timer va yon panel (progress grid) DOM'da alohida bo'lgani uchun joyidan qimirlamaydi). */
@@ -1957,7 +1989,7 @@ html[data-theme="light"] .toast-item{
                   <button type="button" onclick="examFontStep(-1)" title="Matnni kichiklashtirish">A−</button>
                   <button type="button" onclick="examFontStep(1)" title="Matnni kattalashtirish">A+</button>
                 </div>
-                <span class="timer" id="quizTimer">⏱ 18:42</span>
+                <span class="timer" id="quizTimer"><span class="timer-icon">⏱</span><span class="timer-digits">18:42</span></span>
               </div>
             </div>
             <div style="height:1px;background:var(--border);"></div>
@@ -7332,10 +7364,11 @@ function startTimer(seconds, onExpire){
   clearInterval(timerInterval);
   let remaining = seconds;
   const el = document.getElementById('quizTimer');
+  if(!el) return;
   el.style.color = ''; el.style.borderColor = '';
   function render(){
     const m = Math.floor(remaining/60), s = remaining%60;
-    el.textContent = '⏱ ' + String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">' + String(m).padStart(2,'0')+':'+String(s).padStart(2,'0') + '</span>';
   }
   render();
   timerInterval = setInterval(()=>{
@@ -7351,8 +7384,9 @@ function startQuestionTimer(){
   clearQuestionTimer();
   let remaining = 60;
   const el = document.getElementById('quizTimer');
+  if(!el) return;
   function paint(){
-    el.textContent = '⏱ 0:' + String(remaining).padStart(2,'0');
+    el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">0:' + String(remaining).padStart(2,'0') + '</span>';
     if(remaining<=10){ el.style.color = 'var(--red)'; el.style.borderColor = 'var(--red)'; }
     else if(remaining<=30){ el.style.color = 'var(--amber)'; el.style.borderColor = 'var(--amber)'; }
     else { el.style.color = ''; el.style.borderColor = ''; }
@@ -7603,7 +7637,7 @@ function startIstimaJuz(){
   currentQuiz.phase = 'listening';
   clearInterval(timerInterval); clearQuestionTimer();
   const tEl = document.getElementById('quizTimer');
-  if(tEl){ tEl.textContent = '⏱ —:—'; tEl.style.color=''; tEl.style.borderColor=''; }
+  if(tEl){ tEl.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">—:—</span>'; tEl.style.color=''; tEl.style.borderColor=''; }
   renderQuestion();
   updateQGrid();
 }
