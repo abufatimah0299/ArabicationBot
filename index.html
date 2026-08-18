@@ -65,9 +65,11 @@
   --radius-lg:24px;
   --shadow:0 4px 18px -4px rgba(0,0,0,0.35), 0 12px 36px -8px rgba(3,18,12,0.55);
   --shadow-lg:0 8px 24px -4px rgba(0,0,0,0.4), 0 24px 56px -10px rgba(3,18,12,0.65);
-  --font-sans:'Onest', 'Graphik Arabic', sans-serif;
-  --font-ar:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
-  --font-ar-bold:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
+  --font-sans:'Onest', sans-serif;
+  --font-ar:'Noto Sans Arabic', sans-serif;
+  --font-ar-bold:'Noto Sans Arabic', sans-serif;
+  --font-ar-card:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
+  --font-user-name:'Graphik Arabic', 'Noto Sans Arabic', 'Onest', sans-serif;
 }
 /* ---------- Light mode palette (Warm pastel with emerald glow) ---------- */
 html[data-theme="light"]{
@@ -107,7 +109,7 @@ html[data-theme="light"]{
 :root{ --ease:cubic-bezier(.22,.9,.32,1); }
 button, input, select, textarea{ font-family:var(--font-sans); }
 body{
-  font-family:'Onest', 'Graphik Arabic', sans-serif;
+  font-family:var(--font-sans);
   font-feature-settings:"cv02","cv03","cv04","cv11";
   background-color:#ffffff;
   background-image:
@@ -410,7 +412,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 }
 .skill-banner-icon svg{ width:26px; height:26px; }
 .skill-banner-title{ font-size:17.5px; font-weight:600; margin-bottom:7px; letter-spacing:-0.2px; }
-.skill-banner-title.ar{ font-family:var(--font-ar-bold); font-size:23px; font-weight:600; }
+.skill-banner-title.ar{ font-family:var(--font-ar-card); font-size:23px; font-weight:600; }
 .skill-banner-meta{ display:flex; align-items:center; gap:14px; font-size:12px; font-weight:600; opacity:.92; flex-wrap:wrap; }
 .skill-banner-meta span{ display:flex; align-items:center; gap:5px; white-space:nowrap; }
 .skill-banner-meta svg{ width:13px; height:13px; opacity:.9; flex-shrink:0; }
@@ -436,7 +438,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 }
 .skill-intro-icon svg{ width:32px; height:32px; }
 .skill-intro-title-wrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-.skill-intro-title-ar{ font-family:var(--font-ar-bold); font-size:28px; font-weight:600; line-height:1.2; }
+.skill-intro-title-ar{ font-family:var(--font-ar-card); font-size:28px; font-weight:600; line-height:1.2; }
 .skill-intro-title-uz{ font-size:15px; color:var(--text-dim); font-weight:600; }
 .skill-intro-desc{ font-size:14px; color:var(--text-dim); font-weight:500; line-height:1.65; margin:16px 0; }
 .skill-intro-meta{
@@ -1034,7 +1036,7 @@ html[data-theme="light"] .topic-item:hover{
 .topic-item:hover .topic-icon{ transform:scale(1.05); }
 .topic-icon svg{ width:18px; height:18px; }
 .topic-item .t{ font-size:14px; font-weight:600; }
-.topic-item .t.ar{ font-family:var(--font-ar-bold); font-size:16px; font-weight:600; }
+.topic-item .t.ar{ font-family:var(--font-ar-card); font-size:16px; font-weight:600; }
 .topic-item .s{ font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:2px;}
 .topic-mini{ margin-inline-start:auto; display:flex; align-items:center; gap:12px;}
 .topic-mini .pct{ font-size:12.5px; font-weight:600; color:var(--indigo-700);}
@@ -1084,7 +1086,7 @@ html[data-theme="light"] .topic-item:hover{
 }
 .grammar-cat-icon svg{ width:24px; height:24px; }
 .grammar-cat-main{ flex:1; min-width:0; position:relative; z-index:1; }
-.grammar-cat-name{ font-family:var(--font-ar-bold); font-size:19px; font-weight:600; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.grammar-cat-name{ font-family:var(--font-ar-card); font-size:19px; font-weight:600; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .grammar-cat-desc{ font-size:12px; color:rgba(255,255,255,0.82); font-weight:600; margin-top:4px; }
 .grammar-cat-pct{ font-size:15px; font-weight:600; flex-shrink:0; position:relative; z-index:1; }
 .grammar-cat-chev{ width:18px; height:18px; flex-shrink:0; transition:transform .35s cubic-bezier(0.16, 1, 0.3, 1); position:relative; z-index:1; }
@@ -1328,7 +1330,7 @@ html[data-theme="light"] .topic-item:hover{
 .podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:16px; overflow:hidden; border:2px solid rgba(255,255,255,0.2); }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; border-color:#E3A83F; box-shadow:0 0 16px rgba(227,168,63,0.4); }
 .podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
-.podium-name{ font-size:12.5px; font-weight:600; margin-top:4px; }
+.podium-name{ font-family:var(--font-user-name); font-size:12.5px; font-weight:500; margin-top:4px; }
 .podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:14px; transition:background-color .2s var(--ease), transform .15s var(--ease); }
@@ -1337,7 +1339,7 @@ html[data-theme="light"] .topic-item:hover{
 .lb-rank{ width:26px; text-align:center; font-weight:600; font-size:13px; color:var(--text-faint); flex-shrink:0; font-variant-numeric: tabular-nums; }
 .lb-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:12.5px; flex-shrink:0; overflow:hidden; }
 .lb-info{ flex:1; min-width:0; }
-.lb-info .n{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.lb-info .n{ font-family:var(--font-user-name); font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:600; }
 .lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:1px; }
 .lb-xp{ font-weight:600; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; }
@@ -1958,26 +1960,39 @@ html[data-theme="light"] .bottom-nav{
 
 .dash-greeting-sub {
   font-family: 'Onest', sans-serif;
-  font-size: 16.5px;
+  font-size: 17px;
   font-weight: 500;
   color: #7E8B9B;
   letter-spacing: -0.015em;
-  margin-bottom: 8px;
-  line-height: 1.35;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
 html[data-theme="dark"] .dash-greeting-sub {
   color: #94A3B8;
 }
 
+.dash-user-nick,
+.user-display-name,
+#profileName,
+.rank-user-name,
+.u-name,
+.user-nick-text {
+  font-family: var(--font-user-name);
+  font-weight: 500;
+  color: inherit;
+  display: inline-block;
+  unicode-bidi: plaintext;
+}
+
 .dash-main-heading {
   font-family: 'Onest', sans-serif;
-  font-size: 28px;
-  font-weight:600;
+  font-size: 32px;
+  font-weight: 600;
   color: #0F172A;
-  line-height: 1.28;
-  letter-spacing: -0.03em;
-  max-width: 500px;
+  line-height: 1.42;
+  letter-spacing: -0.02em;
+  max-width: 560px;
 }
 
 html[data-theme="dark"] .dash-main-heading {
@@ -2001,12 +2016,13 @@ html[data-theme="dark"] .dash-main-heading {
     height: 38px;
   }
   .dash-greeting-sub {
-    font-size: 15.5px;
-    margin-bottom: 6px;
+    font-size: 16px;
+    margin-bottom: 8px;
+    line-height: 1.4;
   }
   .dash-main-heading {
-    font-size: 25px;
-    line-height: 1.26;
+    font-size: 26.5px;
+    line-height: 1.38;
   }
 }
 </style>
@@ -3623,32 +3639,39 @@ async function loadAdminUsersFromBackend(){
 }
 
 function renderGreetingFromProfile(){
-  let firstName = '';
+  let fullName = '';
   if (TELEGRAM_PROFILE.name && TELEGRAM_PROFILE.name !== 'Mehmon' && TELEGRAM_PROFILE.name !== 'Foydalanuvchi') {
-    firstName = TELEGRAM_PROFILE.name.trim().split(' ')[0];
-  } else if (window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name) {
-    firstName = window.Telegram.WebApp.initDataUnsafe.user.first_name.trim();
+    fullName = TELEGRAM_PROFILE.name.trim();
+  } else if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    const u = window.Telegram.WebApp.initDataUnsafe.user;
+    fullName = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.first_name || '';
   } else if (TELEGRAM_PROFILE.username) {
-    firstName = TELEGRAM_PROFILE.username.replace(/^@/, '').trim();
+    fullName = TELEGRAM_PROFILE.username.replace(/^@/, '').trim();
   }
 
   const dashGreeting = document.getElementById('dashGreetingName');
   if(dashGreeting) {
-    dashGreeting.textContent = firstName ? `Assalamu alaykum ${firstName}!` : `Assalamu alaykum!`;
+    dashGreeting.innerHTML = fullName
+      ? `Assalamu alaykum <span class="dash-user-nick">${escapeHtml(fullName)}</span>!`
+      : `Assalamu alaykum!`;
   }
 
   const dashAvatar = document.getElementById('dashUserAvatar');
   if(dashAvatar) dashAvatar.innerHTML = avatarContent();
 
   const gName = document.getElementById('greetingName');
-  if(gName) gName.textContent = firstName ? `Assalomu alaykum, ${firstName}! 👋` : `Assalomu alaykum! 👋`;
+  if(gName) {
+    gName.innerHTML = fullName
+      ? `Assalomu alaykum, <span class="user-display-name">${escapeHtml(fullName)}</span>! 👋`
+      : `Assalomu alaykum! 👋`;
+  }
 
   const topAvatar = document.getElementById('topAvatar');
   if(topAvatar) topAvatar.innerHTML = avatarContent();
   const pa = document.getElementById('profileAvatar');
   if(pa) pa.innerHTML = avatarContent();
   const pn = document.getElementById('profileName');
-  if(pn) pn.textContent = TELEGRAM_PROFILE.name || (firstName || 'Foydalanuvchi');
+  if(pn) pn.innerHTML = escapeHtml(TELEGRAM_PROFILE.name || (fullName || 'Foydalanuvchi'));
   const pt = document.getElementById('profileTelegram');
   if(pt) pt.textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id}`;
 
@@ -3663,9 +3686,11 @@ function renderGreetingFromProfile(){
 
 async function bootApp(){
   const user = await tgInitAndAuth();
+  let customSavedName = '';
+  try { customSavedName = localStorage.getItem('arabication-custom-name') || ''; } catch(e){}
   if(user){
     TELEGRAM_PROFILE = {
-      name: [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+      name: customSavedName || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
       username: user.username ? `@${user.username}` : '',
       id: String(user.id),
       rawId: user.id,
@@ -3673,7 +3698,7 @@ async function bootApp(){
     };
   } else {
     // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
-    TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
+    TELEGRAM_PROFILE = { name: customSavedName || 'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
   }
   renderGreetingFromProfile();
   applyProfileHeader(null);
@@ -7210,7 +7235,7 @@ let TELEGRAM_PROFILE = {
 };
 function openEditProfile(){
   document.getElementById('modalTitle').textContent = 'Profilni tahrirlash';
-  const currentName = document.getElementById('profileName').textContent;
+  const currentName = TELEGRAM_PROFILE.name || document.getElementById('profileName')?.textContent || '';
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:18px;">
       <div class="avatar" style="width:64px;height:64px;font-size:22px;" id="editAvatarPreview">${avatarContent()}</div>
@@ -7218,12 +7243,12 @@ function openEditProfile(){
     </div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism</span>
-        <input type="text" id="editNameInput" value="${currentName}" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;">
+        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism / Nik</span>
+        <input type="text" id="editNameInput" value="${escapeHtml(currentName)}" dir="auto" placeholder="Ism yoki nik kiriting" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:var(--font-user-name);font-weight:500;font-size:15px;">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ID</span>
-        <input type="text" value="${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Graphik Arabic',sans-serif;font-size:14px;background:var(--bg);color:var(--text-faint);">
+        <input type="text" value="${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id || '-'}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:var(--font-sans);font-size:14px;background:var(--bg);color:var(--text-faint);">
       </label>
       <button class="btn btn-primary" style="margin-top:6px;" onclick="saveProfile()">Saqlash</button>
     </div>
@@ -7241,9 +7266,10 @@ function saveProfile(){
   const newName = document.getElementById('editNameInput').value.trim();
   if(newName){
     TELEGRAM_PROFILE.name = newName;
+    try{ localStorage.setItem('arabication-custom-name', newName); }catch(e){}
     renderGreetingFromProfile();
   }
-  document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}`;
+  document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id || '-'}`;
   closeModal();
   toast('Profil yangilandi ✅');
 }
