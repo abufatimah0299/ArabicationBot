@@ -1962,9 +1962,9 @@ html[data-theme="light"] .bottom-nav{
 
   <!-- MAIN -->
   <main class="main">
-    <div class="topbar hero-banner" id="mainTopbar">
+    <div class="topbar hero-banner" id="mainTopbar" style="display:none;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div class="hello" id="topGreeting">
+        <div class="hello" id="topGreeting" style="display:none;">
           <h1 id="greetingName">Assalomu alaykum! 👋</h1>
           <p id="greetingSub">Yuklanmoqda...</p>
         </div>
@@ -3734,9 +3734,12 @@ function showView(name, push=true){
   document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
   const topGreeting = document.getElementById('topGreeting');
-  if(topGreeting) topGreeting.style.display = (name==='dashboard') ? '' : 'none';
+  if(topGreeting) topGreeting.style.display = 'none';
   const topbarEl = document.getElementById('mainTopbar');
-  if(topbarEl) topbarEl.classList.toggle('hero-banner', name==='dashboard');
+  if(topbarEl){
+    topbarEl.style.display = (name==='dashboard') ? 'none' : 'flex';
+    topbarEl.classList.toggle('hero-banner', name==='dashboard');
+  }
   // Dark/light mode tugmasi faqat bosh sahifada (dashboard) yashiriladi —
   // qolgan barcha bo'limlarda ko'rinadi.
   const themeToggleBtn = document.getElementById('themeToggleBtn');
