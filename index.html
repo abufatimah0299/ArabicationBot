@@ -1458,42 +1458,122 @@ html[data-theme="light"] .topic-item:hover{
 }
 .admin-tab-tier:first-child{ margin-top:0; }
 .admin-tab-tier::after{ content:""; flex:1; height:1px; background:var(--border); }
-.admin-tab-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-@media (max-width:560px){ .admin-tab-row{ grid-template-columns:repeat(2, 1fr); } }
+.admin-tab-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:11px; }
+@media (max-width:560px){ .admin-tab-row{ grid-template-columns:repeat(2, 1fr); gap:9px; } }
 .admin-tab{
-  position:relative; overflow:hidden; border-radius:16px; padding:14px 12px 12px;
-  display:flex; flex-direction:column; gap:8px; cursor:pointer; color:#fff; border:2px solid transparent;
-  text-align:start; font-family:inherit; box-shadow:var(--shadow); min-height:104px;
+  position:relative; overflow:hidden; border-radius:18px; padding:15px 14px 13px;
+  display:flex; flex-direction:column; gap:9px; cursor:pointer; color:#fff;
+  border:1px solid rgba(255,255,255,0.22);
+  text-align:start; font-family:inherit; min-height:108px;
   transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
 }
 .admin-tab:hover{ transform:translateY(-2px); }
 .admin-tab:active{ transform:scale(.98); }
-.admin-tab.active{ border-color:rgba(255,255,255,0.75); }
+.admin-tab.active{
+  border-color:#ffffff;
+  outline:2px solid rgba(255,255,255,0.6);
+  outline-offset:2px;
+}
+.admin-tab::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%);
+  pointer-events:none;
+}
 .admin-tab::after{
-  content:""; position:absolute; bottom:-28px; inset-inline-end:-12px; width:100px; height:100px; border-radius:50%;
-  background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+  content:""; position:absolute; top:-20px; inset-inline-end:-20px; width:90px; height:90px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
 }
 .admin-tab-top{ display:flex; align-items:flex-start; justify-content:space-between; position:relative; z-index:1; }
 .admin-tab-icon{
-  width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.32);
+  width:36px; height:36px; border-radius:11px;
+  background:rgba(255,255,255,0.22);
+  border:1px solid rgba(255,255,255,0.35);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
 }
-.admin-tab-icon svg{ width:17px; height:17px; }
+.admin-tab-icon svg{ width:18px; height:18px; }
 .admin-tab-badge{
-  background:rgba(255,255,255,0.95); color:var(--indigo-900); font-size:9px; font-weight:800;
+  background:rgba(255,255,255,0.92); color:#0f172a; font-size:9.5px; font-weight:800;
   padding:3px 8px; border-radius:20px; white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,0.12);
 }
-.admin-tab-title{ font-size:13.5px; font-weight:800; position:relative; z-index:1; line-height:1.25; }
-.admin-tab-sub{ font-size:10.5px; font-weight:600; opacity:.85; position:relative; z-index:1; }
-.admin-tab.tab-emerald{ background:linear-gradient(135deg, #22C57F 0%, #0E5C3A 100%); }
-.admin-tab.tab-blue{ background:linear-gradient(135deg, #5FA6EE 0%, #1E4E85 100%); }
-.admin-tab.tab-purple{ background:linear-gradient(135deg, #A78BFA 0%, #4E3B8F 100%); }
-.admin-tab.tab-amber{ background:linear-gradient(135deg, #E3BE4E 0%, #8A6A10 100%); }
-.admin-tab.tab-red{ background:linear-gradient(135deg, #E5544D 0%, #6E1E1A 100%); }
-.admin-tab.tab-teal{ background:linear-gradient(135deg, #12A768 0%, #0A3A26 100%); }
-.admin-tab.tab-orange{ background:linear-gradient(135deg, #EB8C5E 0%, #7A3A1C 100%); }
-.admin-tab.tab-slate{ background:linear-gradient(135deg, #647468 0%, #2A332C 100%); }
-.admin-tab.tab-pink{ background:linear-gradient(135deg, #EC6FA8 0%, #7A2350 100%); }
+.admin-tab-title{ font-size:14px; font-weight:800; position:relative; z-index:1; line-height:1.25; text-shadow:0 1px 2px rgba(0,0,0,0.12); }
+.admin-tab-sub{ font-size:11px; font-weight:600; color:rgba(255,255,255,0.88); position:relative; z-index:1; line-height:1.3; }
+
+/* Yumshoq, yoqimli va zamonaviy gradientlar + maromidagi soyalar */
+.admin-tab.tab-emerald{
+  background:linear-gradient(135deg, #10B981 0%, #059669 60%, #047857 100%);
+  box-shadow:0 5px 16px -2px rgba(16,185,129,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-emerald:hover{
+  box-shadow:0 8px 24px -2px rgba(16,185,129,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-blue{
+  background:linear-gradient(135deg, #3B82F6 0%, #2563EB 60%, #1D4ED8 100%);
+  box-shadow:0 5px 16px -2px rgba(37,99,235,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-blue:hover{
+  box-shadow:0 8px 24px -2px rgba(37,99,235,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-purple{
+  background:linear-gradient(135deg, #8B5CF6 0%, #7C3AED 60%, #6D28D9 100%);
+  box-shadow:0 5px 16px -2px rgba(124,58,237,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-purple:hover{
+  box-shadow:0 8px 24px -2px rgba(124,58,237,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-amber{
+  background:linear-gradient(135deg, #F59E0B 0%, #D97706 60%, #B45309 100%);
+  box-shadow:0 5px 16px -2px rgba(217,119,6,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-amber:hover{
+  box-shadow:0 8px 24px -2px rgba(217,119,6,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-red{
+  background:linear-gradient(135deg, #F43F5E 0%, #E11D48 60%, #BE123C 100%);
+  box-shadow:0 5px 16px -2px rgba(225,29,72,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-red:hover{
+  box-shadow:0 8px 24px -2px rgba(225,29,72,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-teal{
+  background:linear-gradient(135deg, #0D9488 0%, #0F766E 60%, #115E59 100%);
+  box-shadow:0 5px 16px -2px rgba(13,148,136,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-teal:hover{
+  box-shadow:0 8px 24px -2px rgba(13,148,136,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-orange{
+  background:linear-gradient(135deg, #FB923C 0%, #EA580C 60%, #C2410C 100%);
+  box-shadow:0 5px 16px -2px rgba(234,88,12,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-orange:hover{
+  box-shadow:0 8px 24px -2px rgba(234,88,12,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-slate{
+  background:linear-gradient(135deg, #64748B 0%, #475569 60%, #334155 100%);
+  box-shadow:0 5px 16px -2px rgba(71,85,105,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-slate:hover{
+  box-shadow:0 8px 24px -2px rgba(71,85,105,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-pink{
+  background:linear-gradient(135deg, #EC4899 0%, #DB2777 60%, #BE185D 100%);
+  box-shadow:0 5px 16px -2px rgba(219,39,119,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-pink:hover{
+  box-shadow:0 8px 24px -2px rgba(219,39,119,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
 .community-card{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
 .community-avatar{ width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--indigo-100); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:var(--indigo-700); }
 .community-info{ flex:1; min-width:0; }
