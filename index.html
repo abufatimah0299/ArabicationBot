@@ -1855,6 +1855,16 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
     Cardlarni yashirish/ko'rsatish yoki qulflash/ochish foydalanuvchi ekranida darhol aks etadi.
   </p>
   <div id="examCardAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+  <p style="font-size:12px;color:var(--text-faint);font-weight:700;margin:20px 0 10px;">
+    Umumiy grammatika bo'limi kartalari
+  </p>
+  <div id="grammarLockAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+  <p style="font-size:12px;color:var(--text-faint);font-weight:700;margin:20px 0 10px;">
+    Pastki menyu tugmalari
+  </p>
+  <div id="navBtnAdminList" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <!-- 6) GRAMMATIKA TARTIBI -->
@@ -2400,20 +2410,6 @@ async function clearSectionQuestionsOnBackendFast(skillId){
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function clearSectionQuestionsOnBackend(skillId){
-  // Muhovara (Speaking) savollari "questions" jadvalida emas, alohida
-  // "speaking_questions" jadvalida saqlanadi — shu sabab bu bo'lim uchun
-  // butunlay boshqa yuklash/o'chirish funksiyalari ishlatiladi.
-  if(skillId === 'muhavara'){
-    const rows = await loadSpeakingQuestionsFromBackend();
-    let deletedQ = 0, failedQ = 0;
-    for(const r of (rows||[])){
-      const ok = await deleteSpeakingQuestionOnBackend(r.id);
-      if(ok !== null) deletedQ++; else failedQ++;
-    }
-    await refreshSpeakingFromBackend();
-    return { deletedQ, failedQ, totalQ: (rows||[]).length, deletedT:0, failedT:0, totalT:0 };
-  }
-
   const all = await loadQuestionsFromBackend();
   const rows = (all||[]).filter(r => r.skill_id === skillId);
   let deletedQ = 0, failedQ = 0;
@@ -2453,10 +2449,7 @@ async function clearCurrentSectionQuestions(){
 
   toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
 
-  // Muhovara uchun tezkor RPC (admin_clear_section_questions) "questions" jadvalini
-  // nazarda tutadi va speaking_questions'ni bilmasligi mumkin — shu sabab bu bo'lim
-  // uchun to'g'ridan-to'g'ri (har doim ishonchli ishlaydigan) sekin usulga o'tamiz.
-  const fastResult = adminActiveSkill === 'muhavara' ? undefined : await clearSectionQuestionsOnBackendFast(adminActiveSkill);
+  const fastResult = await clearSectionQuestionsOnBackendFast(adminActiveSkill);
   if(fastResult !== undefined && fastResult !== null){
     let msg = `🗑 "${skillName}" bo'limidan ${fastResult.questions ?? 0} ta savol`;
     if(topicWord && fastResult.topics) msg += ` va ${fastResult.topics} ta ${topicWord}`;
@@ -2508,35 +2501,6 @@ async function exportAllQuestionsData(){
   const targetSkill = adminActiveSkill;
   const skillName = SKILL_META[targetSkill]?.name || targetSkill;
   toast('⏳ Ma\'lumotlar yuklanmoqda...');
-
-  // Muhovara (Speaking) savollari "questions" jadvalida emas — alohida
-  // "speaking_questions" jadvalida (part_id, prompt) saqlanadi, shu sabab
-  // bu bo'lim uchun butunlay boshqa formatda backup qilinadi.
-  if(targetSkill === 'muhavara'){
-    const rows = await loadSpeakingQuestionsFromBackend();
-    const items = (rows||[]).map(r => ({
-      skillId: 'muhavara',
-      partId: r.part_id,
-      prompt: r.prompt,
-    }));
-    if(!items.length){
-      toast(`⚠️ "${skillName}" bo'limida hali savol yo'q — backup qilinadigan narsa topilmadi`, 6000);
-      return;
-    }
-    const payload = {
-      exported_at: new Date().toISOString(),
-      app: 'Arabication',
-      format: 'speaking_questions_v1',
-      skillId: targetSkill,
-      count: items.length,
-      questions: items,
-    };
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-    downloadJSONFile(`arabication-${targetSkill}-backup-${stamp}.json`, payload);
-    toast(`✅ "${skillName}" bo'limidan ${items.length} ta savol backup qilindi (yuklab olindi)`);
-    return;
-  }
-
   const [topics, questions] = await Promise.all([
     loadGrammarTopicsFromBackend(),
     loadQuestionsFromBackend(),
@@ -2600,36 +2564,6 @@ async function importQuestionsFromFile(event){
 
   const targetSkill = adminActiveSkill;
   const skillName = SKILL_META[targetSkill]?.name || targetSkill;
-
-  // Muhovara (Speaking) savollari alohida "speaking_questions" jadvaliga
-  // (part_id, prompt) admin_add_speaking_question RPC orqali qo'shiladi —
-  // oddiy q/opts/a formatidagi bulk-import bu yerga to'g'ri kelmaydi.
-  if(targetSkill === 'muhavara'){
-    const matchingSpeaking = rows.filter(row => (row.skillId || row.skill_id) === 'muhavara' && row.partId && row.prompt);
-    const foreignCountSpeaking = rows.length - matchingSpeaking.length;
-    if(!matchingSpeaking.length){
-      toast(`❌ Faylda "${skillName}" bo'limiga tegishli savol topilmadi`, 8000);
-      return;
-    }
-    let confirmMsgSpeaking = `Faylda "${skillName}" bo'limiga tegishli ${matchingSpeaking.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi?`;
-    if(foreignCountSpeaking > 0){
-      confirmMsgSpeaking += `\n\n⚠️ Diqqat: faylda yana ${foreignCountSpeaking} ta boshqa bo'limlarga tegishli savol bor — ular IMPORT QILINMAYDI.`;
-    }
-    if(!confirm(confirmMsgSpeaking)) return;
-
-    toast(`⏳ ${matchingSpeaking.length} ta savol yuklanmoqda...`);
-    let inserted = 0, failed = 0;
-    for(const row of matchingSpeaking){
-      const ok = await addSpeakingQuestionToBackend(row.partId, row.prompt);
-      if(ok !== null) inserted++; else failed++;
-    }
-    let msgSpeaking = `✅ "${skillName}" uchun import tugadi: ${inserted} ta qo'shildi`;
-    if(failed > 0) msgSpeaking += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
-    toast(msgSpeaking, 9000);
-    await refreshSpeakingFromBackend();
-    renderAdminQuestions();
-    return;
-  }
 
   const matching = rows.filter(row => (row.skillId || row.skill_id) === targetSkill);
   const foreignCount = rows.length - matching.length;
@@ -3007,8 +2941,20 @@ let viewHistory = ['dashboard'];
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
    cardning o'zini bosishni emas. Admin panelda saqlangan holatni to'g'ridan-to'g'ri
    localStorage'dan o'qiydi, shuning uchun tarmoq/auth kutilmasdan, sinxron ishlaydi
-   va sahifa ochilgan zahotiyoq to'g'ri natija beradi. */
-const VIEW_CARD_MAP = { attanal: 'attanal_full' };
+   va sahifa ochilgan zahotiyoq to'g'ri natija beradi.
+   NAVBTN_* — pastki menyu (bottom-nav) tugmalari uchun ham xuddi shu mexanizm,
+   faqat cardId'lar 'navbtn_<view>' prefiksi bilan (qarang: REAL ADMIN EXTENSION,
+   NAV_BTN_CONFIG / applyNavBtnLockState) — shuning uchun bitta umumiy
+   exam_cards saqlash joyi orqali ham cardlar, ham grammatika, ham menyu
+   tugmalari boshqariladi. */
+const VIEW_CARD_MAP = {
+  attanal: 'attanal_full',
+  dashboard: 'navbtn_dashboard',
+  imtihon: 'navbtn_imtihon',
+  grammar: 'navbtn_grammar',
+  rank: 'navbtn_rank',
+  profil: 'navbtn_profil'
+};
 function getExamCardLockState(cardId){
   try{
     const cfg = JSON.parse(localStorage.getItem('arab_app_config_cache'));
@@ -3449,6 +3395,10 @@ function renderGrammarCategories(){
       </div>
     </div>`;
   }).join('');
+  /* Grammatika cardlari admin panelda yashirilgan/qulflangan bo'lishi mumkin — bu holat
+     localStorage/backend'dan keladi (qarang: REAL ADMIN EXTENSION, applyGrammarCardLockState).
+     innerHTML har safar qayta yozilganda shu holatni qayta tiklab qo'yamiz. */
+  if(typeof window.applyGrammarCardLockState === 'function') window.applyGrammarCardLockState();
 }
 function toggleGrammarCat(id){
   const w = document.querySelector(`.grammar-cat-wrap[data-cat="${id}"]`);
@@ -4508,10 +4458,7 @@ function renderAdminActionsSheet(){
         <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi mavzu qo'shish</span>
       </button>`;
   } else if(isMuhavara){
-    gridHtml = `
-      <button class="as-card" style="grid-column:1 / -1;" onclick="adminActionsSheetChoose(()=>openBulkAddSpeakingQuestionModal())">
-        <span class="as-icon g">${AS_ICON_PLUS}</span><span class="as-t">Ommaviy qo'shish</span>
-      </button>`;
+    gridHtml = '';
     primaryHtml = `<button class="as-primary" onclick="adminActionsSheetChoose(()=>openAddSpeakingQuestionModal())">
         <span class="as-icon">${AS_ICON_PLUS}</span><span class="as-t">Yangi savol qo'shish</span>
       </button>`;
@@ -4923,60 +4870,6 @@ async function deleteSpeakingQuestion(id){
   await refreshSpeakingFromBackend();
   renderAdminQuestions();
   toast("🗑 Savol o'chirildi");
-}
-
-/* ---- Muhavara: savollarni OMMAVIY (bulk) qo'shish ----
-   Backendda alohida "bulk" RPC yo'q, shuning uchun bu funksiya har bir qatorni
-   admin_add_speaking_question RPC'iga birma-bir, ketma-ket yuboradi va
-   natijada nechtasi muvaffaqiyatli/xato bo'lganini foydalanuvchiga aytadi. */
-function openBulkAddSpeakingQuestionModal(presetPartId){
-  const partId0 = presetPartId || MUHAVARA_PARTS[0]?.id;
-  const part = MUHAVARA_PARTS.find(p=>p.id===partId0);
-  if(!part) return;
-  document.getElementById('modalTitle').textContent = "Savollarni ommaviy qo'shish (Muhovara)";
-  document.getElementById('modalBody').innerHTML = `
-    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkSpeakingQuestions(event)">
-      <div class="form-field">
-        <label>Qism</label>
-        <select id="bspPart">
-          ${MUHAVARA_PARTS.map(p=>`<option value="${p.id}" ${p.id===partId0?'selected':''}>${p.name}</option>`).join('')}
-        </select>
-      </div>
-      <p class="form-hint">Har bir savolni ALOHIDA QATORGA yozing (bitta qator = bitta savol). Bo'sh qatorlar e'tiborga olinmaydi.</p>
-      <div class="form-field">
-        <label>Savollar (har biri yangi qatorda, arabcha)</label>
-        <textarea id="bspText" dir="rtl" rows="10" style="min-height:180px;" placeholder="مَاذَا تَفْعَلُ فِي وَقْتِ فَرَاغِكَ؟
-كَيْفَ تَقْضِي يَوْمَكَ الْعَادِيَّ؟
-مَا هِيَ هِوَايَتُكَ الْمُفَضَّلَةُ؟" required></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block">Hammasini saqlash</button>
-    </form>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-}
-async function submitBulkSpeakingQuestions(e){
-  e.preventDefault();
-  const partId = document.getElementById('bspPart').value;
-  const rawText = document.getElementById('bspText').value || '';
-  const lines = rawText.split('\n').map(s=>s.trim()).filter(Boolean);
-  if(!lines.length){ toast("❌ Kamida bitta savol kiriting", 5000); return false; }
-  closeModal();
-  toast(`⏳ ${lines.length} ta savol yuborilmoqda...`);
-
-  let okCount = 0, failCount = 0;
-  for(const prompt of lines){
-    const saved = await addSpeakingQuestionToBackend(partId, prompt);
-    if(saved) okCount++; else failCount++;
-  }
-
-  await refreshSpeakingFromBackend();
-  renderAdminQuestions();
-  if(failCount === 0){
-    toast(`✅ ${okCount} ta savol qo'shildi`);
-  } else {
-    toast(`⚠️ ${okCount} ta qo'shildi, ${failCount} tasi xato berdi (oxirgi xato: ${window.LAST_BACKEND_ERROR})`, 7000);
-  }
-  return false;
 }
 
 /* ---- Kitaba: har bir qism (1/2/3) uchun mavzular banki — qo'shish / tahrirlash / o'chirish ----
@@ -7998,6 +7891,65 @@ bootApp();
         z-index:11;
       }
 
+      /* Grammatika kategoriya cardlari uchun ham xuddi shu qulf uslubi (.exam-card.is-locked
+         bilan bir xil mantiq) — .grammar-cat-wrap allaqachon border-radius:22px va
+         overflow:hidden ega, shuning uchun overlay to'g'ridan-to'g'ri shu elementga tushadi. */
+      .grammar-cat-wrap.is-locked{
+        opacity:1;
+        pointer-events:none;
+        position:relative;
+      }
+
+      .grammar-cat-wrap.is-locked::after{
+        content:'';
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        border-radius:22px;
+        background:rgba(20,20,30,.38);
+        backdrop-filter:blur(6px);
+        -webkit-backdrop-filter:blur(6px);
+        pointer-events:auto;
+        cursor:not-allowed;
+        z-index:10;
+      }
+
+      .grammar-cat-wrap.is-locked::before{
+        content:'';
+        position:absolute;
+        inset:0;
+        margin:auto;
+        width:40px;
+        height:40px;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+        background-repeat:no-repeat;
+        background-position:center;
+        background-size:contain;
+        filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));
+        pointer-events:none;
+        z-index:11;
+      }
+
+      /* Pastki menyu (bottom-nav) tugmalari uchun qulf holati — card'lardan farqli
+         o'laroq bu kichik tugma, shuning uchun blur overlay o'rniga xiralashtirish +
+         burchakda kichik qulf belgisi ishlatiladi. */
+      .bn-btn.is-locked{
+        opacity:.35;
+        pointer-events:none;
+        position:relative;
+      }
+
+      .bn-btn.is-locked::after{
+        content:'🔒';
+        position:absolute;
+        top:2px;
+        right:calc(50% - 26px);
+        font-size:10px;
+        line-height:1;
+        pointer-events:none;
+      }
+
       /* userMsgBell endi tepadagi topbar'da, dark-mode tugmasi yonida (.theme-toggle
          klassidan uslub oladi) — pastki fixed FAB o'rniga. Faqat badge shu yerda. */
       #userMsgBell{ font-size:16px; }
@@ -8206,6 +8158,8 @@ bootApp();
 
     applyExamCardState();
     applyGrammarOrder();
+    applyGrammarCardLockState();
+    applyNavBtnLockState();
     renderCommunityView();
     if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminQuestions();
   }
@@ -8335,19 +8289,193 @@ bootApp();
     }).join('');
   }
 
-  // Qulflangan cardga bosishni bloklash
+  // Qulflangan cardga bosishni bloklash (imtihon cardlari + grammatika kategoriya
+  // cardlari + pastki menyu tugmalari)
   document.addEventListener('click', function (e) {
     const card = e.target.closest('[data-card-id]');
-    if (!card) return;
+    const gramWrap = !card ? e.target.closest('.grammar-cat-wrap[data-cat]') : null;
+    const navBtn = (!card && !gramWrap) ? e.target.closest('.bn-btn[data-view]') : null;
 
-    const state = getCardState(card.dataset.cardId);
+    if (!card && !gramWrap && !navBtn) return;
+
+    let cardId;
+    if (card) cardId = card.dataset.cardId;
+    else if (gramWrap) cardId = grammarCardId(gramWrap.dataset.cat);
+    else cardId = navBtnCardId(navBtn.dataset.view);
+
+    const state = getCardState(cardId);
 
     if (state && state.locked) {
       e.preventDefault();
       e.stopImmediatePropagation();
       toast('🔒 Bu bo‘lim hozircha qulflangan');
+    } else if (state && state.visible === false) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toast("Bu bo'lim vaqtincha mavjud emas");
     }
   }, true);
+
+  /* ---------- bottom-nav (pastki menyu) tugmalari (lock/hide) ---------- */
+
+  const NAV_BTN_CONFIG = [
+    { id: 'dashboard', title: 'Bosh sahifa' },
+    { id: 'imtihon', title: 'Imtihon' },
+    { id: 'grammar', title: 'Testlar (Grammatika)' },
+    { id: 'rank', title: 'Reyting' },
+    { id: 'profil', title: 'Profil' }
+  ];
+
+  function navBtnCardId(viewId) {
+    return 'navbtn_' + viewId;
+  }
+
+  function applyNavBtnLockState() {
+    NAV_BTN_CONFIG.forEach(btn => {
+      const el = document.querySelector('.bn-btn[data-view="' + btn.id + '"]');
+      if (!el) return;
+
+      const state = getCardState(navBtnCardId(btn.id));
+
+      el.hidden = !state.visible;
+      el.classList.toggle('is-locked', !!state.locked);
+    });
+  }
+  window.applyNavBtnLockState = applyNavBtnLockState;
+
+  window.toggleNavBtnCard = async function (viewId, field, value) {
+    const cardId = navBtnCardId(viewId);
+
+    if (!APP_CONFIG.exam_cards[cardId]) {
+      APP_CONFIG.exam_cards[cardId] = {
+        visible: true,
+        locked: false
+      };
+    }
+
+    APP_CONFIG.exam_cards[cardId][field] = value;
+
+    renderNavBtnAdmin();
+    applyNavBtnLockState();
+
+    await saveExamCard(cardId);
+  };
+
+  function renderNavBtnAdmin() {
+    const list = document.getElementById('navBtnAdminList');
+    if (!list) return;
+
+    list.innerHTML = NAV_BTN_CONFIG.map(btn => {
+      const state = getCardState(navBtnCardId(btn.id));
+
+      return `
+        <div class="admin-ext-row">
+          <strong style="font-size:13px;">${btn.title}</strong>
+
+          <div class="admin-ext-toggles">
+            <label>
+              <input
+                type="checkbox"
+                ${state.visible ? 'checked' : ''}
+                onchange="toggleNavBtnCard('${btn.id}', 'visible', this.checked)"
+              >
+              Ko‘rinsin
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                ${state.locked ? 'checked' : ''}
+                onchange="toggleNavBtnCard('${btn.id}', 'locked', this.checked)"
+              >
+              🔒 Qulflangan
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ---------- grammar category cards (lock/hide) ---------- */
+
+  function grammarCardId(catId) {
+    return 'grammar_' + catId;
+  }
+
+  function grammarCardConfigList() {
+    const cats = (typeof GRAMMAR_CATEGORIES !== 'undefined') ? GRAMMAR_CATEGORIES : [];
+    return cats.map(c => ({ id: grammarCardId(c.id), catId: c.id, title: c.name + ' (' + c.ar + ')' }));
+  }
+
+  function applyGrammarCardLockState() {
+    const cats = (typeof GRAMMAR_CATEGORIES !== 'undefined') ? GRAMMAR_CATEGORIES : [];
+
+    cats.forEach(cat => {
+      const el = document.querySelector('.grammar-cat-wrap[data-cat="' + cat.id + '"]');
+      if (!el) return;
+
+      const state = getCardState(grammarCardId(cat.id));
+
+      el.hidden = !state.visible;
+      el.classList.toggle('is-locked', !!state.locked);
+    });
+  }
+  window.applyGrammarCardLockState = applyGrammarCardLockState;
+
+  window.toggleGrammarCard = async function (catId, field, value) {
+    const cardId = grammarCardId(catId);
+
+    if (!APP_CONFIG.exam_cards[cardId]) {
+      APP_CONFIG.exam_cards[cardId] = {
+        visible: true,
+        locked: false
+      };
+    }
+
+    APP_CONFIG.exam_cards[cardId][field] = value;
+
+    renderGrammarLockAdmin();
+    applyGrammarCardLockState();
+
+    await saveExamCard(cardId);
+  };
+
+  function renderGrammarLockAdmin() {
+    const list = document.getElementById('grammarLockAdminList');
+    if (!list) return;
+
+    const cards = grammarCardConfigList();
+
+    list.innerHTML = cards.map(card => {
+      const state = getCardState(card.id);
+
+      return `
+        <div class="admin-ext-row">
+          <strong style="font-size:13px;">${card.title}</strong>
+
+          <div class="admin-ext-toggles">
+            <label>
+              <input
+                type="checkbox"
+                ${state.visible ? 'checked' : ''}
+                onchange="toggleGrammarCard('${card.catId}', 'visible', this.checked)"
+              >
+              Ko‘rinsin
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                ${state.locked ? 'checked' : ''}
+                onchange="toggleGrammarCard('${card.catId}', 'locked', this.checked)"
+              >
+              🔒 Qulflangan
+            </label>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
   /* ---------- grammar order ---------- */
 
@@ -8757,7 +8885,7 @@ bootApp();
         btn.classList.toggle('active', btn.dataset.atab === tab);
       });
 
-      if (tab === 'examcards') renderExamCardAdmin();
+      if (tab === 'examcards') { renderExamCardAdmin(); renderGrammarLockAdmin(); renderNavBtnAdmin(); }
       if (tab === 'gramorder') renderGrammarOrderAdmin();
       if (tab === 'sendmsg') renderSentMessages();
       if (tab === 'admins') renderAdminAdminsList();
@@ -8814,6 +8942,8 @@ bootApp();
       };
       applyExamCardState();
       applyGrammarOrder();
+      applyGrammarCardLockState();
+      applyNavBtnLockState();
     }
 
     await waitForAuth();
@@ -8822,6 +8952,8 @@ bootApp();
 
     renderExamCardAdmin();
     renderGrammarOrderAdmin();
+    renderGrammarLockAdmin();
+    renderNavBtnAdmin();
 
     await refreshUserMessages();
 
