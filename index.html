@@ -4230,6 +4230,46 @@ function renderSkillHub(){
 }
 renderSkillHub();
 
+/* ---------------- Kunlik limit (mahorat bo'yicha) ----------------
+   Admin panelda "Kunlik limitlar" bo'limida belgilangan qiymatlar
+   window.SKILL_DAILY_LIMITS ichida (admin extension skripti tomonidan,
+   HAR BIR foydalanuvchi uchun ilova ochilganda yuklanadi). Bu yerda esa
+   shu limitni HAQIQATDA majburlaymiz: limitga yetilgan bo'lsa, testni
+   boshlovchi HAR QANDAY yo'l (hub tugmasi, mavzu tugmasi, mikrofon
+   tekshiruvi, kitaba) shu yerda to'xtatiladi va toast chiqadi. */
+function getSkillDailyLimitValue(skillId){
+  const map = window.SKILL_DAILY_LIMITS;
+  const v = map && map[skillId];
+  return (typeof v === 'number' && v > 0) ? v : 0;
+}
+function countSkillAttemptsToday(skillId){
+  const rows = Array.isArray(window.HISTORY_DATA_LIVE) ? window.HISTORY_DATA_LIVE : [];
+  const todayStr = new Date().toDateString();
+  let n = 0;
+  rows.forEach(r=>{
+    const sid = pick(r, ['skill_id','skillId'], null);
+    if(sid !== skillId) return;
+    const iso = pick(r, ['created_at','createdAt','inserted_at'], null);
+    if(!iso) return;
+    const d = new Date(iso);
+    if(!isNaN(d) && d.toDateString() === todayStr) n++;
+  });
+  return n;
+}
+/* true = ruxsat bor (davom etsa bo'ladi), false = limit tugagan (bloklandi + toast chiqdi) */
+function checkSkillDailyLimit(skillId){
+  const limit = getSkillDailyLimitValue(skillId);
+  if(!limit) return true; // 0 yoki belgilanmagan = cheksiz
+  const used = countSkillAttemptsToday(skillId);
+  if(used >= limit){
+    const meta = (typeof SKILLS !== 'undefined') ? SKILLS.find(s=>s.id===skillId) : null;
+    const label = meta ? meta.name : skillId;
+    toast(`⛔ ${label}: bugungi limitga yetdingiz (kuniga ${limit} marta). Ertaga qayta urinib ko'ring.`, 5000);
+    return false;
+  }
+  return true;
+}
+
 /* ---------------- Skill intro screen ---------------- */
 let pendingSkillId = null;
 function openSkillIntro(id){
@@ -4254,6 +4294,7 @@ function openSkillIntro(id){
 }
 function beginPendingSkill(){
   if(!pendingSkillId) return;
+  if(!checkSkillDailyLimit(pendingSkillId)) return;
   if(pendingSkillId==='kitaba'){ startKitabaExam(); }
   else if(pendingSkillId==='muhavara'){ openMicCheck(); }
   else{ startQuiz(pendingSkillId); }
@@ -7917,6 +7958,7 @@ function applyLiveAdminUsers(rows){
 /* ---------------- Start quiz ---------------- */
 function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  if(!checkSkillDailyLimit(skillId)) return;
   if(skillId === 'qiroa'){ startQiroaQuiz(customLabel); return; }
   if(skillId === 'istima'){ startIstimaQuiz(customLabel); return; }
   if(skillId === 'muhavara'){ startMuhavaraQuiz(customLabel); return; }
@@ -8076,6 +8118,7 @@ function advanceAfterIstimaJuz(){
    3 qismning yig'indisi (0-30) umumiy Kitaba balli hisoblanadi. */
 function startKitabaExam(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
+  if(!checkSkillDailyLimit('kitaba')) return;
   const parts = [];
   for(const part of KITABA_PARTS){
     const bank = KITABA_TOPICS[part.id] || [];
@@ -10253,8 +10296,20 @@ bootApp();
       console.warn('Kunlik limitlar yuklanmadi, keshdan olinadi:', e);
       SKILL_DAILY_LIMITS = localGet('arab_ext_skill_daily_limits', {});
       throw e;
+    } finally {
+      // Bu qiymat faqat admin panelda emas, HAR BIR foydalanuvchi uchun kerak —
+      // chunki cheklovni haqiqiy tekshirish (checkSkillDailyLimit, asosiy skriptda)
+      // shu window.SKILL_DAILY_LIMITS'ni o'qiydi. Shuning uchun bu yerda har doim,
+      // xato bo'lsa ham (keshdagi qiymat bilan) window'ga chiqarib qo'yamiz.
+      window.SKILL_DAILY_LIMITS = SKILL_DAILY_LIMITS;
     }
   }
+  // Ilova ochilgan zahoti (admin panel ochilishini kutmasdan) barcha foydalanuvchilar
+  // uchun limitlarni yuklab, window.SKILL_DAILY_LIMITS'ni to'ldirib qo'yish uchun
+  // tashqi (global) chaqiriladigan wrapper.
+  window.refreshSkillDailyLimitsGlobal = function () {
+    return loadSkillDailyLimits().catch(() => {});
+  };
 
   async function renderSkillLimitsAdmin() {
     const wrap = document.getElementById('skillLimitsAdminList');
@@ -10412,6 +10467,13 @@ bootApp();
 
     await loadAppConfig();
 
+    // MUHIM: kunlik limitlar oldin faqat super adminlar "Kunlik limitlar" panelini
+    // ochganda yuklanardi — oddiy foydalanuvchilarda umuman yuklanmasdi, shu sabab
+    // limit qo'yilsa ham amalda hech kim uchun ishlamas edi. Endi HAR BIR
+    // foydalanuvchi ilovani ochganda darhol yuklanadi (xato bo'lsa ham indamay
+    // o'tkazib yuboriladi — .catch orqali).
+    await window.refreshSkillDailyLimitsGlobal();
+
     renderExamCardAdmin();
     renderGrammarOrderAdmin();
     renderGrammarLockAdmin();
@@ -10423,10 +10485,11 @@ bootApp();
       clearInterval(pollTimer);
     }
 
-    // Har 30 soniyada config va xabarlarni tekshirib turadi
+    // Har 30 soniyada config, xabarlar va kunlik limitlarni tekshirib turadi
     pollTimer = setInterval(function () {
       loadAppConfig();
       refreshUserMessages();
+      window.refreshSkillDailyLimitsGlobal();
     }, 30000);
 
     // Telefonda ilovaga qaytgan ham yangilab oladi
@@ -10434,6 +10497,7 @@ bootApp();
       if (!document.hidden) {
         loadAppConfig();
         refreshUserMessages();
+        window.refreshSkillDailyLimitsGlobal();
       }
     });
   }
