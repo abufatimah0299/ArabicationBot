@@ -1320,6 +1320,136 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .q-opt-row{ display:flex; align-items:center; gap:10px; }
 .q-opt-row input[type="text"]{ flex:1; }
 .q-opt-row input[type="radio"]{ width:18px; height:18px; accent-color:var(--indigo-700); flex-shrink:0; }
+
+/* ================= Minimalist Bottom-Right Glassmorphism Toast ================= */
+#toast-container{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  z-index:999999;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-width:380px;
+  width:calc(100% - 32px);
+  pointer-events:none;
+  box-sizing:border-box;
+}
+@media (max-width:480px){
+  #toast-container{
+    bottom:calc(82px + env(safe-area-inset-bottom, 0px));
+    right:16px;
+    left:16px;
+    width:auto;
+    max-width:none;
+  }
+}
+.toast-item{
+  pointer-events:auto;
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:rgba(18, 24, 38, 0.68);
+  -webkit-backdrop-filter:blur(24px) saturate(190%);
+  backdrop-filter:blur(24px) saturate(190%);
+  border:1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:0 16px 36px -6px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  color:#ffffff;
+  font-family:inherit;
+  box-sizing:border-box;
+  opacity:0;
+  transform:translateX(40px) scale(0.95);
+  transition:transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow:hidden;
+}
+html[data-theme="light"] .toast-item{
+  background:rgba(255, 255, 255, 0.65);
+  -webkit-backdrop-filter:blur(24px) saturate(190%);
+  backdrop-filter:blur(24px) saturate(190%);
+  border:1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:0 16px 36px -6px rgba(15, 23, 42, 0.14), 0 4px 16px rgba(15, 23, 42, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+  color:#0f172a;
+}
+.toast-item.toast-show{
+  opacity:1;
+  transform:translateX(0) scale(1);
+}
+.toast-item.toast-hide{
+  opacity:0;
+  transform:translateY(16px) scale(0.95);
+  pointer-events:none;
+}
+.toast-icon{
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  margin-top:1px;
+}
+.toast-item.toast-success .toast-icon{
+  background:rgba(16, 185, 129, 0.18);
+  color:#10B981;
+  border:1px solid rgba(16, 185, 129, 0.3);
+}
+.toast-item.toast-error .toast-icon{
+  background:rgba(239, 68, 68, 0.18);
+  color:#EF4444;
+  border:1px solid rgba(239, 68, 68, 0.3);
+}
+.toast-icon svg{
+  width:18px;
+  height:18px;
+}
+.toast-body{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.toast-title{
+  font-size:13.5px;
+  font-weight:700;
+  line-height:1.25;
+}
+.toast-message{
+  font-size:12.5px;
+  opacity:0.85;
+  line-height:1.4;
+  word-break:break-word;
+}
+.toast-close-btn{
+  background:transparent;
+  border:none;
+  color:inherit;
+  opacity:0.5;
+  cursor:pointer;
+  padding:4px;
+  margin:-2px -4px 0 4px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:opacity 0.2s, background-color 0.2s, transform 0.15s;
+  flex-shrink:0;
+}
+.toast-close-btn:hover{
+  opacity:1;
+  background:rgba(120, 120, 128, 0.18);
+}
+.toast-close-btn:active{
+  transform:scale(0.92);
+}
+.toast-close-btn svg{
+  width:14px;
+  height:14px;
+}
 .admin-toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); font-size:12.5px; font-weight:700; padding:11px 20px; border-radius:12px; z-index:9999; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
 .admin-toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
@@ -3389,13 +3519,85 @@ function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.rem
 /* view-dashboard is default active in HTML already */
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
 
-/* ---------------- Toast ---------------- */
-function toast(msg, duration){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(()=> t.classList.remove('show'), duration || 2200);
+/* ---------------- Toast Notification (Minimalist Bottom-Right Glassmorphism) ---------------- */
+function showToast(title, message, type = 'success', duration = 4000){
+  let container = document.getElementById('toast-container');
+  if(!container){
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const isError = type === 'error';
+  const toastEl = document.createElement('div');
+  toastEl.className = `toast-item ${isError ? 'toast-error' : 'toast-success'}`;
+
+  const successIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  const closeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  function escapeHtml(str){
+    if(!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  const titleText = title || (isError ? 'Xatolik' : 'Muvaffaqiyatli');
+
+  toastEl.innerHTML = `
+    <div class="toast-icon">
+      ${isError ? errorIcon : successIcon}
+    </div>
+    <div class="toast-body">
+      <div class="toast-title">${escapeHtml(titleText)}</div>
+      ${message ? `<div class="toast-message">${escapeHtml(message)}</div>` : ''}
+    </div>
+    <button class="toast-close-btn" aria-label="Yopish" type="button">
+      ${closeIcon}
+    </button>
+  `;
+
+  let timer = null;
+  function dismiss(){
+    if(timer) clearTimeout(timer);
+    toastEl.classList.remove('toast-show');
+    toastEl.classList.add('toast-hide');
+    setTimeout(()=>{
+      if(toastEl.parentNode){
+        toastEl.parentNode.removeChild(toastEl);
+      }
+    }, 320);
+  }
+
+  const closeBtn = toastEl.querySelector('.toast-close-btn');
+  if(closeBtn){
+    closeBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      dismiss();
+    });
+  }
+
+  container.appendChild(toastEl);
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      toastEl.classList.add('toast-show');
+    });
+  });
+
+  if(duration && duration > 0){
+    timer = setTimeout(dismiss, duration);
+  }
+}
+
+// Global wrapper for toast(msg, duration)
+function toast(msg, duration = 4000){
+  if(!msg) return;
+  const isErr = msg.includes('❌') || msg.includes('⚠️') || msg.toLowerCase().includes('xato') || msg.toLowerCase().includes('error');
+  const cleanMsg = msg.replace(/^[❌⚠️✅⏳🔤🔒\s]+/, '').trim();
+  const title = isErr ? 'Xatolik' : (msg.includes('✅') ? 'Muvaffaqiyatli' : 'Arabication');
+  showToast(title, cleanMsg || msg, isErr ? 'error' : 'success', duration);
 }
 
 /* ---------------- Skill hub ---------------- */
