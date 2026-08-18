@@ -3655,7 +3655,10 @@ async function loadAdminUsersFromBackend(){
 function renderGreetingFromProfile(){
   let firstName = '';
   if (TELEGRAM_PROFILE.name && TELEGRAM_PROFILE.name !== 'Mehmon' && TELEGRAM_PROFILE.name !== 'Foydalanuvchi') {
-    firstName = TELEGRAM_PROFILE.name.trim().split(' ')[0];
+    // Foydalanuvchi profilida o'zi kiritgan nik (masalan "أبو مريم" kabi ikki
+    // so'zli kunya) bo'lishi mumkin — shuning uchun bo'sh joy bo'yicha bo'lib,
+    // faqat birinchi so'zni olish emas, to'liq nomni ko'rsatamiz.
+    firstName = TELEGRAM_PROFILE.name.trim();
   } else if (window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name) {
     firstName = window.Telegram.WebApp.initDataUnsafe.user.first_name.trim();
   } else if (TELEGRAM_PROFILE.username) {
@@ -3664,14 +3667,26 @@ function renderGreetingFromProfile(){
 
   const dashGreeting = document.getElementById('dashGreetingName');
   if(dashGreeting) {
-    dashGreeting.textContent = firstName ? `Assalamu alaykum ${firstName}!` : `Assalamu alaykum!`;
+    dashGreeting.style.fontFamily = "";
+    if(firstName){
+      dashGreeting.innerHTML = `Assalamu alaykum <span style="font-family:var(--font-ar);">${escapeHtml(firstName)}</span>!`;
+    } else {
+      dashGreeting.textContent = `Assalamu alaykum!`;
+    }
   }
 
   const dashAvatar = document.getElementById('dashUserAvatar');
   if(dashAvatar) dashAvatar.innerHTML = avatarContent();
 
   const gName = document.getElementById('greetingName');
-  if(gName) gName.textContent = firstName ? `Assalomu alaykum, ${firstName}! 👋` : `Assalomu alaykum! 👋`;
+  if(gName) {
+    gName.style.fontFamily = "";
+    if(firstName){
+      gName.innerHTML = `Assalomu alaykum, <span style="font-family:var(--font-ar);">${escapeHtml(firstName)}</span>! 👋`;
+    } else {
+      gName.textContent = `Assalomu alaykum! 👋`;
+    }
+  }
 
   const topAvatar = document.getElementById('topAvatar');
   if(topAvatar) topAvatar.innerHTML = avatarContent();
