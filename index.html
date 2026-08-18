@@ -2952,7 +2952,8 @@ async function saveQuestionToBackend({skillId, topicId, q, opts, a, exp}){
       body: JSON.stringify({ p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Bir nechta savolni bittada qo'shish (ommaviy/bulk) — Supabase'da `admin_bulk_add_questions`
@@ -2970,7 +2971,8 @@ async function saveQuestionsBulkToBackend(items){
       })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Bir nechta savolni bittada, HAR BIRI O'Z MAVZUSI bilan qo'shish (mavzu nomi bo'yicha
@@ -2992,7 +2994,8 @@ async function saveQuestionsBulkWithTopicsToBackend(items){
       })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Barcha savollarni (hamma bo'lim, hamma mavzu) o'chirish — Supabase'da
@@ -3005,7 +3008,8 @@ async function clearAllQuestionsOnBackend(){
       method:"POST", headers: authHeaders(), body: JSON.stringify({})
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json(); // o'chirilgan savollar soni
+    const text = await res.text();
+    return text ? JSON.parse(text) : 0;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function clearAllQuestions(){
@@ -3272,7 +3276,8 @@ async function updateQuestionOnBackend({id, q, opts, a, exp}){
       body: JSON.stringify({ p_id: id, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Savolni o'chirish — Supabase'da `admin_delete_question` RPC funksiyasi talab qilinadi. */
@@ -3322,7 +3327,8 @@ async function saveGrammarTopicToBackend({category, name, ar}){
       body: JSON.stringify({ p_category: category, p_name: name, p_ar: ar })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function updateGrammarTopicOnBackend({id, category, name, ar}){
@@ -3333,7 +3339,8 @@ async function updateGrammarTopicOnBackend({id, category, name, ar}){
       body: JSON.stringify({ p_id: id, p_category: category, p_name: name, p_ar: ar })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function deleteGrammarTopicOnBackend(id){
@@ -3380,7 +3387,8 @@ async function addWritingTopicToBackend(partId, topicAr){
       body: JSON.stringify({ p_part_id: partId, p_topic_ar: topicAr })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function editWritingTopicOnBackend(id, topicAr){
@@ -3391,7 +3399,8 @@ async function editWritingTopicOnBackend(id, topicAr){
       body: JSON.stringify({ p_topic_id: id, p_topic_ar: topicAr })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function deleteWritingTopicOnBackend(id){
@@ -3402,7 +3411,8 @@ async function deleteWritingTopicOnBackend(id){
       body: JSON.stringify({ p_topic_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function loadAdminUsersFromBackend(){
@@ -7230,7 +7240,8 @@ async function addQiroaTextToBackend(juzId, passage, title){
       body: JSON.stringify({ p_juz_id: juzId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json(); // { id: '...' } kutiladi
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Mavjud Qiroa matnini (va mavzu nomini) tahrirlaydi — backendda "admin_edit_qiroa_text"
@@ -7243,7 +7254,8 @@ async function editQiroaTextOnBackend(testId, passage, title){
       body: JSON.stringify({ p_text_id: testId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Qiroa matnini (va unga bog'liq barcha savollarni) o'chiradi — backendda
@@ -7256,7 +7268,8 @@ async function deleteQiroaTextOnBackend(testId){
       body: JSON.stringify({ p_text_id: testId })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Qiroa matnlarini + savollarni backenddan qayta yuklab, mahalliy holatni yangilaydi.
@@ -7319,7 +7332,8 @@ async function addIstimaAudioToBackend(juzId, audioUrl){
       body: JSON.stringify({ p_juz_id: juzId, p_audio_url: audioUrl })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json(); // { id: '...' } kutiladi
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Mavjud Istima audio URL'ini tahrirlaydi — backendda "admin_edit_istima_audio" RPC talab qilinadi. */
@@ -7331,7 +7345,8 @@ async function editIstimaAudioOnBackend(testId, audioUrl){
       body: JSON.stringify({ p_audio_id: testId, p_audio_url: audioUrl })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Istima testini (audio + unga bog'liq barcha savollarni) o'chiradi — backendda
@@ -7344,7 +7359,8 @@ async function deleteIstimaAudioOnBackend(testId){
       body: JSON.stringify({ p_audio_id: testId })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Istima audio+savollarni backenddan qayta yuklab, mahalliy holatni yangilaydi. Tartib MUHIM:
@@ -7397,7 +7413,8 @@ async function addSpeakingQuestionToBackend(partId, prompt){
       body: JSON.stringify({ p_part_id: partId, p_prompt: prompt })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 /* Bir nechta Muhavara savolini bittada qo'shadi — backendda "admin_bulk_add_speaking_questions"
@@ -7410,7 +7427,8 @@ async function saveSpeakingQuestionsBulkToBackend(items){
       body: JSON.stringify({ p_items: items.map(it => ({ part_id: it.partId, prompt: it.prompt })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function editSpeakingQuestionOnBackend(id, prompt){
@@ -7421,7 +7439,8 @@ async function editSpeakingQuestionOnBackend(id, prompt){
       body: JSON.stringify({ p_question_id: id, p_prompt: prompt })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function deleteSpeakingQuestionOnBackend(id){
@@ -7432,7 +7451,8 @@ async function deleteSpeakingQuestionOnBackend(id){
       body: JSON.stringify({ p_question_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
 async function refreshSpeakingFromBackend(){
