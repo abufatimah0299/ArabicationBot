@@ -330,7 +330,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 /* stat row */
 .stat-card{ padding:16px 18px; display:flex; flex-direction:column; gap:4px;}
 .stat-card .top{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-faint); font-weight:700;}
-.stat-card .num{ font-size:22px; font-weight:900; letter-spacing:-0.5px; }
+.stat-card .num{ font-size:22px; font-weight:900; letter-spacing:-0.5px; font-variant-numeric: tabular-nums; }
 .stat-card .sub{ font-size:11px; color:var(--green); font-weight:700;}
 
 /* skill hub cards */
@@ -861,15 +861,16 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
   position:absolute; inset:0; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:2px;
 }
+.num-target{ font-variant-numeric: tabular-nums; display:inline-block; }
 .result-score-big{ display:flex; align-items:baseline; gap:1px; }
-.result-score-big .num-correct{ font-size:30px; font-weight:900; letter-spacing:-0.5px; color:var(--text); }
+.result-score-big .num-correct{ font-size:30px; font-weight:900; letter-spacing:-0.5px; color:var(--text); font-variant-numeric: tabular-nums; }
 .result-score-big .num-slash{ font-size:16px; font-weight:800; color:var(--text-faint); margin:0 1px; }
-.result-score-big .num-total{ font-size:15px; font-weight:800; color:var(--text-faint); }
+.result-score-big .num-total{ font-size:15px; font-weight:800; color:var(--text-faint); font-variant-numeric: tabular-nums; }
 .result-score-of{ font-size:11.5px; color:var(--text-faint); font-weight:700; margin-top:2px; }
 .result-xp-pill{
   display:inline-flex; align-items:center; gap:4px; margin-top:6px;
   background:var(--amber-bg); color:var(--amber); font-size:11px; font-weight:800;
-  padding:3px 9px; border-radius:999px;
+  padding:3px 9px; border-radius:999px; font-variant-numeric: tabular-nums;
 }
 .result-level-wrap{ margin-top:14px; display:flex; flex-direction:column; align-items:center; gap:2px; }
 .result-level-tag{ font-size:11px; font-weight:800; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; }
@@ -1131,7 +1132,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .rank-top-cols{ display:flex; align-items:stretch; }
 .rank-top-col{ flex:1; text-align:center; padding:0 6px; }
 .rank-top-col:not(:last-child){ border-inline-end:1px solid rgba(255,255,255,.2); }
-.rank-top-col .num{ font-size:21px; font-weight:900; letter-spacing:-0.5px; }
+.rank-top-col .num{ font-size:21px; font-weight:900; letter-spacing:-0.5px; font-variant-numeric: tabular-nums; }
 .rank-top-col .lbl{ font-size:10.5px; font-weight:700; opacity:.85; margin-top:4px; }
 .rank-top-gap{ font-size:11.5px; font-weight:700; opacity:.9; text-align:center; }
 /* Reyting: mahorat (bo'lim) filtri — davr filtri bilan bir xil uslub, ranglar bilan */
@@ -1166,18 +1167,18 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; border-color:#E3A83F; box-shadow:0 0 16px rgba(227,168,63,0.4); }
 .podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
 .podium-name{ font-size:12.5px; font-weight:800; margin-top:4px; }
-.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:700; margin-top:2px; }
+.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:700; margin-top:2px; font-variant-numeric: tabular-nums; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:14px; transition:background-color .2s var(--ease), transform .15s var(--ease); }
 .lb-row:hover{ background:var(--indigo-100); }
 .lb-row.me{ background:var(--indigo-100); border:1px solid var(--hover-border); }
-.lb-rank{ width:26px; text-align:center; font-weight:800; font-size:13px; color:var(--text-faint); flex-shrink:0; }
+.lb-rank{ width:26px; text-align:center; font-weight:800; font-size:13px; color:var(--text-faint); flex-shrink:0; font-variant-numeric: tabular-nums; }
 .lb-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:12.5px; flex-shrink:0; overflow:hidden; }
 .lb-info{ flex:1; min-width:0; }
 .lb-info .n{ font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:800; }
 .lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:700; margin-top:1px; }
-.lb-xp{ font-weight:800; font-size:13px; text-align:right; }
+.lb-xp{ font-weight:800; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; }
 
 /* ---------- Profile ---------- */
 .profile-header{ padding:24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
@@ -3518,16 +3519,81 @@ function showView(name, push=true){
   if(name==='rank') refreshRankFromBackend();
 }
 
-/* ---------------- Entrance animations (bars, rings, counters) ---------------- */
+/* ---------------- Universal Number Animation Helper ---------------- */
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function runEntranceAnimations(root){
-  const bars = root.querySelectorAll('.bar-fill[data-target]:not([data-animated])');
-  const rings = root.querySelectorAll('.ring-progress[data-target-offset]:not([data-animated])');
-  const nums = root.querySelectorAll('.num-target[data-target]:not([data-animated])');
+
+function animateNumber(targetEl, targetVal, options = {}){
+  const el = (typeof targetEl === 'string') ? document.getElementById(targetEl) : targetEl;
+  if(!el) return;
+
+  const target = parseFloat(targetVal);
+  if(isNaN(target)){
+    el.textContent = targetVal ?? '';
+    return;
+  }
+
+  const dur = options.duration ?? 850;
+  const prefix = options.prefix ?? '';
+  const suffix = options.suffix ?? '';
+  const decimals = options.decimals ?? 0;
+  const useLocale = options.locale ?? (decimals === 0);
+  const startVal = options.from !== undefined ? parseFloat(options.from) : 0;
+
+  if(reduceMotion || dur <= 0){
+    const formatted = useLocale ? target.toLocaleString('ru-RU') : (decimals > 0 ? target.toFixed(decimals) : Math.round(target));
+    el.textContent = prefix + formatted + suffix;
+    if(options.onComplete) options.onComplete();
+    return;
+  }
+
+  if(el._numAnimId) cancelAnimationFrame(el._numAnimId);
+
+  const startTime = performance.now();
+  function step(now){
+    const p = Math.min(1, (now - startTime) / dur);
+    // Smooth custom cubic ease-out curve (fast initial climb, graceful deceleration)
+    const eased = 1 - Math.pow(1 - p, 3);
+    const curr = startVal + (target - startVal) * eased;
+    let formatted;
+    if(decimals > 0){
+      formatted = curr.toFixed(decimals);
+    } else {
+      const rounded = Math.round(curr);
+      formatted = useLocale ? rounded.toLocaleString('ru-RU') : String(rounded);
+    }
+    el.textContent = prefix + formatted + suffix;
+    if(p < 1){
+      el._numAnimId = requestAnimationFrame(step);
+    } else {
+      el._numAnimId = null;
+      if(options.onComplete) options.onComplete();
+    }
+  }
+  el._numAnimId = requestAnimationFrame(step);
+}
+
+/* ---------------- Entrance animations (bars, rings, counters) ---------------- */
+function runEntranceAnimations(root, force = false){
+  if(!root) return;
+  const selector = force ? '.num-target[data-target]' : '.num-target[data-target]:not([data-animated])';
+  const nums = root.querySelectorAll(selector);
+  nums.forEach(n=>{
+    n.setAttribute('data-animated','1');
+    const target = parseFloat(n.dataset.target);
+    const decimals = parseInt(n.dataset.decimals || '0', 10);
+    const prefix = n.dataset.prefix || '';
+    const suffix = n.dataset.suffix || '';
+    const dur = parseInt(n.dataset.duration || '900', 10);
+    animateNumber(n, target, { duration: dur, decimals, prefix, suffix, from: 0 });
+  });
+
+  const barSelector = force ? '.bar-fill[data-target]' : '.bar-fill[data-target]:not([data-animated])';
+  const ringSelector = force ? '.ring-progress[data-target-offset]' : '.ring-progress[data-target-offset]:not([data-animated])';
+  const bars = root.querySelectorAll(barSelector);
+  const rings = root.querySelectorAll(ringSelector);
   if(reduceMotion){
     bars.forEach(b=>{ b.style.width = b.dataset.target+'%'; b.setAttribute('data-animated','1'); });
     rings.forEach(r=>{ r.setAttribute('stroke-dashoffset', r.dataset.targetOffset); r.setAttribute('data-animated','1'); });
-    nums.forEach(n=>{ n.textContent = n.dataset.target; n.setAttribute('data-animated','1'); });
     return;
   }
   requestAnimationFrame(()=>{
@@ -3535,18 +3601,6 @@ function runEntranceAnimations(root){
       bars.forEach(b=>{ b.style.width = b.dataset.target+'%'; b.setAttribute('data-animated','1'); });
       rings.forEach(r=>{ r.setAttribute('stroke-dashoffset', r.dataset.targetOffset); r.setAttribute('data-animated','1'); });
     }, 120);
-  });
-  nums.forEach(n=>{
-    n.setAttribute('data-animated','1');
-    const target = parseFloat(n.dataset.target);
-    const dur = 900, start = performance.now();
-    function tick(now){
-      const p = Math.min(1, (now-start)/dur);
-      const eased = 1 - Math.pow(1-p, 3);
-      n.textContent = Math.round(target*eased);
-      if(p<1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
   });
 }
 
@@ -4115,14 +4169,18 @@ function statusOf(pct){
   return {label:'Qoniqarsiz', cls:'badge-poor'};
 }
 function renderHistoryStats(){
+  const el = document.getElementById('historyStats');
+  if(!el) return;
   const totalTests = HISTORY_DATA.length;
   const avgAcc = totalTests ? Math.round(HISTORY_DATA.reduce((s,r)=>s+(r.correct/r.total*100),0)/totalTests) : 0;
   const totalMinutes = totalTests*9;
-  document.getElementById('historyStats').innerHTML = `
+  const hours = Math.round(totalMinutes/60*10)/10;
+  el.innerHTML = `
     <div class="card stat-card"><div class="top">📝 Jami yechilgan testlar</div><div class="num"><span class="num-target" data-target="${totalTests}">0</span></div><div class="sub" style="color:var(--text-faint)">Barcha bo'limlar bo'yicha</div></div>
-    <div class="card stat-card"><div class="top">🎯 O'rtacha aniqlik</div><div class="num"><span class="num-target" data-target="${avgAcc}">0</span>%</div><div class="sub">So'nggi testlar bo'yicha</div></div>
-    <div class="card stat-card"><div class="top">⏱ Sarflangan vaqt</div><div class="num"><span class="num-target" data-target="${Math.round(totalMinutes/60*10)/10}">0</span> soat</div><div class="sub" style="color:var(--text-faint)">Taxminiy</div></div>
+    <div class="card stat-card"><div class="top">🎯 O'rtacha aniqlik</div><div class="num"><span class="num-target" data-target="${avgAcc}" data-suffix="%">0%</span></div><div class="sub">So'nggi testlar bo'yicha</div></div>
+    <div class="card stat-card"><div class="top">⏱ Sarflangan vaqt</div><div class="num"><span class="num-target" data-target="${hours}" data-decimals="1" data-suffix=" soat">0 soat</span></div><div class="sub" style="color:var(--text-faint)">Taxminiy</div></div>
   `;
+  runEntranceAnimations(el, true);
 }
 function renderHistoryList(){
   const list = HISTORY_DATA.filter(r=>{
@@ -4491,25 +4549,26 @@ function renderAdminOverview(){
   grid.innerHTML = `
     <div class="stat-card">
       <div class="stat-icon" style="background:var(--indigo-100);color:var(--indigo-700);">👥</div>
-      <div class="stat-val">${totalUsers}</div>
+      <div class="stat-val"><span class="num-target" data-target="${totalUsers}">0</span></div>
       <div class="stat-label">Jami foydalanuvchi</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🔥</div>
-      <div class="stat-val">${activeToday}</div>
+      <div class="stat-val"><span class="num-target" data-target="${activeToday}">0</span></div>
       <div class="stat-label">Bugun faol</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">⚡</div>
-      <div class="stat-val">${totalXp.toLocaleString()}</div>
+      <div class="stat-val"><span class="num-target" data-target="${totalXp}">0</span></div>
       <div class="stat-label">Jami XP</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">📝</div>
-      <div class="stat-val">${totalQuestions}</div>
+      <div class="stat-val"><span class="num-target" data-target="${totalQuestions}">0</span></div>
       <div class="stat-label">Jami savollar soni</div>
     </div>
   `;
+  runEntranceAnimations(grid, true);
 
   const skillAvg = SKILLS.map(s=>{
     const avg = ADMIN_USERS.length
@@ -6593,13 +6652,14 @@ function renderPodium(period, skill, type){
   podiumEl.innerHTML = order.map(i=>{
     const u = top3[i]; if(!u) return '<div></div>';
     return `
-    <div class="podium-item ${i===0?'first':''}">
+    <div class="podium-item ${i===0?'first':(i===1?'second':'third')}">
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${rankAvatarHTML(u, RANK_COLORS[i])}</div>
       <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
-      <div class="podium-xp">${u.xp} XP · ${escapeHtml(u.level)}</div>
+      <div class="podium-xp"><span class="num-target" data-target="${u.xp}">0</span> XP · ${escapeHtml(u.level)}</div>
     </div>`;
   }).join('');
+  runEntranceAnimations(podiumEl, true);
 }
 function renderLeaderboard(period, skill, type){
   const listEl = document.getElementById('leaderboardList');
@@ -6631,9 +6691,10 @@ function renderLeaderboard(period, skill, type){
         <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
         <div class="l">${escapeHtml(u.level)} daraja</div>
       </div>
-      <div class="lb-xp">${u.xp}<span style="font-size:10.5px;color:var(--text-faint);font-weight:700;"> XP</span></div>
+      <div class="lb-xp"><span class="num-target" data-target="${u.xp}">0</span><span style="font-size:10.5px;color:var(--text-faint);font-weight:700;"> XP</span></div>
     </div>
   `).join('');
+  runEntranceAnimations(listEl, true);
 }
 function renderRankTop(period, skill, type){
   if(type === 'cefr'){
@@ -6663,18 +6724,25 @@ function renderRankTop(period, skill, type){
     return;
   }
   const above = data[data.indexOf(me)-1];
-  document.getElementById('rankNum').textContent = '#' + me.rank;
-  document.getElementById('rankXpNum').textContent = me.xp.toLocaleString('ru-RU');
+  animateNumber('rankNum', me.rank, { prefix: '#', duration: 750 });
+  animateNumber('rankXpNum', me.xp, { duration: 900 });
+  const gapBar = document.getElementById('rankGapBar');
   if(above){
     const gap = above.xp - me.xp;
     const pct = Math.max(4, Math.min(100, Math.round((me.xp/above.xp)*100)));
-    document.getElementById('rankGapNum').textContent = gap.toLocaleString('ru-RU');
+    animateNumber('rankGapNum', gap, { duration: 900 });
     document.getElementById('rankGapText').innerHTML = "Keyingi o'ringgacha qolgan XP";
-    document.getElementById('rankGapBar').style.width = pct+'%';
+    if(gapBar){
+      gapBar.style.transition = 'width 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+      gapBar.style.width = pct+'%';
+    }
   } else {
     document.getElementById('rankGapNum').textContent = '🏆';
     document.getElementById('rankGapText').innerHTML = "🎉 Siz ro'yxat boshida turibsiz!";
-    document.getElementById('rankGapBar').style.width = '100%';
+    if(gapBar){
+      gapBar.style.transition = 'width 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+      gapBar.style.width = '100%';
+    }
   }
 }
 function renderRank(period, skill, type){
@@ -6720,11 +6788,14 @@ renderRank(currentRankPeriod, currentRankSkill, currentRankType);
    (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
 let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
-  document.getElementById('profileStats').innerHTML = `
+  const el = document.getElementById('profileStats');
+  if(!el) return;
+  el.innerHTML = `
     <div class="card stat-card"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.xp}">0</span></div><div class="sub">XP</div></div>
     <div class="card stat-card"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.topicsDone}">0</span></div><div class="sub" style="color:var(--text-faint)">/ ${PROFILE_STATS.topicsTotal}</div></div>
-    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}">0</span>%</div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
+    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}" data-suffix="%">0%</span></div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
   `;
+  runEntranceAnimations(el, true);
 }
 renderProfileStats();
 /* Backend get_user_dashboard javobidan XP/mavzular/aniqlikni oladi.
@@ -6941,16 +7012,19 @@ function showFullExamResults(){
       </div>`;
   }).join('');
   const overallPct = sumTotal ? Math.round((sumCorrect/sumTotal)*100) : 0;
+  const sumCorrectDisplay = Math.round(sumCorrect*10)/10;
+  const sumTotalDisplay = Math.round(sumTotal*10)/10;
   const body = document.getElementById('quizBody');
   body.innerHTML = `
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Umumiy natija</div>
-      <div style="font-size:34px;font-weight:800;margin:8px 0;">${Math.round(sumCorrect*10)/10} / ${Math.round(sumTotal*10)/10} ball</div>
-      <div style="color:var(--text-faint);font-size:13px;">${overallPct}% · ${getCEFRLevel(overallPct)} daraja</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;"><span class="num-target" data-target="${sumCorrectDisplay}" data-decimals="${sumCorrectDisplay % 1 !== 0 ? 1 : 0}">0</span> / <span class="num-target" data-target="${sumTotalDisplay}" data-decimals="${sumTotalDisplay % 1 !== 0 ? 1 : 0}">0</span> ball</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${overallPct}" data-suffix="%">0%</span> · ${getCEFRLevel(overallPct)} daraja</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">${rows}</div>
     <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="finishFullExamAndGoHome()">Bosh sahifaga qaytish</button>
   `;
+  runEntranceAnimations(body, true);
   if(overallPct>=60) fireConfetti();
 }
 function finishFullExamAndGoHome(){
@@ -8263,11 +8337,12 @@ function renderMuhavaraSummary(totalScore, maxScore){
   const timerEl = document.getElementById('quizTimer');
   if(timerEl) timerEl.textContent = '';
   const pct = Math.round((totalScore/maxScore)*100);
-  document.getElementById('quizBody').innerHTML = `
+  const body = document.getElementById('quizBody');
+  body.innerHTML = `
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Natija</div>
-      <div style="font-size:34px;font-weight:800;margin:8px 0;">${totalScore} / ${maxScore} ball</div>
-      <div style="color:var(--text-faint);font-size:13px;">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;"><span class="num-target" data-target="${totalScore}">0</span> / <span class="num-target" data-target="${maxScore}">0</span> ball</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct)} daraja</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
       ${currentQuiz.questions.map((q,i)=>`
@@ -8284,6 +8359,8 @@ function renderMuhavaraSummary(totalScore, maxScore){
     </div>
     <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="showView('dashboard')">Bosh sahifaga qaytish</button>
   `;
+  runEntranceAnimations(body, true);
+  if(pct>=60) fireConfetti();
 }
 function renderMuhavaraPhase(){
   clearQuestionTimer();
@@ -8415,11 +8492,13 @@ function renderKitabaSummary(){
   const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
   const maxScore = currentQuiz.questions.length * 10;
   const pct = Math.round((totalScore/maxScore)*100);
-  document.getElementById('quizBody').innerHTML = `
+  const totalScoreDisplay = Math.round(totalScore*10)/10;
+  const body = document.getElementById('quizBody');
+  body.innerHTML = `
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Natija</div>
-      <div style="font-size:34px;font-weight:800;margin:8px 0;">${Math.round(totalScore*10)/10} / ${maxScore} ball</div>
-      <div style="color:var(--text-faint);font-size:13px;">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+      <div style="font-size:34px;font-weight:800;margin:8px 0;"><span class="num-target" data-target="${totalScoreDisplay}" data-decimals="${totalScoreDisplay % 1 !== 0 ? 1 : 0}">0</span> / <span class="num-target" data-target="${maxScore}">0</span> ball</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct)} daraja</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
       ${currentQuiz.questions.map(q=>`
@@ -8447,6 +8526,8 @@ function renderKitabaSummary(){
       <button class="btn btn-primary" style="flex:1;" onclick="showView('dashboard')">Bosh sahifaga qaytish</button>
     </div>
   `;
+  runEntranceAnimations(body, true);
+  if(pct>=60) fireConfetti();
 }
 /* Natijadan keyin "Qayta boshlash" bosilsa — 3 qism uchun yangi (tasodifiy)
    mavzular bilan butun imtihon qaytadan boshlanadi. */
@@ -8489,11 +8570,7 @@ function finishQuiz(){
   }
 
   document.getElementById('resultTopic').textContent = currentQuiz.label || 'Test natijasi';
-  document.getElementById('resultCorrect').textContent = correct;
-  document.getElementById('resultTotal').textContent = total;
-  document.getElementById('resultXP').textContent = xp;
   document.getElementById('resultLevel').textContent = getCEFRLevel(pct);
-  document.getElementById('resWrong').textContent = wrong;
 
   const elapsed = Math.round((Date.now()-currentQuiz.startedAt)/1000);
   const m = Math.floor(elapsed/60), s = elapsed%60;
@@ -8503,7 +8580,16 @@ function finishQuiz(){
   const ring = document.getElementById('resultRing');
   ring.style.stroke = currentQuiz.color;
   ring.setAttribute('stroke-dasharray', c);
-  ring.setAttribute('stroke-dashoffset', c-(pct/100)*c);
+  ring.style.transition = 'stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+  ring.setAttribute('stroke-dashoffset', c);
+  setTimeout(()=>{
+    ring.setAttribute('stroke-dashoffset', c-(pct/100)*c);
+  }, 50);
+
+  animateNumber('resultCorrect', correct, { duration: 850 });
+  animateNumber('resultTotal', total, { duration: 600 });
+  animateNumber('resultXP', xp, { duration: 850, prefix: '+' });
+  animateNumber('resWrong', wrong, { duration: 700 });
 
   const titleEl = document.getElementById('resultTitle');
   const subEl = document.getElementById('resultSub');
