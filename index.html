@@ -760,8 +760,70 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .legend .row{ display:flex; align-items:center; gap:8px;}
 .legend .sw{ width:12px; height:12px; border-radius:4px; }
 
-/* mic / writing views */
-.mic-wrap{ display:flex; flex-direction:column; align-items:center; padding:30px 20px 10px 20px; }
+/* mic / writing views & Voice Visualization */
+.mic-wrap{ display:flex; flex-direction:column; align-items:center; padding:24px 20px 10px 20px; width:100%; max-width:440px; margin:0 auto; }
+.voice-viz-card{
+  width:100%; max-width:420px; margin-top:16px; background:var(--card); border:1px solid var(--border);
+  border-radius:18px; padding:18px; box-shadow:0 8px 26px rgba(0,0,0,0.06); text-align:left;
+}
+.voice-viz-canvas-box{
+  position:relative; width:100%; height:150px; background:var(--bg); border:1.5px solid var(--border);
+  border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center;
+}
+.voice-viz-canvas{ width:100%; height:100%; display:block; }
+.voice-viz-overlay-hint{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; color:var(--text-faint); font-size:12.5px; font-weight:600; pointer-events:none; background:rgba(0,0,0,0.02);
+  transition:opacity .2s;
+}
+.voice-viz-overlay-hint svg{ width:28px; height:28px; opacity:.6; }
+.voice-viz-header-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:8px; flex-wrap:wrap; }
+.voice-viz-modes{ display:flex; align-items:center; gap:5px; background:var(--bg); padding:3px; border-radius:20px; border:1px solid var(--border); }
+.voice-viz-mode-btn{
+  font-family:inherit; font-size:11px; font-weight:700; padding:4px 10px; border-radius:14px; border:none;
+  background:transparent; color:var(--text-dim); cursor:pointer; transition:.15s; display:flex; align-items:center; gap:4px;
+}
+.voice-viz-mode-btn.active{ background:var(--muhavara); color:#fff; box-shadow:0 2px 8px rgba(235,140,94,0.4); }
+.voice-viz-live-badge{
+  display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700;
+  padding:3px 9px; border-radius:16px; background:var(--bg); border:1px solid var(--border); color:var(--text-faint);
+  transition:.2s;
+}
+.voice-viz-live-badge.speaking{
+  color:#22C57F; border-color:rgba(34,197,127,0.4); background:rgba(34,197,127,0.12);
+}
+.live-pulse-dot{
+  width:7px; height:7px; border-radius:50%; background:#22C57F; display:inline-block;
+  animation:livePulseDot 1.2s ease-in-out infinite;
+}
+.voice-viz-live-badge:not(.speaking) .live-pulse-dot{
+  background:var(--text-faint); animation:none; opacity:0.5;
+}
+@keyframes livePulseDot{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.4); opacity:0.4; } }
+
+.voice-viz-stats-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:12px;
+}
+.voice-stat-card{
+  background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:7px 8px; text-align:center;
+}
+.voice-stat-card .v-lbl{ font-size:10px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.3px; }
+.voice-stat-card .v-val{ font-size:13px; font-weight:800; color:var(--text); margin-top:2px; }
+
+.voice-level-bar-wrap{ width:100%; margin-top:12px; }
+.voice-level-bar-track{ width:100%; height:10px; border-radius:6px; background:var(--bg); border:1px solid var(--border); overflow:hidden; position:relative; }
+.voice-level-bar-fill{
+  height:100%; width:0%; border-radius:6px; background:linear-gradient(90deg, #22C57F 0%, #5FA6EE 60%, var(--muhavara) 100%);
+  transition:width .06s linear;
+}
+
+.voice-viz-mini-wrap{
+  width:100%; max-width:380px; margin-bottom:18px; background:var(--bg); border:1px solid var(--border);
+  border-radius:14px; padding:10px 12px; position:relative; overflow:hidden;
+}
+.voice-viz-mini-canvas{ width:100%; height:76px; display:block; border-radius:8px; }
+.voice-viz-mini-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+
 .mic-circle{
   width:120px; height:120px; border-radius:50%; background:linear-gradient(155deg,var(--indigo-500),var(--indigo-900));
   display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px -8px rgba(18,167,104,0.55); cursor:pointer;
@@ -1632,27 +1694,70 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
         </div>
       </div>
 
-      <!-- ============ MIC CHECK SCREEN (Muhovara boshlanishidan oldin) ============ -->
+      <!-- ============ MIC CHECK SCREEN (Muhovara boshlanishidan oldin & Voice Viz) ============ -->
       <div class="view" id="view-miccheck">
         <div class="back-row" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
           Ortga
         </div>
         <div class="skill-intro-wrap">
-          <div class="card skill-intro-card">
+          <div class="card skill-intro-card" style="max-width:480px;">
             <div class="skill-intro-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M9 22h6"/></svg>
             </div>
-            <div class="skill-intro-title-uz">Mikrofonni tekshirish</div>
-            <p class="skill-intro-desc">Muhovara (Speaking) bo'limida har bir javobingiz ovoz orqali yoziladi. Imtihonni boshlashdan oldin mikrofoningiz ishlayotganiga ishonch hosil qiling.</p>
+            <div class="skill-intro-title-uz" id="micCheckTitle">Ovoz Vizualizatsiyasi & Mikrofon</div>
+            <p class="skill-intro-desc" id="micCheckDesc">Mikrofoningiz orqali gapirganingizda, ovoz kuchi va to'lqinlari real-vaqtda ekranda aks etadi.</p>
 
-            <div class="mic-check-box">
-              <div class="mic-level-track"><div class="mic-level-fill" id="micLevelFill"></div></div>
-              <div class="mic-check-status" id="micCheckStatus">Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring</div>
+            <div class="voice-viz-card">
+              <div class="voice-viz-header-row">
+                <div class="voice-viz-live-badge" id="micVizLiveBadge">
+                  <span class="live-pulse-dot"></span>
+                  <span id="micVizLiveText">Kutilmoqda</span>
+                </div>
+                <div class="voice-viz-modes">
+                  <button type="button" class="voice-viz-mode-btn active" id="vizModeWaveBtn" onclick="switchMicVizMode('wave')">🌊 To'lqin</button>
+                  <button type="button" class="voice-viz-mode-btn" id="vizModeBarsBtn" onclick="switchMicVizMode('bars')">📊 Spektr</button>
+                  <button type="button" class="voice-viz-mode-btn" id="vizModeOrbBtn" onclick="switchMicVizMode('orb')">💫 Orb</button>
+                </div>
+              </div>
+
+              <div class="voice-viz-canvas-box">
+                <canvas id="voiceVizCanvas" class="voice-viz-canvas"></canvas>
+                <div class="voice-viz-overlay-hint" id="voiceVizHint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
+                  <span>Mikrofonni yoqish uchun quyidagi tugmani bosing</span>
+                </div>
+              </div>
+
+              <div class="voice-level-bar-wrap">
+                <div class="voice-level-bar-track">
+                  <div class="voice-level-bar-fill" id="micLevelFill"></div>
+                </div>
+              </div>
+
+              <div class="voice-viz-stats-grid">
+                <div class="voice-stat-card">
+                  <div class="v-lbl">Ovoz kuchi</div>
+                  <div class="v-val" id="voiceStatVolume">0%</div>
+                </div>
+                <div class="voice-stat-card">
+                  <div class="v-lbl">Desibel (dB)</div>
+                  <div class="v-val" id="voiceStatDb">-60 dB</div>
+                </div>
+                <div class="voice-stat-card">
+                  <div class="v-lbl">Holat</div>
+                  <div class="v-val" id="voiceStatFreq">Tinch</div>
+                </div>
+              </div>
+
+              <div class="mic-check-status" id="micCheckStatus" style="margin-top:12px;">Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring</div>
             </div>
 
-            <button class="btn btn-primary skill-intro-btn" id="micCheckBtn" onclick="runMicCheck()">🎤 Mikrofonni tekshirish</button>
-            <button class="btn btn-primary skill-intro-btn" id="micStartExamBtn" style="display:none;" onclick="confirmMicCheckAndStartMuhavara()">Imtihonni boshlash</button>
+            <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:420px;margin-top:18px;">
+              <button class="btn btn-primary skill-intro-btn" id="micCheckBtn" style="margin-top:0;" onclick="runMicCheck()">🎤 Mikrofonni yoqish / sinash</button>
+              <button class="btn btn-outline" id="micStopBtn" style="display:none;width:100%;" onclick="stopMicCheckStream()">⏹ Sinovni to'xtatish</button>
+              <button class="btn btn-primary skill-intro-btn" id="micStartExamBtn" style="display:none;margin-top:0;background:var(--green);" onclick="confirmMicCheckAndStartMuhavara()">✅ Imtihonni boshlash</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1937,6 +2042,11 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
             <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">🖼️</div>
             <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
+          </div>
+          <div class="settings-item" onclick="openMicCheck(true)">
+            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">🎙️</div>
+            <div class="si-text"><div class="t">Mikrofon & Ovoz vizualizatsiyasi</div><div class="s">Ovoz to'lqinlarini real-vaqtda sinash</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;opacity:0.4;margin-left:auto;"><path d="m9 18 6-6-6-6"/></svg>
           </div>
           <div class="settings-item" onclick="toast('Chiqish tasdiqlash oynasi tez orada')">
             <div class="si-icon" style="background:var(--red-bg);color:var(--red);">🚪</div>
@@ -3508,45 +3618,480 @@ function beginPendingSkill(){
   else{ startQuiz(pendingSkillId); }
 }
 
-/* ---------------- Mikrofonni tekshirish (Muhovara boshlanishidan oldin) ----------------
-   Speaking bo'limi butunlay ovoz yozishga tayanadi — shuning uchun test boshlanishidan
-   oldin, prep vaqti behuda ketmasligi uchun, mikrofon ruxsati va ishlashini alohida
-   ekranda tekshiramiz. Faqat ruxsat berilgani emas, balki haqiqatan ham signal
-   kelayotgani (RMS darajasi) tekshiriladi. */
+/* ================= VOICE VISUALIZATION ENGINE (Web Audio API) =================
+   Mikrofon signali (amplitude/frequency) asosida real-vaqtda ishlovchi yuqori sifatli
+   Canvas vizualizatori. Foydalanuvchi gapirganda to'lqinlar jonlanadi, jim turganda
+   sokin tinch holatga o'tadi. */
+class VoiceVisualizer {
+  constructor(canvasOrId, options = {}) {
+    this.canvas = typeof canvasOrId === 'string' ? document.getElementById(canvasOrId) : canvasOrId;
+    this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+    this.mode = options.mode || 'wave'; // 'wave' | 'bars' | 'orb'
+    this.analyser = options.analyser || null;
+    this.active = false;
+    this.rafId = null;
+    this.isSpeaking = false;
+    this.smoothedVolume = 0;
+    this.barPeaks = new Array(36).fill(0);
+    this.barPeakDecay = new Array(36).fill(0);
+    this.wavePhase = 0;
+    this.particles = [];
+    this.onMetrics = options.onMetrics || null;
+    this.freqData = null;
+    this.timeData = null;
+    this.width = 0;
+    this.height = 0;
+    this.resize();
+  }
+
+  resize() {
+    if (!this.canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = this.canvas.getBoundingClientRect();
+    const w = rect.width || this.canvas.clientWidth || 320;
+    const h = rect.height || this.canvas.clientHeight || 120;
+    this.canvas.width = Math.round(w * dpr);
+    this.canvas.height = Math.round(h * dpr);
+    if (this.ctx) {
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    this.width = w;
+    this.height = h;
+  }
+
+  setAnalyser(analyser) {
+    this.analyser = analyser;
+    if (this.analyser) {
+      this.analyser.fftSize = 512;
+      this.analyser.smoothingTimeConstant = 0.78;
+      this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
+      this.timeData = new Uint8Array(this.analyser.frequencyBinCount);
+    }
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+    this.particles = [];
+  }
+
+  start() {
+    this.active = true;
+    this.resize();
+    const tick = () => {
+      if (!this.active) return;
+      this.renderFrame();
+      this.rafId = requestAnimationFrame(tick);
+    };
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(tick);
+  }
+
+  stop() {
+    this.active = false;
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.isSpeaking = false;
+    this.smoothedVolume = 0;
+    if (this.ctx && this.width && this.height) {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+    }
+  }
+
+  renderFrame() {
+    if (!this.ctx || !this.width || !this.height) return;
+    const w = this.width;
+    const h = this.height;
+    const ctx = this.ctx;
+
+    let rms = 0;
+    let bass = 0;
+    let mid = 0;
+    let treble = 0;
+
+    if (this.analyser && this.timeData && this.freqData) {
+      this.analyser.getByteTimeDomainData(this.timeData);
+      this.analyser.getByteFrequencyData(this.freqData);
+
+      let sum = 0;
+      for (let i = 0; i < this.timeData.length; i++) {
+        const v = (this.timeData[i] - 128) / 128;
+        sum += v * v;
+      }
+      rms = Math.sqrt(sum / this.timeData.length);
+
+      let bSum = 0, mSum = 0, tSum = 0;
+      for (let i = 0; i < 10; i++) bSum += this.freqData[i];
+      for (let i = 10; i < 48; i++) mSum += this.freqData[i];
+      for (let i = 48; i < 120; i++) tSum += this.freqData[i];
+      bass = bSum / 10 / 255;
+      mid = mSum / 38 / 255;
+      treble = tSum / 72 / 255;
+    }
+
+    const rawVol = Math.min(1, rms * 4.8);
+    if (rawVol > this.smoothedVolume) {
+      this.smoothedVolume += (rawVol - this.smoothedVolume) * 0.42;
+    } else {
+      this.smoothedVolume += (rawVol - this.smoothedVolume) * 0.12;
+    }
+
+    // Gapirish chegarasi (faol nutq aniqlash)
+    this.isSpeaking = this.smoothedVolume > 0.05 || mid > 0.14;
+
+    const volumePercent = Math.min(100, Math.round(this.smoothedVolume * 100));
+    const decibels = rms > 0.0001 ? Math.round(20 * Math.log10(rms)) : -60;
+
+    let toneLabel = 'Tinch';
+    if (this.isSpeaking) {
+      if (treble > mid && treble > bass) toneLabel = 'Aniq talaffuz';
+      else if (bass > mid && bass > 0.3) toneLabel = 'Past chastota';
+      else toneLabel = 'Jonli nutq';
+    }
+
+    if (this.onMetrics) {
+      this.onMetrics({
+        volumePercent,
+        smoothedVolume: this.smoothedVolume,
+        rms,
+        decibels: Math.max(-60, decibels),
+        isSpeaking: this.isSpeaking,
+        toneLabel,
+        bass,
+        mid,
+        treble
+      });
+    }
+
+    ctx.clearRect(0, 0, w, h);
+
+    if (this.mode === 'bars') {
+      this.drawBars(ctx, w, h);
+    } else if (this.mode === 'orb') {
+      this.drawOrb(ctx, w, h, bass, mid);
+    } else {
+      this.drawWaves(ctx, w, h, mid);
+    }
+  }
+
+  drawWaves(ctx, w, h, midEnergy) {
+    const centerY = h / 2;
+    const vol = this.smoothedVolume;
+    const speaking = this.isSpeaking;
+
+    this.wavePhase += speaking ? (0.05 + vol * 0.09) : 0.015;
+
+    // Markaziy mayin chiziq
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(w, centerY);
+    ctx.stroke();
+
+    // Gapirilayotganda zarrachalar chiqarish
+    if (speaking && vol > 0.12 && Math.random() < 0.4) {
+      this.particles.push({
+        x: w * 0.25 + Math.random() * (w * 0.5),
+        y: centerY + (Math.random() - 0.5) * 36 * vol,
+        vx: (Math.random() - 0.5) * 1.6,
+        vy: (Math.random() - 0.5) * 2 - 0.4,
+        size: 2 + Math.random() * 2.5,
+        alpha: 1,
+        color: Math.random() > 0.5 ? '#22C57F' : '#5FA6EE'
+      });
+    }
+
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.038;
+      if (p.alpha <= 0) {
+        this.particles.splice(i, 1);
+        continue;
+      }
+      ctx.beginPath();
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // 3 qatlamli sinxron to'lqinlar
+    const layers = [
+      { amp: speaking ? 6 + vol * (h * 0.4) : 3, freq: 0.018, speed: 1.0, color: 'rgba(34, 197, 127, 0.9)', fill: 'rgba(34, 197, 127, 0.14)', strokeWidth: 3 },
+      { amp: speaking ? 4 + vol * (h * 0.28) : 2, freq: 0.026, speed: -1.3, color: 'rgba(95, 166, 238, 0.85)', fill: 'rgba(95, 166, 238, 0.08)', strokeWidth: 2.2 },
+      { amp: speaking ? 3 + vol * (h * 0.20) : 1.5, freq: 0.034, speed: 1.6, color: 'rgba(235, 140, 94, 0.8)', fill: 'rgba(235, 140, 94, 0.06)', strokeWidth: 1.8 }
+    ];
+
+    layers.forEach((layer, idx) => {
+      ctx.beginPath();
+      ctx.lineWidth = layer.strokeWidth;
+      ctx.strokeStyle = layer.color;
+
+      const step = 4;
+      for (let x = 0; x <= w + step; x += step) {
+        const normX = x / w;
+        const envelope = Math.sin(normX * Math.PI);
+        const wave = Math.sin(x * layer.freq + this.wavePhase * layer.speed) *
+                     Math.cos(x * layer.freq * 0.5 + this.wavePhase * 0.5);
+        const y = centerY + wave * layer.amp * envelope;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      if (idx === 0) {
+        ctx.lineTo(w, centerY);
+        ctx.lineTo(0, centerY);
+        ctx.closePath();
+        ctx.fillStyle = layer.fill;
+        ctx.fill();
+      }
+    });
+  }
+
+  drawBars(ctx, w, h) {
+    const barCount = 28;
+    const gap = 4;
+    const totalBarWidth = (w - 24) - (gap * (barCount - 1));
+    const barWidth = Math.max(3, totalBarWidth / barCount);
+    const startX = (w - (barCount * barWidth + (barCount - 1) * gap)) / 2;
+    const centerY = h / 2;
+    const vol = this.smoothedVolume;
+    const speaking = this.isSpeaking;
+
+    for (let i = 0; i < barCount; i++) {
+      let val = 0;
+      if (this.freqData) {
+        const binIdx = Math.floor((i / barCount) * Math.min(90, this.freqData.length));
+        val = this.freqData[binIdx] / 255;
+      }
+      const rawHeight = speaking ? Math.max(4, (val * 0.75 + vol * 0.25) * (h * 0.82)) : 4;
+      const x = startX + i * (barWidth + gap);
+
+      if (rawHeight > this.barPeaks[i]) {
+        this.barPeaks[i] = rawHeight;
+        this.barPeakDecay[i] = 0;
+      } else {
+        this.barPeakDecay[i] += 0.45;
+        this.barPeaks[i] = Math.max(rawHeight, this.barPeaks[i] - this.barPeakDecay[i]);
+      }
+
+      const barHeight = rawHeight;
+      const yTop = centerY - barHeight / 2;
+
+      const grad = ctx.createLinearGradient(0, yTop, 0, yTop + barHeight);
+      if (speaking) {
+        grad.addColorStop(0, '#EB8C5E');
+        grad.addColorStop(0.5, '#5FA6EE');
+        grad.addColorStop(1, '#22C57F');
+      } else {
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0.08)');
+      }
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      const radius = Math.min(barWidth / 2, 4);
+      if (ctx.roundRect) {
+        ctx.roundRect(x, yTop, barWidth, barHeight, radius);
+      } else {
+        ctx.rect(x, yTop, barWidth, barHeight);
+      }
+      ctx.fill();
+
+      if (speaking && this.barPeaks[i] > 6) {
+        const peakY = centerY - this.barPeaks[i] / 2 - 3;
+        ctx.fillStyle = '#EB8C5E';
+        ctx.beginPath();
+        ctx.arc(x + barWidth / 2, peakY, Math.min(2, barWidth / 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  drawOrb(ctx, w, h, bass, mid) {
+    const cx = w / 2;
+    const cy = h / 2;
+    const vol = this.smoothedVolume;
+    const speaking = this.isSpeaking;
+    const baseRadius = 22 + (speaking ? vol * 24 : 0);
+
+    if (speaking) {
+      const glowGrad = ctx.createRadialGradient(cx, cy, baseRadius * 0.4, cx, cy, baseRadius * 2.3);
+      glowGrad.addColorStop(0, 'rgba(34, 197, 127, 0.35)');
+      glowGrad.addColorStop(0.5, 'rgba(95, 166, 238, 0.18)');
+      glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, baseRadius * 2.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const rayCount = 36;
+    for (let i = 0; i < rayCount; i++) {
+      const angle = (i / rayCount) * Math.PI * 2;
+      let val = 0;
+      if (this.freqData) {
+        const binIdx = Math.floor((i / rayCount) * Math.min(80, this.freqData.length));
+        val = this.freqData[binIdx] / 255;
+      }
+      const rayLen = speaking ? (4 + (val * 0.65 + vol * 0.35) * 30) : 3;
+      const x1 = cx + Math.cos(angle) * (baseRadius + 2);
+      const y1 = cy + Math.sin(angle) * (baseRadius + 2);
+      const x2 = cx + Math.cos(angle) * (baseRadius + 2 + rayLen);
+      const y2 = cy + Math.sin(angle) * (baseRadius + 2 + rayLen);
+
+      ctx.beginPath();
+      ctx.strokeStyle = speaking ? (i % 2 === 0 ? '#22C57F' : '#5FA6EE') : 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius);
+    if (speaking) {
+      coreGrad.addColorStop(0, '#ffffff');
+      coreGrad.addColorStop(0.4, '#22C57F');
+      coreGrad.addColorStop(1, '#12A768');
+    } else {
+      coreGrad.addColorStop(0, 'rgba(255,255,255,0.35)');
+      coreGrad.addColorStop(1, 'rgba(255,255,255,0.1)');
+    }
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, baseRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ---------------- Mikrofonni tekshirish & Ovoz Vizualizatsiyasi ---------------- */
 let micCheckStream = null;
 let micCheckAudioCtx = null;
-let micCheckRaf = null;
+let micCheckVisualizer = null;
 let micCheckConfirmed = false;
-let micCheckTimeoutHandled = false;
-function openMicCheck(){
+let micCheckFromSettings = false;
+
+function switchMicVizMode(mode){
+  ['wave','bars','orb'].forEach(m=>{
+    const btn = document.getElementById('vizMode' + m.charAt(0).toUpperCase() + m.slice(1) + 'Btn');
+    if(btn) btn.classList.toggle('active', m === mode);
+  });
+  if(micCheckVisualizer){
+    micCheckVisualizer.setMode(mode);
+  }
+}
+
+function openMicCheck(fromSettings = false){
+  micCheckFromSettings = Boolean(fromSettings);
   micCheckConfirmed = false;
-  micCheckTimeoutHandled = false;
+  
+  const titleEl = document.getElementById('micCheckTitle');
+  const descEl = document.getElementById('micCheckDesc');
   const statusEl = document.getElementById('micCheckStatus');
-  statusEl.className = 'mic-check-status';
-  statusEl.textContent = "Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring";
-  document.getElementById('micLevelFill').style.width = '0%';
+  const badgeEl = document.getElementById('micVizLiveBadge');
+  const badgeText = document.getElementById('micVizLiveText');
+  const hintEl = document.getElementById('voiceVizHint');
+  const fillEl = document.getElementById('micLevelFill');
   const btn = document.getElementById('micCheckBtn');
-  btn.style.display = ''; btn.disabled = false; btn.textContent = '🎤 Mikrofonni tekshirish';
-  document.getElementById('micStartExamBtn').style.display = 'none';
+  const stopBtn = document.getElementById('micStopBtn');
+  const startExamBtn = document.getElementById('micStartExamBtn');
+
+  if(titleEl) titleEl.textContent = fromSettings ? "Ovoz Vizualizatsiyasi & Mikrofon" : "Mikrofonni tekshirish";
+  if(descEl) descEl.textContent = fromSettings ? "Mikrofoningiz orqali gapiring — ovoz to'lqinlari, spektr va balandligi real-vaqtda aks etadi." : "Muhovara (Speaking) bo'limida javobingiz ovoz orqali yoziladi. Mikrofoningiz ishlayotganiga ishonch hosil qiling.";
+  if(statusEl){
+    statusEl.className = 'mic-check-status';
+    statusEl.textContent = "Tekshirish uchun tugmani bosing, so'ng biror narsa gapiring";
+  }
+  if(badgeEl) badgeEl.className = 'voice-viz-live-badge';
+  if(badgeText) badgeText.textContent = "Kutilmoqda";
+  if(hintEl) hintEl.style.opacity = '1';
+  if(fillEl) fillEl.style.width = '0%';
+  
+  document.getElementById('voiceStatVolume').textContent = '0%';
+  document.getElementById('voiceStatDb').textContent = '-60 dB';
+  document.getElementById('voiceStatFreq').textContent = 'Tinch';
+
+  btn.style.display = '';
+  btn.disabled = false;
+  btn.textContent = '🎤 Mikrofonni yoqish / sinash';
+  if(stopBtn) stopBtn.style.display = 'none';
+  if(startExamBtn) startExamBtn.style.display = 'none';
+
   showView('miccheck');
+
+  // Canvasni to'g'ri o'lchamda tayyorlash
+  setTimeout(()=>{
+    const canvas = document.getElementById('voiceVizCanvas');
+    if(canvas && !micCheckVisualizer){
+      micCheckVisualizer = new VoiceVisualizer(canvas, { mode: 'wave' });
+    }
+    if(micCheckVisualizer) micCheckVisualizer.resize();
+  }, 100);
 }
+
 function stopMicCheckStream(){
-  if(micCheckRaf){ cancelAnimationFrame(micCheckRaf); micCheckRaf = null; }
-  if(micCheckStream){ micCheckStream.getTracks().forEach(t=>t.stop()); micCheckStream = null; }
-  if(micCheckAudioCtx){ try{ micCheckAudioCtx.close(); }catch(e){} micCheckAudioCtx = null; }
+  if(micCheckVisualizer){
+    micCheckVisualizer.stop();
+  }
+  if(micCheckStream){
+    micCheckStream.getTracks().forEach(t=>t.stop());
+    micCheckStream = null;
+  }
+  if(micCheckAudioCtx){
+    try{ micCheckAudioCtx.close(); }catch(e){}
+    micCheckAudioCtx = null;
+  }
+
+  const btn = document.getElementById('micCheckBtn');
+  const stopBtn = document.getElementById('micStopBtn');
+  const hintEl = document.getElementById('voiceVizHint');
+  const badgeEl = document.getElementById('micVizLiveBadge');
+  const badgeText = document.getElementById('micVizLiveText');
+  const fillEl = document.getElementById('micLevelFill');
+
+  if(btn){
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = '🎤 Qayta yoqish';
+  }
+  if(stopBtn) stopBtn.style.display = 'none';
+  if(hintEl) hintEl.style.opacity = '1';
+  if(badgeEl) badgeEl.className = 'voice-viz-live-badge';
+  if(badgeText) badgeText.textContent = "To'xtatildi";
+  if(fillEl) fillEl.style.width = '0%';
+
+  document.getElementById('voiceStatVolume').textContent = '0%';
+  document.getElementById('voiceStatDb').textContent = '-60 dB';
+  document.getElementById('voiceStatFreq').textContent = 'Tinch';
 }
+
 async function runMicCheck(){
   const statusEl = document.getElementById('micCheckStatus');
   const btn = document.getElementById('micCheckBtn');
+  const stopBtn = document.getElementById('micStopBtn');
+  const startExamBtn = document.getElementById('micStartExamBtn');
   const fill = document.getElementById('micLevelFill');
+  const hintEl = document.getElementById('voiceVizHint');
+  const badgeEl = document.getElementById('micVizLiveBadge');
+  const badgeText = document.getElementById('micVizLiveText');
+
   stopMicCheckStream();
   micCheckConfirmed = false;
-  micCheckTimeoutHandled = false;
   btn.disabled = true;
   statusEl.className = 'mic-check-status';
-  statusEl.textContent = "Ruxsat so'ralmoqda...";
+  statusEl.textContent = "Mikrofonga ruxsat so'ralmoqda...";
+
   try{
-    micCheckStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    micCheckStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
   }catch(e){
     btn.disabled = false;
     btn.textContent = '🎤 Qayta urinish';
@@ -3554,43 +4099,57 @@ async function runMicCheck(){
     statusEl.textContent = "❌ Mikrofonga ruxsat berilmadi. Brauzer/Telegram sozlamalaridan ruxsat berib, qayta urinib ko'ring.";
     return;
   }
-  btn.disabled = false;
-  btn.textContent = '🔴 Tinglanmoqda...';
-  statusEl.textContent = "Endi biror narsa gapiring — ovoz darajasi pastda ko'rinadi";
-  micCheckAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const source = micCheckAudioCtx.createMediaStreamSource(micCheckStream);
-  const analyser = micCheckAudioCtx.createAnalyser();
-  analyser.fftSize = 512;
-  source.connect(analyser);
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  let peak = 0;
-  const startedAt = Date.now();
-  function tick(){
-    analyser.getByteTimeDomainData(data);
-    let sum = 0;
-    for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
-    const rms = Math.sqrt(sum/data.length);
-    const level = Math.min(100, Math.round(rms*260));
-    fill.style.width = level+'%';
-    if(level > peak) peak = level;
-    if(!micCheckConfirmed && peak > 12){
-      micCheckConfirmed = true;
-      statusEl.className = 'mic-check-status ok';
-      statusEl.textContent = "✅ Mikrofon ishlayapti! Imtihonni boshlashingiz mumkin.";
-      btn.style.display = 'none';
-      document.getElementById('micStartExamBtn').style.display = '';
+
+  btn.style.display = 'none';
+  if(stopBtn) stopBtn.style.display = '';
+  if(hintEl) hintEl.style.opacity = '0';
+  statusEl.textContent = "Mikrofon faol — endi biror narsa gapiring, to'lqinlar harakatlanadi";
+
+  try{
+    micCheckAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = micCheckAudioCtx.createMediaStreamSource(micCheckStream);
+    const analyser = micCheckAudioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+
+    const canvas = document.getElementById('voiceVizCanvas');
+    if(!micCheckVisualizer){
+      micCheckVisualizer = new VoiceVisualizer(canvas, { mode: 'wave' });
     }
-    if(!micCheckConfirmed && !micCheckTimeoutHandled && Date.now()-startedAt > 8000){
-      micCheckTimeoutHandled = true;
-      statusEl.className = 'mic-check-status err';
-      statusEl.textContent = "🔇 Ovoz eshitilmayapti. Mikrofon tanlovini tekshiring yoki baribir davom eting.";
-      btn.textContent = '🎤 Qayta urinish';
-      document.getElementById('micStartExamBtn').style.display = '';
-    }
-    micCheckRaf = requestAnimationFrame(tick);
+    micCheckVisualizer.setAnalyser(analyser);
+
+    let peakDetected = 0;
+    micCheckVisualizer.onMetrics = (metrics) => {
+      fill.style.width = metrics.volumePercent + '%';
+      document.getElementById('voiceStatVolume').textContent = metrics.volumePercent + '%';
+      document.getElementById('voiceStatDb').textContent = metrics.decibels + ' dB';
+      document.getElementById('voiceStatFreq').textContent = metrics.toneLabel;
+
+      if(metrics.isSpeaking){
+        badgeEl.className = 'voice-viz-live-badge speaking';
+        badgeText.textContent = '🟢 Gapirilmoqda';
+      } else {
+        badgeEl.className = 'voice-viz-live-badge';
+        badgeText.textContent = '⚪ Tinglanmoqda';
+      }
+
+      if(metrics.volumePercent > peakDetected) peakDetected = metrics.volumePercent;
+
+      if(!micCheckConfirmed && peakDetected > 14){
+        micCheckConfirmed = true;
+        statusEl.className = 'mic-check-status ok';
+        statusEl.textContent = "✅ Ajoyib! Ovoz signali aniqlandi va mikrofon yaxshi ishlamoqda.";
+        if(startExamBtn) startExamBtn.style.display = '';
+      }
+    };
+
+    micCheckVisualizer.start();
+  }catch(err){
+    statusEl.className = 'mic-check-status err';
+    statusEl.textContent = "Audio vizualizatsiyasida xatolik: " + err.message;
   }
-  tick();
 }
+
 function confirmMicCheckAndStartMuhavara(){
   stopMicCheckStream();
   startQuiz('muhavara');
@@ -7857,10 +8416,11 @@ async function startMuhavaraRecording(){
   muhavaraRecorder.start();
   startTimer(currentQuiz.questions[currentQuiz.idx].part.answerSecs, ()=> stopMuhavaraRecording());
 }
-/* Yozib olish paytida haqiqiy ovoz balandligini o'lchab, mic doirasi atrofidagi
-   halqalarni jonlantiradi — foydalanuvchi mikrofon ishlayotganini ko'rib turadi. */
+/* Yozib olish paytida haqiqiy ovoz balandligi va spektrini o'lchab,
+   Canvas to'lqinlarini va mic doirasi atrofidagi halqalarni real-vaqtda jonlantiradi. */
 let muhavaraLevelAudioCtx = null;
-let muhavaraLevelRaf = null;
+let muhavaraVisualizer = null;
+
 function startMuhavaraLevelMeter(){
   try{
     muhavaraLevelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -7868,52 +8428,72 @@ function startMuhavaraLevelMeter(){
     const analyser = muhavaraLevelAudioCtx.createAnalyser();
     analyser.fftSize = 512;
     source.connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const startedAt = Date.now();
-    function tick(){
-      const ring = document.getElementById('micRing');
-      const ring2 = document.getElementById('micRing2');
-      const glow1 = document.getElementById('micGlow1');
-      const glow2 = document.getElementById('micGlow2');
-      const glow3 = document.getElementById('micGlow3');
-      if(!ring || !currentQuiz || currentQuiz.phase !== 'recording'){ muhavaraLevelRaf = null; return; }
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
-      const rms = Math.sqrt(sum/data.length);
-      const level = Math.min(1, rms*5.5);
-      // Doimiy, sokin "nafas olish" tempi (jim turgan paytda ham halqalar butunlay
-      // to'xtab qolmasin — GIF'dagi kabi uzluksiz pulsatsiya), gapirganda esa haqiqiy
-      // ovoz balandligi ustiga qo'shilib, halqalar sezilarli kattalashadi.
-      const t = (Date.now() - startedAt) / 1000;
-      const idle = 0.5 + 0.5 * Math.sin(t * 2.2);
-      const boosted = Math.max(level, idle * 0.22);
-      ring.style.opacity = (0.15 + level*0.75).toFixed(2);
-      ring.style.transform = `scale(${(1 + level*0.5).toFixed(3)})`;
-      if(ring2){
-        ring2.style.opacity = (0.10 + level*0.5).toFixed(2);
-        ring2.style.transform = `scale(${(1 + level*0.9).toFixed(3)})`;
-      }
-      if(glow1){
-        glow1.style.opacity = (0.32 + boosted*0.55).toFixed(2);
-        glow1.style.transform = `scale(${(1 + boosted*0.35).toFixed(3)})`;
-      }
-      if(glow2){
-        glow2.style.opacity = (0.20 + boosted*0.45).toFixed(2);
-        glow2.style.transform = `scale(${(1 + boosted*0.55).toFixed(3)})`;
-      }
-      if(glow3){
-        glow3.style.opacity = (0.10 + boosted*0.35).toFixed(2);
-        glow3.style.transform = `scale(${(1 + boosted*0.8).toFixed(3)})`;
-      }
-      muhavaraLevelRaf = requestAnimationFrame(tick);
+
+    const canvas = document.getElementById('muhavaraVoiceCanvas');
+    if(canvas){
+      muhavaraVisualizer = new VoiceVisualizer(canvas, { mode: 'wave' });
+      muhavaraVisualizer.setAnalyser(analyser);
+      muhavaraVisualizer.onMetrics = (metrics) => {
+        const ring = document.getElementById('micRing');
+        const ring2 = document.getElementById('micRing2');
+        const glow1 = document.getElementById('micGlow1');
+        const glow2 = document.getElementById('micGlow2');
+        const glow3 = document.getElementById('micGlow3');
+        const badge = document.getElementById('muhavaraVoiceBadge');
+        const badgeText = document.getElementById('muhavaraVoiceText');
+        const metricEl = document.getElementById('muhavaraVoiceMetric');
+
+        if(metricEl) metricEl.textContent = metrics.volumePercent + '%';
+
+        if(badge && badgeText){
+          if(metrics.isSpeaking){
+            badge.className = 'voice-viz-live-badge speaking';
+            badgeText.textContent = '🟢 Gapirilmoqda (Jonli)';
+          } else {
+            badge.className = 'voice-viz-live-badge';
+            badgeText.textContent = '⚪ Tinglanmoqda';
+          }
+        }
+
+        const level = metrics.smoothedVolume;
+        const idle = 0.12;
+        const boosted = Math.max(level, idle);
+
+        if(ring){
+          ring.style.opacity = (0.15 + level * 0.8).toFixed(2);
+          ring.style.transform = `scale(${(1 + level * 0.55).toFixed(3)})`;
+        }
+        if(ring2){
+          ring2.style.opacity = (0.10 + level * 0.55).toFixed(2);
+          ring2.style.transform = `scale(${(1 + level * 0.95).toFixed(3)})`;
+        }
+        if(glow1){
+          glow1.style.opacity = (0.3 + boosted * 0.6).toFixed(2);
+          glow1.style.transform = `scale(${(1 + boosted * 0.4).toFixed(3)})`;
+        }
+        if(glow2){
+          glow2.style.opacity = (0.2 + boosted * 0.5).toFixed(2);
+          glow2.style.transform = `scale(${(1 + boosted * 0.65).toFixed(3)})`;
+        }
+        if(glow3){
+          glow3.style.opacity = (0.1 + boosted * 0.4).toFixed(2);
+          glow3.style.transform = `scale(${(1 + boosted * 0.9).toFixed(3)})`;
+        }
+      };
+      muhavaraVisualizer.start();
     }
-    tick();
-  }catch(e){ /* halqa ishlamasa ham yozib olishning o'ziga ta'sir qilmaydi */ }
+  }catch(e){ /* visualizer xatosi audio yozishga ta'sir qilmaydi */ }
 }
+
 function stopMuhavaraLevelMeter(){
-  if(muhavaraLevelRaf){ cancelAnimationFrame(muhavaraLevelRaf); muhavaraLevelRaf = null; }
-  if(muhavaraLevelAudioCtx){ try{ muhavaraLevelAudioCtx.close(); }catch(e){} muhavaraLevelAudioCtx = null; }
+  if(muhavaraVisualizer){
+    muhavaraVisualizer.stop();
+    muhavaraVisualizer = null;
+  }
+  if(muhavaraLevelAudioCtx){
+    try{ muhavaraLevelAudioCtx.close(); }catch(e){}
+    muhavaraLevelAudioCtx = null;
+  }
 }
 function stopMuhavaraRecording(){
   clearInterval(timerInterval);
@@ -8026,6 +8606,17 @@ function renderMuhavaraPhase(){
         <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
       </div>
       <div class="mic-wrap">
+        <div class="voice-viz-mini-wrap">
+          <div class="voice-viz-mini-head">
+            <div class="voice-viz-live-badge speaking" id="muhavaraVoiceBadge">
+              <span class="live-pulse-dot"></span>
+              <span id="muhavaraVoiceText">🔴 Ovoz yozilmoqda</span>
+            </div>
+            <div style="font-size:11.5px;font-weight:700;color:var(--text-faint);" id="muhavaraVoiceMetric">0%</div>
+          </div>
+          <canvas id="muhavaraVoiceCanvas" class="voice-viz-mini-canvas"></canvas>
+        </div>
+
         <div class="mic-circle-wrap">
           <div class="mic-glow mic-glow3" id="micGlow3"></div>
           <div class="mic-glow mic-glow2" id="micGlow2"></div>
@@ -8036,8 +8627,8 @@ function renderMuhavaraPhase(){
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
           </div>
         </div>
-        <div class="mic-hint">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
-        <button class="btn btn-outline" style="margin-top:20px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
+        <div class="mic-hint">Gapiring — ovoz to'lqinlari real-vaqtda ekranda harakatlanadi.</div>
+        <button class="btn btn-outline" style="margin-top:16px;width:100%;max-width:280px;" onclick="stopMuhavaraRecording()">⏹ Yakunlash va yuborish</button>
       </div>
     `;
     return;
