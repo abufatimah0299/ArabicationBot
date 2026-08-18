@@ -10285,7 +10285,14 @@ bootApp();
 
   async function loadSkillDailyLimits() {
     try {
-      const rows = await rpc('admin_list_skill_daily_limits');
+      // MUHIM: bu yerda ataylab 'get_skill_daily_limits' (admin bo'lmagan, faqat
+      // o'qish uchun ochiq RPC) chaqirilmoqda — 'admin_list_skill_daily_limits'
+      // emas. Chunki bu funksiya endi faqat admin panelda emas, HAR BIR oddiy
+      // foydalanuvchi uchun ham (limitni real tekshirish uchun) chaqiriladi, va
+      // 'admin_' prefiksli RPC'lar odatda faqat super adminlarga ochiq bo'ladi.
+      // Supabase'da bu RPC'ni yaratish kerak (faqat skill_id, daily_limit qaytarsin,
+      // admin tekshiruvisiz) — quyidagi SQL orqali.
+      const rows = await rpc('get_skill_daily_limits');
       const map = {};
       (Array.isArray(rows) ? rows : []).forEach(r => {
         map[r.skill_id] = (r.daily_limit === null || r.daily_limit === undefined) ? 0 : Number(r.daily_limit);
