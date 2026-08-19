@@ -4070,6 +4070,11 @@ async function bootApp(){
       applyLiveQuestions(liveQuestions);
     });
 
+    await safeBootStep('Mock testlar', async ()=>{
+      const liveMocks = await loadMocksFromBackend();
+      if(liveMocks) applyLiveMocks(liveMocks);
+    });
+
     await safeBootStep('Qiroa', refreshQiroaFromBackend);
     await safeBootStep('Istima', refreshIstimaFromBackend);
     await safeBootStep('Muhavara', refreshSpeakingFromBackend);
@@ -7020,7 +7025,89 @@ function loadMocksData(){
 
 let MOCKS_DATA = loadMocksData();
 
-function saveMocksData(){
+/* ---------- Mocklar: BACKEND (Supabase) bilan sinxronizatsiya ----------
+   ILGARI: MOCKS_DATA faqat localStorage'da saqlanardi — shu sabab admin
+   mock qo'shsa, u faqat o'zining qurilmasida/brauzerida ko'rinardi, boshqa
+   foydalanuvchilarga umuman yetib bormasdi. Endi mocklar `mocks` jadvaliga
+   (Supabase) yoziladi va barcha foydalanuvchilar bootApp() paytida shu
+   jadvaldan o'qiydi — xuddi savollar/grammatika bo'limlari kabi. */
+async function loadMocksFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/mocks?select=*&order=created_at.asc`, { headers: authHeaders() });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    const rows = await res.json();
+    return rows.map(r => ({
+      id: r.id,
+      skill: r.skill,
+      title: r.title,
+      durationMins: r.duration_mins,
+      questions: r.questions || [],
+      createdAt: r.created_at,
+    }));
+  }catch(e){ console.error("Mocks backend load error:", e); return null; }
+}
+
+function applyLiveMocks(list){
+  if(Array.isArray(list)){
+    MOCKS_DATA = list.map(m => ({
+      ...m,
+      title: (m.title || '').replace(/Mock\s*#\s*(\d+)/gi, 'Mock $1')
+    }));
+    try{ localStorage.setItem('arab_app_mocks_data', JSON.stringify(MOCKS_DATA)); }catch(e){}
+  }
+  renderAdminMocks();
+  renderSkillMockPanes();
+}
+
+/* Bitta mockni (sarlavha/vaqt/savollar) backendga to'liq holatda yozib qo'yadi
+   (insert yoki update — admin_upsert_mock RPC "ON CONFLICT (id) DO UPDATE"
+   qiladi). Faqat admin sessiyasida ishlaydi. */
+async function persistMockToBackend(mock){
+  if(!mock) return;
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); toast("⚠️ Backendga saqlanmadi: sessiya topilmadi", 5000); return; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_upsert_mock`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({
+        p_id: mock.id,
+        p_skill: mock.skill,
+        p_title: mock.title,
+        p_duration_mins: mock.durationMins || 30,
+        p_questions: mock.questions || [],
+      })
+    });
+    if(!res.ok){
+      setLastBackendError(res.status, await res.text());
+      toast("⚠️ Mock backendga saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000);
+    }
+  }catch(e){
+    setLastBackendError('—', e.message);
+    toast("⚠️ Tarmoq xatosi: mock backendga saqlanmadi", 5000);
+  }
+}
+
+async function deleteMockFromBackend(mockId){
+  if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); toast("⚠️ Backenddan o'chirilmadi: sessiya topilmadi", 5000); return; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_mock`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_id: mockId })
+    });
+    if(!res.ok){
+      setLastBackendError(res.status, await res.text());
+      toast("⚠️ Mock backenddan o'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
+    }
+  }catch(e){
+    setLastBackendError('—', e.message);
+    toast("⚠️ Tarmoq xatosi: mock backenddan o'chirilmadi", 5000);
+  }
+}
+
+/* mockId berilsa — o'sha mock darhol backendga ham yoziladi (admin CRUD
+   amallaridan keyin chaqiriladi). mockId berilmasa — faqat local keshni
+   (localStorage) va UI'ni yangilaydi (masalan o'chirishdan keyin, chunki
+   o'chirish alohida deleteMockFromBackend() orqali bajariladi). */
+function saveMocksData(mockId){
   try {
     localStorage.setItem('arab_app_mocks_data', JSON.stringify(MOCKS_DATA));
   } catch(e){
@@ -7028,6 +7115,10 @@ function saveMocksData(){
   }
   renderAdminMocks();
   renderSkillMockPanes();
+  if(mockId){
+    const mock = MOCKS_DATA.find(m => m.id === mockId);
+    if(mock) persistMockToBackend(mock);
+  }
 }
 
 function nextMockNumberForSkill(skillId){
@@ -7177,7 +7268,7 @@ function submitNewMock(e){
   };
 
   MOCKS_DATA.push(newMock);
-  saveMocksData();
+  saveMocksData(newMock.id);
   closeModal();
   toast(`✅ "${title}" yaratildi! Endi 30 ta savol qo'shishingiz mumkin.`);
   viewMockQuestions(newMock.id);
@@ -7213,18 +7304,19 @@ function submitEditMock(e, mockId){
   mock.title = document.getElementById('editMockTitleInput').value.trim();
   mock.durationMins = Number(document.getElementById('editMockDurationInput').value) || 30;
 
-  saveMocksData();
+  saveMocksData(mock.id);
   closeModal();
   toast("✅ Mock ma'lumotlari yangilandi");
   return false;
 }
 
-function deleteMock(mockId){
+async function deleteMock(mockId){
   const mock = MOCKS_DATA.find(m => m.id === mockId);
   if(!mock) return;
   if(!confirm(`"${mock.title}" mock testini butunlay o'chirmoqchimisiz?`)) return;
   MOCKS_DATA = MOCKS_DATA.filter(m => m.id !== mockId);
   saveMocksData();
+  await deleteMockFromBackend(mockId);
   toast("🗑 Mock test o'chirildi");
 }
 
@@ -7344,7 +7436,7 @@ function submitAddMockQuestion(e, mockId){
     q, opts, a, exp
   });
 
-  saveMocksData();
+  saveMocksData(mockId);
   toast("✅ Savol qo'shildi");
   viewMockQuestions(mockId);
   return false;
@@ -7393,7 +7485,7 @@ function submitEditMockQuestion(e, mockId, qIdx){
   mock.questions[qIdx].a = Number(document.querySelector('input[name="mqEditCorrect"]:checked').value);
   mock.questions[qIdx].exp = document.getElementById('mqEditExp').value.trim();
 
-  saveMocksData();
+  saveMocksData(mockId);
   toast("✅ Savol yangilandi");
   viewMockQuestions(mockId);
   return false;
@@ -7404,7 +7496,7 @@ function deleteMockQuestion(mockId, qIdx){
   if(!mock || !mock.questions || !mock.questions[qIdx]) return;
   if(!confirm(`${qIdx + 1}-savolni o'chirmoqchimisiz?`)) return;
   mock.questions.splice(qIdx, 1);
-  saveMocksData();
+  saveMocksData(mockId);
   toast("🗑 Savol o'chirildi");
   viewMockQuestions(mockId);
 }
@@ -7417,7 +7509,7 @@ function moveMockQuestion(mockId, qIdx, dir){
   const temp = mock.questions[qIdx];
   mock.questions[qIdx] = mock.questions[targetIdx];
   mock.questions[targetIdx] = temp;
-  saveMocksData();
+  saveMocksData(mockId);
   viewMockQuestions(mockId);
 }
 
@@ -7472,7 +7564,7 @@ function submitBulkAddMockQuestions(e, mockId){
     }
 
     mock.questions.push(...toAdd);
-    saveMocksData();
+    saveMocksData(mockId);
     toast(`✅ ${toAdd.length} ta savol qo'shildi`);
     viewMockQuestions(mockId);
   } catch(err){
