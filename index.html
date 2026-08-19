@@ -1520,6 +1520,109 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .modal-close:active{ transform:scale(.92); }
 .modal-body{ padding:8px 4px; }
 
+/* ---------- Onboarding Modal ---------- */
+.onboarding-overlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  z-index:900;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  animation:fadein .25s ease;
+}
+.onboarding-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:24px;
+  width:100%; max-width:440px;
+  padding:28px 24px;
+  box-shadow:0 25px 60px -15px rgba(0,0,0,0.45);
+  box-sizing:border-box;
+  animation:scaleIn .22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes scaleIn{
+  from{ transform:scale(0.94); opacity:0; }
+  to{ transform:scale(1); opacity:1; }
+}
+.ob-stepper{
+  display:flex; gap:8px; margin-bottom:20px;
+}
+.ob-step-pill{
+  flex:1; height:5px; border-radius:99px;
+  background:var(--border);
+  transition:all .3s ease;
+}
+.ob-step-pill.active{
+  background:var(--green);
+}
+.ob-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:99px;
+  background:var(--green-bg); color:var(--green);
+  font-size:12px; font-weight:700; margin-bottom:12px;
+}
+.ob-title{
+  font-size:22px; font-weight:700; color:var(--text);
+  margin-bottom:8px; line-height:1.25;
+  font-family:'Onest', var(--font-sans);
+}
+.ob-sub{
+  font-size:13.5px; color:var(--text-dim); line-height:1.5; font-weight:500;
+}
+.ob-input{
+  width:100%; box-sizing:border-box;
+  padding:13px 15px; border-radius:13px;
+  border:1.5px solid var(--border);
+  background:var(--bg); color:var(--text);
+  font-size:15px; font-weight:600;
+  outline:none; transition:border-color .2s, box-shadow .2s;
+  font-family:'Onest', var(--font-sans);
+}
+.ob-input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(18,167,104,0.18);
+}
+.ob-btn-next{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px 20px; font-size:14.5px;
+}
+.ob-gender-list{
+  display:flex; flex-direction:column; gap:10px; margin-top:18px;
+}
+.ob-gender-card{
+  width:100%; box-sizing:border-box;
+  display:flex; align-items:center; gap:14px;
+  padding:13px 16px; border-radius:14px;
+  border:1.5px solid var(--border);
+  background:var(--bg); color:var(--text);
+  cursor:pointer; text-align:left;
+  transition:all .18s ease; font-family:inherit;
+}
+.ob-gender-card:hover{
+  border-color:var(--text-faint);
+  transform:translateY(-1px);
+}
+.ob-gender-card.selected{
+  border-color:var(--green);
+  background:var(--green-bg);
+}
+.ob-gender-icon{
+  font-size:24px; flex-shrink:0; line-height:1;
+}
+.ob-gender-info{ flex:1; }
+.ob-gender-info .t{ font-size:14px; font-weight:700; color:var(--text); }
+.ob-gender-info .s{ font-size:11.5px; font-weight:500; color:var(--text-dim); margin-top:2px; }
+.ob-gender-check{
+  width:22px; height:22px; border-radius:50%;
+  border:1.5px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  color:transparent; transition:all .18s ease; flex-shrink:0;
+}
+.ob-gender-card.selected .ob-gender-check{
+  background:var(--green); border-color:var(--green); color:#fff;
+}
+
 /* ---------- Rank ---------- */
 .rank-top-card{
   background:linear-gradient(135deg, var(--indigo-600), var(--indigo-900));
@@ -3149,6 +3252,85 @@ html[data-theme="dark"] .dash-main-heading {
 
 <div class="toast" id="toast"></div>
 
+<!-- ============ ONBOARDING / REGISTRATION MODAL ============ -->
+<div class="onboarding-overlay" id="onboardingOverlay" style="display:none;">
+  <div class="onboarding-card" id="onboardingCard">
+    <!-- Stepper bar -->
+    <div class="ob-stepper">
+      <div class="ob-step-pill active" id="obStepPill1"></div>
+      <div class="ob-step-pill" id="obStepPill2"></div>
+    </div>
+    
+    <!-- STEP 1: Name -->
+    <div class="ob-step-view" id="obStep1">
+      <div class="ob-badge">👋 Xush kelibsiz!</div>
+      <h2 class="ob-title">Sizni qanday deb ataylik?</h2>
+      <p class="ob-sub">Ismingizni tasdiqlang yoki o‘zingizga qulay qilib kiriting. Keyinchalik profilingizdan istalgan payt o‘zgartirishingiz mumkin.</p>
+      
+      <div style="margin:20px 0 16px 0;">
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-dim);margin-bottom:7px;">Ismingiz yoki Kunyangiz</label>
+        <input type="text" id="obNameInput" class="ob-input" placeholder="Ismingizni yozing..." maxlength="40" oninput="handleObNameInput(this)">
+      </div>
+      
+      <button class="btn btn-primary ob-btn-next" onclick="nextOnboardingStep()">
+        Davom etish
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- STEP 2: Gender -->
+    <div class="ob-step-view" id="obStep2" style="display:none;">
+      <div class="ob-badge">✨ So‘nggi qadam</div>
+      <h2 class="ob-title">Jinsingizni tanlang</h2>
+      <p class="ob-sub">O‘rganish va topshiriqlarni sizga eng qulay tarzda moslashtirish uchun kerak bo‘ladi.</p>
+      
+      <div class="ob-gender-list">
+        <button type="button" class="ob-gender-card" id="obGenderMale" onclick="selectObGender('male')">
+          <div class="ob-gender-icon">👨</div>
+          <div class="ob-gender-info">
+            <div class="t">Erkak</div>
+            <div class="s">Erkak foydalanuvchi</div>
+          </div>
+          <div class="ob-gender-check">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="ob-gender-card" id="obGenderFemale" onclick="selectObGender('female')">
+          <div class="ob-gender-icon">👩</div>
+          <div class="ob-gender-info">
+            <div class="t">Ayol</div>
+            <div class="s">Ayol foydalanuvchi</div>
+          </div>
+          <div class="ob-gender-check">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="ob-gender-card selected" id="obGenderUnspecified" onclick="selectObGender('unspecified')">
+          <div class="ob-gender-icon">🔘</div>
+          <div class="ob-gender-info">
+            <div class="t">Ko‘rsatmaslik</div>
+            <div class="s">Muhim emas / Maxfiy qolsin</div>
+          </div>
+          <div class="ob-gender-check">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </button>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button class="btn btn-outline" style="flex:1;" onclick="prevOnboardingStep()">
+          ← Ortga
+        </button>
+        <button class="btn btn-primary" style="flex:2;" onclick="completeOnboarding()">
+          Boshlash 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
   <div class="modal-box">
     <div class="modal-head">
@@ -4040,6 +4222,16 @@ async function bootApp(){
     // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
     TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
   }
+  try{
+    const savedName = localStorage.getItem('arabication_custom_name');
+    if(savedName && savedName.trim()){
+      TELEGRAM_PROFILE.name = savedName.trim();
+    }
+    const savedGender = localStorage.getItem('arabication_user_gender');
+    if(savedGender){
+      TELEGRAM_PROFILE.gender = savedGender;
+    }
+  }catch(e){}
   renderGreetingFromProfile();
   applyProfileHeader(null);
 
@@ -4117,6 +4309,7 @@ async function bootApp(){
     });
   }
   window.APP_READY = true;
+  checkOnboardingRegistration();
 }
 
 /* ---------------- Theme (dark / light) ---------------- */
@@ -8555,7 +8748,7 @@ function applyProfileHeader(dash){
   }
 }
 
-/* ================= EDIT PROFILE (Telegram-based) ================= */
+/* ================= EDIT PROFILE & ONBOARDING (Telegram / Web) ================= */
 /* Endi bu ma'lumot Telegram autentifikatsiyasidan (tgInitAndAuth) real vaqtda keladi.
    rawId — bazadagi bigint id (RPC chaqiruvlarida ishlatiladi), id — ko'rsatish uchun matn. */
 let TELEGRAM_PROFILE = {
@@ -8563,11 +8756,152 @@ let TELEGRAM_PROFILE = {
   username: '',
   id: '',
   rawId: null,
-  photoUrl: null
+  photoUrl: null,
+  gender: 'unspecified' // 'male' | 'female' | 'unspecified'
 };
+
+let ONBOARDING_TEMP_NAME = '';
+let ONBOARDING_SELECTED_GENDER = 'unspecified';
+let EDIT_TEMP_GENDER = 'unspecified';
+
+function handleObNameInput(input){
+  if(!input) return;
+  input.style.fontFamily = hasArabicText(input.value) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
+}
+
+function checkOnboardingRegistration(){
+  let onboarded = false;
+  try{ onboarded = localStorage.getItem('arabication_onboarded_v1') === 'true'; }catch(e){}
+  
+  // Custom name va gender tiklash
+  try{
+    const savedName = localStorage.getItem('arabication_custom_name');
+    if(savedName && savedName.trim()){
+      TELEGRAM_PROFILE.name = savedName.trim();
+    }
+    const savedGender = localStorage.getItem('arabication_user_gender');
+    if(savedGender){
+      TELEGRAM_PROFILE.gender = savedGender;
+    }
+  }catch(e){}
+
+  if(!onboarded){
+    setTimeout(()=>{
+      openOnboardingModal();
+    }, 200);
+  }
+}
+
+function openOnboardingModal(){
+  const overlay = document.getElementById('onboardingOverlay');
+  if(!overlay) return;
+  
+  // Dastlabki ism: Telegram profile nomi yoki username yoki bo'sh
+  let prefillName = '';
+  if(TELEGRAM_PROFILE.name && TELEGRAM_PROFILE.name !== 'Mehmon' && TELEGRAM_PROFILE.name !== 'Foydalanuvchi'){
+    prefillName = TELEGRAM_PROFILE.name.trim();
+  } else if(window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name){
+    prefillName = [window.Telegram.WebApp.initDataUnsafe.user.first_name, window.Telegram.WebApp.initDataUnsafe.user.last_name].filter(Boolean).join(' ').trim();
+  } else if(TELEGRAM_PROFILE.username){
+    prefillName = TELEGRAM_PROFILE.username.replace(/^@/, '').trim();
+  }
+
+  const nameInput = document.getElementById('obNameInput');
+  if(nameInput){
+    nameInput.value = prefillName;
+    handleObNameInput(nameInput);
+  }
+
+  ONBOARDING_TEMP_NAME = prefillName;
+  ONBOARDING_SELECTED_GENDER = TELEGRAM_PROFILE.gender || 'unspecified';
+  selectObGender(ONBOARDING_SELECTED_GENDER);
+
+  showObStep(1);
+  overlay.style.display = 'flex';
+}
+
+function showObStep(step){
+  const s1 = document.getElementById('obStep1');
+  const s2 = document.getElementById('obStep2');
+  const p1 = document.getElementById('obStepPill1');
+  const p2 = document.getElementById('obStepPill2');
+
+  if(step === 1){
+    if(s1) s1.style.display = 'block';
+    if(s2) s2.style.display = 'none';
+    if(p1) p1.classList.add('active');
+    if(p2) p2.classList.remove('active');
+    const input = document.getElementById('obNameInput');
+    if(input) setTimeout(()=>input.focus(), 150);
+  } else {
+    if(s1) s1.style.display = 'none';
+    if(s2) s2.style.display = 'block';
+    if(p1) p1.classList.add('active');
+    if(p2) p2.classList.add('active');
+  }
+}
+
+function nextOnboardingStep(){
+  const nameInput = document.getElementById('obNameInput');
+  let val = nameInput ? nameInput.value.trim() : '';
+  if(!val){
+    val = (TELEGRAM_PROFILE.name && TELEGRAM_PROFILE.name !== 'Mehmon' && TELEGRAM_PROFILE.name !== 'Foydalanuvchi') ? TELEGRAM_PROFILE.name : 'Foydalanuvchi';
+  }
+  ONBOARDING_TEMP_NAME = val;
+  showObStep(2);
+}
+
+function prevOnboardingStep(){
+  showObStep(1);
+}
+
+function selectObGender(gender){
+  ONBOARDING_SELECTED_GENDER = gender;
+  ['male','female','unspecified'].forEach(g => {
+    const el = document.getElementById('obGender' + g.charAt(0).toUpperCase() + g.slice(1));
+    if(el){
+      if(g === gender) el.classList.add('selected');
+      else el.classList.remove('selected');
+    }
+  });
+}
+
+function completeOnboarding(){
+  const finalName = ONBOARDING_TEMP_NAME || 'Foydalanuvchi';
+  const finalGender = ONBOARDING_SELECTED_GENDER || 'unspecified';
+
+  try{
+    localStorage.setItem('arabication_onboarded_v1', 'true');
+    localStorage.setItem('arabication_custom_name', finalName);
+    localStorage.setItem('arabication_user_gender', finalGender);
+  }catch(e){}
+
+  TELEGRAM_PROFILE.name = finalName;
+  TELEGRAM_PROFILE.gender = finalGender;
+
+  renderGreetingFromProfile();
+
+  const overlay = document.getElementById('onboardingOverlay');
+  if(overlay) overlay.style.display = 'none';
+
+  toast(`Xush kelibsiz, ${finalName}! 🎉`, 4000);
+}
+
+function setEditProfileGender(gender){
+  EDIT_TEMP_GENDER = gender;
+  ['male','female','unspecified'].forEach(g => {
+    const btn = document.getElementById('editGenderBtn_' + g);
+    if(btn){
+      if(g === gender) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    }
+  });
+}
+
 function openEditProfile(){
   document.getElementById('modalTitle').textContent = 'Profilni tahrirlash';
-  const currentName = document.getElementById('profileName').textContent;
+  const currentName = TELEGRAM_PROFILE.name || document.getElementById('profileName').textContent;
+  EDIT_TEMP_GENDER = TELEGRAM_PROFILE.gender || 'unspecified';
   const initialFont = hasArabicText(currentName) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:18px;">
@@ -8577,7 +8911,21 @@ function openEditProfile(){
     <div style="display:flex;flex-direction:column;gap:14px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism</span>
-        <input type="text" id="editNameInput" value="${currentName}" oninput="this.style.fontFamily = hasArabicText(this.value) ? '\'Graphik Arabic\', \'Noto Sans Arabic\', sans-serif' : '\'Onest\', sans-serif'" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:${initialFont};font-size:14px;">
+        <input type="text" id="editNameInput" value="${escapeHtml(currentName)}" oninput="this.style.fontFamily = hasArabicText(this.value) ? '\'Graphik Arabic\', \'Noto Sans Arabic\', sans-serif' : '\'Onest\', sans-serif'" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:${initialFont};font-size:14px;">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Jins</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="editGenderSelectGroup">
+          <button type="button" id="editGenderBtn_male" class="ob-gender-card ${EDIT_TEMP_GENDER==='male'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('male')">
+            <span style="font-size:16px;">👨</span> <span style="font-size:12px;font-weight:600;">Erkak</span>
+          </button>
+          <button type="button" id="editGenderBtn_female" class="ob-gender-card ${EDIT_TEMP_GENDER==='female'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('female')">
+            <span style="font-size:16px;">👩</span> <span style="font-size:12px;font-weight:600;">Ayol</span>
+          </button>
+          <button type="button" id="editGenderBtn_unspecified" class="ob-gender-card ${EDIT_TEMP_GENDER==='unspecified'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('unspecified')">
+            <span style="font-size:16px;">🔘</span> <span style="font-size:11px;font-weight:600;">Maxfiy</span>
+          </button>
+        </div>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ID</span>
@@ -8599,8 +8947,12 @@ function saveProfile(){
   const newName = document.getElementById('editNameInput').value.trim();
   if(newName){
     TELEGRAM_PROFILE.name = newName;
-    renderGreetingFromProfile();
+    try{ localStorage.setItem('arabication_custom_name', newName); }catch(e){}
   }
+  TELEGRAM_PROFILE.gender = EDIT_TEMP_GENDER || 'unspecified';
+  try{ localStorage.setItem('arabication_user_gender', TELEGRAM_PROFILE.gender); }catch(e){}
+
+  renderGreetingFromProfile();
   document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}`;
   closeModal();
   toast('Profil yangilandi ✅');
