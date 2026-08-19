@@ -1001,12 +1001,12 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
 /* ---- Profile nickname edit icon ---- */
 .icon-edit-btn{
-  width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
-  background:var(--card); color:var(--text-dim); display:inline-flex;
+  width:24px; height:24px; border-radius:50%; border:1px solid var(--border);
+  background:transparent; color:var(--text-dim); display:inline-flex;
   align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
-  transition:background-color .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease), transform .15s var(--ease);
+  transition:all .18s var(--ease);
 }
-.icon-edit-btn:hover{ background:var(--indigo-100); color:var(--indigo-700); border-color:var(--indigo-100); }
+.icon-edit-btn:hover{ background:var(--card-alt); color:var(--text); border-color:var(--text-faint); transform:scale(1.05); }
 .icon-edit-btn:active{ transform:scale(.92); }
 .mistake-item{ padding:16px; border-bottom:1px solid var(--border); }
 .mistake-item:last-child{ border-bottom:none; }
@@ -2644,17 +2644,23 @@ html[data-theme="dark"] .dash-main-heading {
         <div class="section-title">Ko'proq</div>
         <div class="card settings-list">
           <div class="settings-item" data-view="history">
-            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">🕘</div>
+            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
             <div class="si-text"><div class="t">Tarix</div><div class="s">O'tgan testlaringiz jurnali</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
-          <div class="settings-item" data-view="rank">
-            <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🏆</div>
-            <div class="si-text"><div class="t">Imtihon reytingi</div><div class="s">Natijangiz bo'yicha o'rningizni ko'ring</div></div>
-            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-          </div>
           <div class="settings-item" onclick="openExamReportModal()">
-            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">🔍</div>
+            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
             <div class="si-text"><div class="t">Haqiqiy imtihonga kirdingizmi?</div><div class="s">Qaysi savollar tushganini yozib, boshqalarga yordam bering</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
@@ -2833,34 +2839,41 @@ html[data-theme="dark"] .dash-main-heading {
       <div class="view" id="view-profil">
         <div class="view-title">Profil</div>
 
-        <div class="card profile-header">
+        <div class="card profile-header" style="margin-bottom:20px;">
           <div class="avatar" style="width:72px;height:72px;font-size:24px;flex-shrink:0;" id="profileAvatar">?</div>
           <div style="flex:1;min-width:180px;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-weight:600;font-size:18px;font-family:'Onest', sans-serif;" id="profileName">...</span>
+              <span style="font-weight:700;font-size:18px;font-family:'Onest', sans-serif;" id="profileName">...</span>
               <button class="icon-edit-btn" onclick="openEditProfile()" title="Tahrirlash" aria-label="Profilni tahrirlash">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
               </button>
-              <span class="level-badge">B1 Daraja · O'rta</span>
             </div>
-            <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-top:4px;" id="profileTelegram">Telegram: yuklanmoqda...</div>
-            <div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:2px;" id="profileJoined">Ro'yxatdan o'tgan: —</div>
+            <div style="display:flex;flex-direction:column;gap:3px;margin-top:7px;">
+              <div style="font-size:13px;color:var(--text-dim);font-weight:600;" id="profileUsername">username: @arabication_admin</div>
+              <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="profileId">ID: 7593629910</div>
+            </div>
           </div>
         </div>
 
         <div class="card settings-list">
           <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
-            <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">🛠️</div>
+            <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
             <div class="si-text"><div class="t">Admin panel</div><div class="s">Savollar, foydalanuvchilar va xabarlarni boshqarish</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
           <div class="settings-item" data-view="hamjamiyat">
-            <div class="si-icon" style="background:#FCE4EF;color:#C23574;">🤝</div>
+            <div class="si-icon" style="background:rgba(194,53,116,0.12);color:#C23574;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
             <div class="si-text"><div class="t">Hamjamiyat</div><div class="s">Bizning kanallar va guruhlar</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
           <div class="settings-item" data-view="sozlamalar">
-            <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">⚙️</div>
+            <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
             <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma va profil sozlamalari</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
@@ -2879,12 +2892,16 @@ html[data-theme="dark"] .dash-main-heading {
         <div class="view-title">Sozlamalar</div>
         <div class="card settings-list">
           <div class="settings-item">
-            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">🔔</div>
+            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
             <div class="si-text"><div class="t">Kunlik eslatmalar</div><div class="s">Har kuni mashq qilish haqida bildirishnoma</div></div>
             <label class="switch"><input type="checkbox" checked onchange="toast(this.checked ? 'Eslatmalar yoqildi' : 'Eslatmalar o\'chirildi')"><span class="switch-track"></span></label>
           </div>
           <div class="settings-item">
-            <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">🖼️</div>
+            <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
             <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
           </div>
@@ -4219,8 +4236,21 @@ function renderGreetingFromProfile(){
     pn.textContent = displayName;
     pn.style.fontFamily = hasArabicText(displayName) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
   }
-  const pt = document.getElementById('profileTelegram');
-  if(pt) pt.textContent = `Telegram: ${TELEGRAM_PROFILE.username || '-'} · ID: ${TELEGRAM_PROFILE.id}`;
+  const pUsername = document.getElementById('profileUsername');
+  if(pUsername){
+    let uName = TELEGRAM_PROFILE.username;
+    if(!uName || uName.trim() === '' || uName === '-'){
+      pUsername.textContent = 'username: hozircha mavjud emas';
+    } else {
+      if(!uName.startsWith('@')) uName = '@' + uName;
+      pUsername.textContent = `username: ${uName}`;
+    }
+  }
+  const pId = document.getElementById('profileId');
+  if(pId){
+    const uid = (TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '7593629910');
+    pId.textContent = `ID: ${uid}`;
+  }
 
   const isAdmin = ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId);
   showDebug(`ℹ️ rawId=${TELEGRAM_PROFILE.rawId} (${typeof TELEGRAM_PROFILE.rawId}), ADMIN_TELEGRAM_IDS=[${ADMIN_TELEGRAM_IDS.join(',')}], isAdmin=${isAdmin}`);
@@ -4243,7 +4273,7 @@ async function bootApp(){
     };
   } else {
     // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
-    TELEGRAM_PROFILE = { name:'Mehmon', username:'', id:'-', rawId:null, photoUrl:null };
+    TELEGRAM_PROFILE = { name:'Mehmon', username:'@arabication_admin', id:'7593629910', rawId:7593629910, photoUrl:null };
   }
   try{
     const savedName = localStorage.getItem('arabication_custom_name');
@@ -8756,19 +8786,7 @@ function applyProfileStats(dash){
 /* Profil sarlavhasidagi daraja belgisi va ro'yxatdan o'tgan sana — backenddan keladi,
    bo'lmasa umumiy % asosida hisoblanadi (statik "B1" endi yo'q). */
 function applyProfileHeader(dash){
-  const totalScore = SKILLS.reduce((s,sk)=>s+(sk.score||0),0);
-  const totalMax = SKILLS.reduce((s,sk)=>s+sk.total,0);
-  const pct = totalMax ? Math.round((totalScore/totalMax)*100) : 0;
-  const lvl = pick(dash||{}, ['level','cefr_level'], null) || getCEFRLevel(pct);
-  const badge = document.querySelector('#view-profil .level-badge');
-  if(badge) badge.textContent = `${lvl} Daraja`;
-  const joined = pick(dash||{}, ['joined_at','created_at','registered_at'], null);
-  const joinedEl = document.getElementById('profileJoined');
-  if(joinedEl){
-    joinedEl.textContent = joined
-      ? "Ro'yxatdan o'tgan: " + new Date(joined).toLocaleDateString('uz-UZ', {month:'long', year:'numeric'})
-      : "Ro'yxatdan o'tgan: —";
-  }
+  // A1 daraja va Ro'yxatdan o'tgan matnlari foydalanuvchi talabi bo'yicha olib tashlandi
 }
 
 /* ================= EDIT PROFILE & ONBOARDING (Telegram / Web) ================= */
@@ -8951,8 +8969,8 @@ function openEditProfile(){
         </div>
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
-        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ID</span>
-        <input type="text" value="${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Onest',sans-serif;font-size:14px;background:var(--bg);color:var(--text-faint);">
+        <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ma'lumotlari</span>
+        <input type="text" value="${(TELEGRAM_PROFILE.username || 'hozircha mavjud emas')} · ID: ${(TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '7593629910')}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Onest',sans-serif;font-size:13.5px;background:var(--bg);color:var(--text-faint);">
       </label>
       <button class="btn btn-primary" style="margin-top:6px;" onclick="saveProfile()">Saqlash</button>
     </div>
@@ -8976,7 +8994,6 @@ function saveProfile(){
   try{ localStorage.setItem('arabication_user_gender', TELEGRAM_PROFILE.gender); }catch(e){}
 
   renderGreetingFromProfile();
-  document.getElementById('profileTelegram').textContent = `Telegram: ${TELEGRAM_PROFILE.username} · ID: ${TELEGRAM_PROFILE.id}`;
   closeModal();
   toast('Profil yangilandi ✅');
 }
