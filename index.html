@@ -1512,7 +1512,10 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   border-radius:24px; width:100%; max-width:560px; max-height:82vh; overflow-y:auto;
   box-shadow:0 30px 80px -20px rgba(0,0,0,0.65);
   border:1px solid var(--border);
+  scrollbar-width:none;
+  -ms-overflow-style:none;
 }
+.modal-box::-webkit-scrollbar{ display:none; width:0; height:0; }
 .modal-head{
   display:flex; align-items:center; justify-content:space-between;
   padding:18px 22px; border-bottom:1px solid var(--border);
@@ -1529,7 +1532,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 }
 .modal-close:hover{ background:var(--indigo-100); color:var(--indigo-700); transform:scale(1.05); }
 .modal-close:active{ transform:scale(.92); }
-.modal-body{ padding:8px 4px; }
+.modal-body{ padding:18px 22px 24px; }
 
 /* ---------- Onboarding Modal ---------- */
 .onboarding-overlay{
@@ -5394,8 +5397,7 @@ function escapeHtml(value){
 const EXAM_SECTIONS = ['Qiroa','Istima','Grammatika','Muhavara','Kitaba'];
 const EXAM_TYPES = [
   {value:'at-Tanal', label:'At-Tanal'},
-  {value:'CEFR', label:'CEFR'},
-  {value:'Boshqa', label:'Boshqa'}
+  {value:'CEFR', label:'CEFR'}
 ];
 /* O'zbekiston viloyatlari (12 ta) — shahar matn maydoni o'rniga tanlash uchun */
 const UZ_REGIONS = [
@@ -5449,36 +5451,32 @@ function openExamReportModal(){
   examKitabaParts = {1:'',2:'',3:''};
   document.getElementById('modalTitle').textContent = "Haqiqiy imtihonga kirdingizmi?";
   document.getElementById('modalBody').innerHTML = `
-    <p class="form-hint" style="margin-bottom:16px;">Ma'lumotlaringiz faqat administratorlarga ko'rinadi va boshqa o'quvchilarga tayyorgarlik uchun yordam beradi.</p>
-    <div style="display:flex;flex-direction:column;gap:14px;">
+    <p class="form-hint" style="margin:0 0 18px 0;line-height:1.55;font-size:13px;">Ma'lumotlaringiz faqat administratorlarga ko'rinadi va boshqa o'quvchilarga tayyorgarlik uchun yordam beradi.</p>
+    <div style="display:flex;flex-direction:column;gap:18px;">
       <div class="form-field">
-        <label>Imtihon turi</label>
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Imtihon turi</label>
         <div class="rank-type-toggle" id="repTypeToggle">
           ${EXAM_TYPES.map((t,i)=>`<button type="button" class="rank-type-btn ${i===0?'active':''}" data-val="${t.value}">${t.label}</button>`).join('')}
         </div>
       </div>
       <div class="form-field">
-        <label>Imtihon sanasi</label>
-        <input type="date" id="repDate">
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Imtihon sanasi</label>
+        <input type="date" id="repDate" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13.5px;">
       </div>
       <div class="form-field">
-        <label>Viloyat (ixtiyoriy)</label>
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Viloyat (ixtiyoriy)</label>
         <div class="rank-dropdown" id="repRegionDropdown"></div>
       </div>
       <div class="form-field">
-        <label>Qaysi bo'lim(lar)dan savol tushdi?</label>
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Qaysi bo'lim(lar)dan savol tushdi?</label>
         <div class="rank-dropdown" id="repSectionDropdown" style="padding:0;"></div>
       </div>
-      <div class="form-field">
-        <label>Xona / Parta raqami (ixtiyoriy)</label>
-        <input type="text" id="repSeat" placeholder="Masalan: B-14">
-      </div>
       <div class="form-field" id="repSectionBlocksWrap" style="display:none;">
-        <label>Qanday savollar tushganini yozib bering</label>
-        <p class="form-hint" style="margin:-4px 0 2px;">Javob variantlarini emas, mavzu va savollar sonini yozing.</p>
+        <label style="font-size:13px;font-weight:600;margin-bottom:4px;display:block;">Qanday savollar tushganini yozib bering</label>
+        <p class="form-hint" style="margin:0 0 10px 0;font-size:12px;">Javob variantlarini emas, mavzu va savollar sonini yozing.</p>
         <div class="rep-section-blocks" id="repSectionBlocks"></div>
       </div>
-      <button class="btn btn-primary btn-block" onclick="submitExamReport()">Yuborish</button>
+      <button class="btn btn-primary btn-block" style="margin-top:6px;padding:14px;border-radius:14px;font-size:14.5px;" onclick="submitExamReport()">Yuborish</button>
     </div>
   `;
   initCustomDropdown('repRegionDropdown', {
@@ -5512,11 +5510,11 @@ function renderExamSectionDropdown(){
     ? examChipSelection.join(', ')
     : "Bo'lim(lar)ni tanlang";
   wrap.innerHTML = `
-    <button type="button" class="cd-trigger" id="repSectionTrigger" style="padding:11px 34px 11px 14px;">
+    <button type="button" class="cd-trigger" id="repSectionTrigger" style="padding:12px 34px 12px 14px;">
       <span class="cd-value ${examChipSelection.length?'':'placeholder'}">${escapeHtml(label)}</span>
     </button>
     <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="right:14px;"><path d="m6 9 6 6 6-6"/></svg>
-    <div class="cd-panel" id="repSectionPanel">
+    <div class="cd-panel" id="repSectionPanel" style="scrollbar-width:none;-ms-overflow-style:none;">
       ${EXAM_SECTIONS.map(s=>{
         const active = examChipSelection.includes(s);
         return `<button type="button" class="cd-option cd-option-multi ${active?'active':''}" data-sec="${s}">
@@ -5562,21 +5560,21 @@ function renderExamSectionBlocks(){
     const meta = EXAM_SECTION_META[sec] || {color:'var(--indigo-700)', sub:'', placeholder:''};
     if(sec === 'Kitaba'){
       return `
-        <div class="rep-section-block">
+        <div class="rep-section-block" style="padding:14px 16px;border-radius:16px;">
           <div class="rsb-head"><span class="rsb-dot" style="background:${meta.color}"></span><span class="rsb-title">Kitaba</span></div>
-          <div class="rsb-sub">${meta.sub}</div>
-          <div class="rep-kitaba-parts">
-            <div><label>1-qism mavzusi</label><input type="text" id="repKitaba1" placeholder="Masalan: oila haqida" value="${escapeHtml(examKitabaParts[1]||'')}"></div>
-            <div><label>2-qism mavzusi</label><input type="text" id="repKitaba2" placeholder="Masalan: sayohat haqida" value="${escapeHtml(examKitabaParts[2]||'')}"></div>
-            <div><label>3-qism mavzusi</label><input type="text" id="repKitaba3" placeholder="Masalan: ta'lim haqida" value="${escapeHtml(examKitabaParts[3]||'')}"></div>
+          <div class="rsb-sub" style="margin:0 0 10px 0;">${meta.sub}</div>
+          <div class="rep-kitaba-parts" style="gap:10px;">
+            <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">1-qism mavzusi</label><input type="text" id="repKitaba1" placeholder="Masalan: oila haqida" value="${escapeHtml(examKitabaParts[1]||'')}" style="padding:10px 12px;border-radius:10px;"></div>
+            <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">2-qism mavzusi</label><input type="text" id="repKitaba2" placeholder="Masalan: sayohat haqida" value="${escapeHtml(examKitabaParts[2]||'')}" style="padding:10px 12px;border-radius:10px;"></div>
+            <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">3-qism mavzusi</label><input type="text" id="repKitaba3" placeholder="Masalan: ta'lim haqida" value="${escapeHtml(examKitabaParts[3]||'')}" style="padding:10px 12px;border-radius:10px;"></div>
           </div>
         </div>`;
     }
     return `
-      <div class="rep-section-block">
+      <div class="rep-section-block" style="padding:14px 16px;border-radius:16px;">
         <div class="rsb-head"><span class="rsb-dot" style="background:${meta.color}"></span><span class="rsb-title">${sec}</span></div>
-        <div class="rsb-sub">${meta.sub}</div>
-        <textarea id="repSec_${sec}" placeholder="${escapeHtml(meta.placeholder)}">${escapeHtml(examSectionTexts[sec]||'')}</textarea>
+        <div class="rsb-sub" style="margin:0 0 10px 0;">${meta.sub}</div>
+        <textarea id="repSec_${sec}" placeholder="${escapeHtml(meta.placeholder)}" style="padding:10px 12px;border-radius:10px;min-height:70px;"></textarea>
       </div>`;
   }).join('');
 }
@@ -5603,7 +5601,6 @@ async function submitExamReport(){
   const type = examRepType;
   const date = document.getElementById('repDate').value;
   const center = examRepRegion;
-  const seat = document.getElementById('repSeat').value.trim();
   const text = collectExamSectionText();
   if(!date || examChipSelection.length===0 || !text){
     toast("Iltimos, sana, bo'lim va savollar haqida ma'lumotni to'ldiring");
@@ -5620,7 +5617,7 @@ async function submitExamReport(){
         p_date: date,
         p_center: center || null,
         p_sections: examChipSelection,
-        p_seat: seat || null,
+        p_seat: null,
         p_text: text
       })
     });
@@ -8592,13 +8589,18 @@ function sortedRank(period, skill){
   const xpKeys = rankXpKeys(skill, period);
   const list = RANK_RAW_ROWS.map(r=>{
     const rid = pick(r, ['user_id','telegram_id','id'], '');
+    const isMe = String(rid) === String(myId);
+    const showAvatarVal = pick(r, ['show_avatar','show_photo','avatar_visible'], null);
+    const showAvatar = isMe ? getShowAvatarSetting() : (showAvatarVal !== false && showAvatarVal !== 'off' && showAvatarVal !== 'false');
+    const rawPhoto = pick(r, ['photo_url','avatar_url','photo'], null);
     return {
       id: rid,
       name: pick(r, ['name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
-      photo: pick(r, ['photo_url','avatar_url','photo'], null),
+      photo: showAvatar ? rawPhoto : null,
+      showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
       xp: Number(pick(r, xpKeys, 0)) || 0,
-      me: String(rid) === String(myId),
+      me: isMe,
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
   })
@@ -8607,12 +8609,12 @@ function sortedRank(period, skill){
 }
 /* Profil rasmi bor bo'lsa uni, bo'lmasa harflardan iborat rangli doirani chizadi.
    Rasm yuklanmasa (buzilgan URL va h.k.) avtomatik harflarga qaytadi.
-   O'zingizning qatoringizda "Profil rasmini ko'rsatish" sozlamasi o'chirilgan bo'lsa,
-   reyting/podiumda ham rasm o'rniga harf ko'rsatiladi. */
+   Foydalanuvchi sozlamalarida profil rasmini yashirish yoqilgan bo'lsa (showAvatar===false),
+   boshqa foydalanuvchilarda ham rasm o'rniga bosh harflar ko'rsatiladi. */
 function rankAvatarHTML(u, color){
   const initialsText = escapeHtml(initials(u.name));
-  const hideOwnPhoto = u.me && !getShowAvatarSetting();
-  if(u.photo && !hideOwnPhoto){
+  const hidePhoto = (u.me && !getShowAvatarSetting()) || (u.showAvatar === false) || !u.photo;
+  if(u.photo && !hidePhoto){
     return `<img src="${escapeHtml(u.photo)}" alt="" data-fallback="${initialsText}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:this.dataset.fallback}))">`;
   }
   return initialsText;
@@ -9041,6 +9043,13 @@ function applyAvatarSetting(){
 function toggleAvatarVisibility(){
   const next = getShowAvatarSetting() ? 'off' : 'on';
   try{ localStorage.setItem('arabication-show-avatar', next); }catch(e){}
+  if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
+    fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ show_avatar: next === 'on' })
+    }).catch(()=>{});
+  }
   applyAvatarSetting();
   toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
 }
@@ -10813,7 +10822,17 @@ function finishQuiz(){
   }
 
   document.getElementById('resultTopic').textContent = currentQuiz.label || 'Test natijasi';
-  document.getElementById('resultLevel').textContent = getCEFRLevel(pct);
+  
+  // Daraja faqat Mahorat imtihonlarida ko'rsatiladi (Mock testlar va alohida mavzularda ko'rsatilmaydi)
+  const isMock = !!(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock'));
+  const isSkillExam = !isMock && !currentQuiz.topicId;
+  const levelWrap = document.querySelector('.result-level-wrap');
+  if(levelWrap){
+    levelWrap.style.display = isSkillExam ? 'flex' : 'none';
+  }
+  if(isSkillExam){
+    document.getElementById('resultLevel').textContent = getCEFRLevel(pct);
+  }
 
   const elapsed = Math.round((Date.now()-currentQuiz.startedAt)/1000);
   const m = Math.floor(elapsed/60), s = elapsed%60;
