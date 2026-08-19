@@ -8911,7 +8911,7 @@ function openEditProfile(){
     <div style="display:flex;flex-direction:column;gap:14px;">
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Ism</span>
-        <input type="text" id="editNameInput" value="${escapeHtml(currentName)}" oninput="this.style.fontFamily = hasArabicText(this.value) ? '\'Graphik Arabic\', \'Noto Sans Arabic\', sans-serif' : '\'Onest\', sans-serif'" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:${initialFont};font-size:14px;">
+        <input type="text" id="editNameInput" value="${escapeHtml(currentName)}" oninput="handleObNameInput(this)" style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:${initialFont};font-size:14px;">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Jins</span>
