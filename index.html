@@ -1910,6 +1910,14 @@ html[data-theme="light"] .bottom-nav{
   100%{ transform:translateY(-20px) scale(1.12); }
 }
 .content{ padding:0 16px calc(116px + env(safe-area-inset-bottom, 0px)) 16px; }
+/* Imtihon bo'limidagi cardga (At-Tanal va h.k.) kirilgach — pastki menyu
+   butunlay yopilib, sahifa "full" bo'lib qolishi uchun. .bottom-nav'ning
+   o'zida "display:flex !important" bor, shu sabab uni yengish uchun bu yerda
+   ikkita klassli selektor (ustunlik yuqoriroq) va shu ham !important bilan
+   ishlatiladi. body'ga 'no-bottom-nav' klassi qo'shilganda content'ning
+   pastki bo'sh joyi ham qisqaradi (aks holda bo'sh joy ortiqcha qolib ketardi). */
+.bottom-nav.nav-hidden{ display:none !important; }
+body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
 
 @media (max-width:980px){
   .grid5{ grid-template-columns:repeat(2,1fr); }
@@ -3848,6 +3856,14 @@ applyExamFontScale(getExamFontScale());
 const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
+/* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
+   barcha ichki sahifalarda (mahorat tanlash, mikrofon tekshiruvi, test/imtihon
+   jarayoni, natija) pastki menyu (bottom-nav) yopiq turadi — sahifa "full"
+   bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
+   bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
+   menyu ko'rinadi. */
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results']);
+
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
    cardning o'zini bosishni emas. Admin panelda saqlangan holatni to'g'ridan-to'g'ri
@@ -3900,6 +3916,10 @@ function showView(name, push=true){
   });
   document.querySelectorAll('.navlink').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  // Pastki menyuni to'liq yopib, sahifani "full" qilish (qarang: NO_BOTTOM_NAV_VIEWS yuqorida)
+  const hideBottomNav = NO_BOTTOM_NAV_VIEWS.has(name);
+  document.getElementById('bottomNav')?.classList.toggle('nav-hidden', hideBottomNav);
+  document.body.classList.toggle('no-bottom-nav', hideBottomNav);
   const topGreeting = document.getElementById('topGreeting');
   if(topGreeting) topGreeting.style.display = 'none';
   const topbarEl = document.getElementById('mainTopbar');
