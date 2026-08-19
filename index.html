@@ -65,9 +65,10 @@
   --radius-lg:24px;
   --shadow:0 4px 18px -4px rgba(0,0,0,0.35), 0 12px 36px -8px rgba(3,18,12,0.55);
   --shadow-lg:0 8px 24px -4px rgba(0,0,0,0.4), 0 24px 56px -10px rgba(3,18,12,0.65);
-  --font-sans:'Onest', 'Graphik Arabic', sans-serif;
-  --font-ar:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
-  --font-ar-bold:'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', sans-serif;
+  --font-sans:'Onest', 'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
+  --font-ar:'Noto Sans Arabic', 'Amiri', sans-serif;
+  --font-ar-bold:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
+  --font-ar-title:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
 }
 /* ---------- Light mode palette (Warm pastel with emerald glow) ---------- */
 html[data-theme="light"]{
@@ -358,7 +359,15 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .hub-top{ display:flex; align-items:center; gap:9px; align-self:flex-start; margin-bottom:16px;}
 .hub-icon{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
 .hub-name{ font-size:14px; font-weight:600; text-align:right; }
-.hub-name .ar{ font-size:11px; color:var(--text-faint); font-weight:600; font-family:var(--font-ar);}
+.card h1, .card h2, .card h3, .card h4, .card-title,
+.prep-top h3, .chart-head h3, .hub-name, .skill-banner-title,
+.skill-intro-title-ar, .grammar-cat-name, .topic-item .t,
+.topic-row .t-name, .modal-head h3, .view-title,
+.mock-card-title, .mock-title, .stat-card .top,
+.report-head span, .review-label {
+  font-family:'Graphik Arabic', 'Onest', var(--font-sans);
+}
+.hub-name .ar{ font-size:11px; color:var(--text-faint); font-weight:600; font-family:var(--font-ar-bold);}
 .ring-wrap{ position:relative; width:112px; height:112px; margin:4px 0 16px 0;}
 .ring-num{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
 .ring-num b{ font-size:19px; font-weight:600; }
@@ -1064,6 +1073,61 @@ html[data-theme="light"] .topic-item:hover{
 .topic-start-btn:hover{ background:var(--indigo-700); color:#fff; border-color:var(--indigo-700); transform:scale(1.08); }
 .topic-start-btn:active{ transform:scale(.94); }
 .topic-start-btn svg{ width:20px; height:20px; }
+
+/* ---------- Mock Test Cards ---------- */
+.mock-cards-list{ display:flex; flex-direction:column; gap:14px; }
+.mock-card{
+  position:relative; background:var(--card); border:1.5px solid var(--border);
+  border-radius:18px; padding:18px 20px; display:flex; align-items:center;
+  justify-content:space-between; gap:16px; flex-wrap:wrap;
+  box-shadow:0 4px 14px -4px rgba(0,0,0,0.06);
+  transition:transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease), background-color .22s var(--ease);
+}
+.mock-card:hover{
+  transform:translateY(-2px); border-color:var(--hover-border);
+  box-shadow:var(--shadow);
+}
+.mock-card-left{ display:flex; align-items:center; gap:14px; min-width:220px; flex:1; }
+.mock-card-icon{
+  width:46px; height:46px; border-radius:14px; display:flex; align-items:center;
+  justify-content:center; font-size:22px; flex-shrink:0;
+  box-shadow:0 4px 12px -2px rgba(0,0,0,0.08);
+}
+.mock-card-main{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.mock-card-title{
+  font-family:'Graphik Arabic', 'Onest', var(--font-sans);
+  font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.2px;
+  display:flex; align-items:center; gap:8px;
+}
+.mock-pills-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.mock-pill{
+  display:inline-flex; align-items:center; gap:5px; font-size:11.5px;
+  font-weight:600; padding:3.5px 9.5px; border-radius:8px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text-dim); white-space:nowrap;
+}
+.mock-pill svg{ width:12px; height:12px; flex-shrink:0; }
+.mock-pill-error{ font-weight:700; }
+.mock-pill-error.has-errors{
+  background:var(--red-bg); border-color:rgba(239,77,77,0.3); color:var(--red);
+}
+.mock-pill-error.zero-errors{
+  background:var(--green-bg); border-color:rgba(22,163,104,0.3); color:var(--green);
+}
+.mock-pill-untested{ background:var(--bg); color:var(--text-faint); }
+.mock-start-btn{
+  display:inline-flex; align-items:center; gap:8px; padding:10px 18px;
+  font-size:13.5px; font-weight:600; border-radius:12px; white-space:nowrap;
+  cursor:pointer; border:none; color:#fff;
+  transition:transform .15s ease, opacity .15s ease, filter .15s ease;
+}
+.mock-start-btn:hover{ filter:brightness(1.08); transform:scale(1.02); }
+.mock-start-btn:active{ transform:scale(0.98); }
+
+/* All Test Arabic Texts: Noto Sans Arabic */
+.passage, .q-text, .opt-text, .opt-circle, .mistake-q, .mistake-row,
+#writeArea, .write-area, .speaking-prompt, .q-opt-row input[dir="rtl"] {
+  font-family:'Noto Sans Arabic', 'Amiri', sans-serif !important;
+}
 
 /* grammar section: category accordion */
 .grammar-cat-grid{ display:flex; flex-direction:column; gap:14px; margin-bottom:22px; }
@@ -2440,37 +2504,21 @@ html[data-theme="dark"] .dash-main-heading {
         </div>
         <div class="view-title">Umumiy arab tili grammatikasi</div>
 
-        <!-- Segmented Tab Switcher (Mashq qilish / Mocklar) -->
-        <div class="attanal-tab-toggle" role="tablist" aria-label="Grammatika rejimi" style="margin-top:4px; margin-bottom:18px;">
-          <button type="button" class="attanal-tab-btn active" id="grammarTabPractice" onclick="switchGrammarTab('practice')" role="tab" aria-selected="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span>Mashq qilish</span>
-          </button>
-          <button type="button" class="attanal-tab-btn" id="grammarTabMocks" onclick="switchGrammarTab('mocks')" role="tab" aria-selected="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-            <span>Mocklar</span>
-          </button>
-        </div>
+        <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:600px;">Bo'limni tanlang va shu bo'limga oid mavzular bo'yicha alohida testlar orqali bilimingizni mustahkamlang.</p>
+        <div class="grammar-cat-grid" id="grammarCatGrid" data-grammar-topics></div>
 
-        <div id="grammarPanePractice" class="attanal-pane">
-          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:600px;">Bo'limni tanlang va shu bo'limga oid mavzular bo'yicha alohida testlar orqali bilimingizni mustahkamlang.</p>
-          <div class="grammar-cat-grid" id="grammarCatGrid" data-grammar-topics></div>
-
-          <div class="card" style="padding:22px;">
-            <div style="font-weight:600;font-size:15px;margin-bottom:14px;">Grammatika bo'yicha tarix</div>
-            <div class="filter-group" id="grammarHistFilter" style="margin-bottom:16px;">
-              <button class="filter-chip active" data-val="hammasi">Hammasi</button>
-              <button class="filter-chip" data-val="xato">Xatolar</button>
-              <button class="filter-chip" data-val="togri">To'g'ri</button>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px;" id="grammarHistList"></div>
-            <div class="placeholder-card" id="grammarHistEmpty" style="display:none;">
-              <h3>Tarix topilmadi</h3><p>Ushbu filtr bo'yicha hech qanday natija yo'q.</p>
-            </div>
+        <div class="card" style="padding:22px;">
+          <div style="font-weight:600;font-size:15px;margin-bottom:14px;">Grammatika bo'yicha tarix</div>
+          <div class="filter-group" id="grammarHistFilter" style="margin-bottom:16px;">
+            <button class="filter-chip active" data-val="hammasi">Hammasi</button>
+            <button class="filter-chip" data-val="xato">Xatolar</button>
+            <button class="filter-chip" data-val="togri">To'g'ri</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;" id="grammarHistList"></div>
+          <div class="placeholder-card" id="grammarHistEmpty" style="display:none;">
+            <h3>Tarix topilmadi</h3><p>Ushbu filtr bo'yicha hech qanday natija yo'q.</p>
           </div>
         </div>
-
-        <div id="grammarPaneMocks" class="attanal-pane" style="display:none;"></div>
       </div>
 
       <!-- ============ QUIZ VIEW ============ -->
@@ -6872,6 +6920,38 @@ async function submitBulkIstimaTests(e){
 /* ================= MOCKLAR BOSHQARUVI (ADMIN & O'QUVCHI) ================= */
 let adminActiveMockSkill = 'all';
 
+function getMockResultsMap(){
+  try {
+    const raw = localStorage.getItem('arab_app_mock_results');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){
+    return {};
+  }
+}
+
+function getMockResult(mockId){
+  const map = getMockResultsMap();
+  return map[mockId] || null;
+}
+
+function recordMockResult(mockId, correct, total, wrong){
+  if(!mockId) return;
+  try {
+    const map = getMockResultsMap();
+    map[mockId] = {
+      correct: Number(correct) || 0,
+      total: Number(total) || 0,
+      wrong: Number(wrong) || 0,
+      pct: total ? Math.round((correct / total) * 100) : 0,
+      completedAt: new Date().toISOString(),
+      attempts: ((map[mockId] && map[mockId].attempts) || 0) + 1
+    };
+    localStorage.setItem('arab_app_mock_results', JSON.stringify(map));
+  } catch(e){
+    console.error("Failed to record mock result", e);
+  }
+}
+
 function loadMocksData(){
   try {
     const raw = localStorage.getItem('arab_app_mocks_data');
@@ -7135,7 +7215,7 @@ function viewMockQuestions(mockId){
                   <button class="btn btn-outline" style="padding:3px 7px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="deleteMockQuestion('${mock.id}', ${idx})">O'chirish</button>
                 </div>
               </div>
-              <div dir="rtl" style="font-size:15px;font-weight:700;margin-bottom:10px;text-align:right;font-family:'Graphik Arabic',sans-serif;line-height:1.5;">${escapeHtml(q.q)}</div>
+              <div dir="rtl" style="font-size:15px;font-weight:700;margin-bottom:10px;text-align:right;font-family:'Noto Sans Arabic',var(--font-ar),sans-serif;line-height:1.5;">${escapeHtml(q.q)}</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
                 ${(q.opts || []).map((opt, oIdx) => `
                   <div dir="rtl" style="padding:7px 10px;border-radius:8px;font-size:13px;background:${oIdx === q.a ? 'var(--green-bg)' : 'var(--card)'};border:1.5px solid ${oIdx === q.a ? 'var(--green)' : 'var(--border)'};color:${oIdx === q.a ? 'var(--green)' : 'var(--text)'};font-weight:${oIdx === q.a ? '700' : '500'};text-align:right;">
@@ -7349,10 +7429,82 @@ function submitBulkAddMockQuestions(e, mockId){
   return false;
 }
 
+function renderMockCardHtml(m, skillMeta){
+  const result = getMockResult(m.id);
+  const duration = m.durationMins || 30;
+  
+  let errorBadge = '';
+  let btnText = 'Mockni boshlash';
+  
+  if(result){
+    const wrongCount = result.wrong;
+    const isClean = wrongCount === 0;
+    errorBadge = `
+      <span class="mock-pill mock-pill-error ${isClean ? 'zero-errors' : 'has-errors'}" title="Oxirgi natija: ${result.correct}/${result.total}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          ${isClean 
+            ? '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>' 
+            : '<circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="m15 9-6 6M9 9l6 6"/>'}
+        </svg>
+        ${wrongCount} ta xato
+      </span>
+    `;
+    btnText = 'Qayta ishlash';
+  } else {
+    errorBadge = `
+      <span class="mock-pill mock-pill-untested" title="Hali ishlanmagan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/>
+        </svg>
+        0 ta xato
+      </span>
+    `;
+  }
+
+  return `
+    <div class="mock-card card" id="mockCard_${m.id}">
+      <div class="mock-card-left">
+        <div class="mock-card-icon" style="background:${skillMeta.bg || 'var(--indigo-100)'};color:${skillMeta.color || 'var(--indigo-700)'};">
+          ${skillMeta.icon || '📘'}
+        </div>
+        <div class="mock-card-main">
+          <div class="mock-card-title">${escapeHtml(m.title)}</div>
+          <div class="mock-pills-row">
+            <span class="mock-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>
+              </svg>
+              30 ta savol
+            </span>
+            <span class="mock-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+              </svg>
+              ${duration} daqiqa
+            </span>
+            <span class="mock-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              30 ball
+            </span>
+            ${errorBadge}
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary mock-start-btn" onclick="startMockQuiz('${m.id}')" style="background:${skillMeta.color || 'var(--indigo-700)'};">
+        <span>${btnText}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  `;
+}
+
 function renderSkillMockPanes(){
   const grammarMockEl = document.getElementById('grammarPaneMocks');
   if(grammarMockEl){
     const grammarMocks = MOCKS_DATA.filter(m => m.skill === 'grammatika');
+    const skillMeta = SKILL_META['grammatika'] || { name: 'Grammatika', icon: '📘', bg: 'var(--grammatika-bg)', color: 'var(--grammatika)' };
     if(grammarMocks.length === 0){
       grammarMockEl.innerHTML = `
         <div class="placeholder-card" style="padding:32px 16px;">
@@ -7363,27 +7515,8 @@ function renderSkillMockPanes(){
       `;
     } else {
       grammarMockEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${grammarMocks.map(m => {
-            const qCount = (m.questions || []).length;
-            return `
-              <div class="card" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1.5px solid var(--border);transition:transform .2s var(--ease),border-color .2s var(--ease);">
-                <div style="display:flex;align-items:center;gap:14px;min-width:200px;flex:1;">
-                  <div style="width:44px;height:44px;border-radius:12px;background:var(--grammatika-bg);color:var(--grammatika);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📘</div>
-                  <div>
-                    <div style="font-size:15.5px;font-weight:700;margin-bottom:3px;">${escapeHtml(m.title)}</div>
-                    <div style="font-size:12px;color:var(--text-faint);font-weight:600;">
-                      30 ta savol · ${m.durationMins || 30} daqiqa · 30 ball
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-primary" onclick="startMockQuiz('${m.id}')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;">
-                  <span>Mockni boshlash</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-            `;
-          }).join('')}
+        <div class="mock-cards-list">
+          ${grammarMocks.map(m => renderMockCardHtml(m, skillMeta)).join('')}
         </div>
       `;
     }
@@ -7403,27 +7536,8 @@ function renderSkillMockPanes(){
       `;
     } else {
       skillMockEl.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${skillMocks.map(m => {
-            const qCount = (m.questions || []).length;
-            return `
-              <div class="card" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1.5px solid var(--border);transition:transform .2s var(--ease),border-color .2s var(--ease);">
-                <div style="display:flex;align-items:center;gap:14px;min-width:200px;flex:1;">
-                  <div style="width:44px;height:44px;border-radius:12px;background:${skillMeta.bg};color:${skillMeta.color};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${skillMeta.icon || '📝'}</div>
-                  <div>
-                    <div style="font-size:15.5px;font-weight:700;margin-bottom:3px;">${escapeHtml(m.title)}</div>
-                    <div style="font-size:12px;color:var(--text-faint);font-weight:600;">
-                      30 ta savol · ${m.durationMins || 30} daqiqa · 30 ball
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-primary" onclick="startMockQuiz('${m.id}')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;">
-                  <span>Mockni boshlash</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-            `;
-          }).join('')}
+        <div class="mock-cards-list">
+          ${skillMocks.map(m => renderMockCardHtml(m, skillMeta)).join('')}
         </div>
       `;
     }
@@ -9951,6 +10065,13 @@ function finishQuiz(){
       topicName: currentQuiz.label,
       correct, total
     });
+  }
+
+  // Mock test natijasini (va xatoliklar sonini) saqlash
+  if(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock')){
+    const mockKey = currentQuiz.mockId || currentQuiz.topicId;
+    recordMockResult(mockKey, correct, total, wrong);
+    renderSkillMockPanes();
   }
 
   if(FULL_EXAM && FULL_EXAM.active){
