@@ -1585,7 +1585,16 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 }
 .ob-btn-next{
   width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
-  padding:13px 20px; font-size:14.5px;
+  padding:13px 20px; font-size:14.5px; font-weight:700; border-radius:9999px;
+  cursor:pointer;
+}
+.ob-btn-row{
+  display:flex; gap:12px; margin-top:22px; width:100%;
+}
+.ob-action-btn{
+  flex:1; height:46px; border-radius:9999px; font-size:14.5px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  cursor:pointer;
 }
 .ob-gender-list{
   display:flex; flex-direction:column; gap:10px; margin-top:18px;
@@ -1608,7 +1617,13 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   background:var(--green-bg);
 }
 .ob-gender-icon{
-  font-size:24px; flex-shrink:0; line-height:1;
+  width:36px; height:36px; border-radius:50%;
+  background:var(--card); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-dim); flex-shrink:0; transition:all .18s ease;
+}
+.ob-gender-card.selected .ob-gender-icon{
+  background:var(--green-bg); border-color:var(--green); color:var(--green);
 }
 .ob-gender-info{ flex:1; }
 .ob-gender-info .t{ font-size:14px; font-weight:700; color:var(--text); }
@@ -3263,7 +3278,7 @@ html[data-theme="dark"] .dash-main-heading {
     
     <!-- STEP 1: Name -->
     <div class="ob-step-view" id="obStep1">
-      <div class="ob-badge">👋 Xush kelibsiz!</div>
+      <div class="ob-badge">Xush kelibsiz!</div>
       <h2 class="ob-title">Sizni qanday deb ataylik?</h2>
       <p class="ob-sub">Ismingizni tasdiqlang yoki o‘zingizga qulay qilib kiriting. Keyinchalik profilingizdan istalgan payt o‘zgartirishingiz mumkin.</p>
       
@@ -3280,16 +3295,18 @@ html[data-theme="dark"] .dash-main-heading {
 
     <!-- STEP 2: Gender -->
     <div class="ob-step-view" id="obStep2" style="display:none;">
-      <div class="ob-badge">✨ So‘nggi qadam</div>
+      <div class="ob-badge">So‘nggi qadam</div>
       <h2 class="ob-title">Jinsingizni tanlang</h2>
       <p class="ob-sub">O‘rganish va topshiriqlarni sizga eng qulay tarzda moslashtirish uchun kerak bo‘ladi.</p>
       
       <div class="ob-gender-list">
         <button type="button" class="ob-gender-card" id="obGenderMale" onclick="selectObGender('male')">
-          <div class="ob-gender-icon">👨</div>
+          <div class="ob-gender-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
           <div class="ob-gender-info">
-            <div class="t">Erkak</div>
-            <div class="s">Erkak foydalanuvchi</div>
+            <div class="t">Muzakkar</div>
+            <div class="s">Muzakkar foydalanuvchi</div>
           </div>
           <div class="ob-gender-check">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -3297,10 +3314,12 @@ html[data-theme="dark"] .dash-main-heading {
         </button>
 
         <button type="button" class="ob-gender-card" id="obGenderFemale" onclick="selectObGender('female')">
-          <div class="ob-gender-icon">👩</div>
+          <div class="ob-gender-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
           <div class="ob-gender-info">
-            <div class="t">Ayol</div>
-            <div class="s">Ayol foydalanuvchi</div>
+            <div class="t">Muannas</div>
+            <div class="s">Muannas foydalanuvchi</div>
           </div>
           <div class="ob-gender-check">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -3308,10 +3327,12 @@ html[data-theme="dark"] .dash-main-heading {
         </button>
 
         <button type="button" class="ob-gender-card selected" id="obGenderUnspecified" onclick="selectObGender('unspecified')">
-          <div class="ob-gender-icon">🔘</div>
+          <div class="ob-gender-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
           <div class="ob-gender-info">
-            <div class="t">Ko‘rsatmaslik</div>
-            <div class="s">Muhim emas / Maxfiy qolsin</div>
+            <div class="t">Maxfiy</div>
+            <div class="s">Muhim emas / Ko‘rsatilmasin</div>
           </div>
           <div class="ob-gender-check">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -3319,12 +3340,14 @@ html[data-theme="dark"] .dash-main-heading {
         </button>
       </div>
 
-      <div style="display:flex;gap:10px;margin-top:22px;">
-        <button class="btn btn-outline" style="flex:1;" onclick="prevOnboardingStep()">
-          ← Ortga
+      <div class="ob-btn-row">
+        <button type="button" class="btn btn-outline ob-action-btn" onclick="prevOnboardingStep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Ortga
         </button>
-        <button class="btn btn-primary" style="flex:2;" onclick="completeOnboarding()">
-          Boshlash 🚀
+        <button type="button" class="btn btn-primary ob-action-btn" onclick="completeOnboarding()">
+          Boshlash
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
@@ -8916,14 +8939,14 @@ function openEditProfile(){
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Jins</span>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="editGenderSelectGroup">
-          <button type="button" id="editGenderBtn_male" class="ob-gender-card ${EDIT_TEMP_GENDER==='male'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('male')">
-            <span style="font-size:16px;">👨</span> <span style="font-size:12px;font-weight:600;">Erkak</span>
+          <button type="button" id="editGenderBtn_male" class="ob-gender-card ${EDIT_TEMP_GENDER==='male'?'selected':''}" style="padding:10px 8px;justify-content:center;border-radius:9999px;" onclick="setEditProfileGender('male')">
+            <span style="font-size:12.5px;font-weight:700;">Muzakkar</span>
           </button>
-          <button type="button" id="editGenderBtn_female" class="ob-gender-card ${EDIT_TEMP_GENDER==='female'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('female')">
-            <span style="font-size:16px;">👩</span> <span style="font-size:12px;font-weight:600;">Ayol</span>
+          <button type="button" id="editGenderBtn_female" class="ob-gender-card ${EDIT_TEMP_GENDER==='female'?'selected':''}" style="padding:10px 8px;justify-content:center;border-radius:9999px;" onclick="setEditProfileGender('female')">
+            <span style="font-size:12.5px;font-weight:700;">Muannas</span>
           </button>
-          <button type="button" id="editGenderBtn_unspecified" class="ob-gender-card ${EDIT_TEMP_GENDER==='unspecified'?'selected':''}" style="padding:10px 8px;justify-content:center;gap:6px;" onclick="setEditProfileGender('unspecified')">
-            <span style="font-size:16px;">🔘</span> <span style="font-size:11px;font-weight:600;">Maxfiy</span>
+          <button type="button" id="editGenderBtn_unspecified" class="ob-gender-card ${EDIT_TEMP_GENDER==='unspecified'?'selected':''}" style="padding:10px 8px;justify-content:center;border-radius:9999px;" onclick="setEditProfileGender('unspecified')">
+            <span style="font-size:12.5px;font-weight:700;">Maxfiy</span>
           </button>
         </div>
       </label>
