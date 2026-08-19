@@ -4276,8 +4276,15 @@ function countSkillAttemptsToday(skillId){
   });
   return n;
 }
-/* true = ruxsat bor (davom etsa bo'ladi), false = limit tugagan (bloklandi + toast chiqdi) */
+/* true = ruxsat bor (davom etsa bo'ladi), false = limit tugagan (bloklandi + toast chiqdi)
+   MUHIM: to'liq mock imtihon (FULL_EXAM.active) davomida bu tekshiruv butunlay
+   o'chiriladi — aks holda, masalan, foydalanuvchi alohida mashqda Grammatika
+   limitini tugatgan bo'lsa, keyin to'liq imtihonni boshlaganda aynan Grammatika
+   bosqichiga yetganda imtihon "qotib qolar" edi (orqaga qaytish ham qulflangan
+   bo'lgani uchun chiqib ketolmasdi). Kunlik limit faqat alohida (mock imtihondan
+   tashqari) mashq/test boshlashga tegishli. */
 function checkSkillDailyLimit(skillId){
+  if(FULL_EXAM && FULL_EXAM.active) return true;
   const limit = getSkillDailyLimitValue(skillId);
   if(!limit) return true; // 0 yoki belgilanmagan = cheksiz
   const used = countSkillAttemptsToday(skillId);
