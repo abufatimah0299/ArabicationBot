@@ -1175,6 +1175,113 @@ html[data-theme="light"] .topic-item:hover{
   padding:10px 6px;
 }
 
+/* At-Tanal bo'limi: Mashq qilish / Mocklar segmentli almashtirgich (rasmdagi dizayn) */
+.attanal-tab-toggle{
+  display:flex;
+  background:var(--card-alt, #e8eee9);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:4px;
+  margin:0 0 20px 0;
+  position:relative;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);
+}
+html[data-theme="light"] .attanal-tab-toggle{
+  background:#e5ece7;
+  border:1px solid rgba(22,100,68,0.12);
+}
+html[data-theme="dark"] .attanal-tab-toggle{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+}
+.attanal-tab-btn{
+  flex:1 1 0;
+  min-width:0;
+  text-align:center;
+  white-space:nowrap;
+  padding:12px 14px;
+  border-radius:14px;
+  border:none;
+  background:transparent;
+  color:var(--text-dim);
+  font-family:inherit;
+  font-weight:600;
+  font-size:14px;
+  cursor:pointer;
+  transition:all .22s cubic-bezier(0.16, 1, 0.3, 1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.attanal-tab-btn:hover{
+  color:var(--text);
+}
+.attanal-tab-btn.active{
+  background:#ffffff;
+  color:var(--indigo-700);
+  box-shadow:0 3px 10px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+}
+html[data-theme="dark"] .attanal-tab-btn.active{
+  background:var(--card);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3);
+}
+.attanal-pane{
+  animation:fadeIn .25s ease-out;
+}
+.attanal-mock-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:24px 22px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  margin-bottom:16px;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.attanal-mock-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px -6px rgba(0,0,0,0.08);
+}
+.attanal-mock-header{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.attanal-mock-icon{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  background:linear-gradient(135deg, #4A7AE8 0%, #2A4DB8 100%);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  flex-shrink:0;
+  box-shadow:0 4px 14px -4px rgba(74,122,232,0.45);
+}
+.attanal-mock-badges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.attanal-mock-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 11px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:var(--bg);
+  color:var(--text-dim);
+  border:1px solid var(--border);
+}
+
 /* Reyting: TANAL/CEFR va davr filtrlari — teng width/height, card bilan bir xil chetlar */
 .rank-type-toggle{ display:flex; gap:8px; margin-bottom:16px; }
 .rank-type-btn{
@@ -1598,6 +1705,14 @@ html[data-theme="light"] .topic-item:hover{
 }
 .admin-tab.tab-cyan:hover{
   box-shadow:0 8px 24px -2px rgba(8,145,178,0.45), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.admin-tab.tab-indigo{
+  background:linear-gradient(135deg, #6366F1 0%, #4F46E5 60%, #4338CA 100%);
+  box-shadow:0 5px 16px -2px rgba(79,70,229,0.32), 0 2px 6px rgba(0,0,0,0.04);
+}
+.admin-tab.tab-indigo:hover{
+  box-shadow:0 8px 24px -2px rgba(79,70,229,0.45), 0 3px 8px rgba(0,0,0,0.06);
 }
 .community-card{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
 .community-avatar{ width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--indigo-100); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:18px; color:var(--indigo-700); }
@@ -2196,25 +2311,44 @@ html[data-theme="dark"] .dash-main-heading {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
           Ortga
         </div>
-        <div class="skill-intro-wrap">
-          <div class="card skill-intro-card">
-            <div class="skill-intro-hero">
-              <div class="skill-intro-icon" id="skillIntroIcon"></div>
-              <div class="skill-intro-title-wrap">
-                <div class="skill-intro-title-ar" id="skillIntroAr"></div>
-                <div class="skill-intro-title-uz" id="skillIntroUz"></div>
+
+        <!-- Segmented Tab Switcher (Mashq qilish / Mocklar) -->
+        <div class="attanal-tab-toggle" role="tablist" aria-label="Mahorat rejimi" style="margin-top:4px; margin-bottom:18px;">
+          <button type="button" class="attanal-tab-btn active" id="skillTabPractice" onclick="switchSkillTab('practice')" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Mashq qilish</span>
+          </button>
+          <button type="button" class="attanal-tab-btn" id="skillTabMocks" onclick="switchSkillTab('mocks')" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>Mocklar</span>
+          </button>
+        </div>
+
+        <!-- Mashq qilish pane -->
+        <div id="skillPanePractice" class="attanal-pane">
+          <div class="skill-intro-wrap">
+            <div class="card skill-intro-card">
+              <div class="skill-intro-hero">
+                <div class="skill-intro-icon" id="skillIntroIcon"></div>
+                <div class="skill-intro-title-wrap">
+                  <div class="skill-intro-title-ar" id="skillIntroAr"></div>
+                  <div class="skill-intro-title-uz" id="skillIntroUz"></div>
+                </div>
               </div>
+              <div class="skill-intro-meta" id="skillIntroMeta"></div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-top:6px;">Bo'lim tavsifi:</div>
+              <p class="skill-intro-desc" id="skillIntroDesc" style="margin:8px 0 14px 0;"></p>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:6px;">
+                <div style="font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:4px;">📌 Qoida va ko'rsatmalar</div>
+                <div style="font-size:12px;font-weight:600;color:var(--text-dim);line-height:1.5;">Test boshlangach belgilangan vaqt davom etadi. Har bir savolga diqqat bilan javob bering va vaqtdan unumli foydalaning.</div>
+              </div>
+              <button class="btn btn-primary skill-intro-btn" id="skillIntroBtn" onclick="beginPendingSkill()">Testni boshlash</button>
             </div>
-            <div class="skill-intro-meta" id="skillIntroMeta"></div>
-            <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-top:6px;">Bo'lim tavsifi:</div>
-            <p class="skill-intro-desc" id="skillIntroDesc" style="margin:8px 0 14px 0;"></p>
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:6px;">
-              <div style="font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:4px;">📌 Qoida va ko'rsatmalar</div>
-              <div style="font-size:12px;font-weight:600;color:var(--text-dim);line-height:1.5;">Test boshlangach belgilangan vaqt davom etadi. Har bir savolga diqqat bilan javob bering va vaqtdan unumli foydalaning.</div>
-            </div>
-            <button class="btn btn-primary skill-intro-btn" id="skillIntroBtn" onclick="beginPendingSkill()">Testni boshlash</button>
           </div>
         </div>
+
+        <!-- Mocklar pane (Bo'sh) -->
+        <div id="skillPaneMocks" class="attanal-pane" style="display:none;"></div>
       </div>
 
       <!-- ============ MIC CHECK SCREEN (Muhovara boshlanishidan oldin) ============ -->
@@ -2300,22 +2434,43 @@ html[data-theme="dark"] .dash-main-heading {
 
       <!-- ============ GRAMMAR TOPICS ============ -->
       <div class="view" id="view-grammar">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
         <div class="view-title">Umumiy arab tili grammatikasi</div>
-        <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:600px;">Bo'limni tanlang va shu bo'limga oid mavzular bo'yicha alohida testlar orqali bilimingizni mustahkamlang.</p>
-        <div class="grammar-cat-grid" id="grammarCatGrid" data-grammar-topics></div>
 
-        <div class="card" style="padding:22px;">
-          <div style="font-weight:600;font-size:15px;margin-bottom:14px;">Grammatika bo'yicha tarix</div>
-          <div class="filter-group" id="grammarHistFilter" style="margin-bottom:16px;">
-            <button class="filter-chip active" data-val="hammasi">Hammasi</button>
-            <button class="filter-chip" data-val="xato">Xatolar</button>
-            <button class="filter-chip" data-val="togri">To'g'ri</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:10px;" id="grammarHistList"></div>
-          <div class="placeholder-card" id="grammarHistEmpty" style="display:none;">
-            <h3>Tarix topilmadi</h3><p>Ushbu filtr bo'yicha hech qanday natija yo'q.</p>
+        <!-- Segmented Tab Switcher (Mashq qilish / Mocklar) -->
+        <div class="attanal-tab-toggle" role="tablist" aria-label="Grammatika rejimi" style="margin-top:4px; margin-bottom:18px;">
+          <button type="button" class="attanal-tab-btn active" id="grammarTabPractice" onclick="switchGrammarTab('practice')" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Mashq qilish</span>
+          </button>
+          <button type="button" class="attanal-tab-btn" id="grammarTabMocks" onclick="switchGrammarTab('mocks')" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>Mocklar</span>
+          </button>
+        </div>
+
+        <div id="grammarPanePractice" class="attanal-pane">
+          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:600px;">Bo'limni tanlang va shu bo'limga oid mavzular bo'yicha alohida testlar orqali bilimingizni mustahkamlang.</p>
+          <div class="grammar-cat-grid" id="grammarCatGrid" data-grammar-topics></div>
+
+          <div class="card" style="padding:22px;">
+            <div style="font-weight:600;font-size:15px;margin-bottom:14px;">Grammatika bo'yicha tarix</div>
+            <div class="filter-group" id="grammarHistFilter" style="margin-bottom:16px;">
+              <button class="filter-chip active" data-val="hammasi">Hammasi</button>
+              <button class="filter-chip" data-val="xato">Xatolar</button>
+              <button class="filter-chip" data-val="togri">To'g'ri</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;" id="grammarHistList"></div>
+            <div class="placeholder-card" id="grammarHistEmpty" style="display:none;">
+              <h3>Tarix topilmadi</h3><p>Ushbu filtr bo'yicha hech qanday natija yo'q.</p>
+            </div>
           </div>
         </div>
+
+        <div id="grammarPaneMocks" class="attanal-pane" style="display:none;"></div>
       </div>
 
       <!-- ============ QUIZ VIEW ============ -->
@@ -2601,6 +2756,14 @@ html[data-theme="dark"] .dash-main-heading {
               <div class="admin-tab-title">Savollar banki</div>
               <div class="admin-tab-sub">Qo'shish / tahrirlash</div>
             </button>
+            <button class="admin-tab tab-indigo" data-atab="mocks" onclick="openAdminPanelModal('mocks')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+                <span class="admin-tab-badge">30 talik</span>
+              </div>
+              <div class="admin-tab-title">Mocklar</div>
+              <div class="admin-tab-sub">Mock testlar yaratish</div>
+            </button>
           </div>
 
           <div class="admin-tab-tier">Vaqti-vaqti bilan</div>
@@ -2719,6 +2882,23 @@ html[data-theme="dark"] .dash-main-heading {
             </div>
           </div>
           <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
+        </div>
+
+        <!-- MOCKLAR BOSHQARUVI -->
+        <div class="admin-panel-body" id="adminTab-mocks" style="display:none;">
+          <div class="rank-filter-row" id="adminMockSkillFilterRow">
+            <div class="rank-dropdown" id="adminMockSkillDropdown"></div>
+          </div>
+          <div class="admin-toolbar">
+            <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="adminMocksCount">0 ta mock</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="openAddMockModal()" style="display:flex;align-items:center;gap:7px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Mock qo'shish
+              </button>
+            </div>
+          </div>
+          <div class="card" style="padding:16px;" id="adminMocksList"></div>
         </div>
 
         <!-- 4) IMTIHON XABARLARI (mavjud) -->
@@ -3956,6 +4136,8 @@ function showView(name, push=true){
   if(activeEl) runEntranceAnimations(activeEl);
   if(name==='admin') renderAdminPanel();
   if(name==='hamjamiyat') renderCommunityView();
+  if(name==='grammar') switchGrammarTab('practice');
+  if(name==='skillintro') switchSkillTab('practice');
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
   // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
@@ -4267,6 +4449,47 @@ function renderSkillHub(){
 }
 renderSkillHub();
 
+/* ---------------- Skill / Grammar Tab Switchers (Mashq qilish / Mocklar) ---------------- */
+function switchSkillTab(tab){
+  const btnPractice = document.getElementById('skillTabPractice');
+  const btnMocks = document.getElementById('skillTabMocks');
+  const panePractice = document.getElementById('skillPanePractice');
+  const paneMocks = document.getElementById('skillPaneMocks');
+
+  if(tab === 'mocks'){
+    if(btnPractice){ btnPractice.classList.remove('active'); btnPractice.setAttribute('aria-selected', 'false'); }
+    if(btnMocks){ btnMocks.classList.add('active'); btnMocks.setAttribute('aria-selected', 'true'); }
+    if(panePractice) panePractice.style.display = 'none';
+    if(paneMocks) paneMocks.style.display = 'block';
+    renderSkillMockPanes();
+  } else {
+    if(btnMocks){ btnMocks.classList.remove('active'); btnMocks.setAttribute('aria-selected', 'false'); }
+    if(btnPractice){ btnPractice.classList.add('active'); btnPractice.setAttribute('aria-selected', 'true'); }
+    if(paneMocks) paneMocks.style.display = 'none';
+    if(panePractice) panePractice.style.display = 'block';
+  }
+}
+
+function switchGrammarTab(tab){
+  const btnPractice = document.getElementById('grammarTabPractice');
+  const btnMocks = document.getElementById('grammarTabMocks');
+  const panePractice = document.getElementById('grammarPanePractice');
+  const paneMocks = document.getElementById('grammarPaneMocks');
+
+  if(tab === 'mocks'){
+    if(btnPractice){ btnPractice.classList.remove('active'); btnPractice.setAttribute('aria-selected', 'false'); }
+    if(btnMocks){ btnMocks.classList.add('active'); btnMocks.setAttribute('aria-selected', 'true'); }
+    if(panePractice) panePractice.style.display = 'none';
+    if(paneMocks) paneMocks.style.display = 'block';
+    renderSkillMockPanes();
+  } else {
+    if(btnMocks){ btnMocks.classList.remove('active'); btnMocks.setAttribute('aria-selected', 'false'); }
+    if(btnPractice){ btnPractice.classList.add('active'); btnPractice.setAttribute('aria-selected', 'true'); }
+    if(paneMocks) paneMocks.style.display = 'none';
+    if(panePractice) panePractice.style.display = 'block';
+  }
+}
+
 /* ---------------- Kunlik limit (mahorat bo'yicha) ----------------
    Admin panelda "Kunlik limitlar" bo'limida belgilangan qiymatlar
    window.SKILL_DAILY_LIMITS ichida (admin extension skripti tomonidan,
@@ -4320,6 +4543,7 @@ function openSkillIntro(id){
   const s = SKILLS.find(x=>x.id===id);
   if(!s) return;
   pendingSkillId = id;
+  switchSkillTab('practice');
   const icon = document.getElementById('skillIntroIcon');
   icon.style.background = s.bg; icon.style.color = s.color;
   icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS[s.id]}</svg>`;
@@ -4997,13 +5221,14 @@ async function submitExamReport(){
 /* ================= ADMIN PANEL — asosiy mantiq ================= */
 function showAdminTab(tab){
   document.querySelectorAll('#adminTabs .admin-tab').forEach(b=>b.classList.toggle('active', b.dataset.atab===tab));
-  ['overview','users','questions','reports'].forEach(t=>{
+  ['overview','users','questions','mocks','reports'].forEach(t=>{
     const el = document.getElementById('adminTab-'+t);
     if(el) el.style.display = (t===tab) ? '' : 'none';
   });
   if(tab==='overview') renderAdminOverview();
   if(tab==='users') renderAdminUsers();
   if(tab==='questions') renderAdminQuestions();
+  if(tab==='mocks') renderAdminMocks();
   if(tab==='reports') renderAdminReports();
 }
 
@@ -5013,7 +5238,7 @@ function renderAdminPanel(){
 }
 
 const ADMIN_TAB_TITLES = {
-  overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki',
+  overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki', mocks:'Mocklar',
   reports:'Imtihon xabarlari', examcards:'Imtihon cardlari', gramorder:'Grammatika tartibi',
   sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat', skilllimits:'Kunlik limitlar'
 };
@@ -5321,12 +5546,25 @@ function renderAdminQuestions(){
   if(adminActiveSkill==='grammatika'){
     const topics = adminSubFilter==='all' ? GRAMMAR_TOPICS : GRAMMAR_TOPICS.filter(t=>t.category===adminSubFilter);
     const total = topics.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
-    countEl.textContent = `${topics.length} ta mavzu · ${total} ta savol`;
-    if(topics.length===0){
+    const realExamCount = QUESTION_BANKS.grammatika.questions.length;
+    countEl.textContent = `${topics.length} ta mavzu · ${total} ta amaliyot savoli · ${realExamCount} ta real imtihon savoli`;
+    // "Mavzusiz" (real imtihon) bank — faqat "Barchasi" filtrida ko'rinadi, chunki
+    // u biror kategoriyaga tegishli emas.
+    const realExamRow = (adminSubFilter==='all') ? `<div class="topic-row" style="border-inline-start:2px solid var(--indigo-500);padding-inline-start:10px;">
+        <div>
+          <div class="t-name">🎓 Grammatika mahorati (real imtihon, mavzusiz)</div>
+          <div class="t-meta">${realExamCount} ta savol · At-Tanal / to'liq mock imtihonda shu yerdan tasodifiy 30 tasi chiqadi</div>
+        </div>
+        <div class="t-actions">${rowMenuBtn([
+          {icon:IB_ICON_VIEW, label:"Ko'rish", run:()=>viewTopicQuestions('grammatika', null)},
+          {icon:IB_ICON_ADD, label:"Savol qo'shish", run:()=>openAddQuestionModal('grammatika', null)},
+        ], 'Grammatika mahorati')}</div>
+      </div>` : '';
+    if(topics.length===0 && !realExamRow){
       list.innerHTML = `<div class="placeholder-card"><h3>Hali mavzu yo'q</h3><p>"Amallar" tugmasi orqali birinchi grammatika mavzusini qo'shing, so'ng unga savollar kiriting.</p></div>`;
       return;
     }
-    list.innerHTML = topics.map(t=>{
+    list.innerHTML = realExamRow + topics.map(t=>{
       const n = GRAMMAR_TOPIC_BANKS[t.id]?.length || 0;
       const cat = GRAMMAR_CATEGORIES.find(c=>c.id===t.category);
       const menu = rowMenuBtn([
@@ -5738,9 +5976,12 @@ function viewTopicQuestions(skillId, topicId){
   renderTopicQuestionsModal(skillId, topicId, items || []);
   document.getElementById('modalOverlay').classList.add('show');
 }
-/* Savollar ro'yxatini beruvchi umumiy funksiya — edit/delete/move ham shundan foydalanadi. */
+/* Savollar ro'yxatini beruvchi umumiy funksiya — edit/delete/move ham shundan foydalanadi.
+   MUHIM: grammatika uchun topicId bo'lmasa (mavzusiz) — bu "faqat real imtihon" uchun
+   ajratilgan alohida savollar banki (QUESTION_BANKS.grammatika.questions), amaliyot
+   mavzulari (GRAMMAR_TOPIC_BANKS) bilan ARALASHMAYDI. */
 function getQuestionItems(skillId, topicId){
-  if(skillId==='grammatika') return GRAMMAR_TOPIC_BANKS[topicId];
+  if(skillId==='grammatika') return topicId ? GRAMMAR_TOPIC_BANKS[topicId] : QUESTION_BANKS.grammatika.questions;
   if(skillId==='qiroa') return QIROA_TEST_BY_ID[topicId]?.questions;
   if(skillId==='istima') return ISTIMA_TEST_BY_ID[topicId]?.questions;
   return QUESTION_BANKS[skillId]?.questions;
@@ -6628,6 +6869,599 @@ async function submitBulkIstimaTests(e){
   return false;
 }
 
+/* ================= MOCKLAR BOSHQARUVI (ADMIN & O'QUVCHI) ================= */
+let adminActiveMockSkill = 'all';
+
+function loadMocksData(){
+  try {
+    const raw = localStorage.getItem('arab_app_mocks_data');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  } catch(e){
+    console.error("Mocks data load error:", e);
+  }
+  return [];
+}
+
+let MOCKS_DATA = loadMocksData();
+
+function saveMocksData(){
+  try {
+    localStorage.setItem('arab_app_mocks_data', JSON.stringify(MOCKS_DATA));
+  } catch(e){
+    console.error("Mocks data save error:", e);
+  }
+  renderAdminMocks();
+  renderSkillMockPanes();
+}
+
+function nextMockNumberForSkill(skillId){
+  const skillMocks = MOCKS_DATA.filter(m => m.skill === skillId);
+  return skillMocks.length + 1;
+}
+
+function renderAdminMockSkillFilters(){
+  const mockSkills = [
+    { value: 'all', label: 'Barchasi' },
+    ...SKILLS.map(s => ({ value: s.id, label: s.name }))
+  ];
+  initCustomDropdown('adminMockSkillDropdown', {
+    label: 'Mahorat',
+    options: mockSkills,
+    value: adminActiveMockSkill,
+    onChange: (val) => {
+      adminActiveMockSkill = val;
+      renderAdminMocks();
+    }
+  });
+}
+
+function renderAdminMocks(){
+  renderAdminMockSkillFilters();
+  const list = document.getElementById('adminMocksList');
+  const countEl = document.getElementById('adminMocksCount');
+  if(!list) return;
+
+  const filteredMocks = adminActiveMockSkill === 'all'
+    ? MOCKS_DATA
+    : MOCKS_DATA.filter(m => m.skill === adminActiveMockSkill);
+
+  if(countEl){
+    countEl.textContent = `${filteredMocks.length} ta mock`;
+  }
+
+  if(filteredMocks.length === 0){
+    list.innerHTML = `
+      <div class="placeholder-card" style="padding:28px 16px;">
+        <div style="font-size:32px;margin-bottom:8px;">📝</div>
+        <h3 style="margin-bottom:4px;">Hozircha mock testlar yo'q</h3>
+        <p style="margin-bottom:14px;color:var(--text-faint);font-size:13px;">"${adminActiveMockSkill === 'all' ? 'Barcha mahoratlar' : (SKILL_META[adminActiveMockSkill]?.name || adminActiveMockSkill)}" bo'yicha yangi mock yaratish uchun yuqoridagi tugmani bosing.</p>
+        <button class="btn btn-primary" onclick="openAddMockModal('${adminActiveMockSkill === 'all' ? 'grammatika' : adminActiveMockSkill}')">+ Yangi mock yaratish</button>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = filteredMocks.map(m => {
+    const skillMeta = SKILL_META[m.skill] || { name: m.skill, color: 'var(--indigo-600)', bg: 'var(--indigo-100)' };
+    const qCount = (m.questions || []).length;
+    const isComplete = qCount >= 30;
+    const statusBadge = isComplete 
+      ? `<span class="badge-status badge-elite" style="font-size:11px;">30/30 savol (To'liq) ✅</span>`
+      : `<span class="badge-status badge-good" style="font-size:11px;">${qCount}/30 savol</span>`;
+
+    const menu = rowMenuBtn([
+      { icon: IB_ICON_VIEW, label: "Ko'rish / Savollar", run: () => viewMockQuestions(m.id) },
+      { icon: IB_ICON_ADD, label: "+ Savol qo'shish", disabled: qCount >= 30, run: () => openAddMockQuestionModal(m.id) },
+      { icon: AS_ICON_PLUS || IB_ICON_ADD, label: "Ommaviy savol qo'shish (JSON)", disabled: qCount >= 30, run: () => openBulkAddMockQuestionModal(m.id) },
+      { icon: IB_ICON_EDIT, label: "Mock nomini tahrirlash", run: () => openEditMockModal(m.id) },
+      { icon: IB_ICON_DEL, label: "O'chirish", danger: true, run: () => deleteMock(m.id) },
+    ], m.title);
+
+    return `
+      <div class="topic-row" style="align-items:center;padding:14px 12px;border-bottom:1px solid var(--border);">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${skillMeta.bg};color:${skillMeta.color};">${skillMeta.name}</span>
+            <div class="t-name" style="font-size:14.5px;font-weight:700;">${escapeHtml(m.title)}</div>
+            ${statusBadge}
+          </div>
+          <div class="t-meta" style="font-size:12px;color:var(--text-faint);">
+            30 ta savol · ${m.durationMins || 30} daqiqa · ${qCount} ta mavjud savol
+          </div>
+        </div>
+        <div class="t-actions">
+          <button class="row-btn" onclick="viewMockQuestions('${m.id}')" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Savollar (${qCount})
+          </button>
+          ${menu}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddMockModal(presetSkill){
+  const skill = presetSkill && presetSkill !== 'all' ? presetSkill : (adminActiveMockSkill !== 'all' ? adminActiveMockSkill : 'grammatika');
+  const nextNum = nextMockNumberForSkill(skill);
+  
+  document.getElementById('modalTitle').textContent = "Yangi Mock qo'shish";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="newMockForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitNewMock(event)">
+      <div class="form-field">
+        <label>Mahoratni tanlang</label>
+        <select id="mockSkillSelect" onchange="updateMockAutoNumber(this.value)">
+          ${SKILLS.map(s => `<option value="${s.id}" ${s.id === skill ? 'selected' : ''}>${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Mock nomi (avtomatik raqamlangan)</label>
+        <input type="text" id="mockTitleInput" value="Mock #${nextNum}" required>
+        <div class="form-hint">Har bir yangi mock avtomatik raqamlanadi (masalan: Mock #1, Mock #2).</div>
+      </div>
+      <div class="form-field">
+        <label>Savollar soni</label>
+        <input type="number" value="30" disabled style="background:var(--bg);color:var(--text-faint);cursor:not-allowed;">
+        <div class="form-hint">Har bir mock standart 30 ta savoldan iborat bo'ladi.</div>
+      </div>
+      <div class="form-field">
+        <label>Ajratilgan vaqt (daqiqa)</label>
+        <input type="number" id="mockDurationInput" value="30" min="5" max="180" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Mockni yaratish</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function updateMockAutoNumber(skillId){
+  const nextNum = nextMockNumberForSkill(skillId);
+  const input = document.getElementById('mockTitleInput');
+  if(input) input.value = `Mock #${nextNum}`;
+}
+
+function submitNewMock(e){
+  e.preventDefault();
+  const skill = document.getElementById('mockSkillSelect').value;
+  const title = document.getElementById('mockTitleInput').value.trim();
+  const durationMins = Number(document.getElementById('mockDurationInput').value) || 30;
+
+  if(!title){
+    toast("⚠️ Mock nomini kiriting");
+    return false;
+  }
+
+  const newMock = {
+    id: 'mock_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    skill,
+    title,
+    durationMins,
+    questions: [],
+    createdAt: new Date().toISOString()
+  };
+
+  MOCKS_DATA.push(newMock);
+  saveMocksData();
+  closeModal();
+  toast(`✅ "${title}" yaratildi! Endi 30 ta savol qo'shishingiz mumkin.`);
+  viewMockQuestions(newMock.id);
+  return false;
+}
+
+function openEditMockModal(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+
+  document.getElementById('modalTitle').textContent = "Mockni tahrirlash";
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditMock(event, '${mock.id}')">
+      <div class="form-field">
+        <label>Mock nomi</label>
+        <input type="text" id="editMockTitleInput" value="${escapeHtml(mock.title)}" required>
+      </div>
+      <div class="form-field">
+        <label>Ajratilgan vaqt (daqiqa)</label>
+        <input type="number" id="editMockDurationInput" value="${mock.durationMins || 30}" min="5" max="180" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function submitEditMock(e, mockId){
+  e.preventDefault();
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return false;
+
+  mock.title = document.getElementById('editMockTitleInput').value.trim();
+  mock.durationMins = Number(document.getElementById('editMockDurationInput').value) || 30;
+
+  saveMocksData();
+  closeModal();
+  toast("✅ Mock ma'lumotlari yangilandi");
+  return false;
+}
+
+function deleteMock(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+  if(!confirm(`"${mock.title}" mock testini butunlay o'chirmoqchimisiz?`)) return;
+  MOCKS_DATA = MOCKS_DATA.filter(m => m.id !== mockId);
+  saveMocksData();
+  toast("🗑 Mock test o'chirildi");
+}
+
+function viewMockQuestions(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+
+  const qList = mock.questions || [];
+  const skillMeta = SKILL_META[mock.skill] || { name: mock.skill };
+
+  document.getElementById('modalTitle').textContent = `${mock.title} — Savollar (${qList.length}/30)`;
+  
+  const content = `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+        <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;">
+          Mahorat: <b style="color:var(--text);">${skillMeta.name}</b> · Jami: <b style="color:var(--text);">${qList.length}/30</b>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline" style="font-size:12px;padding:6px 12px;" onclick="openBulkAddMockQuestionModal('${mock.id}')" ${qList.length >= 30 ? 'disabled' : ''}>Ommaviy (JSON)</button>
+          <button class="btn btn-primary" style="font-size:12px;padding:6px 12px;" onclick="openAddMockQuestionModal('${mock.id}')" ${qList.length >= 30 ? 'disabled' : ''}>+ Yangi savol</button>
+        </div>
+      </div>
+      
+      ${qList.length === 0 ? `
+        <div class="placeholder-card" style="padding:24px 14px;">
+          <h3 style="margin-bottom:6px;">Bu mockda hali savol yo'q</h3>
+          <p style="margin-bottom:12px;color:var(--text-faint);font-size:13px;">30 ta savol kiritish uchun yuqoridagi tugmalardan foydalaning.</p>
+          <button class="btn btn-primary" onclick="openAddMockQuestionModal('${mock.id}')">+ Birinchi savolni qo'shish</button>
+        </div>
+      ` : `
+        <div style="display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;padding-right:4px;">
+          ${qList.map((q, idx) => `
+            <div class="card" style="padding:14px;background:var(--card-alt);border:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+                <span style="font-weight:700;font-size:12.5px;color:var(--indigo-600);">${idx + 1}-savol</span>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn btn-outline" style="padding:3px 7px;font-size:11px;" onclick="moveMockQuestion('${mock.id}', ${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                  <button class="btn btn-outline" style="padding:3px 7px;font-size:11px;" onclick="moveMockQuestion('${mock.id}', ${idx}, 1)" ${idx === qList.length - 1 ? 'disabled' : ''}>▼</button>
+                  <button class="btn btn-outline" style="padding:3px 7px;font-size:11px;" onclick="openEditMockQuestionModal('${mock.id}', ${idx})">Tahrirlash</button>
+                  <button class="btn btn-outline" style="padding:3px 7px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="deleteMockQuestion('${mock.id}', ${idx})">O'chirish</button>
+                </div>
+              </div>
+              <div dir="rtl" style="font-size:15px;font-weight:700;margin-bottom:10px;text-align:right;font-family:'Graphik Arabic',sans-serif;line-height:1.5;">${escapeHtml(q.q)}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                ${(q.opts || []).map((opt, oIdx) => `
+                  <div dir="rtl" style="padding:7px 10px;border-radius:8px;font-size:13px;background:${oIdx === q.a ? 'var(--green-bg)' : 'var(--card)'};border:1.5px solid ${oIdx === q.a ? 'var(--green)' : 'var(--border)'};color:${oIdx === q.a ? 'var(--green)' : 'var(--text)'};font-weight:${oIdx === q.a ? '700' : '500'};text-align:right;">
+                    ${oIdx === q.a ? '✓ ' : ''}${escapeHtml(opt)}
+                  </div>
+                `).join('')}
+              </div>
+              ${q.exp ? `<div style="font-size:11.5px;color:var(--text-faint);background:var(--card);padding:6px 10px;border-radius:6px;border:1px dashed var(--border);">💡 ${escapeHtml(q.exp)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+  `;
+
+  document.getElementById('modalBody').innerHTML = content;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openAddMockQuestionModal(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+  if((mock.questions || []).length >= 30){
+    toast("⚠️ Ushbu mock testda allaqachon 30 ta savol to'lgan!");
+    return;
+  }
+
+  document.getElementById('modalTitle').textContent = `${mock.title} — Yangi savol qo'shish`;
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddMockQuestion(event, '${mock.id}')">
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="mqText" dir="rtl" placeholder="أَيْنَ ذَهَبَ..." required></textarea>
+      </div>
+      <div class="form-field">
+        <label>Javob variantlari (to'g'risini belgilang)</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[0,1,2,3].map(i => `
+            <div class="q-opt-row">
+              <input type="radio" name="mqCorrect" value="${i}" ${i === 0 ? 'checked' : ''} required>
+              <input type="text" id="mqOpt${i}" placeholder="Variant ${i + 1}" dir="rtl" required>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
+        <textarea id="mqExp" placeholder="Nima uchun bu javob to'g'ri..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Savolni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function submitAddMockQuestion(e, mockId){
+  e.preventDefault();
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return false;
+  if(!mock.questions) mock.questions = [];
+  if(mock.questions.length >= 30){
+    toast("⚠️ 30 tadan ortiq savol qo'shib bo'lmaydi");
+    return false;
+  }
+
+  const q = document.getElementById('mqText').value.trim();
+  const opts = [0,1,2,3].map(i => document.getElementById('mqOpt' + i).value.trim());
+  const a = Number(document.querySelector('input[name="mqCorrect"]:checked').value);
+  const exp = document.getElementById('mqExp').value.trim();
+
+  mock.questions.push({
+    id: 'mq_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+    q, opts, a, exp
+  });
+
+  saveMocksData();
+  toast("✅ Savol qo'shildi");
+  viewMockQuestions(mockId);
+  return false;
+}
+
+function openEditMockQuestionModal(mockId, qIdx){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock || !mock.questions || !mock.questions[qIdx]) return;
+  const qObj = mock.questions[qIdx];
+
+  document.getElementById('modalTitle').textContent = `${mock.title} — ${qIdx + 1}-savolni tahrirlash`;
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditMockQuestion(event, '${mock.id}', ${qIdx})">
+      <div class="form-field">
+        <label>Savol matni (arabcha)</label>
+        <textarea id="mqEditText" dir="rtl" required>${escapeHtml(qObj.q)}</textarea>
+      </div>
+      <div class="form-field">
+        <label>Javob variantlari (to'g'risini belgilang)</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${[0,1,2,3].map(i => `
+            <div class="q-opt-row">
+              <input type="radio" name="mqEditCorrect" value="${i}" ${i === qObj.a ? 'checked' : ''} required>
+              <input type="text" id="mqEditOpt${i}" value="${escapeHtml(qObj.opts ? qObj.opts[i] || '' : '')}" dir="rtl" required>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
+        <textarea id="mqEditExp">${escapeHtml(qObj.exp || '')}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">O'zgarishlarni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function submitEditMockQuestion(e, mockId, qIdx){
+  e.preventDefault();
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock || !mock.questions || !mock.questions[qIdx]) return false;
+
+  mock.questions[qIdx].q = document.getElementById('mqEditText').value.trim();
+  mock.questions[qIdx].opts = [0,1,2,3].map(i => document.getElementById('mqEditOpt' + i).value.trim());
+  mock.questions[qIdx].a = Number(document.querySelector('input[name="mqEditCorrect"]:checked').value);
+  mock.questions[qIdx].exp = document.getElementById('mqEditExp').value.trim();
+
+  saveMocksData();
+  toast("✅ Savol yangilandi");
+  viewMockQuestions(mockId);
+  return false;
+}
+
+function deleteMockQuestion(mockId, qIdx){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock || !mock.questions || !mock.questions[qIdx]) return;
+  if(!confirm(`${qIdx + 1}-savolni o'chirmoqchimisiz?`)) return;
+  mock.questions.splice(qIdx, 1);
+  saveMocksData();
+  toast("🗑 Savol o'chirildi");
+  viewMockQuestions(mockId);
+}
+
+function moveMockQuestion(mockId, qIdx, dir){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock || !mock.questions) return;
+  const targetIdx = qIdx + dir;
+  if(targetIdx < 0 || targetIdx >= mock.questions.length) return;
+  const temp = mock.questions[qIdx];
+  mock.questions[qIdx] = mock.questions[targetIdx];
+  mock.questions[targetIdx] = temp;
+  saveMocksData();
+  viewMockQuestions(mockId);
+}
+
+function openBulkAddMockQuestionModal(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+  const availableSlots = 30 - (mock.questions || []).length;
+  if(availableSlots <= 0){
+    toast("⚠️ Mockda allaqachon 30 ta savol bor");
+    return;
+  }
+
+  document.getElementById('modalTitle').textContent = `${mock.title} — Ommaviy savol qo'shish`;
+  document.getElementById('modalBody').innerHTML = `
+    <form style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkAddMockQuestions(event, '${mock.id}')">
+      <div class="form-field">
+        <label>JSON formatdagi savollar ro'yxati</label>
+        <textarea id="mockBulkJson" style="min-height:160px;font-family:monospace;font-size:12px;" placeholder='[&#10;  {&#10;    "q": "كَتَبَ الطَّالِبُ...",&#10;    "opts": ["الدَّرْسَ", "الدَّرْسُ", "الدَّرْسِ", "دَرْسٌ"],&#10;    "a": 0,&#10;    "exp": "Izoh..."&#10;  }&#10;]' required></textarea>
+        <div class="form-hint">Maksimal qolgan joy: <b>${availableSlots}</b> ta savol (jami 30 ta).</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Qo'shish</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function submitBulkAddMockQuestions(e, mockId){
+  e.preventDefault();
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return false;
+  if(!mock.questions) mock.questions = [];
+
+  const raw = document.getElementById('mockBulkJson').value.trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed) || !parsed.length){
+      toast("⚠️ JSON massiv bo'lishi kerak!");
+      return false;
+    }
+    const availableSlots = 30 - mock.questions.length;
+    const toAdd = parsed.slice(0, availableSlots).map(item => ({
+      id: 'mq_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+      q: item.q || item.question || '',
+      opts: Array.isArray(item.opts) ? item.opts : (Array.isArray(item.options) ? item.options : ['','','','']),
+      a: typeof item.a === 'number' ? item.a : (typeof item.correct === 'number' ? item.correct : 0),
+      exp: item.exp || item.explanation || ''
+    })).filter(q => q.q && q.opts.length === 4);
+
+    if(!toAdd.length){
+      toast("⚠️ Yaroqli savollar topilmadi");
+      return false;
+    }
+
+    mock.questions.push(...toAdd);
+    saveMocksData();
+    toast(`✅ ${toAdd.length} ta savol qo'shildi`);
+    viewMockQuestions(mockId);
+  } catch(err){
+    toast("⚠️ JSON formati noto'g'ri: " + err.message);
+    return false;
+  }
+  return false;
+}
+
+function renderSkillMockPanes(){
+  const grammarMockEl = document.getElementById('grammarPaneMocks');
+  if(grammarMockEl){
+    const grammarMocks = MOCKS_DATA.filter(m => m.skill === 'grammatika');
+    if(grammarMocks.length === 0){
+      grammarMockEl.innerHTML = `
+        <div class="placeholder-card" style="padding:32px 16px;">
+          <div style="font-size:32px;margin-bottom:8px;">📝</div>
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:6px;">Hozircha mock testlar mavjud emas</h3>
+          <p style="font-size:13px;color:var(--text-faint);">Grammatika bo'yicha mock testlar admin tomonidan tez orada joylanadi.</p>
+        </div>
+      `;
+    } else {
+      grammarMockEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${grammarMocks.map(m => {
+            const qCount = (m.questions || []).length;
+            return `
+              <div class="card" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1.5px solid var(--border);transition:transform .2s var(--ease),border-color .2s var(--ease);">
+                <div style="display:flex;align-items:center;gap:14px;min-width:200px;flex:1;">
+                  <div style="width:44px;height:44px;border-radius:12px;background:var(--grammatika-bg);color:var(--grammatika);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📘</div>
+                  <div>
+                    <div style="font-size:15.5px;font-weight:700;margin-bottom:3px;">${escapeHtml(m.title)}</div>
+                    <div style="font-size:12px;color:var(--text-faint);font-weight:600;">
+                      30 ta savol · ${m.durationMins || 30} daqiqa · 30 ball
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="startMockQuiz('${m.id}')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;">
+                  <span>Mockni boshlash</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+  }
+
+  const skillMockEl = document.getElementById('skillPaneMocks');
+  if(skillMockEl && pendingSkillId){
+    const skillMocks = MOCKS_DATA.filter(m => m.skill === pendingSkillId);
+    const skillMeta = SKILL_META[pendingSkillId] || { name: pendingSkillId, icon: '📝', bg: 'var(--indigo-100)', color: 'var(--indigo-600)' };
+    if(skillMocks.length === 0){
+      skillMockEl.innerHTML = `
+        <div class="placeholder-card" style="padding:32px 16px;">
+          <div style="font-size:32px;margin-bottom:8px;">📝</div>
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:6px;">Hozircha mock testlar mavjud emas</h3>
+          <p style="font-size:13px;color:var(--text-faint);">${skillMeta.name} bo'yicha mock testlar admin tomonidan tez orada joylanadi.</p>
+        </div>
+      `;
+    } else {
+      skillMockEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${skillMocks.map(m => {
+            const qCount = (m.questions || []).length;
+            return `
+              <div class="card" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1.5px solid var(--border);transition:transform .2s var(--ease),border-color .2s var(--ease);">
+                <div style="display:flex;align-items:center;gap:14px;min-width:200px;flex:1;">
+                  <div style="width:44px;height:44px;border-radius:12px;background:${skillMeta.bg};color:${skillMeta.color};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${skillMeta.icon || '📝'}</div>
+                  <div>
+                    <div style="font-size:15.5px;font-weight:700;margin-bottom:3px;">${escapeHtml(m.title)}</div>
+                    <div style="font-size:12px;color:var(--text-faint);font-weight:600;">
+                      30 ta savol · ${m.durationMins || 30} daqiqa · 30 ball
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="startMockQuiz('${m.id}')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;">
+                  <span>Mockni boshlash</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+  }
+}
+
+function startMockQuiz(mockId){
+  const mock = MOCKS_DATA.find(m => m.id === mockId);
+  if(!mock) return;
+  if(!mock.questions || mock.questions.length === 0){
+    toast("⚠️ Ushbu mock testda hali savollar yo'q!");
+    return;
+  }
+  const skillMeta = SKILL_META[mock.skill] || { name: mock.skill, color: 'var(--indigo-600)' };
+  currentQuiz = {
+    skillId: mock.skill,
+    topicId: mock.id,
+    type: 'mock',
+    mockId: mock.id,
+    mockTitle: mock.title,
+    questions: mock.questions.map(q => ({
+      ...q,
+      picked: null
+    })),
+    color: skillMeta.color || 'var(--indigo-600)',
+    label: `${skillMeta.name} — ${mock.title}`,
+    idx: 0,
+    startedAt: Date.now()
+  };
+  document.getElementById('quizTag').textContent = currentQuiz.label;
+  document.getElementById('quizTag').style.background = 'color-mix(in srgb, ' + currentQuiz.color + ' 16%, white)';
+  document.getElementById('quizTag').style.color = currentQuiz.color;
+  buildQGrid();
+  showView('quiz');
+  renderQuestion();
+  startTimer((mock.durationMins || 30) * 60, () => finishQuiz());
+}
+
 function openAddQuestionModal(presetSkill, presetTopic){
   const skillId = presetSkill || adminActiveSkill;
   const isGrammar = skillId === 'grammatika';
@@ -6670,8 +7504,10 @@ function openAddQuestionModal(presetSkill, presetTopic){
       <div class="form-field" id="qTopicField" style="${isGrammar?'':'display:none;'}">
         <label>Mavzu</label>
         <select id="qTopic">
+          <option value="" ${!presetTopic?'selected':''}>— Mavzusiz (faqat "Grammatika mahorati" — real imtihon uchun) —</option>
           ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}" ${t.id===presetTopic?'selected':''}>${t.name}</option>`).join('')}
         </select>
+        <div style="font-size:11px;color:var(--text-faint);font-weight:600;margin-top:5px;">Mavzu tanlansa — savol shu mavzuning amaliyot testiga (Umumiy grammatika bo'limi) tushadi. Mavzu tanlanmasa — savol faqat to'liq imtihondagi "Grammatika mahorati"da chiqadi.</div>
       </div>
       <div class="form-field" id="qJuzField" style="${isQiroa?'':'display:none;'}">
         <label>Test (matn)</label>
@@ -6758,8 +7594,14 @@ async function submitNewQuestion(e){
   // shunda savol Supabase "questions" jadvaliga yoziladi va boshqa foydalanuvchilar
   // ilovani keyingi ochganda uni ko'radi.
   if(skillId==='grammatika'){
-    if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
-    GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
+    if(topicId){
+      if(!GRAMMAR_TOPIC_BANKS[topicId]) GRAMMAR_TOPIC_BANKS[topicId] = [];
+      GRAMMAR_TOPIC_BANKS[topicId].push(newQ);
+    } else {
+      // Mavzu tanlanmagan — bu savol amaliyot (Umumiy grammatika) mavzulariga emas,
+      // faqat "Grammatika mahorati" (real At-Tanal imtihoni) savollar bankiga tushadi.
+      QUESTION_BANKS.grammatika.questions.push(newQ);
+    }
   } else if(skillId==='qiroa'){
     if(QIROA_TEST_BY_ID[topicId]) QIROA_TEST_BY_ID[topicId].questions.push(newQ);
   } else if(skillId==='istima'){
@@ -6825,9 +7667,9 @@ function openBulkAddQuestionModal(){
       </div>
       <div id="bqGrammarFields" style="${isGrammar?'':'display:none;'}display:flex;flex-direction:column;gap:14px;">
         <div class="form-field">
-          <label>Standart mavzu (ixtiyoriy — pastdagi matnda "topic" ko'rsatilmagan savollar shu mavzuga tushadi)</label>
+          <label>Standart mavzu (tanlansa — amaliyot uchun, Umumiy grammatika bo'limiga tushadi. Tanlanmasa — bu savollar FAQAT "Grammatika mahorati" (real imtihon)da chiqadi)</label>
           <select id="bqTopic">
-            <option value="">— tanlanmagan —</option>
+            <option value="">— Mavzusiz (real imtihon uchun) —</option>
             ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
           </select>
         </div>
@@ -6848,7 +7690,7 @@ function openBulkAddQuestionModal(){
 ]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
           Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
-          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (ixtiyoriy, faqat yangi mavzu yaratilganda ishlatiladi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>imlo</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi. Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
+          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (yangi mavzu yaratilganda MAJBURIY — aks holda xatolik beradi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>imlo</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi (u ham tanlanmagan bo'lsa — savol MAVZUSIZ, ya'ni faqat real imtihon uchun qo'shiladi). Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
           ${isQiroa ? `Qiroa uchun: yuqorida tanlangan <b>testga</b> (matnga) qo'shiladi — bitta testda ko'pi bilan ${QIROA_MAX_Q_PER_TEST} ta savol bo'lishi kerak. "Yangi matn" tanlansa, avval matn saqlanadi, so'ng shu savollar o'sha yangi matnga bog'lanadi.` : ''}
         </div>
       </div>
@@ -8011,10 +8853,17 @@ function startQuiz(skillId, customLabel, topicId){
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
     questions = GRAMMAR_TOPIC_BANKS[topicId];
   } else if(skillId==='grammatika' && !topicId){
-    const built = buildGrammarExamQuestions();
-    questions = built.questions;
-    if(built.shortage.length){
-      toast(`⚠️ Ba'zi kategoriyalarda savollar yetarli emas: ${built.shortage.join(', ')}`, 6000);
+    // "Grammatika mahorati" (mavzu tanlanmasdan — real At-Tanal imtihoni yoki
+    // to'liq mock imtihon bosqichi sifatida) endi Umumiy grammatika bo'limining
+    // amaliyot mavzularidan (GRAMMAR_TOPIC_BANKS) EMAS, balki alohida — faqat shu
+    // maqsad uchun (admin panelda "Mavzusiz" qilib qo'shilgan) real imtihon
+    // savollar bankidan (QUESTION_BANKS.grammatika.questions) tasodifiy 30 tasi
+    // olinadi. Bu ikki bank butunlay mustaqil — biri ikkinchisiga aralashmaydi.
+    const GRAMMAR_EXAM_SIZE = 30;
+    const pool = QUESTION_BANKS.grammatika.questions || [];
+    questions = shuffleArray(pool).slice(0, GRAMMAR_EXAM_SIZE);
+    if(questions.length < GRAMMAR_EXAM_SIZE){
+      toast(`⚠️ Real imtihon uchun savollar yetarli emas: ${questions.length}/${GRAMMAR_EXAM_SIZE}. Admin panelda "Grammatika" → mavzusiz savol qo'shing.`, 6000);
     }
   }
   if(!questions || !questions.length){
