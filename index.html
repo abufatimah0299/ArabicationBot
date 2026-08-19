@@ -3472,13 +3472,22 @@ function setLastBackendError(status, text){
   console.error(window.LAST_BACKEND_ERROR);
 }
 
-async function saveQuestionToBackend({skillId, topicId, q, opts, a, exp}){
+async function saveQuestionToBackend({skillId, topicId, category, q, opts, a, exp}){
   if(!SESSION_TOKEN){ setLastBackendError('—', 'SESSION_TOKEN yo\'q (Telegram orqali kirilmagan)'); return null; }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
+    const bodyWithCat = { p_skill_id: skillId, p_topic_id: topicId||null, p_category: category||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null };
+    let res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
       method:"POST", headers: authHeaders(),
-      body: JSON.stringify({ p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
+      body: JSON.stringify(bodyWithCat)
     });
+    if(!res.ok && res.status >= 400){
+      // Agar backend admin_add_question p_category parametrini tanimasa (eski RPC), p_category'siz qayta urinamiz
+      const bodyWithoutCat = { p_skill_id: skillId, p_topic_id: topicId||null, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null };
+      res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_add_question`, {
+        method:"POST", headers: authHeaders(),
+        body: JSON.stringify(bodyWithoutCat)
+      });
+    }
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     const text = await res.text();
     return text ? JSON.parse(text) : true;
@@ -5686,14 +5695,21 @@ function renderAdminQuestions(){
   if(adminActiveSkill==='grammatika'){
     const topics = adminSubFilter==='all' ? GRAMMAR_TOPICS : GRAMMAR_TOPICS.filter(t=>t.category===adminSubFilter);
     const total = topics.reduce((s,t)=> s + (GRAMMAR_TOPIC_BANKS[t.id]?.length||0), 0);
-    const realExamCount = QUESTION_BANKS.grammatika.questions.length;
+    const realExamPool = QUESTION_BANKS.grammatika.questions || [];
+    const realExamCount = realExamPool.length;
+    const catCounts = { nahv: 0, sarf: 0, imlo: 0, xatolar: 0 };
+    realExamPool.forEach(q => {
+      const c = q.category || 'nahv';
+      if(catCounts[c] !== undefined) catCounts[c]++;
+      else catCounts.nahv++;
+    });
     countEl.textContent = `${topics.length} ta mavzu · ${total} ta amaliyot savoli · ${realExamCount} ta real imtihon savoli`;
-    // "Mavzusiz" (real imtihon) bank — faqat "Barchasi" filtrida ko'rinadi, chunki
-    // u biror kategoriyaga tegishli emas.
     const realExamRow = (adminSubFilter==='all') ? `<div class="topic-row" style="border-inline-start:2px solid var(--indigo-500);padding-inline-start:10px;">
         <div>
-          <div class="t-name">🎓 Grammatika mahorati (real imtihon, mavzusiz)</div>
-          <div class="t-meta">${realExamCount} ta savol · At-Tanal / to'liq mock imtihonda shu yerdan tasodifiy 30 tasi chiqadi</div>
+          <div class="t-name">🎓 Grammatika mahorati (real imtihon — 30 ta savol)</div>
+          <div class="t-meta" style="margin-top:2px;">
+            Jami: <b>${realExamCount} ta</b> savol · Nisbat: Nahv (${catCounts.nahv}/15), Sarf (${catCounts.sarf}/7), Imlo (${catCounts.imlo}/4), Xatolar (${catCounts.xatolar}/4)
+          </div>
         </div>
         <div class="t-actions">${rowMenuBtn([
           {icon:IB_ICON_VIEW, label:"Ko'rish", run:()=>viewTopicQuestions('grammatika', null)},
@@ -6128,33 +6144,52 @@ function getQuestionItems(skillId, topicId){
 }
 function renderTopicQuestionsModal(skillId, topicId, items){
   document.getElementById('modalTitle').textContent = `Savollar (${items.length} ta)`;
-  document.getElementById('modalBody').innerHTML = items.map((q,i)=>`
-    <div class="report-item" style="position:relative;">
-      <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:8px;">${i+1}. ${escapeHtml(q.q)}</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        ${q.opts.map((o,oi)=>`<div style="font-size:12.5px;font-weight:600;direction:rtl;text-align:right;color:${oi===q.a?'var(--grammatika)':'var(--text-dim)'};">${oi===q.a?'✓ ':''}${escapeHtml(o)}</div>`).join('')}
-      </div>
-      ${q.exp?`<div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${escapeHtml(q.exp)}</div>`:''}
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-        <div class="icon-btn-row">
-          <button type="button" class="icon-btn ib-add" title="Yuqoriga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},-1)" ${i===0?'disabled':''}>${IB_ICON_UP}</button>
-          <button type="button" class="icon-btn ib-add" title="Pastga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},1)" ${i===items.length-1?'disabled':''}>${IB_ICON_DOWN}</button>
-          <button type="button" class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditQuestionModal('${skillId}','${topicId||''}',${i})">${IB_ICON_EDIT}</button>
-          <button type="button" class="icon-btn ib-del" title="O'chirish" onclick="deleteQuestion('${skillId}','${topicId||''}',${i})">${IB_ICON_DEL}</button>
+  document.getElementById('modalBody').innerHTML = items.map((q,i)=>{
+    const isGrammar = skillId === 'grammatika';
+    const cat = isGrammar ? (GRAMMAR_CATEGORIES.find(c=>c.id===q.category) || {name: q.category || 'Nahv', ar:'النحو'}) : null;
+    const catBadge = cat ? `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--indigo-100);color:var(--indigo-700);margin-bottom:6px;">${cat.name} (${cat.ar})</span>` : '';
+    return `
+      <div class="report-item" style="position:relative;">
+        ${catBadge}
+        <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:8px;">${i+1}. ${escapeHtml(q.q)}</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          ${q.opts.map((o,oi)=>`<div style="font-size:12.5px;font-weight:600;direction:rtl;text-align:right;color:${oi===q.a?'var(--grammatika)':'var(--text-dim)'};">${oi===q.a?'✓ ':''}${escapeHtml(o)}</div>`).join('')}
         </div>
-        ${!q.id?'<span style="font-size:11px;color:var(--text-faint);font-weight:600;">namunaviy (backendda emas)</span>':''}
+        ${q.exp?`<div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${escapeHtml(q.exp)}</div>`:''}
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <div class="icon-btn-row">
+            <button type="button" class="icon-btn ib-add" title="Yuqoriga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},-1)" ${i===0?'disabled':''}>${IB_ICON_UP}</button>
+            <button type="button" class="icon-btn ib-add" title="Pastga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},1)" ${i===items.length-1?'disabled':''}>${IB_ICON_DOWN}</button>
+            <button type="button" class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditQuestionModal('${skillId}','${topicId||''}',${i})">${IB_ICON_EDIT}</button>
+            <button type="button" class="icon-btn ib-del" title="O'chirish" onclick="deleteQuestion('${skillId}','${topicId||''}',${i})">${IB_ICON_DEL}</button>
+          </div>
+          ${!q.id?'<span style="font-size:11px;color:var(--text-faint);font-weight:600;">namunaviy (backendda emas)</span>':''}
+        </div>
       </div>
-    </div>
-  `).join('') || `<div class="placeholder-card"><h3>Bo'sh</h3></div>`;
+    `;
+  }).join('') || `<div class="placeholder-card"><h3>Bo'sh</h3></div>`;
 }
 
 function openEditQuestionModal(skillId, topicId, idx){
   const items = getQuestionItems(skillId, topicId);
   const q = items?.[idx];
   if(!q) return;
+  const isGrammar = skillId === 'grammatika';
+  const qCat = q.category || (topicId ? GRAMMAR_TOPICS.find(t=>t.id===topicId)?.category : null) || 'nahv';
+
   document.getElementById('modalTitle').textContent = "Savolni tahrirlash";
   document.getElementById('modalBody').innerHTML = `
     <form id="adminQEditForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditQuestion(event,'${skillId}','${topicId||''}',${idx})">
+      ${isGrammar ? `
+      <div class="form-field">
+        <label>Kategoriya (Imtihon nisbati: Nahv 15 ta, Sarf 7 ta, Imlo 4 ta, Keng tarqalgan xatolar 4 ta)</label>
+        <select id="eqCategory">
+          ${GRAMMAR_CATEGORIES.map(c=>{
+            const countLabel = c.id==='nahv'?'15 ta': c.id==='sarf'?'7 ta': c.id==='imlo'?'4 ta':'4 ta';
+            return `<option value="${c.id}" ${c.id===qCat?'selected':''}>${c.name} (${c.ar}) — imtihonda ${countLabel}</option>`;
+          }).join('')}
+        </select>
+      </div>` : ''}
       <div class="form-field">
         <label>Savol matni (arabcha)</label>
         <textarea id="eqText" dir="rtl" required>${escapeHtml(q.q)}</textarea>
@@ -6188,6 +6223,9 @@ async function submitEditQuestion(e, skillId, topicId, idx){
   q.opts = [0,1,2,3].map(i=>document.getElementById('eqOpt'+i).value);
   q.a = Number(document.querySelector('input[name="eqCorrect"]:checked').value);
   q.exp = document.getElementById('eqExp').value;
+  if(skillId === 'grammatika'){
+    q.category = document.getElementById('eqCategory')?.value || q.category || 'nahv';
+  }
   renderAdminQuestions();
   viewTopicQuestions(skillId, topicId);
   if(q.id){
@@ -7784,6 +7822,10 @@ function openAddQuestionModal(presetSkill, presetTopic){
     toast("⚠️ Avval Istima bo'limida biror qismga test (audio) qo'shing — \"+ Yangi test\"", 6000);
     return;
   }
+
+  const initialTopicObj = presetTopic ? GRAMMAR_TOPICS.find(t=>t.id===presetTopic) : null;
+  const initialCategory = initialTopicObj ? initialTopicObj.category : 'nahv';
+
   document.getElementById('modalTitle').textContent = "Yangi savol qo'shish";
   document.getElementById('modalBody').innerHTML = `
     <form id="adminQForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitNewQuestion(event)">
@@ -7795,11 +7837,21 @@ function openAddQuestionModal(presetSkill, presetTopic){
       </div>
       <div class="form-field" id="qTopicField" style="${isGrammar?'':'display:none;'}">
         <label>Mavzu</label>
-        <select id="qTopic">
+        <select id="qTopic" onchange="onGrammarTopicChange()">
           <option value="" ${!presetTopic?'selected':''}>— Mavzusiz (faqat "Grammatika mahorati" — real imtihon uchun) —</option>
           ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}" ${t.id===presetTopic?'selected':''}>${t.name}</option>`).join('')}
         </select>
         <div style="font-size:11px;color:var(--text-faint);font-weight:600;margin-top:5px;">Mavzu tanlansa — savol shu mavzuning amaliyot testiga (Umumiy grammatika bo'limi) tushadi. Mavzu tanlanmasa — savol faqat to'liq imtihondagi "Grammatika mahorati"da chiqadi.</div>
+      </div>
+      <div class="form-field" id="qCategoryField" style="${isGrammar?'':'display:none;'}">
+        <label>Kategoriya (Imtihon nisbati: Nahv 15 ta, Sarf 7 ta, Imlo 4 ta, Keng tarqalgan xatolar 4 ta)</label>
+        <select id="qCategory">
+          ${GRAMMAR_CATEGORIES.map(c=>{
+            const countLabel = c.id==='nahv'?'15 ta': c.id==='sarf'?'7 ta': c.id==='imlo'?'4 ta':'4 ta';
+            return `<option value="${c.id}" ${c.id===initialCategory?'selected':''}>${c.name} (${c.ar}) — imtihonda ${countLabel}</option>`;
+          }).join('')}
+        </select>
+        <div style="font-size:11px;color:var(--text-faint);font-weight:600;margin-top:5px;">Imtihonda savollar aynan shu 4 kategoriya bo'yicha belgilangan nisbatda (jami 30 ta) random tanlanadi.</div>
       </div>
       <div class="form-field" id="qJuzField" style="${isQiroa?'':'display:none;'}">
         <label>Test (matn)</label>
@@ -7847,10 +7899,23 @@ function openAddQuestionModal(presetSkill, presetTopic){
 }
 function toggleGrammarTopicField(){
   const val = document.getElementById('qSkill').value;
-  document.getElementById('qTopicField').style.display = val==='grammatika' ? '' : 'none';
+  const isGrammar = val==='grammatika';
+  document.getElementById('qTopicField').style.display = isGrammar ? '' : 'none';
+  const catField = document.getElementById('qCategoryField');
+  if(catField) catField.style.display = isGrammar ? '' : 'none';
   document.getElementById('qJuzField').style.display = val==='qiroa' ? '' : 'none';
   const istimaField = document.getElementById('qIstimaField');
   if(istimaField) istimaField.style.display = val==='istima' ? '' : 'none';
+}
+function onGrammarTopicChange(){
+  const topicId = document.getElementById('qTopic')?.value;
+  if(topicId){
+    const t = GRAMMAR_TOPICS.find(x=>x.id===topicId);
+    if(t && t.category){
+      const catSel = document.getElementById('qCategory');
+      if(catSel) catSel.value = t.category;
+    }
+  }
 }
 async function submitNewQuestion(e){
   e.preventDefault();
@@ -7859,6 +7924,9 @@ async function submitNewQuestion(e){
     ? document.getElementById('qTopic')?.value
     : skillId==='qiroa' ? document.getElementById('qJuz')?.value
     : skillId==='istima' ? document.getElementById('qIstima')?.value
+    : null;
+  const category = (skillId==='grammatika')
+    ? (document.getElementById('qCategory')?.value || (topicId ? GRAMMAR_TOPICS.find(t=>t.id===topicId)?.category : null) || 'nahv')
     : null;
   if(skillId==='qiroa'){
     const n = QIROA_TEST_BY_ID[topicId]?.questions.length || 0;
@@ -7877,6 +7945,7 @@ async function submitNewQuestion(e){
   }
   const newQ = {
     id: null, skillId, topicId: topicId || null,
+    category: category || null,
     q: document.getElementById('qText').value,
     opts: [0,1,2,3].map(i=>document.getElementById('qOpt'+i).value),
     a: Number(document.querySelector('input[name="qCorrect"]:checked').value),
@@ -7906,7 +7975,7 @@ async function submitNewQuestion(e){
   adminActiveSkill = skillId;
   renderAdminQuestions();
 
-  const saved = await saveQuestionToBackend({ skillId, topicId, q:newQ.q, opts:newQ.opts, a:newQ.a, exp:newQ.exp });
+  const saved = await saveQuestionToBackend({ skillId, topicId, category, q:newQ.q, opts:newQ.opts, a:newQ.a, exp:newQ.exp });
   if(saved){
     // Backend id'sini shu savolga biriktiramiz — shu bilan uni darhol tahrirlash/o'chirish mumkin bo'ladi.
     const savedId = Array.isArray(saved) ? saved[0]?.id : saved?.id;
@@ -7960,29 +8029,33 @@ function openBulkAddQuestionModal(){
       <div id="bqGrammarFields" style="${isGrammar?'':'display:none;'}display:flex;flex-direction:column;gap:14px;">
         <div class="form-field">
           <label>Standart mavzu (tanlansa — amaliyot uchun, Umumiy grammatika bo'limiga tushadi. Tanlanmasa — bu savollar FAQAT "Grammatika mahorati" (real imtihon)da chiqadi)</label>
-          <select id="bqTopic">
-            <option value="">— Mavzusiz (real imtihon uchun) —</option>
+          <select id="bqTopic" onchange="onBulkGrammarTopicChange()">
+            <option value="">— Mavzusiz (faqat "Grammatika mahorati" — real imtihon uchun) —</option>
             ${GRAMMAR_TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
           </select>
         </div>
         <div class="form-field">
-          <label>Standart kategoriya (JSON'da "category" ko'rsatilmagan yangi mavzular shu kategoriya ostida yaratiladi)</label>
+          <label>Standart kategoriya (Imtihon nisbati: Nahv 15 ta, Sarf 7 ta, Imlo 4 ta, Keng tarqalgan xatolar 4 ta)</label>
           <select id="bqCategory">
-            <option value="">— tanlanmagan —</option>
-            ${GRAMMAR_CATEGORIES.map(c=>`<option value="${c.id}">${c.name} (${c.ar})</option>`).join('')}
+            ${GRAMMAR_CATEGORIES.map(c=>{
+              const countLabel = c.id==='nahv'?'15 ta': c.id==='sarf'?'7 ta': c.id==='imlo'?'4 ta':'4 ta';
+              return `<option value="${c.id}">${c.name} (${c.ar}) — imtihonda ${countLabel}</option>`;
+            }).join('')}
           </select>
+          <div style="font-size:11px;color:var(--text-faint);font-weight:600;margin-top:5px;">JSON'da "category" ko'rsatilmagan savollar uchun shu kategoriya ishlatiladi.</div>
         </div>
       </div>
       <div class="form-field">
         <label>Savollar (JSON massiv)</label>
         <textarea id="bqJson" rows="12" placeholder='[
-  {"topic":"Fe\\'l zamonlari","topicAr":"أزمنة الفعل","category":"sarf","q":"أَيْنَ ذَهَبَ؟","opts":["أ","ب","ج","د"],"a":0,"exp":"Izoh (ixtiyoriy)"},
-  {"topic":"Imlo qoidalari","category":"imlo","q":"...","opts":["...","...","...","..."],"a":2},
-  {"q":"...","opts":["...","...","...","..."],"a":1}
+  {"category":"nahv","q":"أَيْنَ ذَهَبَ زَيْدٌ؟","opts":["إِلَى الْمَدْرَسَةِ","فِي الْمَدْرَسَةِ","عَنِ الْمَدْرَسَةِ","مِنَ الْمَدْرَسَةِ"],"a":0,"exp":"Nahv qoidasi"},
+  {"category":"sarf","q":"مَا هُوَ وَزْنُ كَلِمَةِ \\"اسْتَغْفَرَ\\"؟","opts":["اسْتَفْعَلَ","افْتَعَلَ","تَفَاعَلَ","فَعَّلَ"],"a":0,"exp":"Sarf qoidasi"},
+  {"category":"imlo","q":"كَيْفَ تُكْتَبُ هَمْزَةُ \\"سَأَلَ\\"؟","opts":["عَلَى الأَلِفِ","عَلَى الْوَاوِ","عَلَى الْيَاءِ","عَلَى السَّطْرِ"],"a":0,"exp":"Imlo qoidasi"},
+  {"category":"xatolar","q":"عَيِّنِ الْجُمْلَةَ الصَّحِيحَةَ:","opts":["قَرَأْتُ كِتَابًا مُفِيدًا","قَرَأْتُ كِتَابٌ مُفِيدٌ","قَرَأْتُ كِتَابٍ مُفِيدٍ","قَرَأْتُ كِتَابَ مُفِيدٍ"],"a":0,"exp":"Xatolarni tuzatish"}
 ]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
         <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;">
           Har bir savol: <b>q</b> — savol matni, <b>opts</b> — 4 ta variant, <b>a</b> — to'g'ri variant indeksi (0-3), <b>exp</b> — izoh (ixtiyoriy).<br>
-          ${isGrammar ? `Grammatika uchun qo'shimcha (ixtiyoriy): <b>topic</b> — mavzu nomi (o'zbekcha). Agar shu nomdagi mavzu bazada bor bo'lsa — o'shanga qo'shiladi; bo'lmasa yaratiladi. <b>topicAr</b> — mavzuning arabcha tarjimasi (yangi mavzu yaratilganda MAJBURIY — aks holda xatolik beradi). <b>category</b> — yangi mavzu qaysi kategoriyaga tushishi kerak: <code>nahv</code>, <code>sarf</code>, <code>imlo</code> yoki <code>xatolar</code> (ixtiyoriy — ko'rsatilmasa yuqorida tanlangan "Standart kategoriya" ishlatiladi). "topic" ko'rsatilmasa — yuqoridagi "Standart mavzu" ishlatiladi (u ham tanlanmagan bo'lsa — savol MAVZUSIZ, ya'ni faqat real imtihon uchun qo'shiladi). Bitta ro'yxat ichida turli mavzu VA turli kategoriyadagi savollarni aralashtirib yozishingiz mumkin.` : ''}
+          ${isGrammar ? `Grammatika uchun: <b>category</b> — savol qaysi kategoriyaga tushishi: <code>nahv</code> (15 ta), <code>sarf</code> (7 ta), <code>imlo</code> (4 ta) yoki <code>xatolar</code> (4 ta). Agar JSON'da category ko'rsatilmasa, yuqoridagi "Standart kategoriya" olinadi. <b>topic</b> — mavzu nomi (ixtiyoriy, agar Umumiy grammatika amaliyot mavzusiga qo'shmoqchi bo'lsangiz).` : ''}
           ${isQiroa ? `Qiroa uchun: yuqorida tanlangan <b>testga</b> (matnga) qo'shiladi — bitta testda ko'pi bilan ${QIROA_MAX_Q_PER_TEST} ta savol bo'lishi kerak. "Yangi matn" tanlansa, avval matn saqlanadi, so'ng shu savollar o'sha yangi matnga bog'lanadi.` : ''}
         </div>
       </div>
@@ -8004,6 +8077,16 @@ function toggleBulkGrammarTopicField(){
   else{
     const existingField = document.getElementById('bqQiroaExistingTestField');
     if(existingField) existingField.style.display = 'none';
+  }
+}
+function onBulkGrammarTopicChange(){
+  const topicId = document.getElementById('bqTopic')?.value;
+  if(topicId){
+    const t = GRAMMAR_TOPICS.find(x=>x.id===topicId);
+    if(t && t.category){
+      const catSel = document.getElementById('bqCategory');
+      if(catSel) catSel.value = t.category;
+    }
   }
 }
 /* Qiroa bulk formasida: tanlangan Juz + rejim (yangi matn / mavjud test)ga qarab
@@ -9060,7 +9143,16 @@ function applyLiveQuestions(rows){
   Object.keys(QUESTION_BANKS).forEach(skillId=>{ if(QUESTION_BANKS[skillId]) QUESTION_BANKS[skillId].questions = []; });
   if(!Array.isArray(rows) || !rows.length) return;
   rows.forEach(r=>{
-    const item = { id: r.id, skillId: r.skill_id, topicId: r.topic_id || null, q: r.q, opts: r.opts, a: r.correct_index ?? r.a, exp: r.exp || '' };
+    const item = {
+      id: r.id,
+      skillId: r.skill_id,
+      topicId: r.topic_id || null,
+      category: r.category || (r.topic_id ? GRAMMAR_TOPICS.find(t=>t.id===r.topic_id)?.category : null) || 'nahv',
+      q: r.q,
+      opts: r.opts,
+      a: r.correct_index ?? r.a,
+      exp: r.exp || ''
+    };
     if(r.skill_id === 'grammatika' && r.topic_id){
       if(!GRAMMAR_TOPIC_BANKS[r.topic_id]) GRAMMAR_TOPIC_BANKS[r.topic_id] = [];
       GRAMMAR_TOPIC_BANKS[r.topic_id].push(item);
@@ -9076,10 +9168,12 @@ function applyLiveQuestions(rows){
 }
 
 /* ---------------- Grammatika: umumiy imtihon uchun kategoriya bo'yicha taqsimot ----------------
-   Umumiy "Grammatika" testi (mavzu tanlanmasdan boshlanganda) 30 ta savoldan iborat bo'lishi
-   kerak: 15 ta النحو (nahv), 7 ta الصرف (sarf), 4 ta الإملاء (imlo), 4 ta الأخطاء الشائعة (xatolar).
-   Har bir kategoriyaga tegishli barcha mavzulardagi savollar birlashtiriladi, so'ng shu
-   kategoriyadan talab qilingan sondagi savol TASODIFIY tanlanadi. */
+   Umumiy "Grammatika mahorati" (real imtihon) 30 ta savoldan iborat:
+   - 15 ta النحو (nahv)
+   - 7 ta الصرف (sarf)
+   - 4 ta الإملاء (imlo)
+   - 4 ta الأخطاء الشائعة (xatolar)
+   Jami: 30 ta savol shu nisbatda tasodifiy tanlanadi. */
 const GRAMMAR_EXAM_DISTRIBUTION = { nahv: 15, sarf: 7, imlo: 4, xatolar: 4 };
 function shuffleArray(arr){
   const a = arr.slice();
@@ -9090,26 +9184,69 @@ function shuffleArray(arr){
   return a;
 }
 function buildGrammarExamQuestions(){
-  const byCategory = {};
-  GRAMMAR_TOPICS.forEach(t=>{
-    const cat = t.category;
-    if(!byCategory[cat]) byCategory[cat] = [];
-    const qs = GRAMMAR_TOPIC_BANKS[t.id] || [];
-    byCategory[cat] = byCategory[cat].concat(qs);
+  const byCategory = {
+    nahv: [],
+    sarf: [],
+    imlo: [],
+    xatolar: []
+  };
+
+  // 1. Asosiy manba: mavzusiz real imtihon savollar banki (QUESTION_BANKS.grammatika.questions)
+  const examPool = QUESTION_BANKS.grammatika?.questions || [];
+  examPool.forEach(q=>{
+    const cat = q.category || 'nahv';
+    if(byCategory[cat]) byCategory[cat].push(q);
+    else byCategory.nahv.push(q);
   });
+
+  // 2. Agar mavzularda ham savollar bo'lsa (va real imtihon bankida hali dublikat bo'lmasa), zaxira sifatida foydalanish
+  GRAMMAR_TOPICS.forEach(t=>{
+    const cat = t.category || 'nahv';
+    const qs = GRAMMAR_TOPIC_BANKS[t.id] || [];
+    qs.forEach(q=>{
+      const isAlreadyIn = examPool.some(ep => (ep.id && ep.id === q.id) || ep.q === q.q);
+      if(!isAlreadyIn){
+        if(byCategory[cat]) byCategory[cat].push(q);
+        else byCategory.nahv.push(q);
+      }
+    });
+  });
+
   let result = [];
   const shortage = [];
+  const details = [];
+
   Object.keys(GRAMMAR_EXAM_DISTRIBUTION).forEach(cat=>{
     const need = GRAMMAR_EXAM_DISTRIBUTION[cat];
+    const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===cat) || { name: cat };
     const pool = shuffleArray(byCategory[cat] || []);
     const picked = pool.slice(0, need);
-    if(picked.length < need){
-      const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===cat);
-      shortage.push(`${catMeta ? catMeta.name : cat}: ${picked.length}/${need}`);
-    }
+    
     result = result.concat(picked);
+    details.push(`${catMeta.name}: ${picked.length}/${need}`);
+    
+    if(picked.length < need){
+      shortage.push(`${catMeta.name} (${picked.length}/${need})`);
+    }
   });
-  return { questions: shuffleArray(result), shortage };
+
+  // Agar umumiy savollar soni 30 tadan kam bo'lsa, mavjud boshqa barcha savollar ichidan to'ldiramiz
+  if(result.length < 30){
+    const selectedKeys = new Set(result.map(q => q.id || q.q));
+    const allRemaining = [];
+    Object.values(byCategory).forEach(list=>{
+      list.forEach(q=>{
+        if(!selectedKeys.has(q.id || q.q)){
+          allRemaining.push(q);
+        }
+      });
+    });
+    const extraNeeded = 30 - result.length;
+    const extra = shuffleArray(allRemaining).slice(0, extraNeeded);
+    result = result.concat(extra);
+  }
+
+  return { questions: shuffleArray(result), shortage, details };
 }
 
 /* Admin — real foydalanuvchilar ro'yxati. */
@@ -9145,17 +9282,12 @@ function startQuiz(skillId, customLabel, topicId){
   if(skillId==='grammatika' && topicId && GRAMMAR_TOPIC_BANKS[topicId]){
     questions = GRAMMAR_TOPIC_BANKS[topicId];
   } else if(skillId==='grammatika' && !topicId){
-    // "Grammatika mahorati" (mavzu tanlanmasdan — real At-Tanal imtihoni yoki
-    // to'liq mock imtihon bosqichi sifatida) endi Umumiy grammatika bo'limining
-    // amaliyot mavzularidan (GRAMMAR_TOPIC_BANKS) EMAS, balki alohida — faqat shu
-    // maqsad uchun (admin panelda "Mavzusiz" qilib qo'shilgan) real imtihon
-    // savollar bankidan (QUESTION_BANKS.grammatika.questions) tasodifiy 30 tasi
-    // olinadi. Bu ikki bank butunlay mustaqil — biri ikkinchisiga aralashmaydi.
-    const GRAMMAR_EXAM_SIZE = 30;
-    const pool = QUESTION_BANKS.grammatika.questions || [];
-    questions = shuffleArray(pool).slice(0, GRAMMAR_EXAM_SIZE);
-    if(questions.length < GRAMMAR_EXAM_SIZE){
-      toast(`⚠️ Real imtihon uchun savollar yetarli emas: ${questions.length}/${GRAMMAR_EXAM_SIZE}. Admin panelda "Grammatika" → mavzusiz savol qo'shing.`, 6000);
+    // "Grammatika mahorati" (real At-Tanal / mock imtihon) — 30 ta savol belgilangan nisbatda:
+    // Nahv 15 ta, Sarf 7 ta, Imlo 4 ta, Keng tarqalgan xatolar 4 ta
+    const examBuild = buildGrammarExamQuestions();
+    questions = examBuild.questions;
+    if(examBuild.shortage.length > 0 && questions.length < 30){
+      toast(`⚠️ Real imtihon uchun savollar yetarli emas (${questions.length}/30 ta): ${examBuild.shortage.join(', ')}. Admin panelda kategoriya bo'yicha savol qo'shing.`, 6000);
     }
   }
   if(!questions || !questions.length){
