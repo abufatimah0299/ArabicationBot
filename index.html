@@ -863,11 +863,11 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   font-family:var(--font-ar); font-size:calc(19px * var(--exam-font-scale)); line-height:2; text-align:right; direction:rtl; margin-bottom:18px;
 }
 .q-text{ font-family:var(--font-ar); font-size:calc(20px * var(--exam-font-scale)); text-align:right; direction:rtl; line-height:1.9; margin-bottom:18px; font-weight:600;}
-.q-sub{ font-size:calc(12.5px * var(--exam-font-scale)); color:var(--text-faint); font-weight:600; margin-bottom:14px; }
+.q-sub{ font-size:12.5px; color:var(--text-faint); font-weight:600; margin-bottom:14px; }
 .options{ display:flex; flex-direction:column; gap:10px; }
 .option{
   display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px; border:1.5px solid var(--border);
-  cursor:pointer; direction:rtl; flex-direction:row-reverse; font-family:var(--font-ar); font-size:calc(17px * var(--exam-font-scale)); transition:.12s;
+  cursor:pointer; direction:rtl; font-family:var(--font-ar); font-size:calc(17px * var(--exam-font-scale)); transition:.12s;
 }
 .option:hover{ border-color:var(--indigo-500); }
 .option.selected{ border-color:var(--indigo-700); background:var(--indigo-100); }
@@ -878,11 +878,13 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   display:flex; align-items:center; justify-content:center; font-family:var(--font-ar); font-size:calc(13px * var(--exam-font-scale));
   font-weight:600; color:var(--text-dim); background:var(--card);
 }
-.opt-text{ flex:1; text-align:right; }
+.opt-text{ flex:1; text-align:right; font-size:calc(17px * var(--exam-font-scale)); line-height:1.6; }
 .option.selected .opt-circle{ border-color:var(--indigo-700); background:var(--indigo-700); color:#fff; }
 .option.correct .opt-circle{ border-color:var(--green); background:var(--green); color:#fff; }
 .option.incorrect .opt-circle{ border-color:var(--red); background:var(--red); color:#fff; }
-.q-nav-row{ display:flex; justify-content:space-between; margin-top:22px; }
+.q-nav-row{ display:flex; justify-content:space-between; align-items:stretch; gap:12px; margin-top:22px; }
+.q-nav-row .btn{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; text-align:center; min-height:44px; padding:11px 16px; font-size:13.5px; border-radius:11px; }
+.q-nav-row[style*="justify-content:center"] .btn{ flex:0 1 auto; min-width:200px; }
 
 /* side question grid */
 .side-card{ padding:18px; }
@@ -3469,10 +3471,13 @@ function contactSupport(){
 }
 
 function authHeaders(){
+  const token = (typeof SESSION_TOKEN === 'string' && SESSION_TOKEN.trim().split('.').length === 3)
+    ? SESSION_TOKEN.trim()
+    : SUPABASE_ANON_KEY;
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${SESSION_TOKEN}`,
     "apikey": SUPABASE_ANON_KEY,
+    "Authorization": `Bearer ${token}`,
   };
 }
 
@@ -4420,7 +4425,6 @@ function examFontStep(dir){
   v = Math.min(EXAM_FONT_MAX, Math.max(EXAM_FONT_MIN, v));
   try{ localStorage.setItem('arab_exam_font_scale', v); }catch(e){}
   applyExamFontScale(v);
-  toast(`🔤 Matn o'lchami: ${Math.round(v*100)}%`, 1100);
 }
 applyExamFontScale(getExamFontScale());
 
@@ -9894,6 +9898,11 @@ function updateQGrid(){
 function jumpTo(i){ currentQuiz.idx=i; renderQuestion(); }
 
 function renderQuestion(){
+  const fontCtrl = document.getElementById('examFontCtrl');
+  if(fontCtrl){
+    const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening');
+    fontCtrl.style.display = hideZoom ? 'none' : 'flex';
+  }
   const body = document.getElementById('quizBody');
   if(currentQuiz.type==='writing'){
     clearQuestionTimer();
