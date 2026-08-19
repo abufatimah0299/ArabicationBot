@@ -2419,19 +2419,19 @@ html[data-theme="dark"] .dash-main-heading {
 
       <!-- ============ SKILL INTRO SCREEN ============ -->
       <div class="view" id="view-skillintro">
-        <div class="back-row" onclick="goBack()">
+        <div class="back-row" onclick="handleSkillIntroBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
           Ortga
         </div>
 
+        <div class="view-title" id="skillIntroMockTitle" style="display:none; margin-top:4px; margin-bottom:16px;">Mock testlar</div>
+
         <!-- Segmented Tab Switcher (Mashq qilish / Mocklar) -->
-        <div class="attanal-tab-toggle" role="tablist" aria-label="Mahorat rejimi" style="margin-top:4px; margin-bottom:18px;">
+        <div class="attanal-tab-toggle" id="skillTabToggle" role="tablist" aria-label="Mahorat rejimi" style="margin-top:4px; margin-bottom:18px;">
           <button type="button" class="attanal-tab-btn active" id="skillTabPractice" onclick="switchSkillTab('practice')" role="tab" aria-selected="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <span>Mashq qilish</span>
           </button>
           <button type="button" class="attanal-tab-btn" id="skillTabMocks" onclick="switchSkillTab('mocks')" role="tab" aria-selected="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span>Mocklar</span>
           </button>
         </div>
@@ -2571,7 +2571,7 @@ html[data-theme="dark"] .dash-main-heading {
 
       <!-- ============ QUIZ VIEW ============ -->
       <div class="view" id="view-quiz">
-        <div class="back-row" onclick="goBack()">
+        <div class="back-row" onclick="handleQuizBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
           Ortga
         </div>
@@ -2607,9 +2607,9 @@ html[data-theme="dark"] .dash-main-heading {
 
       <!-- ============ RESULTS VIEW ============ -->
       <div class="view" id="view-results">
-        <div class="back-row" onclick="showView('attanal')">
+        <div class="back-row" onclick="handleResultsBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-          At-Tanal bo'limiga qaytish
+          Ortga qaytish
         </div>
         <div class="card">
           <div class="result-hero-v2">
@@ -4552,23 +4552,72 @@ renderSkillHub();
 
 /* ---------------- Skill / Grammar Tab Switchers (Mashq qilish / Mocklar) ---------------- */
 function switchSkillTab(tab){
+  const tabToggle = document.getElementById('skillTabToggle');
+  const mockTitle = document.getElementById('skillIntroMockTitle');
   const btnPractice = document.getElementById('skillTabPractice');
   const btnMocks = document.getElementById('skillTabMocks');
   const panePractice = document.getElementById('skillPanePractice');
   const paneMocks = document.getElementById('skillPaneMocks');
 
   if(tab === 'mocks'){
+    if(tabToggle) tabToggle.style.display = 'none';
+    if(mockTitle) mockTitle.style.display = 'block';
     if(btnPractice){ btnPractice.classList.remove('active'); btnPractice.setAttribute('aria-selected', 'false'); }
     if(btnMocks){ btnMocks.classList.add('active'); btnMocks.setAttribute('aria-selected', 'true'); }
     if(panePractice) panePractice.style.display = 'none';
     if(paneMocks) paneMocks.style.display = 'block';
     renderSkillMockPanes();
   } else {
+    if(tabToggle) tabToggle.style.display = 'flex';
+    if(mockTitle) mockTitle.style.display = 'none';
     if(btnMocks){ btnMocks.classList.remove('active'); btnMocks.setAttribute('aria-selected', 'false'); }
     if(btnPractice){ btnPractice.classList.add('active'); btnPractice.setAttribute('aria-selected', 'true'); }
     if(paneMocks) paneMocks.style.display = 'none';
     if(panePractice) panePractice.style.display = 'block';
   }
+}
+
+function handleSkillIntroBack(){
+  const paneMocks = document.getElementById('skillPaneMocks');
+  if(paneMocks && paneMocks.style.display !== 'none'){
+    switchSkillTab('practice');
+  } else {
+    goBack();
+  }
+}
+
+function handleQuizBack(){
+  if(currentQuiz && (currentQuiz.type === 'mock' || currentQuiz.mockId)){
+    const sId = currentQuiz.skillId;
+    clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+    currentQuiz = null;
+    if(sId === 'grammatika'){
+      showView('grammar');
+      switchGrammarTab('mocks');
+    } else {
+      openSkillIntro(sId);
+      switchSkillTab('mocks');
+      showView('skillintro');
+    }
+    return;
+  }
+  goBack();
+}
+
+function handleResultsBack(){
+  if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
+    const sId = window.lastCompletedQuiz.skillId;
+    if(sId === 'grammatika'){
+      showView('grammar');
+      switchGrammarTab('mocks');
+    } else {
+      openSkillIntro(sId);
+      switchSkillTab('mocks');
+      showView('skillintro');
+    }
+    return;
+  }
+  showView('attanal');
 }
 
 function switchGrammarTab(tab){
@@ -7578,7 +7627,7 @@ function renderMockCardHtml(m, skillMeta, idx){
   const result = getMockResult(m.id);
   const testNumber = (typeof idx === 'number') ? (idx + 1) : 1;
   const qCount = (m.questions && m.questions.length) ? m.questions.length : 30;
-  const subtitle = `${qCount} ta savol`;
+  const subtitle = `${qCount} ta savol · ${qCount} daqiqa`;
   const cleanTitle = (m.title || `Mock ${testNumber}`).replace(/Mock\s*#\s*(\d+)/gi, 'Mock $1').replace(/#(\d+)/g, '$1');
 
   let footerHtml = '';
@@ -7710,7 +7759,9 @@ function startMockQuiz(mockId){
   buildQGrid();
   showView('quiz');
   renderQuestion();
-  startTimer((mock.durationMins || 30) * 60, () => finishQuiz());
+  const qCount = currentQuiz.questions.length;
+  const durationSeconds = Math.max(60, qCount * 60);
+  startTimer(durationSeconds, () => finishQuiz());
 }
 
 function openAddQuestionModal(presetSkill, presetTopic){
@@ -10188,6 +10239,7 @@ function getCEFRLevel(pct){
 function finishQuiz(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   if(!currentQuiz || !currentQuiz.questions){ showView('attanal'); return; }
+  window.lastCompletedQuiz = { ...currentQuiz };
   const total = currentQuiz.questions.length;
   const correct = currentQuiz.questions.filter(q=>q.picked===q.a).length;
   const wrong = total - correct;
@@ -10316,6 +10368,10 @@ function toggleReviewDetail(i){
 }
 function showMistakes(){ document.getElementById('reviewGrid').scrollIntoView({behavior:'smooth', block:'start'}); }
 function retryQuiz(){
+  if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
+    startMockQuiz(window.lastCompletedQuiz.mockId);
+    return;
+  }
   if(!currentQuiz) return;
   startQuiz(currentQuiz.skillId, currentQuiz.label, currentQuiz.topicId);
 }
