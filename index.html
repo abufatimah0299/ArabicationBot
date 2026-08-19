@@ -1074,54 +1074,71 @@ html[data-theme="light"] .topic-item:hover{
 .topic-start-btn:active{ transform:scale(.94); }
 .topic-start-btn svg{ width:20px; height:20px; }
 
-/* ---------- Mock Test Cards ---------- */
+/* ---------- Mock Test Cards (Photo style: Completed / Progress / Untested) ---------- */
 .mock-cards-list{ display:flex; flex-direction:column; gap:14px; }
 .mock-card{
   position:relative; background:var(--card); border:1.5px solid var(--border);
-  border-radius:18px; padding:18px 20px; display:flex; align-items:center;
-  justify-content:space-between; gap:16px; flex-wrap:wrap;
-  box-shadow:0 4px 14px -4px rgba(0,0,0,0.06);
+  border-radius:20px; padding:18px 20px; display:flex; flex-direction:column;
+  gap:12px; box-shadow:0 4px 14px -4px rgba(0,0,0,0.06); cursor:pointer; user-select:none;
   transition:transform .22s var(--ease), border-color .22s var(--ease), box-shadow .22s var(--ease), background-color .22s var(--ease);
 }
 .mock-card:hover{
   transform:translateY(-2px); border-color:var(--hover-border);
   box-shadow:var(--shadow);
 }
-.mock-card-left{ display:flex; align-items:center; gap:14px; min-width:220px; flex:1; }
-.mock-card-icon{
-  width:46px; height:46px; border-radius:14px; display:flex; align-items:center;
-  justify-content:center; font-size:22px; flex-shrink:0;
-  box-shadow:0 4px 12px -2px rgba(0,0,0,0.08);
+.mock-card:active{ transform:scale(0.99); }
+.mock-card-header{
+  display:flex; align-items:center; justify-content:space-between;
 }
-.mock-card-main{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.mock-card-book-icon{
+  width:40px; height:40px; border-radius:12px; display:flex; align-items:center;
+  justify-content:center; background:rgba(235, 169, 60, 0.14); color:#EBA93C;
+}
+.mock-card-book-icon svg{ width:24px; height:24px; }
+.mock-card-arrow{
+  width:30px; height:30px; border-radius:8px; display:flex; align-items:center;
+  justify-content:center; color:var(--text-faint); background:var(--bg);
+  border:1px solid var(--border); transition:transform .2s ease, color .2s ease;
+}
+.mock-card:hover .mock-card-arrow{
+  transform:translateX(3px); color:var(--indigo-600); border-color:var(--indigo-400);
+}
+.mock-card-body{ display:flex; flex-direction:column; gap:3px; }
 .mock-card-title{
   font-family:'Graphik Arabic', 'Onest', var(--font-sans);
-  font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.2px;
-  display:flex; align-items:center; gap:8px;
+  font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.2px; line-height:1.3;
 }
-.mock-pills-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.mock-pill{
-  display:inline-flex; align-items:center; gap:5px; font-size:11.5px;
-  font-weight:600; padding:3.5px 9.5px; border-radius:8px; background:var(--bg);
-  border:1px solid var(--border); color:var(--text-dim); white-space:nowrap;
+.mock-card-sub{ font-size:13px; font-weight:500; color:var(--text-faint); }
+.mock-card-footer{ margin-top:2px; }
+.mock-footer-completed{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:2px;
 }
-.mock-pill svg{ width:12px; height:12px; flex-shrink:0; }
-.mock-pill-error{ font-weight:700; }
-.mock-pill-error.has-errors{
-  background:var(--red-bg); border-color:rgba(239,77,77,0.3); color:var(--red);
+.mock-completed-label{
+  display:inline-flex; align-items:center; gap:6px; color:#16A368;
+  font-size:12.5px; font-weight:800; letter-spacing:0.5px;
 }
-.mock-pill-error.zero-errors{
-  background:var(--green-bg); border-color:rgba(22,163,104,0.3); color:var(--green);
+.mock-completed-label svg{ width:18px; height:18px; }
+.mock-footer-progress{ display:flex; flex-direction:column; gap:8px; width:100%; padding-top:2px; }
+.mock-bar-track{
+  width:100%; height:7px; border-radius:99px; background:var(--border); overflow:hidden;
 }
-.mock-pill-untested{ background:var(--bg); color:var(--text-faint); }
-.mock-start-btn{
-  display:inline-flex; align-items:center; gap:8px; padding:10px 18px;
-  font-size:13.5px; font-weight:600; border-radius:12px; white-space:nowrap;
-  cursor:pointer; border:none; color:#fff;
-  transition:transform .15s ease, opacity .15s ease, filter .15s ease;
+.mock-bar-fill{
+  height:100%; border-radius:99px; background:#16A368; transition:width .4s ease;
 }
-.mock-start-btn:hover{ filter:brightness(1.08); transform:scale(1.02); }
-.mock-start-btn:active{ transform:scale(0.98); }
+.mock-progress-meta-row{
+  display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:600; color:var(--text-dim);
+}
+.mock-error-chip{
+  font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:8px;
+  display:inline-flex; align-items:center; gap:4px;
+}
+.mock-error-chip.wrong{
+  background:var(--red-bg); border:1px solid rgba(239, 77, 77, 0.25); color:var(--red);
+}
+.mock-error-chip.zero{
+  background:var(--green-bg); border:1px solid rgba(22, 163, 104, 0.25); color:var(--green);
+}
+.mock-footer-untested{ min-height:2px; }
 
 /* All Test Arabic Texts: Noto Sans Arabic */
 .passage, .q-text, .opt-text, .opt-circle, .mistake-q, .mistake-row,
@@ -7429,73 +7446,62 @@ function submitBulkAddMockQuestions(e, mockId){
   return false;
 }
 
-function renderMockCardHtml(m, skillMeta){
+function renderMockCardHtml(m, skillMeta, idx){
   const result = getMockResult(m.id);
   const duration = m.durationMins || 30;
-  
-  let errorBadge = '';
-  let btnText = 'Mockni boshlash';
-  
-  if(result){
-    const wrongCount = result.wrong;
-    const isClean = wrongCount === 0;
-    errorBadge = `
-      <span class="mock-pill mock-pill-error ${isClean ? 'zero-errors' : 'has-errors'}" title="Oxirgi natija: ${result.correct}/${result.total}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          ${isClean 
-            ? '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>' 
-            : '<circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="m15 9-6 6M9 9l6 6"/>'}
-        </svg>
-        ${wrongCount} ta xato
-      </span>
+  const testNumber = (typeof idx === 'number') ? (idx + 1) : 1;
+  const subtitle = `Test ${testNumber} · 30 ta savol · ${duration} daqiqa`;
+
+  let footerHtml = '';
+  if(result && result.total > 0 && result.wrong === 0){
+    // 1-kabi: 100% to'g'ri ishlangan (COMPLETED + 0 ta xato)
+    footerHtml = `
+      <div class="mock-card-footer mock-footer-completed">
+        <div class="mock-completed-label">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          <span>COMPLETED</span>
+        </div>
+        <div class="mock-error-chip zero">0 ta xato</div>
+      </div>
     `;
-    btnText = 'Qayta ishlash';
+  } else if(result && result.total > 0 && result.wrong > 0){
+    // 2-kabi: Chala / xatosi bor (Progress bar + natija & X ta xato)
+    const pct = Math.min(100, Math.max(12, Math.round((result.correct / result.total) * 100)));
+    footerHtml = `
+      <div class="mock-card-footer mock-footer-progress">
+        <div class="mock-bar-track">
+          <div class="mock-bar-fill" style="width:${pct}%;"></div>
+        </div>
+        <div class="mock-progress-meta-row">
+          <span>${result.correct}/${result.total} to'g'ri (${pct}%)</span>
+          <span class="mock-error-chip wrong">${result.wrong} ta xato</span>
+        </div>
+      </div>
+    `;
   } else {
-    errorBadge = `
-      <span class="mock-pill mock-pill-untested" title="Hali ishlanmagan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/>
-        </svg>
-        0 ta xato
-      </span>
-    `;
+    // 3-kabi: Ishlanmagan (toza)
+    footerHtml = `<div class="mock-card-footer mock-footer-untested"></div>`;
   }
 
   return `
-    <div class="mock-card card" id="mockCard_${m.id}">
-      <div class="mock-card-left">
-        <div class="mock-card-icon" style="background:${skillMeta.bg || 'var(--indigo-100)'};color:${skillMeta.color || 'var(--indigo-700)'};">
-          ${skillMeta.icon || '📘'}
+    <div class="mock-card card" id="mockCard_${m.id}" onclick="startMockQuiz('${m.id}')" role="button" tabindex="0">
+      <div class="mock-card-header">
+        <div class="mock-card-book-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 4.5C10.6 3.5 8.8 3 7 3c-2.4 0-4.5.9-6 2.3v13.9C2.5 17.8 4.6 17 7 17c1.8 0 3.6.5 5 1.5 1.4-1 3.2-1.5 5-1.5 2.4 0 4.5.8 6 2.2V5.3C21.5 3.9 19.4 3 17 3c-1.8 0-3.6.5-5 1.5zm-1 10.8c-1.2-.8-2.6-1.3-4-1.3-1.6 0-3.1.6-4.3 1.6V6.6C3.9 5.6 5.4 5 7 5c1.4 0 2.8.5 4 1.3v9zm10 0c-1.2-1-2.7-1.6-4.3-1.6-1.4 0-2.8.5-4 1.3V6.3c1.2-.8 2.6-1.3 4-1.3 1.6 0 3.1.6 4.3 1.6v8.7z"/>
+          </svg>
         </div>
-        <div class="mock-card-main">
-          <div class="mock-card-title">${escapeHtml(m.title)}</div>
-          <div class="mock-pills-row">
-            <span class="mock-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>
-              </svg>
-              30 ta savol
-            </span>
-            <span class="mock-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
-              </svg>
-              ${duration} daqiqa
-            </span>
-            <span class="mock-pill">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              30 ball
-            </span>
-            ${errorBadge}
-          </div>
+        <div class="mock-card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
         </div>
       </div>
-      <button class="btn btn-primary mock-start-btn" onclick="startMockQuiz('${m.id}')" style="background:${skillMeta.color || 'var(--indigo-700)'};">
-        <span>${btnText}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
+      <div class="mock-card-body">
+        <div class="mock-card-title">${escapeHtml(m.title)}</div>
+        <div class="mock-card-sub">${escapeHtml(subtitle)}</div>
+      </div>
+      ${footerHtml}
     </div>
   `;
 }
@@ -7516,7 +7522,7 @@ function renderSkillMockPanes(){
     } else {
       grammarMockEl.innerHTML = `
         <div class="mock-cards-list">
-          ${grammarMocks.map(m => renderMockCardHtml(m, skillMeta)).join('')}
+          ${grammarMocks.map((m, idx) => renderMockCardHtml(m, skillMeta, idx)).join('')}
         </div>
       `;
     }
@@ -7537,7 +7543,7 @@ function renderSkillMockPanes(){
     } else {
       skillMockEl.innerHTML = `
         <div class="mock-cards-list">
-          ${skillMocks.map(m => renderMockCardHtml(m, skillMeta)).join('')}
+          ${skillMocks.map((m, idx) => renderMockCardHtml(m, skillMeta, idx)).join('')}
         </div>
       `;
     }
