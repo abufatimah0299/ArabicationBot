@@ -105,6 +105,12 @@ html[data-theme="light"]{
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 :root{ --ease:cubic-bezier(.22,.9,.32,1); }
+/* Sahifa uzun bo'lganda o'ng tomonda joy egallaydigan standart scrollbar
+   ko'rinmas qilinadi (lekin skroll qilish imkoniyati saqlanadi) — Chrome/
+   Safari/Telegram WebView va Firefox uchun alohida qatorlar kerak. */
+html{ scrollbar-width:none; -ms-overflow-style:none; }
+html::-webkit-scrollbar{ display:none; width:0; height:0; }
+body::-webkit-scrollbar{ display:none; width:0; height:0; }
 button, input, select, textarea{ font-family:var(--font-sans); }
 body{
   font-family:'Onest', 'Graphik Arabic', sans-serif;
