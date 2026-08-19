@@ -104,7 +104,16 @@ html[data-theme="light"]{
   --shadow:0 4px 20px -4px rgba(22, 80, 52, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
   --shadow-lg:0 10px 32px -6px rgba(22, 80, 52, 0.09), 0 2px 6px rgba(0, 0, 0, 0.03);
 }
-*{box-sizing:border-box; margin:0; padding:0;}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent !important; -webkit-tap-highlight-color:rgba(0,0,0,0) !important;}
+*::before, *::after{ -webkit-tap-highlight-color:transparent !important; -webkit-tap-highlight-color:rgba(0,0,0,0) !important; }
+html, body, button, a, input, select, textarea, label, [role="button"], [onclick], .btn, .navlink, .option, .card, .clickable, .mock-card, .settings-item, .lesson-item, .topic-item, .skill-banner, .exam-card, .admin-tab, .qbtn, .cd-option, .modal-close, .theme-toggle{
+  -webkit-tap-highlight-color:transparent !important;
+  -webkit-tap-highlight-color:rgba(0,0,0,0) !important;
+}
+button, a, [role="button"], [onclick], .btn, .navlink, .option, .mock-card, .settings-item, .lesson-item, .topic-item, .skill-banner, .exam-card, .admin-tab, .qbtn, .cd-option, .modal-close, .theme-toggle, .hub-btn, .detail-btn, .start-btn, .filter-chip, .rank-type-btn, .icon-btn, .icon-edit-btn{
+  user-select:none;
+  -webkit-user-select:none;
+}
 :root{ --ease:cubic-bezier(.22,.9,.32,1); }
 /* Sahifa uzun bo'lganda o'ng tomonda joy egallaydigan standart scrollbar
    ko'rinmas qilinadi (lekin skroll qilish imkoniyati saqlanadi) — Chrome/
