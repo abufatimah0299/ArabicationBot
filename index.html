@@ -425,6 +425,17 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   width:110px; height:110px; opacity:.35; pointer-events:none; z-index:0;
 }
 .skill-banner-illust svg{ width:100%; height:100%; }
+/* Grammatika mavzularidagi ("Nahv" va h.k.) kabi kichik doiraviy strelka tugmasi —
+   avvalgi katta (o'ngdagi) dekorativ ikonka o'rniga. */
+.skill-banner-arrow-btn{
+  position:relative; z-index:1; flex-shrink:0;
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.35);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .2s var(--ease), background .2s var(--ease);
+}
+.skill-banner-arrow-btn svg{ width:18px; height:18px; }
+.skill-banner:hover .skill-banner-arrow-btn{ background:rgba(255,255,255,0.32); transform:scale(1.08); }
 
 /* ---------- Skill & Exam Full-Page Intro Screens ---------- */
 .skill-intro-wrap{ display:flex; flex-direction:column; width:100%; max-width:100%; gap:18px; }
@@ -4248,8 +4259,8 @@ function renderSkillHub(){
           </div>
         </div>
       </div>
-      <div class="skill-banner-illust">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS[s.id]}</svg>
+      <div class="skill-banner-arrow-btn" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 4 4-4 4"/></svg>
       </div>
     </button>
   `).join('');
