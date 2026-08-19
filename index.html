@@ -4588,17 +4588,12 @@ function handleSkillIntroBack(){
 
 function handleQuizBack(){
   if(currentQuiz && (currentQuiz.type === 'mock' || currentQuiz.mockId)){
-    const sId = currentQuiz.skillId;
+    const sId = currentQuiz.skillId || 'grammatika';
     clearInterval(timerInterval); clearInterval(mcqTimerInterval);
     currentQuiz = null;
-    if(sId === 'grammatika'){
-      showView('grammar');
-      switchGrammarTab('mocks');
-    } else {
-      openSkillIntro(sId);
-      switchSkillTab('mocks');
-      showView('skillintro');
-    }
+    openSkillIntro(sId);
+    switchSkillTab('mocks');
+    showView('skillintro');
     return;
   }
   goBack();
@@ -4606,15 +4601,10 @@ function handleQuizBack(){
 
 function handleResultsBack(){
   if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
-    const sId = window.lastCompletedQuiz.skillId;
-    if(sId === 'grammatika'){
-      showView('grammar');
-      switchGrammarTab('mocks');
-    } else {
-      openSkillIntro(sId);
-      switchSkillTab('mocks');
-      showView('skillintro');
-    }
+    const sId = window.lastCompletedQuiz.skillId || 'grammatika';
+    openSkillIntro(sId);
+    switchSkillTab('mocks');
+    showView('skillintro');
     return;
   }
   showView('attanal');
