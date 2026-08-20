@@ -967,17 +967,15 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
   padding:36px 26px 28px 26px; position:relative; overflow:hidden;
 }
 .result-hero-v2::before{
-  content:""; position:absolute; inset:0;
-  background:radial-gradient(60% 60% at 50% 0%, rgba(18,167,104,0.16) 0%, rgba(18,167,104,0) 70%);
-  pointer-events:none;
+  display:none;
 }
 .result-badge-wrap{ position:relative; width:150px; height:150px; margin-bottom:6px; }
 .result-badge-wrap svg{ display:block; }
 .result-topic-tag{
   display:inline-flex; align-items:center; gap:6px;
-  background:linear-gradient(155deg,var(--indigo-500),var(--indigo-700)); color:#fff;
-  font-size:12px; font-weight:600; padding:6px 15px; border-radius:999px;
-  margin-bottom:16px; box-shadow:0 4px 10px -3px rgba(18,167,104,0.4); position:relative; z-index:1;
+  background:var(--indigo-700); color:#fff;
+  font-size:12px; font-weight:600; padding:6px 16px; border-radius:999px;
+  margin-bottom:16px; box-shadow:none; position:relative; z-index:1;
 }
 .result-badge-center{
   position:absolute; inset:0; display:flex; flex-direction:column;
@@ -985,30 +983,29 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 }
 .num-target{ font-variant-numeric: tabular-nums; display:inline-block; }
 .result-score-big{ display:flex; align-items:baseline; gap:1px; }
-.result-score-big .num-correct{ font-size:30px; font-weight:600; letter-spacing:-0.5px; color:var(--text); font-variant-numeric: tabular-nums; }
+.result-score-big .num-correct{ font-size:30px; font-weight:700; letter-spacing:-0.5px; color:var(--text); font-variant-numeric: tabular-nums; }
 .result-score-big .num-slash{ font-size:16px; font-weight:600; color:var(--text-faint); margin:0 1px; }
 .result-score-big .num-total{ font-size:15px; font-weight:600; color:var(--text-faint); font-variant-numeric: tabular-nums; }
 .result-score-of{ font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:2px; }
 .result-xp-pill{
   display:inline-flex; align-items:center; gap:4px; margin-top:6px;
-  background:var(--amber-bg); color:var(--amber); font-size:11px; font-weight:600;
+  background:var(--amber-bg); color:var(--amber); font-size:11px; font-weight:700;
   padding:3px 9px; border-radius:999px; font-variant-numeric: tabular-nums;
 }
 .result-level-wrap{ margin-top:14px; display:flex; flex-direction:column; align-items:center; gap:2px; }
-.result-level-tag{ font-size:11px; font-weight:600; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; }
+.result-level-tag{ font-size:11px; font-weight:700; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; }
 .result-level-letter{
-  font-size:44px; font-weight:600; line-height:1; letter-spacing:-1px;
-  background:linear-gradient(155deg,var(--indigo-600),var(--indigo-900));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
+  font-size:44px; font-weight:700; line-height:1; letter-spacing:-0.5px;
+  color:var(--indigo-700);
 }
-.result-title{ font-size:18px; font-weight:600; margin-top:16px; }
+.result-title{ font-size:18px; font-weight:700; margin-top:16px; color:var(--text); }
 .result-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-top:5px; max-width:320px; }
 .result-mini-stats{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; justify-content:center; }
 .result-mini-stat{
   display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--border);
   padding:7px 13px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--text-dim);
 }
-.result-mini-stat b{ color:var(--text); font-weight:600; }
+.result-mini-stat b{ color:var(--text); font-weight:700; }
 
 /* ---- Profile nickname edit icon ---- */
 .icon-edit-btn{
@@ -1029,6 +1026,28 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 
 /* ---- Review grid (savollar jadvali) ---- */
 .review-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:14px; }
+@media (max-width: 600px){
+  .review-grid{
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+  }
+  .review-card{
+    padding:12px 6px !important;
+    gap:6px !important;
+    border-radius:12px !important;
+  }
+  .review-icon{
+    width:34px !important;
+    height:34px !important;
+  }
+  .review-icon svg{
+    width:16px !important;
+    height:16px !important;
+  }
+  .review-label{
+    font-size:11px !important;
+  }
+}
 .review-card{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
   padding:16px 10px; border-radius:14px; background:var(--card); border:1px solid var(--border);
@@ -2864,7 +2883,7 @@ html[data-theme="dark"] .dash-main-heading {
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;margin-top:7px;">
               <div style="font-size:13px;color:var(--text-dim);font-weight:600;" id="profileUsername">username: @arabication_admin</div>
-              <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="profileId">ID: 7593629910</div>
+              <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="profileId">ID: 759362991</div>
             </div>
           </div>
         </div>
