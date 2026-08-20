@@ -3146,12 +3146,27 @@ html[data-theme="dark"] .dash-main-heading {
           </div>
           <div class="admin-toolbar">
             <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="adminQuestionsCount"></div>
-            <div style="display:flex;gap:8px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn btn-outline" id="adminQSearchToggleBtn" onclick="toggleAdminQuestionSearch()" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:9px 13px;" title="Savollarni qidirish">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Qidiruv</span>
+              </button>
               <button class="btn btn-primary" onclick="openAdminActionsSheet()" style="display:flex;align-items:center;gap:7px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 Amallar
               </button>
               <input type="file" id="bqImportFileInput" accept=".json,application/json" style="display:none;" onchange="importQuestionsFromFile(event)">
+            </div>
+          </div>
+          <div id="adminQSearchBox" class="admin-search" style="display:none;margin-bottom:14px;position:relative;gap:10px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--text-faint);flex-shrink:0;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="adminQuestionSearchInput" placeholder="Savol matni, javob varianti yoki kalit so'z bo'yicha qidirish..." oninput="handleAdminQuestionSearch(this.value)" autocomplete="off">
+            <button type="button" id="adminQSearchClearBtn" onclick="clearAdminQuestionSearch()" style="display:none;background:transparent;border:none;color:var(--text-faint);cursor:pointer;padding:4px 8px;font-size:14px;border-radius:6px;flex-shrink:0;" title="Tozalash">✕</button>
+            <div style="border-inline-start:1px solid var(--border);padding-inline-start:10px;display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <label style="font-size:11.5px;font-weight:600;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;user-select:none;">
+                <input type="checkbox" id="adminQSearchAllSkillsCheckbox" onchange="toggleAdminQuestionSearchAllSkills(this.checked)" style="accent-color:var(--indigo-700);cursor:pointer;">
+                <span>Barcha mahoratlarda</span>
+              </label>
             </div>
           </div>
           <div class="card" style="padding:16px;" id="adminQuestionsList"></div>
@@ -6121,6 +6136,93 @@ function rowMenuChoose(id, i){
 
 let adminActiveSkill = 'qiroa';
 let adminSubFilter = 'all';
+let adminQuestionSearchQuery = '';
+let adminQuestionSearchAllSkills = false;
+
+function normalizeArabicSearch(text){
+  if(!text) return '';
+  return String(text)
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, '') // remove tashkeel/harakat, tanween, tatweel
+    .replace(/[إأآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .toLowerCase()
+    .trim();
+}
+
+function textMatchesQuery(sourceText, query){
+  if(!sourceText || !query) return false;
+  const sStr = String(sourceText);
+  const qStr = String(query).trim();
+  if(!qStr) return false;
+  if(sStr.toLowerCase().includes(qStr.toLowerCase())) return true;
+  const sNorm = normalizeArabicSearch(sStr);
+  const qNorm = normalizeArabicSearch(qStr);
+  if(qNorm && sNorm.includes(qNorm)) return true;
+  return false;
+}
+
+function highlightSearchText(text, query){
+  if(!text || !query) return escapeHtml(text || '');
+  const escaped = escapeHtml(text);
+  const qTrim = query.trim();
+  if(!qTrim) return escaped;
+  try {
+    const escapedRegex = qTrim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedRegex})`, 'gi');
+    return escaped.replace(regex, '<mark style="background:rgba(234,179,8,0.32);color:inherit;padding:1px 4px;border-radius:4px;font-weight:700;">$1</mark>');
+  } catch(e) {
+    return escaped;
+  }
+}
+
+function toggleAdminQuestionSearch(){
+  const box = document.getElementById('adminQSearchBox');
+  const btn = document.getElementById('adminQSearchToggleBtn');
+  const input = document.getElementById('adminQuestionSearchInput');
+  if(!box) return;
+  const isHidden = box.style.display === 'none' || !box.style.display;
+  if(isHidden){
+    box.style.display = 'flex';
+    if(btn) { btn.classList.remove('btn-outline'); btn.classList.add('btn-primary'); }
+    if(input) { input.focus(); }
+  } else {
+    box.style.display = 'none';
+    if(btn) { btn.classList.remove('btn-primary'); btn.classList.add('btn-outline'); }
+    if(adminQuestionSearchQuery){
+      adminQuestionSearchQuery = '';
+      if(input) input.value = '';
+      const clearBtn = document.getElementById('adminQSearchClearBtn');
+      if(clearBtn) clearBtn.style.display = 'none';
+      renderAdminQuestions();
+    }
+  }
+}
+
+function handleAdminQuestionSearch(val){
+  adminQuestionSearchQuery = (val || '').trim();
+  const clearBtn = document.getElementById('adminQSearchClearBtn');
+  if(clearBtn){
+    clearBtn.style.display = adminQuestionSearchQuery ? 'inline-block' : 'none';
+  }
+  renderAdminQuestions();
+}
+
+function clearAdminQuestionSearch(){
+  adminQuestionSearchQuery = '';
+  const input = document.getElementById('adminQuestionSearchInput');
+  if(input) input.value = '';
+  const clearBtn = document.getElementById('adminQSearchClearBtn');
+  if(clearBtn) clearBtn.style.display = 'none';
+  if(input) input.focus();
+  renderAdminQuestions();
+}
+
+function toggleAdminQuestionSearchAllSkills(checked){
+  adminQuestionSearchAllSkills = !!checked;
+  renderAdminQuestions();
+}
+
 function renderAdminSkillFilters(){
   let subLabel = 'Kategoriya', subItems = [];
   if(adminActiveSkill==='grammatika'){ subLabel = 'Kategoriya'; subItems = GRAMMAR_CATEGORIES; }
@@ -6152,6 +6254,304 @@ function renderAdminQuestions(){
 
   const list = document.getElementById('adminQuestionsList');
   const countEl = document.getElementById('adminQuestionsCount');
+
+  if(adminQuestionSearchQuery){
+    const query = adminQuestionSearchQuery;
+    const skillsToSearch = adminQuestionSearchAllSkills
+      ? ['grammatika', 'qiroa', 'istima', 'muhavara', 'kitaba']
+      : [adminActiveSkill];
+
+    const results = [];
+
+    skillsToSearch.forEach(sk => {
+      if(sk === 'grammatika'){
+        // 1) Topic banks
+        const topics = adminSubFilter === 'all' || adminQuestionSearchAllSkills
+          ? GRAMMAR_TOPICS
+          : GRAMMAR_TOPICS.filter(t => t.category === adminSubFilter);
+        topics.forEach(topic => {
+          const qs = GRAMMAR_TOPIC_BANKS[topic.id] || [];
+          qs.forEach((q, idx) => {
+            const matchesQ = textMatchesQuery(q.q, query);
+            const matchesOpts = q.opts && q.opts.some(o => textMatchesQuery(o, query));
+            const matchesExp = textMatchesQuery(q.exp, query);
+            const matchesTopic = textMatchesQuery(topic.name, query) || textMatchesQuery(topic.ar, query);
+            const matchesCat = textMatchesQuery(q.category, query) || textMatchesQuery(topic.category, query);
+            if(matchesQ || matchesOpts || matchesExp || matchesTopic || matchesCat){
+              results.push({
+                type: 'mcq',
+                skillId: 'grammatika',
+                skillName: 'Grammatika',
+                skillColor: 'grammatika',
+                topicId: topic.id,
+                contextTitle: `${topic.name} (${topic.ar})`,
+                category: q.category || topic.category || 'nahv',
+                qIndex: idx,
+                q: q.q,
+                opts: q.opts || [],
+                a: q.a,
+                exp: q.exp,
+                id: q.id
+              });
+            }
+          });
+        });
+        // 2) Real exam questions
+        if(adminSubFilter === 'all' || adminQuestionSearchAllSkills){
+          const realExamPool = QUESTION_BANKS.grammatika.questions || [];
+          realExamPool.forEach((q, idx) => {
+            const matchesQ = textMatchesQuery(q.q, query);
+            const matchesOpts = q.opts && q.opts.some(o => textMatchesQuery(o, query));
+            const matchesExp = textMatchesQuery(q.exp, query);
+            const matchesCat = textMatchesQuery(q.category, query);
+            if(matchesQ || matchesOpts || matchesExp || matchesCat){
+              results.push({
+                type: 'mcq',
+                skillId: 'grammatika',
+                skillName: 'Grammatika',
+                skillColor: 'grammatika',
+                topicId: null,
+                contextTitle: 'Real imtihon savoli',
+                category: q.category || 'nahv',
+                qIndex: idx,
+                q: q.q,
+                opts: q.opts || [],
+                a: q.a,
+                exp: q.exp,
+                id: q.id
+              });
+            }
+          });
+        }
+      } else if(sk === 'qiroa'){
+        const juzList = adminSubFilter === 'all' || adminQuestionSearchAllSkills
+          ? QIROA_JUZ
+          : QIROA_JUZ.filter(j => j.id === adminSubFilter);
+        juzList.forEach(juz => {
+          const tests = QIROA_TESTS[juz.id] || [];
+          tests.forEach((t, tIdx) => {
+            const matchesPassage = textMatchesQuery(t.passage, query);
+            const matchesTitle = textMatchesQuery(t.title, query);
+            (t.questions || []).forEach((q, idx) => {
+              const matchesQ = textMatchesQuery(q.q, query);
+              const matchesOpts = q.opts && q.opts.some(o => textMatchesQuery(o, query));
+              const matchesExp = textMatchesQuery(q.exp, query);
+              if(matchesQ || matchesOpts || matchesExp || matchesPassage || matchesTitle){
+                results.push({
+                  type: 'mcq',
+                  skillId: 'qiroa',
+                  skillName: 'Qiroat',
+                  skillColor: 'qiroa',
+                  topicId: t.id,
+                  contextTitle: `${juz.name} · Test ${tIdx+1}${t.title ? ` (${t.title})` : ''}`,
+                  qIndex: idx,
+                  q: q.q,
+                  opts: q.opts || [],
+                  a: q.a,
+                  exp: q.exp,
+                  id: q.id,
+                  passage: t.passage,
+                  testTitle: t.title
+                });
+              }
+            });
+          });
+        });
+      } else if(sk === 'istima'){
+        const juzList = adminSubFilter === 'all' || adminQuestionSearchAllSkills
+          ? ISTIMA_JUZ
+          : ISTIMA_JUZ.filter(j => j.id === adminSubFilter);
+        juzList.forEach(juz => {
+          const tests = ISTIMA_TESTS[juz.id] || [];
+          tests.forEach((t, tIdx) => {
+            (t.questions || []).forEach((q, idx) => {
+              const matchesQ = textMatchesQuery(q.q, query);
+              const matchesOpts = q.opts && q.opts.some(o => textMatchesQuery(o, query));
+              const matchesExp = textMatchesQuery(q.exp, query);
+              if(matchesQ || matchesOpts || matchesExp){
+                results.push({
+                  type: 'mcq',
+                  skillId: 'istima',
+                  skillName: 'Istimo\'',
+                  skillColor: 'istima',
+                  topicId: t.id,
+                  contextTitle: `${juz.name} · Test ${tIdx+1}`,
+                  qIndex: idx,
+                  q: q.q,
+                  opts: q.opts || [],
+                  a: q.a,
+                  exp: q.exp,
+                  id: q.id,
+                  audioUrl: t.audioUrl
+                });
+              }
+            });
+          });
+        });
+      } else if(sk === 'muhavara'){
+        const partsList = adminSubFilter === 'all' || adminQuestionSearchAllSkills
+          ? MUHAVARA_PARTS
+          : MUHAVARA_PARTS.filter(p => p.id === adminSubFilter);
+        partsList.forEach(part => {
+          const qs = MUHAVARA_QUESTIONS[part.id] || [];
+          qs.forEach((q, idx) => {
+            if(textMatchesQuery(q.prompt, query) || textMatchesQuery(part.name, query)){
+              results.push({
+                type: 'speaking',
+                skillId: 'muhavara',
+                skillName: 'Muhovara',
+                skillColor: 'muhavara',
+                partId: part.id,
+                contextTitle: part.name,
+                qIndex: idx,
+                prompt: q.prompt,
+                id: q.id
+              });
+            }
+          });
+        });
+      } else if(sk === 'kitaba'){
+        const partsList = adminSubFilter === 'all' || adminQuestionSearchAllSkills
+          ? KITABA_PARTS
+          : KITABA_PARTS.filter(p => p.id === adminSubFilter);
+        partsList.forEach(part => {
+          const topics = KITABA_TOPICS[part.id] || [];
+          topics.forEach((t, idx) => {
+            if(textMatchesQuery(t.topicAr, query) || textMatchesQuery(part.name, query)){
+              results.push({
+                type: 'writing',
+                skillId: 'kitaba',
+                skillName: 'Kitoba',
+                skillColor: 'kitaba',
+                partId: part.id,
+                contextTitle: part.name,
+                qIndex: idx,
+                topicAr: t.topicAr,
+                id: t.id
+              });
+            }
+          });
+        });
+      } else {
+        const bank = QUESTION_BANKS[sk];
+        (bank?.questions || []).forEach((q, idx) => {
+          if(textMatchesQuery(q.q, query) || (q.opts && q.opts.some(o => textMatchesQuery(o, query))) || textMatchesQuery(q.exp, query)){
+            results.push({
+              type: 'mcq',
+              skillId: sk,
+              skillName: SKILL_META[sk]?.name || sk,
+              skillColor: 'indigo',
+              topicId: null,
+              contextTitle: SKILL_META[sk]?.name || sk,
+              qIndex: idx,
+              q: q.q,
+              opts: q.opts || [],
+              a: q.a,
+              exp: q.exp,
+              id: q.id
+            });
+          }
+        });
+      }
+    });
+
+    countEl.innerHTML = `🔍 Qidiruv natijasi: <b>${results.length} ta</b> savol topildi ("${escapeHtml(query)}")`;
+
+    if(results.length === 0){
+      list.innerHTML = `
+        <div class="placeholder-card" style="padding:40px 20px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:36px;height:36px;margin:0 auto 10px;color:var(--text-faint);"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <h3 style="font-size:15px;margin-bottom:6px;">Savol topilmadi</h3>
+          <p style="font-size:12.5px;color:var(--text-faint);max-width:380px;margin:0 auto 14px;">"${escapeHtml(query)}" bo'yicha hech qanday savol, matn yoki javob varianti topilmadi.</p>
+          <button type="button" class="btn btn-outline" style="font-size:12.5px;padding:8px 16px;" onclick="clearAdminQuestionSearch()">Qidiruvni tozalash</button>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = results.map((res, i) => {
+      let actionsHtml = '';
+      if(res.type === 'mcq'){
+        const actions = [
+          { icon: IB_ICON_VIEW, label: "Mavzu/Test savollari", run: () => viewTopicQuestions(res.skillId, res.topicId) },
+          { icon: IB_ICON_EDIT, label: "Tahrirlash", run: () => openEditQuestionModal(res.skillId, res.topicId, res.qIndex) },
+          { icon: IB_ICON_DEL, label: "O'chirish", danger: true, run: () => deleteQuestion(res.skillId, res.topicId, res.qIndex) }
+        ];
+        actionsHtml = rowMenuBtn(actions, `Savol ${i+1}`);
+      } else if(res.type === 'speaking'){
+        const actions = [
+          { icon: IB_ICON_EDIT, label: "Tahrirlash", run: () => openEditSpeakingQuestionModal(res.id) },
+          { icon: IB_ICON_DEL, label: "O'chirish", danger: true, run: () => deleteSpeakingQuestion(res.id) }
+        ];
+        actionsHtml = rowMenuBtn(actions, `Savol ${i+1}`);
+      } else if(res.type === 'writing'){
+        const actions = [
+          { icon: IB_ICON_EDIT, label: "Tahrirlash", run: () => openEditKitabaTopicModal(res.id) },
+          { icon: IB_ICON_DEL, label: "O'chirish", danger: true, run: () => deleteKitabaTopic(res.id) }
+        ];
+        actionsHtml = rowMenuBtn(actions, `Mavzu ${i+1}`);
+      }
+
+      const catObj = res.category ? GRAMMAR_CATEGORIES.find(c => c.id === res.category) : null;
+      const catBadge = catObj ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--indigo-100);color:var(--indigo-700);">${catObj.name} (${catObj.ar})</span>` : '';
+
+      if(res.type === 'mcq'){
+        return `
+          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--${res.skillColor}-bg, var(--indigo-100));color:var(--${res.skillColor}, var(--indigo-700));">${res.skillName}</span>
+                <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
+                ${catBadge}
+              </div>
+              <div class="t-actions">${actionsHtml}</div>
+            </div>
+            <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:10px;line-height:1.7;">
+              ${highlightSearchText(res.q, query)}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${(res.opts || []).map((opt, oi) => `
+                <div style="font-size:12.5px;font-weight:600;direction:rtl;text-align:right;padding:4px 8px;border-radius:6px;background:${oi === res.a ? 'var(--green-bg)' : 'transparent'};color:${oi === res.a ? 'var(--green)' : 'var(--text-dim)'};">
+                  ${oi === res.a ? '✓ ' : ''}${highlightSearchText(opt, query)}
+                </div>
+              `).join('')}
+            </div>
+            ${res.exp ? `<div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${highlightSearchText(res.exp, query)}</div>` : ''}
+          </div>
+        `;
+      } else if(res.type === 'speaking'){
+        return `
+          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--muhavara-bg);color:var(--muhavara);">${res.skillName}</span>
+                <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
+              </div>
+              <div class="t-actions">${actionsHtml}</div>
+            </div>
+            <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;line-height:1.7;">
+              ${highlightSearchText(res.prompt, query)}
+            </div>
+          </div>
+        `;
+      } else if(res.type === 'writing'){
+        return `
+          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--kitaba-bg);color:var(--kitaba);">${res.skillName}</span>
+                <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
+              </div>
+              <div class="t-actions">${actionsHtml}</div>
+            </div>
+            <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;line-height:1.7;">
+              ${highlightSearchText(res.topicAr, query)}
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+    return;
+  }
 
   if(adminActiveSkill==='grammatika'){
     const topics = adminSubFilter==='all' ? GRAMMAR_TOPICS : GRAMMAR_TOPICS.filter(t=>t.category===adminSubFilter);
