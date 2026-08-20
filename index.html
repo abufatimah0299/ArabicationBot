@@ -995,8 +995,8 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .result-level-wrap{ margin-top:14px; display:flex; flex-direction:column; align-items:center; gap:2px; }
 .result-level-tag{ font-size:11px; font-weight:700; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase; }
 .result-level-letter{
-  font-size:44px; font-weight:700; line-height:1; letter-spacing:-0.5px;
-  color:var(--indigo-700);
+  font-size:38px; font-weight:700; line-height:1.15; letter-spacing:-0.5px;
+  color:var(--indigo-700); text-align:center; max-width:320px;
 }
 .result-title{ font-size:18px; font-weight:700; margin-top:16px; color:var(--text); }
 .result-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-top:5px; max-width:320px; }
@@ -1060,6 +1060,7 @@ textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
 .review-icon{ width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .review-icon.correct{ background:var(--green); }
 .review-icon.wrong{ background:var(--red); }
+.review-icon.unanswered{ background:#94a3b8; }
 .review-icon svg{ width:20px; height:20px; }
 .review-label{ font-size:12px; font-weight:600; color:var(--text-dim); text-align:center; }
 .review-detail{ margin-top:18px; padding-top:18px; border-top:1px dashed var(--border); }
@@ -1307,14 +1308,6 @@ html[data-theme="light"] .topic-item:hover{
 }
 .filter-chip:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
 .filter-chip.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
-
-/* Tarix (Imtixon) sahifasi: mahorat va vaqt filtrlari — teng enli/bo'yli,
-   tepadagi 3 ustunli statistika blocklari bilan bir xil chetlarga taqsimlangan */
-#filterSection, #filterDate{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-#filterSection .filter-chip, #filterDate .filter-chip{
-  width:100%; box-sizing:border-box; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  padding:10px 6px;
-}
 
 /* At-Tanal bo'limi: Mashq qilish / Mocklar segmentli almashtirgich (rasmdagi dizayn) */
 .attanal-tab-toggle{
@@ -2778,7 +2771,7 @@ html[data-theme="dark"] .dash-main-heading {
               <div class="result-badge-center">
                 <div class="result-score-big"><span class="num-correct" id="resultCorrect">20</span><span class="num-slash">/</span><span class="num-total" id="resultTotal">20</span></div>
                 <div class="result-score-of">Ball</div>
-                <div class="result-xp-pill">⚡ +<span id="resultXP">20</span> XP</div>
+                <div class="result-xp-pill">⚡ <span id="resultXP">+20</span> XP</div>
               </div>
             </div>
             <div class="result-level-wrap">
@@ -2812,20 +2805,9 @@ html[data-theme="dark"] .dash-main-heading {
 
         <div class="grid4 stagger" id="historyStats" style="grid-template-columns:repeat(3,1fr);"></div>
 
-        <div class="filter-bar">
-          <div class="filter-group" id="filterSection">
-            <button class="filter-chip active" data-val="Barchasi">Barchasi</button>
-            <button class="filter-chip" data-val="Qiroa">Qiroa</button>
-            <button class="filter-chip" data-val="Istima">Istima</button>
-            <button class="filter-chip" data-val="Grammatika">Grammatika</button>
-            <button class="filter-chip" data-val="Muhovara">Muhovara</button>
-            <button class="filter-chip" data-val="Kitaba">Kitaba</button>
-          </div>
-          <div class="filter-group" id="filterDate">
-            <button class="filter-chip active" data-val="7kun">Oxirgi 7 kun</button>
-            <button class="filter-chip" data-val="oy">Shu oy</button>
-            <button class="filter-chip" data-val="hammasi">Barchasi</button>
-          </div>
+        <div class="rank-filter-row" style="margin:16px 0 18px 0;">
+          <div class="rank-dropdown" id="historySkillDropdown"></div>
+          <div class="rank-dropdown" id="historyPeriodDropdown"></div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px;" id="historyList"></div>
@@ -4529,7 +4511,11 @@ function showView(name, push=true){
   // qolgan barcha bo'limlarda ko'rinadi.
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   if(themeToggleBtn) themeToggleBtn.style.display = (name==='dashboard') ? 'none' : '';
-  if(push){ viewHistory.push(name); }
+  if(push){
+    if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== name){
+      viewHistory.push(name);
+    }
+  }
   document.getElementById('content').scrollTo?.(0,0);
   window.scrollTo(0,0);
   closeSidebar();
@@ -4663,11 +4649,66 @@ function goBack(){
   if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
   stopMuhavaraLevelMeter();
   viewHistory.pop();
-  const prev = viewHistory[viewHistory.length-1] || 'attanal';
+  while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'quiz' || viewHistory[viewHistory.length - 1] === 'results')){
+    viewHistory.pop();
+  }
+  const prev = viewHistory[viewHistory.length-1] || 'dashboard';
   showView(prev, false);
 }
 document.querySelectorAll('[data-view]').forEach(el=>{
   el.addEventListener('click', ()=> showView(el.dataset.view));
+});
+
+/* ---- Custom dropdown (native <select> popup'ini ilova dizayniga mos qilib
+   bo'yash mumkin emasligi sababli — to'liq JS bilan yasalgan almashtiruvchi). ----
+   initCustomDropdown('wrapId', { label, options:[{value,label}], value, onChange }) */
+let CUSTOM_DROPDOWN_STATE = {};
+function initCustomDropdown(id, config){
+  CUSTOM_DROPDOWN_STATE[id] = { ...config };
+  renderCustomDropdown(id);
+}
+function updateCustomDropdown(id, patch){
+  const st = CUSTOM_DROPDOWN_STATE[id];
+  if(!st) return;
+  Object.assign(st, patch);
+  renderCustomDropdown(id);
+}
+function renderCustomDropdown(id){
+  const st = CUSTOM_DROPDOWN_STATE[id];
+  const wrap = document.getElementById(id);
+  if(!st || !wrap) return;
+  wrap.classList.add('cd-wrap');
+  const opt = st.options.find(o=>o.value===st.value) || st.options[0];
+  wrap.innerHTML = `
+    <label>${escapeHtml(st.label)}</label>
+    <button type="button" class="cd-trigger"><span class="cd-value">${escapeHtml(opt?opt.label:'')}</span></button>
+    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="cd-panel" id="${id}__panel">
+      ${st.options.map(o=>`<button type="button" class="cd-option ${o.value===st.value?'active':''}" data-dd-id="${id}" data-dd-val="${escapeHtml(o.value)}">${escapeHtml(o.label)}</button>`).join('')}
+    </div>
+  `;
+}
+document.addEventListener('click', (e)=>{
+  const optBtn = e.target.closest('.cd-option');
+  if(optBtn){
+    const id = optBtn.dataset.ddId, val = optBtn.dataset.ddVal;
+    const st = CUSTOM_DROPDOWN_STATE[id];
+    if(st){
+      st.value = val;
+      renderCustomDropdown(id);
+      if(st.onChange) st.onChange(val);
+    }
+    return;
+  }
+  const trigger = e.target.closest('.cd-trigger');
+  if(trigger){
+    const wrapEl = trigger.closest('.cd-wrap');
+    const panel = wrapEl ? document.getElementById(wrapEl.id + '__panel') : null;
+    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p !== panel) p.classList.remove('show'); });
+    if(panel) panel.classList.toggle('show');
+    return;
+  }
+  document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
 });
 
 /* mobile sidebar (agar mavjud bo'lsa) */
@@ -4887,27 +4928,42 @@ function handleSkillIntroBack(){
 }
 
 function handleQuizBack(){
+  while(viewHistory.length > 0 && viewHistory[viewHistory.length - 1] === 'quiz'){
+    viewHistory.pop();
+  }
   if(currentQuiz && (currentQuiz.type === 'mock' || currentQuiz.mockId)){
     const sId = currentQuiz.skillId || 'grammatika';
     clearInterval(timerInterval); clearInterval(mcqTimerInterval);
     currentQuiz = null;
     openSkillIntro(sId);
     switchSkillTab('mocks');
-    showView('skillintro');
+    if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'skillintro'){
+      viewHistory.push('skillintro');
+    }
+    showView('skillintro', false);
     return;
   }
   goBack();
 }
 
 function handleResultsBack(){
+  while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'results' || viewHistory[viewHistory.length - 1] === 'quiz')){
+    viewHistory.pop();
+  }
   if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
     const sId = window.lastCompletedQuiz.skillId || 'grammatika';
     openSkillIntro(sId);
     switchSkillTab('mocks');
-    showView('skillintro');
+    if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'skillintro'){
+      viewHistory.push('skillintro');
+    }
+    showView('skillintro', false);
     return;
   }
-  showView('attanal');
+  if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'attanal'){
+    viewHistory.push('attanal');
+  }
+  showView('attanal', false);
 }
 
 function switchGrammarTab(tab){
@@ -5369,16 +5425,37 @@ function renderHistoryList(){
     </div>`;
   }).join('');
 }
-document.getElementById('filterSection').addEventListener('click', e=>{
-  const btn = e.target.closest('.filter-chip'); if(!btn) return;
-  document.querySelectorAll('#filterSection .filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); historyFilters.section = btn.dataset.val; renderHistoryList();
+initCustomDropdown('historySkillDropdown', {
+  label: 'Mahorat',
+  options: [
+    { value: 'Barchasi', label: 'Barchasi' },
+    { value: 'Qiroa', label: 'Qiroa' },
+    { value: 'Istima', label: 'Istima' },
+    { value: 'Grammatika', label: 'Grammatika' },
+    { value: 'Muhovara', label: 'Muhovara' },
+    { value: 'Kitaba', label: 'Kitaba' },
+  ],
+  value: historyFilters.section,
+  onChange: (val) => {
+    historyFilters.section = val;
+    renderHistoryList();
+  }
 });
-document.getElementById('filterDate').addEventListener('click', e=>{
-  const btn = e.target.closest('.filter-chip'); if(!btn) return;
-  document.querySelectorAll('#filterDate .filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); historyFilters.date = btn.dataset.val; renderHistoryList();
+
+initCustomDropdown('historyPeriodDropdown', {
+  label: 'Davr',
+  options: [
+    { value: '7kun', label: 'Oxirgi 7 kun' },
+    { value: 'oy', label: 'Shu oy' },
+    { value: 'hammasi', label: 'Butun davr' },
+  ],
+  value: historyFilters.date,
+  onChange: (val) => {
+    historyFilters.date = val;
+    renderHistoryList();
+  }
 });
+
 renderHistoryStats();
 renderHistoryList();
 renderGrammarHistory();
@@ -6176,58 +6253,6 @@ function renderAdminQuestions(){
 }
 function setAdminSkill(id){ adminActiveSkill = id; adminSubFilter = 'all'; renderAdminQuestions(); }
 function setAdminSubFilter(val){ adminSubFilter = val; renderAdminQuestions(); }
-
-/* ---- Custom dropdown (native <select> popup'ini ilova dizayniga mos qilib
-   bo'yash mumkin emasligi sababli — to'liq JS bilan yasalgan almashtiruvchi). ----
-   initCustomDropdown('wrapId', { label, options:[{value,label}], value, onChange }) */
-let CUSTOM_DROPDOWN_STATE = {};
-function initCustomDropdown(id, config){
-  CUSTOM_DROPDOWN_STATE[id] = { ...config };
-  renderCustomDropdown(id);
-}
-function updateCustomDropdown(id, patch){
-  const st = CUSTOM_DROPDOWN_STATE[id];
-  if(!st) return;
-  Object.assign(st, patch);
-  renderCustomDropdown(id);
-}
-function renderCustomDropdown(id){
-  const st = CUSTOM_DROPDOWN_STATE[id];
-  const wrap = document.getElementById(id);
-  if(!st || !wrap) return;
-  wrap.classList.add('cd-wrap');
-  const opt = st.options.find(o=>o.value===st.value) || st.options[0];
-  wrap.innerHTML = `
-    <label>${escapeHtml(st.label)}</label>
-    <button type="button" class="cd-trigger"><span class="cd-value">${escapeHtml(opt?opt.label:'')}</span></button>
-    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-    <div class="cd-panel" id="${id}__panel">
-      ${st.options.map(o=>`<button type="button" class="cd-option ${o.value===st.value?'active':''}" data-dd-id="${id}" data-dd-val="${escapeHtml(o.value)}">${escapeHtml(o.label)}</button>`).join('')}
-    </div>
-  `;
-}
-document.addEventListener('click', (e)=>{
-  const optBtn = e.target.closest('.cd-option');
-  if(optBtn){
-    const id = optBtn.dataset.ddId, val = optBtn.dataset.ddVal;
-    const st = CUSTOM_DROPDOWN_STATE[id];
-    if(st){
-      st.value = val;
-      renderCustomDropdown(id);
-      if(st.onChange) st.onChange(val);
-    }
-    return;
-  }
-  const trigger = e.target.closest('.cd-trigger');
-  if(trigger){
-    const wrapEl = trigger.closest('.cd-wrap');
-    const panel = wrapEl ? document.getElementById(wrapEl.id + '__panel') : null;
-    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p !== panel) p.classList.remove('show'); });
-    if(panel) panel.classList.toggle('show');
-    return;
-  }
-  document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
-});
 
 const IB_ICON_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
 const IB_ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>`;
@@ -10799,7 +10824,8 @@ function reviseWriting(){
 }
 
 /* ---------------- Finish / results ---------------- */
-function getCEFRLevel(pct){
+function getCEFRLevel(pct, answeredCount = 1){
+  if(answeredCount === 0 || pct === 0) return "A0 ham ko'p sizga";
   if(pct>=90) return 'C2';
   if(pct>=75) return 'C1';
   if(pct>=60) return 'B2';
@@ -10807,9 +10833,31 @@ function getCEFRLevel(pct){
   if(pct>=25) return 'A2';
   return 'A1';
 }
-function finishQuiz(){
-  clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+function finishQuiz(force = false){
   if(!currentQuiz || !currentQuiz.questions){ showView('attanal'); return; }
+  
+  // Agar foydalanuvchi barcha savollarni belgilamagan bo'lsa va majburiy yakunlash (force) bo'lmasa — ogohlantirish oynasini chiqaramiz
+  if(!force){
+    const unansweredCount = currentQuiz.questions.filter(q => q.picked === null || q.picked === undefined).length;
+    if(unansweredCount > 0){
+      document.getElementById('modalTitle').textContent = "Testni yakunlash";
+      document.getElementById('modalBody').innerHTML = `
+        <div style="text-align:center;padding:10px 4px 6px;">
+          <div style="font-size:38px;margin-bottom:12px;">⚠️</div>
+          <div style="font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:8px;">Sizda ${unansweredCount} ta belgilanmagan savol qolgan!</div>
+          <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">Haqiqatdan ham testni hozir yakunlashni xohlaysizmi? Belgilanmagan savollar xato deb hisoblanadi.</p>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline" style="flex:1;padding:12px;" onclick="document.getElementById('modalOverlay').classList.remove('show')">Davom etish</button>
+            <button class="btn btn-primary" style="flex:1;padding:12px;background:var(--red);border-color:var(--red);" onclick="document.getElementById('modalOverlay').classList.remove('show');finishQuiz(true)">Ha, yakunlash</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modalOverlay').classList.add('show');
+      return;
+    }
+  }
+
+  clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   window.lastCompletedQuiz = { ...currentQuiz };
   const total = currentQuiz.questions.length;
   const correct = currentQuiz.questions.filter(q=>q.picked===q.a).length;
@@ -10850,7 +10898,8 @@ function finishQuiz(){
     levelWrap.style.display = isSkillExam ? 'flex' : 'none';
   }
   if(isSkillExam){
-    document.getElementById('resultLevel').textContent = getCEFRLevel(pct);
+    const answeredCount = currentQuiz.questions.filter(q => q.picked !== null && q.picked !== undefined).length;
+    document.getElementById('resultLevel').textContent = getCEFRLevel(pct, answeredCount);
   }
 
   const elapsed = Math.round((Date.now()-currentQuiz.startedAt)/1000);
@@ -10900,6 +10949,9 @@ function finishQuiz(){
   if(pct>=60) fireConfetti();
 
   renderReviewGrid();
+  while(viewHistory.length > 0 && viewHistory[viewHistory.length - 1] === 'quiz'){
+    viewHistory.pop();
+  }
   showView('results');
 }
 
@@ -10914,9 +10966,13 @@ function renderReviewGrid(){
   if(!grid) return;
   grid.innerHTML = currentQuiz.questions.map((q,i)=>{
     const correct = q.picked===q.a;
+    const isUnanswered = q.picked === null || q.picked === undefined;
+    // Faqat belgilangan va xato bo'lgan savollar ustiga bosganda tahlil ochiladi
+    const canClick = !correct && !isUnanswered;
+    const iconClass = correct ? 'correct' : (isUnanswered ? 'unanswered' : 'wrong');
     return `
-      <div class="review-card ${correct?'':'clickable'}" data-idx="${i}" ${correct?'':`onclick="toggleReviewDetail(${i})"`}>
-        <div class="review-icon ${correct?'correct':'wrong'}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
+      <div class="review-card ${canClick?'clickable':''}" data-idx="${i}" ${canClick?`onclick="toggleReviewDetail(${i})"`:''}>
+        <div class="review-icon ${iconClass}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
         <div class="review-label">Savol ${i+1}</div>
       </div>`;
   }).join('');
@@ -10926,26 +10982,50 @@ function renderReviewGrid(){
 }
 function toggleReviewDetail(i){
   const q = currentQuiz.questions[i];
-  const detail = document.getElementById('reviewDetail');
-  const wasOpenOnSame = detail.dataset.idx == i && detail.style.display !== 'none';
-  document.querySelectorAll('.review-card').forEach(c=>c.classList.remove('active'));
-  if(wasOpenOnSame){
-    detail.style.display = 'none';
-    delete detail.dataset.idx;
-    return;
-  }
-  const card = document.querySelector(`.review-card[data-idx="${i}"]`);
-  if(card) card.classList.add('active');
-  detail.dataset.idx = i;
-  detail.style.display = 'block';
-  detail.innerHTML = `
-    <div class="mistake-item">
-      <div class="mistake-q">${q.q}</div>
-      <div class="mistake-row wrong">✕ Sizning javobingiz: ${q.picked===null?'<i>(javob berilmagan)</i>':q.opts[q.picked]}</div>
-      <div class="mistake-row right">✓ To'g'ri javob: ${q.opts[q.a]}</div>
-      <div class="mistake-exp">💡 ${q.exp}</div>
-    </div>`;
-  detail.scrollIntoView({behavior:'smooth', block:'nearest'});
+  if(!q) return;
+  document.getElementById('modalTitle').textContent = `${i+1}-savol tahlili`;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="background:var(--bg);padding:16px;border-radius:14px;border:1px solid var(--border);">
+        <div style="font-size:11.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Savol</div>
+        <div style="font-family:var(--font-ar);font-size:20px;line-height:1.7;direction:rtl;text-align:right;color:var(--text);font-weight:600;">
+          ${escapeHtml(q.q)}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--red-bg);border:1px solid rgba(214,69,69,0.3);color:var(--red);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">✕</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">Sizning javobingiz:</span>
+            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;">${q.picked===null || q.picked===undefined ? '<i>(javob berilmagan)</i>' : escapeHtml(q.opts[q.picked])}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
+            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;">${escapeHtml(q.opts[q.a])}</span>
+          </div>
+        </div>
+      </div>
+
+      ${q.exp ? `
+        <div style="background:var(--card-alt);padding:14px 16px;border-radius:14px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--indigo-700);margin-bottom:6px;">
+            <span>💡</span> Tushuntirish / Izoh:
+          </div>
+          <div style="font-size:13.5px;line-height:1.6;color:var(--text);font-weight:500;">
+            ${escapeHtml(q.exp)}
+          </div>
+        </div>
+      ` : ''}
+
+      <button class="btn btn-primary btn-block" style="padding:12px;margin-top:4px;" onclick="document.getElementById('modalOverlay').classList.remove('show')">Tushundim</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
 }
 function showMistakes(){ document.getElementById('reviewGrid').scrollIntoView({behavior:'smooth', block:'start'}); }
 function retryQuiz(){
