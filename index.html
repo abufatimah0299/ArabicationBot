@@ -1818,12 +1818,92 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .placeholder-card h3{ font-size:15px; color:var(--text); font-weight:600; margin-bottom:6px;}
 .placeholder-card p{ font-size:13px; font-weight:600; }
 
-/* ---------- Yuklanmoqda holati (static/mock ma'lumot o'rniga) ---------- */
-@keyframes skelPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
-.skel{ background:var(--border); border-radius:8px; animation:skelPulse 1.1s ease-in-out infinite; }
+/* ---------- Yuklanmoqda holati (Skeleton Screen) ---------- */
+@keyframes skelShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes skelFadeIn {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.skel, .skel-box, .skel-line, .skel-circle, .skel-avatar {
+  background: linear-gradient(90deg, var(--border) 0%, color-mix(in srgb, var(--card) 70%, var(--border)) 50%, var(--border) 100%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+  display: block;
+}
+html[data-theme="light"] .skel,
+html[data-theme="light"] .skel-box,
+html[data-theme="light"] .skel-line,
+html[data-theme="light"] .skel-circle,
+html[data-theme="light"] .skel-avatar {
+  background: linear-gradient(90deg, #e5e9f0 0%, #f4f6fa 50%, #e5e9f0 100%);
+  background-size: 200% 100%;
+}
+html[data-theme="dark"] .skel,
+html[data-theme="dark"] .skel-box,
+html[data-theme="dark"] .skel-line,
+html[data-theme="dark"] .skel-circle,
+html[data-theme="dark"] .skel-avatar {
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.13) 50%, rgba(255,255,255,0.06) 100%);
+  background-size: 200% 100%;
+}
+
+.fade-in-enter, .skel-fade-in {
+  animation: skelFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .skel-row{ display:flex; align-items:center; gap:12px; padding:10px 4px; }
 .skel-avatar{ width:36px; height:36px; border-radius:50%; flex-shrink:0; }
+.skel-circle{ border-radius:50%; flex-shrink:0; }
 .skel-line{ height:12px; border-radius:6px; }
+.skel-box{ border-radius:10px; }
+
+.skel-stat-card{
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 84px;
+}
+.skel-history-item{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+}
+.skel-podium-card{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 10px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  min-height: 140px;
+}
+.skel-grammar-card{
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.skel-community-card{
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
 .loading-inline{ display:flex; align-items:center; justify-content:center; gap:10px; padding:26px 10px; color:var(--text-faint); font-size:13px; font-weight:600; }
 .loading-spinner{ width:16px; height:16px; border-radius:50%; border:2.5px solid var(--border); border-top-color:var(--indigo-700); animation:skelSpin .7s linear infinite; flex-shrink:0; }
 @keyframes skelSpin{ to{ transform:rotate(360deg); } }
@@ -2842,8 +2922,25 @@ html[data-theme="dark"] .dash-main-heading {
       <!-- ============ XATOLAR ============ -->
       <div class="view" id="view-xatolar">
         <div class="view-title">Xatolarim</div>
-        <div id="errorsListWrap" style="display:flex;flex-direction:column;gap:10px;"></div>
-        <div class="card placeholder-card" id="errorsEmpty">
+        <div id="errorsListWrap" style="display:flex;flex-direction:column;gap:10px;">
+          <div class="card history-item skel-history-item">
+            <div class="skel skel-circle" style="width:42px;height:42px;border-radius:12px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="skel skel-line" style="width:60%;height:14px;"></div>
+              <div class="skel skel-line" style="width:35%;height:11px;"></div>
+            </div>
+            <div class="skel skel-box" style="width:54px;height:24px;border-radius:8px;"></div>
+          </div>
+          <div class="card history-item skel-history-item">
+            <div class="skel skel-circle" style="width:42px;height:42px;border-radius:12px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="skel skel-line" style="width:50%;height:14px;"></div>
+              <div class="skel skel-line" style="width:40%;height:11px;"></div>
+            </div>
+            <div class="skel skel-box" style="width:54px;height:24px;border-radius:8px;"></div>
+          </div>
+        </div>
+        <div class="card placeholder-card" id="errorsEmpty" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
           <h3>Barcha xatolaringiz shu yerda to'planadi</h3>
           <p>Testlarni topshiring — xato qilgan savollaringiz avtomatik ravishda bu yerga qo'shiladi va takroriy mashq uchun taklif qilinadi.</p>
@@ -2869,6 +2966,8 @@ html[data-theme="dark"] .dash-main-heading {
             </div>
           </div>
         </div>
+
+        <div class="grid3 stagger" id="profileStats" style="margin-bottom:20px;"></div>
 
         <div class="card settings-list">
           <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
@@ -2897,8 +2996,25 @@ html[data-theme="dark"] .dash-main-heading {
 
       <div class="view" id="view-hamjamiyat">
         <div class="view-title">Hamjamiyat</div>
-        <div id="communityCardsList">
-          <div class="loading-inline"><span class="loading-spinner"></span>Yuklanmoqda…</div>
+        <div id="communityCardsList" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="skel-community-card">
+            <div class="skel skel-circle" style="width:46px;height:46px;border-radius:12px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="skel skel-line" style="width:55%;height:14px;"></div>
+              <div class="skel skel-line" style="width:85%;height:11px;"></div>
+              <div class="skel skel-line" style="width:40%;height:10px;"></div>
+            </div>
+            <div class="skel skel-box" style="width:68px;height:32px;border-radius:10px;"></div>
+          </div>
+          <div class="skel-community-card">
+            <div class="skel skel-circle" style="width:46px;height:46px;border-radius:12px;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="skel skel-line" style="width:48%;height:14px;"></div>
+              <div class="skel skel-line" style="width:75%;height:11px;"></div>
+              <div class="skel skel-line" style="width:35%;height:10px;"></div>
+            </div>
+            <div class="skel skel-box" style="width:68px;height:32px;border-radius:10px;"></div>
+          </div>
         </div>
       </div>
 
@@ -5207,16 +5323,32 @@ function computeGrammarTopicProgress(){
   });
   grammarProgressLoaded = true;
 }
+let grammarTopicsLoaded = false;
 function renderGrammarCategories(){
   const wrap = document.getElementById('grammarCatGrid');
   if(!wrap) return;
+  if(!grammarTopicsLoaded && (!GRAMMAR_TOPICS || !GRAMMAR_TOPICS.length)){
+    wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat=>`
+      <div class="grammar-cat-wrap">
+        <div class="skel-grammar-card">
+          <div class="skel skel-circle" style="width:40px;height:40px;border-radius:12px;"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+            <div class="skel skel-line" style="width:40%;height:15px;"></div>
+            <div class="skel skel-line" style="width:65%;height:11px;"></div>
+          </div>
+          <div class="skel skel-box" style="width:48px;height:24px;border-radius:12px;"></div>
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
   wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat=>{
     const topics = GRAMMAR_TOPICS.filter(t=>t.category===cat.id);
     const attemptedTopics = topics.filter(t=>t.attempted);
     const avgPct = attemptedTopics.length ? Math.round(attemptedTopics.reduce((s,t)=>s+t.pct,0)/attemptedTopics.length) : null;
     const avgLabel = avgPct===null ? (grammarProgressLoaded ? '—' : '···') : avgPct+'%';
     return `
-    <div class="grammar-cat-wrap" data-cat="${cat.id}">
+    <div class="grammar-cat-wrap fade-in-enter" data-cat="${cat.id}">
       <div class="grammar-cat-card gcat-${cat.id}" onclick="toggleGrammarCat('${cat.id}')">
         <div class="grammar-cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg></div>
         <div class="grammar-cat-main">
@@ -5271,6 +5403,20 @@ function renderGrammarHistory(){
   const el = document.getElementById('grammarHistList');
   const empty = document.getElementById('grammarHistEmpty');
   if(!el) return;
+  if(!historyLoaded){
+    if(empty) empty.style.display = 'none';
+    el.innerHTML = Array.from({length:2}).map(()=>`
+      <div class="card history-item skel-history-item">
+        <div class="skel skel-circle" style="width:38px;height:38px;border-radius:10px;"></div>
+        <div class="history-main" style="display:flex;flex-direction:column;gap:6px;">
+          <div class="skel skel-line" style="width:50%;height:13px;"></div>
+          <div class="skel skel-line" style="width:30%;height:11px;"></div>
+        </div>
+        <div class="skel skel-box" style="width:48px;height:22px;border-radius:8px;"></div>
+      </div>
+    `).join('');
+    return;
+  }
   if(empty) empty.style.display = list.length? 'none':'block';
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
@@ -5280,7 +5426,7 @@ function renderGrammarHistory(){
       ? `<div class="t ar">${gt.ar}</div>`
       : `<div class="t">${r.topic}</div>`;
     return `
-    <div class="card history-item">
+    <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
       <div class="history-main">
         ${mainLine}
@@ -5305,6 +5451,7 @@ if(grammarHistFilterEl){
 /* STATIK NAMUNA OLIB TASHLANDI. Bu massiv endi bo'sh boshlanadi — haqiqiy foydalanuvchi
    tarixi backenddan (quiz_attempts jadvali) kelgach, applyLiveHistory() uni to'ldiradi. */
 let HISTORY_DATA = [];
+let historyLoaded = false;
 /* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi.
    MOSLASHTIRING: agar sizning jadval ustunlaringiz boshqacha nomlansa, pick() ichidagi nomlarga qo'shing. */
 function mapBackendHistoryRow(row, idx){
@@ -5324,6 +5471,7 @@ function mapBackendHistoryRow(row, idx){
   };
 }
 function applyLiveHistory(){
+  historyLoaded = true;
   if(Array.isArray(window.HISTORY_DATA_LIVE) && window.HISTORY_DATA_LIVE.length){
     HISTORY_DATA = window.HISTORY_DATA_LIVE.map(mapBackendHistoryRow);
   }
@@ -5337,6 +5485,7 @@ function applyLiveHistory(){
 
 /* ================= XATOLARIM (foydalanuvchi xato javob bergan savollar) ================= */
 /* MOSLASHTIRING: user_errors jadvalingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
+let errorsLoaded = false;
 function mapBackendErrorRow(row, idx){
   const skillId = pick(row, ['skill_id','skillId'], 'grammatika');
   const meta = SKILL_META[skillId] || {section:skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
@@ -5354,18 +5503,22 @@ function mapBackendErrorRow(row, idx){
   };
 }
 function applyLiveErrors(){
+  errorsLoaded = true;
   const wrap = document.getElementById('errorsListWrap');
   const empty = document.getElementById('errorsEmpty');
   if(!wrap) return;
   const rows = Array.isArray(window.USER_ERRORS_LIVE) ? window.USER_ERRORS_LIVE.map(mapBackendErrorRow) : [];
   if(!rows.length){
     wrap.innerHTML = '';
-    if(empty) empty.style.display = 'block';
+    if(empty){
+      empty.style.display = 'block';
+      empty.classList.add('fade-in-enter');
+    }
     return;
   }
   if(empty) empty.style.display = 'none';
   wrap.innerHTML = rows.map(r=>`
-    <div class="card mistake-item">
+    <div class="card mistake-item fade-in-enter">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div class="history-icon" style="background:${r.bg};width:32px;height:32px;font-size:15px;">${r.icon}</div>
         <div style="min-width:0;">
@@ -5390,30 +5543,67 @@ function statusOf(pct){
 function renderHistoryStats(){
   const el = document.getElementById('historyStats');
   if(!el) return;
+  if(!historyLoaded){
+    el.innerHTML = `
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:60%;height:13px;"></div>
+        <div class="skel skel-box" style="width:40%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:75%;height:11px;"></div>
+      </div>
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:55%;height:13px;"></div>
+        <div class="skel skel-box" style="width:45%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:70%;height:11px;"></div>
+      </div>
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:50%;height:13px;"></div>
+        <div class="skel skel-box" style="width:35%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:65%;height:11px;"></div>
+      </div>
+    `;
+    return;
+  }
   const totalTests = HISTORY_DATA.length;
   const avgAcc = totalTests ? Math.round(HISTORY_DATA.reduce((s,r)=>s+(r.correct/r.total*100),0)/totalTests) : 0;
   const totalMinutes = totalTests*9;
   const hours = Math.round(totalMinutes/60*10)/10;
   el.innerHTML = `
-    <div class="card stat-card"><div class="top">📝 Jami yechilgan testlar</div><div class="num"><span class="num-target" data-target="${totalTests}">0</span></div><div class="sub" style="color:var(--text-faint)">Barcha bo'limlar bo'yicha</div></div>
-    <div class="card stat-card"><div class="top">🎯 O'rtacha aniqlik</div><div class="num"><span class="num-target" data-target="${avgAcc}" data-suffix="%">0%</span></div><div class="sub">So'nggi testlar bo'yicha</div></div>
-    <div class="card stat-card"><div class="top">⏱ Sarflangan vaqt</div><div class="num"><span class="num-target" data-target="${hours}" data-decimals="1" data-suffix=" soat">0 soat</span></div><div class="sub" style="color:var(--text-faint)">Taxminiy</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">📝 Jami yechilgan testlar</div><div class="num"><span class="num-target" data-target="${totalTests}">0</span></div><div class="sub" style="color:var(--text-faint)">Barcha bo'limlar bo'yicha</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">🎯 O'rtacha aniqlik</div><div class="num"><span class="num-target" data-target="${avgAcc}" data-suffix="%">0%</span></div><div class="sub">So'nggi testlar bo'yicha</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">⏱ Sarflangan vaqt</div><div class="num"><span class="num-target" data-target="${hours}" data-decimals="1" data-suffix=" soat">0 soat</span></div><div class="sub" style="color:var(--text-faint)">Taxminiy</div></div>
   `;
   runEntranceAnimations(el, true);
 }
 function renderHistoryList(){
+  const el = document.getElementById('historyList');
+  if(!el) return;
+  if(!historyLoaded){
+    const emptyEl = document.getElementById('historyEmpty');
+    if(emptyEl) emptyEl.style.display = 'none';
+    el.innerHTML = Array.from({length:4}).map(()=>`
+      <div class="card history-item skel-history-item">
+        <div class="skel skel-circle" style="width:42px;height:42px;border-radius:12px;"></div>
+        <div class="history-main" style="display:flex;flex-direction:column;gap:6px;">
+          <div class="skel skel-line" style="width:55%;height:14px;"></div>
+          <div class="skel skel-line" style="width:35%;height:11px;"></div>
+        </div>
+        <div class="skel skel-box" style="width:52px;height:24px;border-radius:8px;"></div>
+        <div class="skel skel-box" style="width:64px;height:22px;border-radius:12px;"></div>
+      </div>
+    `).join('');
+    return;
+  }
   const list = HISTORY_DATA.filter(r=>{
     const sOk = historyFilters.section==='Barchasi' || r.section===historyFilters.section;
     const dOk = historyFilters.date==='hammasi' || r.dateGroup===historyFilters.date || (historyFilters.date==='oy' && r.dateGroup==='7kun');
     return sOk && dOk;
   });
-  const el = document.getElementById('historyList');
   document.getElementById('historyEmpty').style.display = list.length? 'none':'block';
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
     const st = statusOf(pct);
     return `
-    <div class="card history-item">
+    <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
       <div class="history-main">
         <div class="t">${r.topic}</div>
@@ -8670,7 +8860,23 @@ function renderPodium(period, skill, type){
     return;
   }
   if(!rankLoaded){
-    podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Reyting yuklanmoqda…</div>`;
+    podiumEl.innerHTML = `
+      <div class="podium-item second skel-podium-card">
+        <div class="skel skel-avatar" style="width:48px;height:48px;margin:0 auto 10px;"></div>
+        <div class="skel skel-line" style="width:65%;height:13px;margin:0 auto 8px;"></div>
+        <div class="skel skel-line" style="width:40%;height:10px;margin:0 auto;"></div>
+      </div>
+      <div class="podium-item first skel-podium-card">
+        <div class="skel skel-avatar" style="width:56px;height:56px;margin:0 auto 10px;"></div>
+        <div class="skel skel-line" style="width:75%;height:15px;margin:0 auto 8px;"></div>
+        <div class="skel skel-line" style="width:50%;height:11px;margin:0 auto;"></div>
+      </div>
+      <div class="podium-item third skel-podium-card">
+        <div class="skel skel-avatar" style="width:44px;height:44px;margin:0 auto 10px;"></div>
+        <div class="skel skel-line" style="width:60%;height:13px;margin:0 auto 8px;"></div>
+        <div class="skel skel-line" style="width:35%;height:10px;margin:0 auto;"></div>
+      </div>
+    `;
     return;
   }
   const top3 = sortedRank(period, skill).slice(0,3);
@@ -8683,7 +8889,7 @@ function renderPodium(period, skill, type){
   podiumEl.innerHTML = order.map(i=>{
     const u = top3[i]; if(!u) return '<div></div>';
     return `
-    <div class="podium-item ${i===0?'first':(i===1?'second':'third')}">
+    <div class="podium-item ${i===0?'first':(i===1?'second':'third')} fade-in-enter">
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${rankAvatarHTML(u, RANK_COLORS[i])}</div>
       <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
@@ -8700,12 +8906,14 @@ function renderLeaderboard(period, skill, type){
   }
   if(!rankLoaded){
     listEl.innerHTML = Array.from({length:5}).map(()=>`
-      <div class="skel-row">
-        <div class="skel skel-avatar"></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-          <div class="skel skel-line" style="width:55%;"></div>
-          <div class="skel skel-line" style="width:30%;"></div>
+      <div class="lb-row" style="opacity:0.85;">
+        <div class="skel" style="width:20px;height:16px;border-radius:4px;flex-shrink:0;"></div>
+        <div class="skel skel-avatar" style="width:38px;height:38px;"></div>
+        <div class="lb-info" style="gap:6px;">
+          <div class="skel skel-line" style="width:55%;height:13px;"></div>
+          <div class="skel skel-line" style="width:32%;height:11px;"></div>
         </div>
+        <div class="skel" style="width:60px;height:22px;border-radius:8px;flex-shrink:0;"></div>
       </div>`).join('');
     return;
   }
@@ -8715,7 +8923,7 @@ function renderLeaderboard(period, skill, type){
     return;
   }
   listEl.innerHTML = data.map((u,i)=>`
-    <div class="lb-row ${u.me?'me':''}">
+    <div class="lb-row ${u.me?'me':''} fade-in-enter">
       <div class="lb-rank">${u.rank}</div>
       <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i%RANK_COLORS.length])}</div>
       <div class="lb-info">
@@ -8737,10 +8945,10 @@ function renderRankTop(period, skill, type){
     return;
   }
   if(!rankLoaded){
-    document.getElementById('rankNum').textContent = '—';
-    document.getElementById('rankXpNum').textContent = '—';
-    document.getElementById('rankGapNum').textContent = '—';
-    document.getElementById('rankGapText').innerHTML = 'Yuklanmoqda…';
+    document.getElementById('rankNum').innerHTML = '<span class="skel" style="width:28px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
+    document.getElementById('rankXpNum').innerHTML = '<span class="skel" style="width:36px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
+    document.getElementById('rankGapNum').innerHTML = '<span class="skel" style="width:32px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
+    document.getElementById('rankGapText').innerHTML = '<span class="skel skel-line" style="width:55%;height:12px;display:inline-block;background:rgba(255,255,255,0.35);"></span>';
     document.getElementById('rankGapBar').style.width = '0%';
     return;
   }
@@ -8817,14 +9025,35 @@ renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 /* ================= PROFILE ================= */
 /* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
    (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
+let profileStatsLoaded = false;
 let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
   const el = document.getElementById('profileStats');
   if(!el) return;
+  if(!profileStatsLoaded){
+    el.innerHTML = `
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:50%;height:13px;"></div>
+        <div class="skel skel-box" style="width:40%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:30%;height:11px;"></div>
+      </div>
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:65%;height:13px;"></div>
+        <div class="skel skel-box" style="width:35%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:40%;height:11px;"></div>
+      </div>
+      <div class="card stat-card skel-stat-card">
+        <div class="skel skel-line" style="width:55%;height:13px;"></div>
+        <div class="skel skel-box" style="width:45%;height:26px;margin:4px 0;"></div>
+        <div class="skel skel-line" style="width:60%;height:11px;"></div>
+      </div>
+    `;
+    return;
+  }
   el.innerHTML = `
-    <div class="card stat-card"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.xp}">0</span></div><div class="sub">XP</div></div>
-    <div class="card stat-card"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.topicsDone}">0</span></div><div class="sub" style="color:var(--text-faint)">/ ${PROFILE_STATS.topicsTotal}</div></div>
-    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}" data-suffix="%">0%</span></div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.xp}">0</span></div><div class="sub">XP</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.topicsDone}">0</span></div><div class="sub" style="color:var(--text-faint)">/ ${PROFILE_STATS.topicsTotal}</div></div>
+    <div class="card stat-card fade-in-enter"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}" data-suffix="%">0%</span></div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
   `;
   runEntranceAnimations(el, true);
 }
@@ -8833,6 +9062,7 @@ renderProfileStats();
    MOSLASHTIRING: view'ingizdagi ustun nomlari boshqacha bo'lsa, pick() ro'yxatiga qo'shing. */
 function applyProfileStats(dash){
   if(!dash) return;
+  profileStatsLoaded = true;
   PROFILE_STATS.xp = Number(pick(dash, ['total_xp','xp'], PROFILE_STATS.xp)) || 0;
   PROFILE_STATS.topicsDone = Number(pick(dash, ['topics_done','completed_topics'], PROFILE_STATS.topicsDone)) || 0;
   PROFILE_STATS.topicsTotal = Number(pick(dash, ['topics_total'], PROFILE_STATS.topicsTotal)) || PROFILE_STATS.topicsTotal;
@@ -12400,16 +12630,31 @@ bootApp();
   }
   window.openCommunityLink = openCommunityLink;
 
+  let communityLoaded = false;
   function renderCommunityView() {
     const box = document.getElementById('communityCardsList');
     if (!box) return;
+    if (!communityLoaded && (!APP_CONFIG.community_cards || !APP_CONFIG.community_cards.length)) {
+      box.innerHTML = Array.from({length: 3}).map(() => `
+        <div class="community-card skel-card">
+          <div class="skel skel-avatar" style="width:48px;height:48px;"></div>
+          <div class="community-info" style="gap:6px;">
+            <div class="skel skel-line" style="width:50%;height:15px;"></div>
+            <div class="skel skel-line" style="width:80%;height:12px;"></div>
+            <div class="skel skel-line" style="width:30%;height:10px;"></div>
+          </div>
+          <div class="skel skel-box" style="width:72px;height:32px;border-radius:10px;"></div>
+        </div>
+      `).join('');
+      return;
+    }
     const cards = (APP_CONFIG.community_cards || []);
     if (!cards.length) {
-      box.innerHTML = `<p style="font-size:13px;color:var(--text-faint);font-weight:600;">Hozircha hamjamiyat kartalari qo'shilmagan.</p>`;
+      box.innerHTML = `<p class="fade-in-enter" style="font-size:13px;color:var(--text-faint);font-weight:600;">Hozircha hamjamiyat kartalari qo'shilmagan.</p>`;
       return;
     }
     box.innerHTML = cards.map(c => `
-      <div class="community-card">
+      <div class="community-card fade-in-enter">
         ${c.avatar_url
           ? `<img class="community-avatar" src="${c.avatar_url}" alt="">`
           : `<div class="community-avatar">${(c.name || '?').trim().charAt(0).toUpperCase()}</div>`
@@ -12423,7 +12668,10 @@ bootApp();
       </div>
     `).join('');
   }
-  window.renderCommunityView = renderCommunityView;
+  window.renderCommunityView = function() {
+    communityLoaded = true;
+    renderCommunityView();
+  };
 
   async function renderCommunityAdmin() {
     const box = document.getElementById('communityAdminList');
