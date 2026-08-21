@@ -209,7 +209,7 @@ html[data-theme="dark"] .topbar.hero-banner{
 .topbar.hero-banner .hello h1{ color:var(--text); font-size:24px; font-weight:600; letter-spacing:-0.3px; }
 .topbar.hero-banner .hello p{ color:var(--text-dim); font-size:13.5px; margin-top:4px; font-weight:500; }
 .topbar.hero-banner .avatar{
-  background:linear-gradient(135deg, var(--indigo-600), var(--indigo-900));
+  background:var(--indigo-700);
   border:2px solid rgba(255,255,255,0.85);
   box-shadow:0 4px 14px rgba(22, 163, 104, 0.22);
   width:44px; height:44px; font-size:16px; font-weight:600; flex-shrink:0;
@@ -224,7 +224,7 @@ html[data-theme="dark"] .topbar.hero-banner{
 }
 .topbar-right{ display:flex; align-items:center; gap:12px; flex-shrink:0;}
 .avatar{
-  width:38px; height:38px; border-radius:50%; background:linear-gradient(155deg,var(--indigo-500),var(--indigo-900));
+  width:38px; height:38px; border-radius:50%; background:var(--indigo-700);
   display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:14px; flex-shrink:0;
 }
 .menu-btn{ display:none; }
@@ -528,7 +528,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .quiz-wrap{ display:grid; grid-template-columns:minmax(0, 1fr) 260px; gap:18px; align-items:start; width:100%; max-width:100%; min-width:0; }
 .quiz-wrap > .card{ width:100%; max-width:100%; min-width:0; box-sizing:border-box; }
 .quiz-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; gap:10px; flex-wrap:wrap; }
-.quiz-head .tag{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; }
+.quiz-head .tag{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; display:inline-flex; align-items:center; transition:background-color .35s var(--ease), color .35s var(--ease); }
 .quiz-head .timer{
   display:inline-flex;
   align-items:center;
@@ -1715,6 +1715,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   font-size:11px; font-weight:600; padding:5px 12px; border-radius:20px; z-index:1;
 }
 .exam-card-title{ font-size:19px; font-weight:600; margin-bottom:4px; }
+.exam-card-title.ar{ font-family:var(--font-ar-bold); font-size:24px; font-weight:600; line-height:1.2; }
 .exam-card-sub{ font-size:12.5px; font-weight:600; opacity:.85; margin-bottom:10px; }
 .exam-card-pill{
   display:inline-block; background:rgba(255,255,255,0.2); font-size:11.5px; font-weight:600;
@@ -2655,7 +2656,7 @@ html[data-theme="dark"] .dash-main-heading {
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg>
             </span>
             <div class="exam-card-body">
-              <div class="exam-card-title">التنال العربي</div>
+              <div class="exam-card-title ar">التنال العربي</div>
               <div class="exam-card-sub">5 mahorat · A1–C2</div>
               <span class="exam-card-pill">30 ball shkalasi</span>
             </div>
@@ -4873,7 +4874,7 @@ function applyBackendSkillScores(dash){
 }
 /* Bo'lim nomi -> ikonka/rang, tarix va xatolar ro'yxatini backend qatoridan chizish uchun */
 const SKILL_META = {};
-SKILLS.forEach(s=>{ SKILL_META[s.id] = {section:s.name, icon:s.icon, color:s.color, bg:s.bg}; });
+SKILLS.forEach(s=>{ SKILL_META[s.id] = {name:s.name, section:s.name, icon:s.icon, color:s.color, bg:s.bg}; });
 /* Backend qator shakli aniq bo'lmagani uchun bir nechta mumkin bo'lgan ustun nomini sinab ko'radi */
 function pick(obj, keys, fallback){
   for(const k of keys){ if(obj && obj[k]!==undefined && obj[k]!==null) return obj[k]; }
@@ -8574,7 +8575,7 @@ function startMockQuiz(mockId){
     toast("⚠️ Ushbu mock testda hali savollar yo'q!");
     return;
   }
-  const skillMeta = SKILL_META[mock.skill] || { name: mock.skill, color: 'var(--indigo-600)' };
+  const skillMeta = SKILL_META[mock.skill] || { name: mock.skill, color: 'var(--indigo-600)', bg: 'var(--indigo-100)' };
   currentQuiz = {
     skillId: mock.skill,
     topicId: mock.id,
@@ -8586,13 +8587,17 @@ function startMockQuiz(mockId){
       picked: null
     })),
     color: skillMeta.color || 'var(--indigo-600)',
+    bg: skillMeta.bg || 'var(--indigo-100)',
     label: `${skillMeta.name} — ${mock.title}`,
     idx: 0,
     startedAt: Date.now()
   };
-  document.getElementById('quizTag').textContent = currentQuiz.label;
-  document.getElementById('quizTag').style.background = 'color-mix(in srgb, ' + currentQuiz.color + ' 16%, white)';
-  document.getElementById('quizTag').style.color = currentQuiz.color;
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    qTag.textContent = currentQuiz.label;
+    qTag.style.background = skillMeta.bg || 'var(--indigo-100)';
+    qTag.style.color = skillMeta.color || 'var(--indigo-600)';
+  }
   buildQGrid();
   showView('quiz');
   renderQuestion();
@@ -10284,12 +10289,15 @@ function startQuiz(skillId, customLabel, topicId){
   currentQuiz = {
     skillId, topicId: topicId||null, type: bank.type, passage: bank.passage||null,
     questions: questions.map(q=>({...q, picked:null})),
-    color: skillMeta.color, label: customLabel || skillMeta.name,
+    color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
     idx:0, startedAt:Date.now(), duration: bank.type==='reading'?18*60: bank.type==='listening'?16*60:20*60,
   };
-  document.getElementById('quizTag').textContent = currentQuiz.label;
-  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
-  document.getElementById('quizTag').style.color = skillMeta.color;
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    qTag.textContent = currentQuiz.label;
+    qTag.style.background = skillMeta.bg;
+    qTag.style.color = skillMeta.color;
+  }
   buildQGrid();
   renderQuestion();
   if(bank.type !== 'mcq'){ startTimer(currentQuiz.duration); }
@@ -10322,12 +10330,15 @@ function startQiroaQuiz(customLabel){
   currentQuiz = {
     skillId:'qiroa', topicId:null, type:'reading-juz',
     questions: flat, juz: juzMeta, juzPointer:0, phase:'reading',
-    color: skillMeta.color, label: customLabel || skillMeta.name,
+    color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
     idx: juzMeta[0].startIdx, startedAt: Date.now(),
   };
-  document.getElementById('quizTag').textContent = currentQuiz.label;
-  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
-  document.getElementById('quizTag').style.color = skillMeta.color;
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    qTag.textContent = currentQuiz.label;
+    qTag.style.background = skillMeta.bg;
+    qTag.style.color = skillMeta.color;
+  }
   buildQGrid();
   showView('quiz');
   startQiroaJuzReading();
@@ -10386,12 +10397,15 @@ function startIstimaQuiz(customLabel){
   currentQuiz = {
     skillId:'istima', topicId:null, type:'listening-juz',
     questions: flat, juz: juzMeta, juzPointer:0, playsUsed:0,
-    color: skillMeta.color, label: customLabel || skillMeta.name,
+    color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
     idx: juzMeta[0].startIdx, startedAt: Date.now(),
   };
-  document.getElementById('quizTag').textContent = currentQuiz.label;
-  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
-  document.getElementById('quizTag').style.color = skillMeta.color;
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    qTag.textContent = currentQuiz.label;
+    qTag.style.background = skillMeta.bg;
+    qTag.style.color = skillMeta.color;
+  }
   buildQGrid();
   showView('quiz');
   startIstimaJuz();
@@ -11002,12 +11016,15 @@ function startMuhavaraQuiz(customLabel){
   currentQuiz = {
     skillId:'muhavara', topicId:null, type:'speaking',
     questions: flat, idx:0, phase:'prep',
-    color: skillMeta.color, label: customLabel || skillMeta.name,
+    color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
     startedAt: Date.now(),
   };
-  document.getElementById('quizTag').textContent = currentQuiz.label;
-  document.getElementById('quizTag').style.background = 'color-mix(in srgb, '+skillMeta.color+' 16%, white)';
-  document.getElementById('quizTag').style.color = skillMeta.color;
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    qTag.textContent = currentQuiz.label;
+    qTag.style.background = skillMeta.bg;
+    qTag.style.color = skillMeta.color;
+  }
   document.getElementById('quizSide').style.display = 'none';
   showView('quiz');
   startMuhavaraPrep();
