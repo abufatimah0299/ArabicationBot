@@ -402,33 +402,32 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .skill-banner:hover{ transform:translateY(-3px); }
 .sb-istima{
   background:linear-gradient(135deg, #4A7AE8 0%, #2A4DB8 100%);
-  box-shadow:0 6px 20px -6px rgba(74,122,232,0.32), 0 16px 36px -12px rgba(42,77,184,0.4);
+  box-shadow:var(--shadow);
 }
-.sb-istima:hover{ box-shadow:0 8px 24px -4px rgba(74,122,232,0.45), 0 20px 42px -10px rgba(42,77,184,0.55); }
+.sb-istima:hover{ box-shadow:var(--shadow-lg); }
 .sb-qiroa{
   background:linear-gradient(135deg, #20BD7D 0%, #0E7B4E 100%);
-  box-shadow:0 6px 20px -6px rgba(32,189,125,0.32), 0 16px 36px -12px rgba(14,123,78,0.4);
+  box-shadow:var(--shadow);
 }
-.sb-qiroa:hover{ box-shadow:0 8px 24px -4px rgba(32,189,125,0.45), 0 20px 42px -10px rgba(14,123,78,0.55); }
+.sb-qiroa:hover{ box-shadow:var(--shadow-lg); }
 .sb-grammatika{
   background:linear-gradient(135deg, #8C6DF0 0%, #5B3EC7 100%);
-  box-shadow:0 6px 20px -6px rgba(140,109,240,0.32), 0 16px 36px -12px rgba(91,62,199,0.4);
+  box-shadow:var(--shadow);
 }
-.sb-grammatika:hover{ box-shadow:0 8px 24px -4px rgba(140,109,240,0.45), 0 20px 42px -10px rgba(91,62,199,0.55); }
+.sb-grammatika:hover{ box-shadow:var(--shadow-lg); }
 .sb-muhavara{
   background:linear-gradient(135deg, #EB8F42 0%, #BD651A 100%);
-  box-shadow:0 6px 20px -6px rgba(235,143,66,0.32), 0 16px 36px -12px rgba(189,101,26,0.4);
+  box-shadow:var(--shadow);
 }
-.sb-muhavara:hover{ box-shadow:0 8px 24px -4px rgba(235,143,66,0.45), 0 20px 42px -10px rgba(189,101,26,0.55); }
+.sb-muhavara:hover{ box-shadow:var(--shadow-lg); }
 .sb-kitaba{
   background:linear-gradient(135deg, #E65A54 0%, #B03430 100%);
-  box-shadow:0 6px 20px -6px rgba(230,90,84,0.32), 0 16px 36px -12px rgba(176,52,48,0.4);
+  box-shadow:var(--shadow);
 }
-.sb-kitaba:hover{ box-shadow:0 8px 24px -4px rgba(230,90,84,0.45), 0 20px 42px -10px rgba(176,52,48,0.55); }
+.sb-kitaba:hover{ box-shadow:var(--shadow-lg); }
 .skill-banner:active{ transform:scale(.99); }
 .skill-banner::before{
-  content:""; position:absolute; top:-55px; inset-inline-end:-30px; width:190px; height:190px; border-radius:50%;
-  background:radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+  display:none;
 }
 .skill-banner-left{ display:flex; align-items:center; gap:16px; position:relative; z-index:1; min-width:0; }
 .skill-banner-icon{
@@ -1325,7 +1324,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   justify-content:center;
   font-size:24px;
   flex-shrink:0;
-  box-shadow:0 4px 14px -4px rgba(74,122,232,0.45);
+  box-shadow:none;
 }
 .attanal-mock-badges{
   display:flex;
@@ -1691,18 +1690,17 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .exam-card:hover{ transform:translateY(-3px); }
 .exam-card.exam-red{
   background:linear-gradient(135deg, #E65A54 0%, #8E2320 100%);
-  box-shadow:0 6px 20px -6px rgba(230,90,84,0.35), 0 16px 36px -12px rgba(142,35,32,0.45);
+  box-shadow:var(--shadow);
 }
-.exam-card.exam-red:hover{ box-shadow:0 8px 24px -4px rgba(230,90,84,0.45), 0 20px 42px -10px rgba(142,35,32,0.55); }
+.exam-card.exam-red:hover{ box-shadow:var(--shadow-lg); }
 .exam-card.exam-green{
   background:linear-gradient(135deg, var(--indigo-600) 0%, var(--indigo-900) 100%);
-  box-shadow:0 6px 20px -6px rgba(34,197,127,0.32), 0 16px 36px -12px rgba(12,72,47,0.4);
+  box-shadow:var(--shadow);
 }
-.exam-card.exam-green:hover{ box-shadow:0 8px 24px -4px rgba(34,197,127,0.45), 0 20px 42px -10px rgba(12,72,47,0.55); }
+.exam-card.exam-green:hover{ box-shadow:var(--shadow-lg); }
 .exam-card:active{ transform:scale(.99); }
 .exam-card::after{
-  content:""; position:absolute; bottom:-34px; inset-inline-end:-10px; width:140px; height:140px; border-radius:50%;
-  background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+  display:none;
 }
 .exam-card-icon{
   width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.32);
@@ -2422,6 +2420,101 @@ html[data-theme="dark"] .dash-main-heading {
     line-height: 1.26;
   }
 }
+
+/* ---------- App Lock Screen Overlay & Passcode Modal ---------- */
+.app-lock-overlay{
+  position:fixed; inset:0; z-index:999999;
+  background:rgba(13, 23, 19, 0.94);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  opacity:1;
+  transition:opacity .25s var(--ease), visibility .25s var(--ease);
+}
+html[data-theme="light"] .app-lock-overlay{
+  background:rgba(247, 250, 248, 0.96);
+}
+.app-lock-overlay.unlocking{
+  opacity:0; pointer-events:none;
+}
+.app-lock-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:28px;
+  padding:36px 26px;
+  width:100%;
+  max-width:390px;
+  text-align:center;
+  box-shadow:var(--shadow-lg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+  animation:popIn .28s var(--ease);
+}
+.app-lock-shield-icon{
+  width:64px; height:64px; border-radius:22px;
+  background:var(--indigo-100); color:var(--indigo-700);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:16px;
+}
+.app-lock-shield-icon svg{ width:30px; height:30px; }
+.app-lock-title{
+  font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px;
+  letter-spacing:-0.3px; font-family:'Onest', var(--font-sans);
+}
+.app-lock-sub{
+  font-size:13.5px; color:var(--text-dim); font-weight:500; margin-bottom:20px; line-height:1.5;
+}
+.app-lock-input-wrap{
+  position:relative; width:100%; margin-bottom:12px;
+}
+.app-lock-input{
+  width:100%; padding:14px 44px 14px 16px; border-radius:14px;
+  border:1.5px solid var(--border); background:var(--card-alt);
+  color:var(--text); font-size:16px; font-weight:600; text-align:center;
+  letter-spacing:2px; font-family:inherit; outline:none;
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.app-lock-input:focus{
+  border-color:var(--indigo-600);
+  background:var(--card);
+}
+.app-lock-eye-btn{
+  position:absolute; inset-inline-end:10px; top:50%; transform:translateY(-50%);
+  background:none; border:none; color:var(--text-faint); cursor:pointer; padding:6px;
+  display:flex; align-items:center; justify-content:center; border-radius:8px;
+}
+.app-lock-eye-btn:hover{ color:var(--text); background:rgba(0,0,0,0.05); }
+.app-lock-error{
+  color:var(--red); font-size:12.5px; font-weight:600; margin-bottom:14px; line-height:1.4;
+  background:var(--red-bg); padding:8px 12px; border-radius:10px; width:100%;
+}
+.app-lock-submit-btn{
+  width:100%; padding:13px; font-size:15px; font-weight:700; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.shake-anim{
+  animation:lockShake .42s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes lockShake{
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+.passcode-tab-nav{
+  display:flex; background:var(--card-alt); border-radius:12px; padding:3px; gap:4px; margin-bottom:18px;
+  border:1px solid var(--border);
+}
+.passcode-tab-btn{
+  flex:1; padding:9px 12px; border-radius:9px; border:none; background:transparent;
+  color:var(--text-dim); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+  transition:all .2s var(--ease);
+}
+.passcode-tab-btn.active{
+  background:var(--card); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
 </style>
 </head>
 <body>
@@ -2933,6 +3026,10 @@ html[data-theme="dark"] .dash-main-heading {
 
       <!-- ============ SOZLAMALAR ============ -->
       <div class="view" id="view-sozlamalar">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
         <div class="view-title">Sozlamalar</div>
         <div class="card settings-list">
           <div class="settings-item">
@@ -2948,6 +3045,13 @@ html[data-theme="dark"] .dash-main-heading {
             </div>
             <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
+          </div>
+          <div class="settings-item" onclick="openPasscodeSettingsModal()" style="cursor:pointer;">
+            <div class="si-icon" style="background:rgba(245,193,72,0.16);color:#D97706;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="si-text"><div class="t">Ilova paroli (Xavfsizlik)</div><div class="s" id="passcodeSettingSub">O'rnatilmagan</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
         </div>
       </div>
@@ -3342,6 +3446,46 @@ html[data-theme="dark"] .dash-main-heading {
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ============ APP LOCK OVERLAY ============ -->
+<div class="app-lock-overlay" id="appLockOverlay" style="display:none;">
+  <div class="app-lock-card" id="appLockCard">
+    <div class="app-lock-shield-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h2 class="app-lock-title">Arabication</h2>
+    <p class="app-lock-sub">Platformaga kirish uchun xavfsizlik parolini kiriting</p>
+
+    <div class="app-lock-input-wrap">
+      <input type="password" id="appLockInput" class="app-lock-input" placeholder="Parolni kiriting..." autocomplete="current-password" onkeydown="if(event.key==='Enter') submitAppUnlock()">
+      <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('appLockInput', this)" aria-label="Parolni ko'rsatish">
+        <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="eye-closed" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>
+    </div>
+
+    <div id="appLockError" class="app-lock-error" style="display:none;"></div>
+
+    <button class="btn btn-primary app-lock-submit-btn" onclick="submitAppUnlock()">
+      Kirish
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ============ PASSCODE SETTINGS MODAL ============ -->
+<div class="modal-overlay" id="passcodeModalOverlay" onclick="if(event.target===this) closePasscodeModal()" style="display:none;">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h3 id="passcodeModalTitle">Ilova paroli (Xavfsizlik)</h3>
+      <button class="modal-close" onclick="closePasscodeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="passcodeModalBody" style="padding:18px 20px 24px;"></div>
+  </div>
+</div>
 
 <!-- ============ ONBOARDING / REGISTRATION MODAL ============ -->
 <div class="onboarding-overlay" id="onboardingOverlay" style="display:none;">
@@ -4451,6 +4595,352 @@ function toggleTheme(){
   applyAvatarSetting();
 })();
 
+/* ---------------- Ilova xavfsizlik paroli (Passcode / App Lock) ---------------- */
+function getStoredAppPasscode(){
+  try{
+    const p = localStorage.getItem('arabication_app_passcode');
+    return (p && p.trim()) ? p.trim() : null;
+  }catch(e){
+    return null;
+  }
+}
+
+function updatePasscodeStatusText(){
+  const sub = document.getElementById('passcodeSettingSub');
+  if(!sub) return;
+  const pass = getStoredAppPasscode();
+  if(pass){
+    sub.innerHTML = '<span style="color:var(--green);font-weight:600;">🔒 Faol o‘rnatilgan</span>';
+  } else {
+    sub.textContent = "O'rnatilmagan";
+  }
+}
+
+function checkAppLockOnStartup(){
+  const pass = getStoredAppPasscode();
+  const overlay = document.getElementById('appLockOverlay');
+  if(!overlay) return;
+  
+  if(pass){
+    overlay.style.display = 'flex';
+    overlay.classList.remove('unlocking');
+    const input = document.getElementById('appLockInput');
+    const err = document.getElementById('appLockError');
+    if(err) { err.textContent = ''; err.style.display = 'none'; }
+    if(input){
+      input.value = '';
+      setTimeout(()=>{ input.focus(); }, 120);
+    }
+  } else {
+    overlay.style.display = 'none';
+  }
+  updatePasscodeStatusText();
+}
+
+function submitAppUnlock(){
+  const pass = getStoredAppPasscode();
+  const overlay = document.getElementById('appLockOverlay');
+  const card = document.getElementById('appLockCard');
+  const input = document.getElementById('appLockInput');
+  const err = document.getElementById('appLockError');
+  
+  if(!pass){
+    if(overlay) overlay.style.display = 'none';
+    return;
+  }
+  
+  const entered = (input?.value || '').trim();
+  if(entered === pass){
+    if(err) { err.textContent = ''; err.style.display = 'none'; }
+    if(overlay){
+      overlay.classList.add('unlocking');
+      setTimeout(()=>{
+        overlay.style.display = 'none';
+        overlay.classList.remove('unlocking');
+      }, 240);
+    }
+    if(input) input.value = '';
+  } else {
+    if(err){
+      err.textContent = 'Parol noto‘g‘ri. Qayta urinib ko‘ring.';
+      err.style.display = 'block';
+    }
+    if(card){
+      card.classList.remove('shake-anim');
+      void card.offsetWidth;
+      card.classList.add('shake-anim');
+      setTimeout(()=>{ card.classList.remove('shake-anim'); }, 450);
+    }
+    if(input){
+      input.select();
+      input.focus();
+    }
+  }
+}
+
+function togglePassVisibility(inputId, btn){
+  const input = document.getElementById(inputId);
+  if(!input || !btn) return;
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  const openSvg = btn.querySelector('.eye-open');
+  const closedSvg = btn.querySelector('.eye-closed');
+  if(openSvg && closedSvg){
+    openSvg.style.display = isPass ? 'none' : 'block';
+    closedSvg.style.display = isPass ? 'block' : 'none';
+  }
+}
+
+let PASSCODE_ACTIVE_TAB = 'edit'; // 'edit' | 'remove'
+
+function openPasscodeSettingsModal(){
+  const overlay = document.getElementById('passcodeModalOverlay');
+  const body = document.getElementById('passcodeModalBody');
+  const title = document.getElementById('passcodeModalTitle');
+  if(!overlay || !body) return;
+
+  const currentPass = getStoredAppPasscode();
+  if(title) title.textContent = currentPass ? "Ilova parolini boshqarish" : "Ilova parolini o'rnatish";
+  
+  PASSCODE_ACTIVE_TAB = 'edit';
+  renderPasscodeModalBody();
+  overlay.style.display = 'flex';
+}
+
+function closePasscodeModal(){
+  const overlay = document.getElementById('passcodeModalOverlay');
+  if(overlay) overlay.style.display = 'none';
+  updatePasscodeStatusText();
+}
+
+function switchPasscodeTab(tab){
+  PASSCODE_ACTIVE_TAB = tab;
+  renderPasscodeModalBody();
+}
+
+function renderPasscodeModalBody(){
+  const body = document.getElementById('passcodeModalBody');
+  if(!body) return;
+  const currentPass = getStoredAppPasscode();
+
+  if(!currentPass){
+    body.innerHTML = `
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="width:52px;height:52px;border-radius:16px;background:rgba(245,193,72,0.16);color:#D97706;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">
+          Platformaga har safar kirganingizda ma'lumotlaringiz xavfsizligini ta'minlash uchun parol yoki PIN-kod o'rnating.
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parol</label>
+          <div style="position:relative;">
+            <input type="password" id="modalNewPass" class="ob-input" placeholder="Parol yoki PIN kiriting..." style="padding-right:42px;width:100%;">
+            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalNewPass', this)" style="right:8px;">
+              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Parolni tasdiqlang</label>
+          <div style="position:relative;">
+            <input type="password" id="modalConfirmPass" class="ob-input" placeholder="Parolni qayta kiriting..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') saveNewPasscode()">
+            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalConfirmPass', this)" style="right:8px;">
+              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
+        <button type="button" class="btn btn-primary" style="flex:1;" onclick="saveNewPasscode()">Saqlash</button>
+      </div>
+    `;
+  } else {
+    const isEdit = PASSCODE_ACTIVE_TAB === 'edit';
+    body.innerHTML = `
+      <div class="passcode-tab-nav">
+        <button type="button" class="passcode-tab-btn ${isEdit ? 'active' : ''}" onclick="switchPasscodeTab('edit')">O'zgartirish</button>
+        <button type="button" class="passcode-tab-btn ${!isEdit ? 'active' : ''}" onclick="switchPasscodeTab('remove')">Olib tashlash</button>
+      </div>
+
+      ${isEdit ? `
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Joriy parol</label>
+            <div style="position:relative;">
+              <input type="password" id="modalCurrPass" class="ob-input" placeholder="Hozirgi parolingiz..." style="padding-right:42px;width:100%;">
+              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalCurrPass', this)" style="right:8px;">
+                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parol</label>
+            <div style="position:relative;">
+              <input type="password" id="modalNewPass" class="ob-input" placeholder="Yangi parol yoki PIN..." style="padding-right:42px;width:100%;">
+              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalNewPass', this)" style="right:8px;">
+                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parolni tasdiqlang</label>
+            <div style="position:relative;">
+              <input type="password" id="modalConfirmPass" class="ob-input" placeholder="Yangi parolni qayta kiriting..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') changePasscode()">
+              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalConfirmPass', this)" style="right:8px;">
+                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
+
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
+          <button type="button" class="btn btn-primary" style="flex:1;" onclick="changePasscode()">Yangilash</button>
+        </div>
+      ` : `
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">
+            Parol himoyasini olib tashlamoqchimisiz? Platformani ochganda parol so'ralmaydi.
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Tasdiqlash uchun joriy parolni kiriting</label>
+          <div style="position:relative;">
+            <input type="password" id="modalRemovePass" class="ob-input" placeholder="Joriy parol..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') removePasscode()">
+            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalRemovePass', this)" style="right:8px;">
+              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
+
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
+          <button type="button" class="btn btn-outline" style="flex:1;border-color:var(--red);color:var(--red);" onclick="removePasscode()">Olib tashlash</button>
+        </div>
+      `}
+    `;
+  }
+}
+
+function showModalPassError(msg){
+  const el = document.getElementById('passcodeModalError');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function saveNewPasscode(){
+  const newPass = (document.getElementById('modalNewPass')?.value || '').trim();
+  const confirmPass = (document.getElementById('modalConfirmPass')?.value || '').trim();
+
+  if(!newPass){
+    showModalPassError("Iltimos, yangi parolni kiriting.");
+    return;
+  }
+  if(newPass.length < 3){
+    showModalPassError("Parol kamida 3 ta belgidan iborat bo‘lishi kerak.");
+    return;
+  }
+  if(newPass !== confirmPass){
+    showModalPassError("Kiritilgan parollar bir-biriga mos kelmadi.");
+    return;
+  }
+
+  try{
+    localStorage.setItem('arabication_app_passcode', newPass);
+  }catch(e){
+    showModalPassError("Xotirada saqlashda xatolik yuz berdi.");
+    return;
+  }
+
+  closePasscodeModal();
+  toast("Ilova paroli muvaffaqiyatli o'rnatildi 🔒", 3000);
+}
+
+function changePasscode(){
+  const currPass = (document.getElementById('modalCurrPass')?.value || '').trim();
+  const newPass = (document.getElementById('modalNewPass')?.value || '').trim();
+  const confirmPass = (document.getElementById('modalConfirmPass')?.value || '').trim();
+  const saved = getStoredAppPasscode();
+
+  if(!currPass){
+    showModalPassError("Iltimos, joriy parolingizni kiriting.");
+    return;
+  }
+  if(currPass !== saved){
+    showModalPassError("Joriy parol noto'g'ri kiritildi.");
+    return;
+  }
+  if(!newPass){
+    showModalPassError("Iltimos, yangi parolni kiriting.");
+    return;
+  }
+  if(newPass.length < 3){
+    showModalPassError("Yangi parol kamida 3 ta belgidan iborat bo‘lishi kerak.");
+    return;
+  }
+  if(newPass !== confirmPass){
+    showModalPassError("Yangi parollar bir-biriga mos kelmadi.");
+    return;
+  }
+
+  try{
+    localStorage.setItem('arabication_app_passcode', newPass);
+  }catch(e){
+    showModalPassError("Xotirada saqlashda xatolik yuz berdi.");
+    return;
+  }
+
+  closePasscodeModal();
+  toast("Ilova paroli muvaffaqiyatli yangilandi ✅", 3000);
+}
+
+function removePasscode(){
+  const currPass = (document.getElementById('modalRemovePass')?.value || '').trim();
+  const saved = getStoredAppPasscode();
+
+  if(!currPass){
+    showModalPassError("Tasdiqlash uchun joriy parolni kiriting.");
+    return;
+  }
+  if(currPass !== saved){
+    showModalPassError("Joriy parol noto'g'ri kiritildi.");
+    return;
+  }
+
+  try{
+    localStorage.removeItem('arabication_app_passcode');
+  }catch(e){
+    showModalPassError("Xotirani tozalashda xatolik yuz berdi.");
+    return;
+  }
+
+  closePasscodeModal();
+  toast("Ilova paroli olib tashlandi 🔓", 3000);
+}
+
+(function initAppLockImmediately(){
+  checkAppLockOnStartup();
+})();
+
 /* ---------------- Imtihon matn o'lchami (barcha bo'limlar uchun umumiy) ----------------
    Quiz-head ichidagi A−/A+ tugmalari --exam-font-scale CSS o'zgaruvchisini o'zgartiradi,
    shu o'zgaruvchidan .passage/.q-text/.q-sub/.option/.opt-circle/.write-area/.qiroa-title-btn
@@ -4569,6 +5059,7 @@ function showView(name, push=true){
   if(name==='hamjamiyat') renderCommunityView();
   if(name==='grammar') switchGrammarTab('practice');
   if(name==='skillintro') switchSkillTab('practice');
+  if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
   // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
