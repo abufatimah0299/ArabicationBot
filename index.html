@@ -801,6 +801,8 @@ html[data-theme="dark"] .istima-wf-bar.active{
 .option.selected{ border-color:var(--indigo-700); background:var(--indigo-100); }
 .option.correct{ border-color:var(--green); background:var(--green-bg); }
 .option.incorrect{ border-color:var(--red); background:var(--red-bg); }
+.option.disabled, .option.is-expired{ opacity:0.5; cursor:not-allowed !important; pointer-events:none !important; border-style:dashed; }
+.option.disabled:hover, .option.is-expired:hover{ border-color:var(--border) !important; }
 .opt-circle{
   width:26px; height:26px; border-radius:50%; border:2px solid var(--text-faint); flex-shrink:0;
   display:flex; align-items:center; justify-content:center; font-family:var(--font-ar); font-size:calc(13px * var(--exam-font-scale));
@@ -826,6 +828,7 @@ html[data-theme="dark"] .istima-wf-bar.active{
 }
 .qbtn.current{ border-color:var(--indigo-700); background:var(--indigo-700); color:#fff; }
 .qbtn.answered{ border-color:var(--green); background:var(--green-bg); color:var(--green); }
+.qbtn.expired:not(.answered){ border-color:var(--red); color:var(--red); opacity:0.75; }
 .legend{ margin-top:14px; display:flex; flex-direction:column; gap:7px; font-size:11.5px; font-weight:600; color:var(--text-dim);}
 .legend .row{ display:flex; align-items:center; gap:8px;}
 .legend .sw{ width:12px; height:12px; border-radius:4px; }
@@ -1594,16 +1597,91 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 
 /* ---------- Rank ---------- */
 .rank-top-card{
-  background:linear-gradient(135deg, var(--indigo-600), var(--indigo-900));
-  color:#fff; padding:20px 20px 18px; display:flex; flex-direction:column; gap:14px;
-  border-radius:24px; box-shadow:0 12px 32px -8px rgba(18,167,104,0.35);
+  position:relative;
+  overflow:hidden;
+  background:rgba(255, 255, 255, 0.58);
+  backdrop-filter:blur(24px) saturate(190%);
+  -webkit-backdrop-filter:blur(24px) saturate(190%);
+  color:var(--text);
+  padding:22px 20px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  border-radius:24px;
+  border:1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 10px 30px -6px rgba(18, 167, 104, 0.12),
+    0 4px 12px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.03);
+  transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.rank-top-cols{ display:flex; align-items:stretch; }
+.rank-top-card::before{
+  content:'';
+  position:absolute;
+  top:-50%;
+  left:-20%;
+  width:140%;
+  height:120%;
+  background:radial-gradient(ellipse at 35% 20%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 45%, transparent 70%);
+  pointer-events:none;
+  transform:rotate(-8deg);
+}
+.rank-top-card::after{
+  content:'';
+  position:absolute;
+  bottom:-40%;
+  right:-20%;
+  width:100%;
+  height:100%;
+  background:radial-gradient(circle at 80% 80%, rgba(18, 167, 104, 0.07) 0%, transparent 60%);
+  pointer-events:none;
+}
+[data-theme="dark"] .rank-top-card{
+  background:rgba(22, 33, 29, 0.62);
+  border:1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 14px 36px -8px rgba(0, 0, 0, 0.45),
+    0 4px 14px -2px rgba(0, 0, 0, 0.25),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.35);
+  color:#fff;
+}
+[data-theme="dark"] .rank-top-card::before{
+  background:radial-gradient(ellipse at 35% 20%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 45%, transparent 70%);
+}
+[data-theme="dark"] .rank-top-card::after{
+  background:radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.08) 0%, transparent 60%);
+}
+.rank-top-cols{ display:flex; align-items:stretch; position:relative; z-index:1; }
 .rank-top-col{ flex:1; text-align:center; padding:0 6px; }
-.rank-top-col:not(:last-child){ border-inline-end:1px solid rgba(255,255,255,.2); }
-.rank-top-col .num{ font-size:21px; font-weight:600; letter-spacing:-0.5px; font-variant-numeric: tabular-nums; }
-.rank-top-col .lbl{ font-size:10.5px; font-weight:600; opacity:.85; margin-top:4px; }
-.rank-top-gap{ font-size:11.5px; font-weight:600; opacity:.9; text-align:center; }
+.rank-top-col:not(:last-child){ border-inline-end:1px solid rgba(0, 0, 0, 0.08); }
+[data-theme="dark"] .rank-top-col:not(:last-child){ border-inline-end:1px solid rgba(255, 255, 255, 0.12); }
+.rank-top-col .num{ font-size:22px; font-weight:700; letter-spacing:-0.5px; font-variant-numeric: tabular-nums; color:var(--text); }
+[data-theme="dark"] .rank-top-col .num{ color:#fff; }
+.rank-top-col .lbl{ font-size:11px; font-weight:600; color:var(--text-dim); margin-top:4px; }
+[data-theme="dark"] .rank-top-col .lbl{ color:rgba(255,255,255,0.72); }
+.rank-top-gap{ font-size:12px; font-weight:600; color:var(--text-dim); text-align:center; position:relative; z-index:1; }
+[data-theme="dark"] .rank-top-gap{ color:rgba(255,255,255,0.8); }
+.rank-top-bar-wrap{ position:relative; z-index:1; }
+.rank-top-card .bar-bg{
+  background:rgba(0, 0, 0, 0.06);
+  height:7px;
+  border-radius:999px;
+  overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .rank-top-card .bar-bg{
+  background:rgba(255, 255, 255, 0.12);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.3);
+}
+.rank-top-card .bar-fill{
+  background:linear-gradient(90deg, var(--indigo-600), var(--indigo-700));
+  border-radius:999px;
+}
+[data-theme="dark"] .rank-top-card .bar-fill{
+  background:linear-gradient(90deg, #10b981, #34d399);
+}
 /* Reyting: mahorat (bo'lim) filtri — davr filtri bilan bir xil uslub, ranglar bilan */
 .rank-skill-filter{ margin-bottom:10px; }
 .rank-skill-filter .filter-chip{ display:flex; align-items:center; gap:6px; }
@@ -2122,6 +2200,61 @@ html[data-theme="light"] .toast-item{
   color:#EF4444;
   border:1px solid rgba(239, 68, 68, 0.3);
 }
+.toast-item.toast-warning .toast-icon{
+  background:rgba(245, 158, 11, 0.18);
+  color:#F59E0B;
+  border:1px solid rgba(245, 158, 11, 0.35);
+}
+.toast-item.toast-info .toast-icon{
+  background:rgba(59, 130, 246, 0.18);
+  color:#3B82F6;
+  border:1px solid rgba(59, 130, 246, 0.32);
+}
+.toast-item.toast-delete .toast-icon{
+  background:rgba(244, 63, 94, 0.18);
+  color:#F43F5E;
+  border:1px solid rgba(244, 63, 94, 0.32);
+}
+.toast-item.toast-sun .toast-icon,
+.toast-item.toast-light .toast-icon{
+  background:rgba(251, 191, 36, 0.2);
+  color:#D97706;
+  border:1px solid rgba(251, 191, 36, 0.38);
+}
+.toast-item.toast-moon .toast-icon,
+.toast-item.toast-dark .toast-icon{
+  background:rgba(139, 92, 246, 0.2);
+  color:#8B5CF6;
+  border:1px solid rgba(139, 92, 246, 0.35);
+}
+.toast-item.toast-lock .toast-icon{
+  background:rgba(245, 158, 11, 0.18);
+  color:#F59E0B;
+  border:1px solid rgba(245, 158, 11, 0.35);
+}
+.toast-item.toast-unlock .toast-icon{
+  background:rgba(16, 185, 129, 0.18);
+  color:#10B981;
+  border:1px solid rgba(16, 185, 129, 0.3);
+}
+.toast-item.toast-loading .toast-icon{
+  background:rgba(99, 102, 241, 0.18);
+  color:#6366F1;
+  border:1px solid rgba(99, 102, 241, 0.32);
+}
+.toast-item.toast-audio .toast-icon{
+  background:rgba(6, 182, 212, 0.18);
+  color:#06B6D4;
+  border:1px solid rgba(6, 182, 212, 0.32);
+}
+@keyframes toastSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+.toast-loading-spin{
+  animation:toastSpin 0.9s linear infinite;
+  transform-origin:center;
+}
 .toast-icon svg{
   width:18px;
   height:18px;
@@ -2424,15 +2557,15 @@ html[data-theme="dark"] .dash-main-heading {
 /* ---------- App Lock Screen Overlay & Passcode Modal ---------- */
 .app-lock-overlay{
   position:fixed; inset:0; z-index:999999;
-  background:rgba(13, 23, 19, 0.94);
-  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  background:rgba(13, 23, 19, 0.96);
+  backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px);
   display:flex; align-items:center; justify-content:center;
-  padding:20px;
+  padding:20px 16px;
   opacity:1;
   transition:opacity .25s var(--ease), visibility .25s var(--ease);
 }
 html[data-theme="light"] .app-lock-overlay{
-  background:rgba(247, 250, 248, 0.96);
+  background:rgba(244, 248, 246, 0.97);
 }
 .app-lock-overlay.unlocking{
   opacity:0; pointer-events:none;
@@ -2440,10 +2573,10 @@ html[data-theme="light"] .app-lock-overlay{
 .app-lock-card{
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:28px;
-  padding:36px 26px;
+  border-radius:32px;
+  padding:36px 24px 32px;
   width:100%;
-  max-width:390px;
+  max-width:380px;
   text-align:center;
   box-shadow:var(--shadow-lg);
   display:flex;
@@ -2453,55 +2586,89 @@ html[data-theme="light"] .app-lock-overlay{
   animation:popIn .28s var(--ease);
 }
 .app-lock-shield-icon{
-  width:64px; height:64px; border-radius:22px;
+  width:56px; height:56px; border-radius:18px;
   background:var(--indigo-100); color:var(--indigo-700);
   display:flex; align-items:center; justify-content:center;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
-.app-lock-shield-icon svg{ width:30px; height:30px; }
+.app-lock-shield-icon svg{ width:28px; height:28px; }
 .app-lock-title{
-  font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px;
+  font-size:22px; font-weight:700; color:var(--text); margin-bottom:4px;
   letter-spacing:-0.3px; font-family:'Onest', var(--font-sans);
 }
 .app-lock-sub{
-  font-size:13.5px; color:var(--text-dim); font-weight:500; margin-bottom:20px; line-height:1.5;
+  font-size:13.5px; color:var(--text-dim); font-weight:500; margin-bottom:22px; line-height:1.45;
+  max-width:280px;
 }
-.app-lock-input-wrap{
-  position:relative; width:100%; margin-bottom:12px;
+/* 6-digit PIN Dots indicator */
+.pin-dots-container{
+  display:flex; justify-content:center; align-items:center; gap:12px; margin-bottom:24px;
 }
-.app-lock-input{
-  width:100%; padding:14px 44px 14px 16px; border-radius:14px;
-  border:1.5px solid var(--border); background:var(--card-alt);
-  color:var(--text); font-size:16px; font-weight:600; text-align:center;
-  letter-spacing:2px; font-family:inherit; outline:none;
-  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+.pin-dot{
+  width:44px; height:44px; border-radius:50%;
+  background:var(--card-alt); border:1.5px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:700; color:var(--text);
+  transition:all .18s var(--ease);
 }
-.app-lock-input:focus{
+.pin-dot.filled{
+  background:var(--indigo-100);
   border-color:var(--indigo-600);
-  background:var(--card);
+  color:var(--indigo-700);
+  transform:scale(1.05);
 }
-.app-lock-eye-btn{
-  position:absolute; inset-inline-end:10px; top:50%; transform:translateY(-50%);
-  background:none; border:none; color:var(--text-faint); cursor:pointer; padding:6px;
-  display:flex; align-items:center; justify-content:center; border-radius:8px;
+html[data-theme="light"] .pin-dot.filled{
+  background:var(--indigo-100);
+  border-color:var(--indigo-600);
+  color:var(--indigo-800);
 }
-.app-lock-eye-btn:hover{ color:var(--text); background:rgba(0,0,0,0.05); }
+.pin-dot.active-step{
+  border-color:var(--indigo-500);
+}
+/* Keypad 3x4 Grid */
+.pin-keypad{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;
+  width:100%; max-width:300px; margin:0 auto;
+}
+.pin-key{
+  aspect-ratio:1; max-width:72px; width:100%; margin:0 auto;
+  border-radius:50%; border:1px solid var(--border);
+  background:var(--card-alt); color:var(--text);
+  font-size:25px; font-weight:600; font-family:'Onest', var(--font-sans);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:all .15s var(--ease);
+}
+.pin-key:hover{
+  background:var(--card); border-color:var(--indigo-300);
+}
+.pin-key:active{
+  transform:scale(0.91);
+  background:var(--indigo-100);
+  border-color:var(--indigo-500);
+  color:var(--indigo-700);
+}
+.pin-key.key-action{
+  font-size:18px; border:none; background:transparent; color:var(--text-dim);
+}
+.pin-key.key-action:hover{
+  background:var(--card-alt); color:var(--text);
+}
+.pin-key.key-action:active{
+  transform:scale(0.91); background:var(--card-alt);
+}
 .app-lock-error{
   color:var(--red); font-size:12.5px; font-weight:600; margin-bottom:14px; line-height:1.4;
-  background:var(--red-bg); padding:8px 12px; border-radius:10px; width:100%;
-}
-.app-lock-submit-btn{
-  width:100%; padding:13px; font-size:15px; font-weight:700; border-radius:14px;
-  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--red-bg); padding:8px 12px; border-radius:10px; width:100%; max-width:300px;
 }
 .shake-anim{
   animation:lockShake .42s cubic-bezier(.36,.07,.19,.97) both;
 }
 @keyframes lockShake{
-  10%, 90% { transform: translate3d(-3px, 0, 0); }
-  20%, 80% { transform: translate3d(5px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-  40%, 60% { transform: translate3d(6px, 0, 0); }
+  10%, 90% { transform: translate3d(-4px, 0, 0); }
+  20%, 80% { transform: translate3d(6px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
 }
 .passcode-tab-nav{
   display:flex; background:var(--card-alt); border-radius:12px; padding:3px; gap:4px; margin-bottom:18px;
@@ -3050,7 +3217,7 @@ html[data-theme="light"] .app-lock-overlay{
             <div class="si-icon" style="background:rgba(245,193,72,0.16);color:#D97706;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <div class="si-text"><div class="t">Ilova paroli (Xavfsizlik)</div><div class="s" id="passcodeSettingSub">O'rnatilmagan</div></div>
+            <div class="si-text"><div class="t">Ilova PIN kodi (6 xonali)</div><div class="s" id="passcodeSettingSub">O'rnatilmagan</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
         </div>
@@ -3092,9 +3259,9 @@ html[data-theme="light"] .app-lock-overlay{
               <div class="lbl">Keyingi o'ringacha</div>
             </div>
           </div>
-          <div>
+          <div class="rank-top-bar-wrap">
             <div class="rank-top-gap" id="rankGapText"></div>
-            <div class="bar-bg" style="background:rgba(255,255,255,.28);margin-top:6px;"><div class="bar-fill" id="rankGapBar" style="width:0%;background:#fff;"></div></div>
+            <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" id="rankGapBar" style="width:0%;"></div></div>
           </div>
         </div>
 
@@ -3456,34 +3623,51 @@ html[data-theme="light"] .app-lock-overlay{
         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
     </div>
-    <h2 class="app-lock-title">Arabication</h2>
-    <p class="app-lock-sub">Platformaga kirish uchun xavfsizlik parolini kiriting</p>
+    <h2 class="app-lock-title">PIN kodni kiriting</h2>
+    <p class="app-lock-sub">Ilovaga kirish uchun 6 xonali PIN kodni kiriting</p>
 
-    <div class="app-lock-input-wrap">
-      <input type="password" id="appLockInput" class="app-lock-input" placeholder="Parolni kiriting..." autocomplete="current-password" onkeydown="if(event.key==='Enter') submitAppUnlock()">
-      <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('appLockInput', this)" aria-label="Parolni ko'rsatish">
-        <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        <svg class="eye-closed" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-      </button>
+    <!-- 6-digit PIN Dots -->
+    <div class="pin-dots-container" id="appLockDots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
     </div>
 
     <div id="appLockError" class="app-lock-error" style="display:none;"></div>
 
-    <button class="btn btn-primary app-lock-submit-btn" onclick="submitAppUnlock()">
-      Kirish
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </button>
+    <!-- Keypad 3x4 Grid -->
+    <div class="pin-keypad" id="appLockKeypad">
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('1')">1</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('2')">2</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('3')">3</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('4')">4</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('5')">5</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('6')">6</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('7')">7</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('8')">8</button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('9')">9</button>
+      <button type="button" class="pin-key key-action" onclick="handleLockKeyClear()" aria-label="Tozalash">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <button type="button" class="pin-key" onclick="handleLockKeyInput('0')">0</button>
+      <button type="button" class="pin-key key-action" onclick="handleLockKeyBackspace()" aria-label="O'chirish">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
 <!-- ============ PASSCODE SETTINGS MODAL ============ -->
 <div class="modal-overlay" id="passcodeModalOverlay" onclick="if(event.target===this) closePasscodeModal()" style="display:none;">
-  <div class="modal-box" style="max-width:440px;">
+  <div class="modal-box" style="max-width:400px;border-radius:28px;">
     <div class="modal-head">
-      <h3 id="passcodeModalTitle">Ilova paroli (Xavfsizlik)</h3>
+      <h3 id="passcodeModalTitle">Ilova PIN kodi (6 xonali)</h3>
       <button class="modal-close" onclick="closePasscodeModal()">✕</button>
     </div>
-    <div class="modal-body" id="passcodeModalBody" style="padding:18px 20px 24px;"></div>
+    <div class="modal-body" id="passcodeModalBody" style="padding:16px 20px 24px;"></div>
   </div>
 </div>
 
@@ -4595,11 +4779,13 @@ function toggleTheme(){
   applyAvatarSetting();
 })();
 
-/* ---------------- Ilova xavfsizlik paroli (Passcode / App Lock) ---------------- */
+/* ---------------- Ilova xavfsizlik paroli (6 xonali PIN / App Lock) ---------------- */
+let APP_LOCK_PIN_BUFFER = "";
+
 function getStoredAppPasscode(){
   try{
     const p = localStorage.getItem('arabication_app_passcode');
-    return (p && p.trim()) ? p.trim() : null;
+    return (p && /^\d{6}$/.test(p.trim())) ? p.trim() : null;
   }catch(e){
     return null;
   }
@@ -4610,10 +4796,25 @@ function updatePasscodeStatusText(){
   if(!sub) return;
   const pass = getStoredAppPasscode();
   if(pass){
-    sub.innerHTML = '<span style="color:var(--green);font-weight:600;">🔒 Faol o‘rnatilgan</span>';
+    sub.innerHTML = '<span style="color:var(--green);font-weight:600;">🔒 Faol o‘rnatilgan (6 xonali)</span>';
   } else {
     sub.textContent = "O'rnatilmagan";
   }
+}
+
+function renderLockDots(){
+  const container = document.getElementById('appLockDots');
+  if(!container) return;
+  const dots = container.querySelectorAll('.pin-dot');
+  dots.forEach((dot, idx) => {
+    if(idx < APP_LOCK_PIN_BUFFER.length){
+      dot.classList.add('filled');
+      dot.textContent = '●';
+    } else {
+      dot.classList.remove('filled');
+      dot.textContent = '';
+    }
+  });
 }
 
 function checkAppLockOnStartup(){
@@ -4622,47 +4823,74 @@ function checkAppLockOnStartup(){
   if(!overlay) return;
   
   if(pass){
+    APP_LOCK_PIN_BUFFER = "";
     overlay.style.display = 'flex';
     overlay.classList.remove('unlocking');
-    const input = document.getElementById('appLockInput');
     const err = document.getElementById('appLockError');
     if(err) { err.textContent = ''; err.style.display = 'none'; }
-    if(input){
-      input.value = '';
-      setTimeout(()=>{ input.focus(); }, 120);
-    }
+    renderLockDots();
   } else {
     overlay.style.display = 'none';
   }
   updatePasscodeStatusText();
 }
 
-function submitAppUnlock(){
+function handleLockKeyInput(digit){
+  if(!/^\d$/.test(digit)) return;
+  if(APP_LOCK_PIN_BUFFER.length >= 6) return;
+
+  APP_LOCK_PIN_BUFFER += digit;
+  renderLockDots();
+
+  const err = document.getElementById('appLockError');
+  if(err) { err.textContent = ''; err.style.display = 'none'; }
+
+  if(APP_LOCK_PIN_BUFFER.length === 6){
+    setTimeout(verifyAppUnlock, 120);
+  }
+}
+
+function handleLockKeyBackspace(){
+  if(APP_LOCK_PIN_BUFFER.length > 0){
+    APP_LOCK_PIN_BUFFER = APP_LOCK_PIN_BUFFER.slice(0, -1);
+    renderLockDots();
+    const err = document.getElementById('appLockError');
+    if(err) { err.textContent = ''; err.style.display = 'none'; }
+  }
+}
+
+function handleLockKeyClear(){
+  APP_LOCK_PIN_BUFFER = "";
+  renderLockDots();
+  const err = document.getElementById('appLockError');
+  if(err) { err.textContent = ''; err.style.display = 'none'; }
+}
+
+function verifyAppUnlock(){
   const pass = getStoredAppPasscode();
   const overlay = document.getElementById('appLockOverlay');
   const card = document.getElementById('appLockCard');
-  const input = document.getElementById('appLockInput');
   const err = document.getElementById('appLockError');
-  
+
   if(!pass){
     if(overlay) overlay.style.display = 'none';
     return;
   }
-  
-  const entered = (input?.value || '').trim();
-  if(entered === pass){
+
+  if(APP_LOCK_PIN_BUFFER === pass){
     if(err) { err.textContent = ''; err.style.display = 'none'; }
     if(overlay){
       overlay.classList.add('unlocking');
       setTimeout(()=>{
         overlay.style.display = 'none';
         overlay.classList.remove('unlocking');
+        APP_LOCK_PIN_BUFFER = "";
+        renderLockDots();
       }, 240);
     }
-    if(input) input.value = '';
   } else {
     if(err){
-      err.textContent = 'Parol noto‘g‘ri. Qayta urinib ko‘ring.';
+      err.textContent = "PIN kod noto‘g‘ri. Qayta urinib ko‘ring.";
       err.style.display = 'block';
     }
     if(card){
@@ -4671,271 +4899,303 @@ function submitAppUnlock(){
       card.classList.add('shake-anim');
       setTimeout(()=>{ card.classList.remove('shake-anim'); }, 450);
     }
-    if(input){
-      input.select();
-      input.focus();
-    }
+    APP_LOCK_PIN_BUFFER = "";
+    renderLockDots();
   }
 }
 
-function togglePassVisibility(inputId, btn){
-  const input = document.getElementById(inputId);
-  if(!input || !btn) return;
-  const isPass = input.type === 'password';
-  input.type = isPass ? 'text' : 'password';
-  const openSvg = btn.querySelector('.eye-open');
-  const closedSvg = btn.querySelector('.eye-closed');
-  if(openSvg && closedSvg){
-    openSvg.style.display = isPass ? 'none' : 'block';
-    closedSvg.style.display = isPass ? 'block' : 'none';
-  }
-}
-
-let PASSCODE_ACTIVE_TAB = 'edit'; // 'edit' | 'remove'
+/* Modal PIN Keypad State */
+let MODAL_PIN_MODE = 'setup'; // 'setup' | 'change' | 'remove'
+let MODAL_PIN_STEP = 1;
+let MODAL_PIN_BUFFER = "";
+let MODAL_TEMP_PIN = "";
+let MODAL_CURR_VERIFIED = false;
 
 function openPasscodeSettingsModal(){
   const overlay = document.getElementById('passcodeModalOverlay');
-  const body = document.getElementById('passcodeModalBody');
-  const title = document.getElementById('passcodeModalTitle');
-  if(!overlay || !body) return;
+  if(!overlay) return;
 
   const currentPass = getStoredAppPasscode();
-  if(title) title.textContent = currentPass ? "Ilova parolini boshqarish" : "Ilova parolini o'rnatish";
-  
-  PASSCODE_ACTIVE_TAB = 'edit';
-  renderPasscodeModalBody();
+  MODAL_PIN_MODE = currentPass ? 'change' : 'setup';
+  MODAL_PIN_STEP = 1;
+  MODAL_PIN_BUFFER = "";
+  MODAL_TEMP_PIN = "";
+  MODAL_CURR_VERIFIED = false;
+
+  renderPasscodeModalContent();
   overlay.style.display = 'flex';
 }
 
 function closePasscodeModal(){
   const overlay = document.getElementById('passcodeModalOverlay');
   if(overlay) overlay.style.display = 'none';
+  MODAL_PIN_BUFFER = "";
+  MODAL_TEMP_PIN = "";
   updatePasscodeStatusText();
 }
 
-function switchPasscodeTab(tab){
-  PASSCODE_ACTIVE_TAB = tab;
-  renderPasscodeModalBody();
+function switchPasscodeTab(mode){
+  MODAL_PIN_MODE = mode;
+  MODAL_PIN_STEP = 1;
+  MODAL_PIN_BUFFER = "";
+  MODAL_TEMP_PIN = "";
+  MODAL_CURR_VERIFIED = false;
+  renderPasscodeModalContent();
 }
 
-function renderPasscodeModalBody(){
-  const body = document.getElementById('passcodeModalBody');
-  if(!body) return;
-  const currentPass = getStoredAppPasscode();
+function renderModalDots(){
+  const container = document.getElementById('modalPinDots');
+  if(!container) return;
+  const dots = container.querySelectorAll('.pin-dot');
+  dots.forEach((dot, idx) => {
+    if(idx < MODAL_PIN_BUFFER.length){
+      dot.classList.add('filled');
+      dot.textContent = '●';
+    } else {
+      dot.classList.remove('filled');
+      dot.textContent = '';
+    }
+  });
+}
 
-  if(!currentPass){
-    body.innerHTML = `
-      <div style="text-align:center;margin-bottom:18px;">
-        <div style="width:52px;height:52px;border-radius:16px;background:rgba(245,193,72,0.16);color:#D97706;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">
-          Platformaga har safar kirganingizda ma'lumotlaringiz xavfsizligini ta'minlash uchun parol yoki PIN-kod o'rnating.
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;">
-        <div>
-          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parol</label>
-          <div style="position:relative;">
-            <input type="password" id="modalNewPass" class="ob-input" placeholder="Parol yoki PIN kiriting..." style="padding-right:42px;width:100%;">
-            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalNewPass', this)" style="right:8px;">
-              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-        </div>
-        <div>
-          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Parolni tasdiqlang</label>
-          <div style="position:relative;">
-            <input type="password" id="modalConfirmPass" class="ob-input" placeholder="Parolni qayta kiriting..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') saveNewPasscode()">
-            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalConfirmPass', this)" style="right:8px;">
-              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
-
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
-        <button type="button" class="btn btn-primary" style="flex:1;" onclick="saveNewPasscode()">Saqlash</button>
-      </div>
-    `;
+function getModalStepInfo(){
+  if(MODAL_PIN_MODE === 'setup'){
+    if(MODAL_PIN_STEP === 1){
+      return {
+        title: "Yangi PIN kodni kiriting",
+        sub: "6 ta raqamdan iborat xavfsizlik kodini tanlang"
+      };
+    } else {
+      return {
+        title: "PIN kodni tasdiqlang",
+        sub: "Tasdiqlash uchun o‘sha 6 ta raqamni qayta kiriting"
+      };
+    }
+  } else if(MODAL_PIN_MODE === 'change'){
+    if(MODAL_PIN_STEP === 1){
+      return {
+        title: "Joriy PIN kodni kiriting",
+        sub: "O‘zgartirish uchun hozirgi 6 xonali PIN kodingizni kiriting"
+      };
+    } else if(MODAL_PIN_STEP === 2){
+      return {
+        title: "Yangi PIN kodni kiriting",
+        sub: "6 ta raqamdan iborat yangi PIN kodni tanlang"
+      };
+    } else {
+      return {
+        title: "Yangi PIN kodni tasdiqlang",
+        sub: "Tasdiqlash uchun yangi PIN kodni qayta kiriting"
+      };
+    }
   } else {
-    const isEdit = PASSCODE_ACTIVE_TAB === 'edit';
-    body.innerHTML = `
-      <div class="passcode-tab-nav">
-        <button type="button" class="passcode-tab-btn ${isEdit ? 'active' : ''}" onclick="switchPasscodeTab('edit')">O'zgartirish</button>
-        <button type="button" class="passcode-tab-btn ${!isEdit ? 'active' : ''}" onclick="switchPasscodeTab('remove')">Olib tashlash</button>
+    return {
+      title: "Joriy PIN kodni kiriting",
+      sub: "Parol himoyasini olib tashlash uchun hozirgi PIN kodni kiriting"
+    };
+  }
+}
+
+function renderPasscodeModalContent(){
+  const body = document.getElementById('passcodeModalBody');
+  const titleEl = document.getElementById('passcodeModalTitle');
+  if(!body) return;
+
+  const currentPass = getStoredAppPasscode();
+  const info = getModalStepInfo();
+  if(titleEl) titleEl.textContent = currentPass ? "Ilova PIN kodi (6 xonali)" : "PIN kod o'rnatish";
+
+  body.innerHTML = `
+    ${currentPass ? `
+      <div class="passcode-tab-nav" style="margin-bottom:16px;">
+        <button type="button" class="passcode-tab-btn ${MODAL_PIN_MODE==='change' ? 'active' : ''}" onclick="switchPasscodeTab('change')">O'zgartirish</button>
+        <button type="button" class="passcode-tab-btn ${MODAL_PIN_MODE==='remove' ? 'active' : ''}" onclick="switchPasscodeTab('remove')">Olib tashlash</button>
+      </div>
+    ` : ''}
+
+    <div id="modalPinCard" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;" id="modalStepTitle">${info.title}</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px;max-width:270px;line-height:1.4;" id="modalStepSub">${info.sub}</div>
+
+      <!-- 6-digit PIN Dots -->
+      <div class="pin-dots-container" id="modalPinDots" style="margin-bottom:20px;">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
       </div>
 
-      ${isEdit ? `
-        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px;">
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Joriy parol</label>
-            <div style="position:relative;">
-              <input type="password" id="modalCurrPass" class="ob-input" placeholder="Hozirgi parolingiz..." style="padding-right:42px;width:100%;">
-              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalCurrPass', this)" style="right:8px;">
-                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parol</label>
-            <div style="position:relative;">
-              <input type="password" id="modalNewPass" class="ob-input" placeholder="Yangi parol yoki PIN..." style="padding-right:42px;width:100%;">
-              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalNewPass', this)" style="right:8px;">
-                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Yangi parolni tasdiqlang</label>
-            <div style="position:relative;">
-              <input type="password" id="modalConfirmPass" class="ob-input" placeholder="Yangi parolni qayta kiriting..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') changePasscode()">
-              <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalConfirmPass', this)" style="right:8px;">
-                <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div id="modalPinError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
 
-        <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
+      <!-- Keypad -->
+      <div class="pin-keypad" id="modalPinKeypad">
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('1')">1</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('2')">2</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('3')">3</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('4')">4</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('5')">5</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('6')">6</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('7')">7</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('8')">8</button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('9')">9</button>
+        <button type="button" class="pin-key key-action" onclick="handleModalKeyClear()" aria-label="Tozalash">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <button type="button" class="pin-key" onclick="handleModalKeyInput('0')">0</button>
+        <button type="button" class="pin-key key-action" onclick="handleModalKeyBackspace()" aria-label="O'chirish">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
 
-        <div style="display:flex;gap:10px;">
-          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
-          <button type="button" class="btn btn-primary" style="flex:1;" onclick="changePasscode()">Yangilash</button>
-        </div>
-      ` : `
-        <div style="text-align:center;margin-bottom:16px;">
-          <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">
-            Parol himoyasini olib tashlamoqchimisiz? Platformani ochganda parol so'ralmaydi.
-          </div>
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">Tasdiqlash uchun joriy parolni kiriting</label>
-          <div style="position:relative;">
-            <input type="password" id="modalRemovePass" class="ob-input" placeholder="Joriy parol..." style="padding-right:42px;width:100%;" onkeydown="if(event.key==='Enter') removePasscode()">
-            <button type="button" class="app-lock-eye-btn" onclick="togglePassVisibility('modalRemovePass', this)" style="right:8px;">
-              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-closed" style="display:none;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-        </div>
+  renderModalDots();
+}
 
-        <div id="passcodeModalError" class="app-lock-error" style="display:none;margin-bottom:14px;"></div>
+function handleModalKeyInput(digit){
+  if(!/^\d$/.test(digit)) return;
+  if(MODAL_PIN_BUFFER.length >= 6) return;
 
-        <div style="display:flex;gap:10px;">
-          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closePasscodeModal()">Bekor qilish</button>
-          <button type="button" class="btn btn-outline" style="flex:1;border-color:var(--red);color:var(--red);" onclick="removePasscode()">Olib tashlash</button>
-        </div>
-      `}
-    `;
+  MODAL_PIN_BUFFER += digit;
+  renderModalDots();
+
+  const err = document.getElementById('modalPinError');
+  if(err) { err.textContent = ''; err.style.display = 'none'; }
+
+  if(MODAL_PIN_BUFFER.length === 6){
+    setTimeout(processModalStep, 130);
   }
 }
 
-function showModalPassError(msg){
-  const el = document.getElementById('passcodeModalError');
-  if(!el) return;
-  el.textContent = msg;
-  el.style.display = 'block';
+function handleModalKeyBackspace(){
+  if(MODAL_PIN_BUFFER.length > 0){
+    MODAL_PIN_BUFFER = MODAL_PIN_BUFFER.slice(0, -1);
+    renderModalDots();
+    const err = document.getElementById('modalPinError');
+    if(err) { err.textContent = ''; err.style.display = 'none'; }
+  }
 }
 
-function saveNewPasscode(){
-  const newPass = (document.getElementById('modalNewPass')?.value || '').trim();
-  const confirmPass = (document.getElementById('modalConfirmPass')?.value || '').trim();
-
-  if(!newPass){
-    showModalPassError("Iltimos, yangi parolni kiriting.");
-    return;
-  }
-  if(newPass.length < 3){
-    showModalPassError("Parol kamida 3 ta belgidan iborat bo‘lishi kerak.");
-    return;
-  }
-  if(newPass !== confirmPass){
-    showModalPassError("Kiritilgan parollar bir-biriga mos kelmadi.");
-    return;
-  }
-
-  try{
-    localStorage.setItem('arabication_app_passcode', newPass);
-  }catch(e){
-    showModalPassError("Xotirada saqlashda xatolik yuz berdi.");
-    return;
-  }
-
-  closePasscodeModal();
-  toast("Ilova paroli muvaffaqiyatli o'rnatildi 🔒", 3000);
+function handleModalKeyClear(){
+  MODAL_PIN_BUFFER = "";
+  renderModalDots();
+  const err = document.getElementById('modalPinError');
+  if(err) { err.textContent = ''; err.style.display = 'none'; }
 }
 
-function changePasscode(){
-  const currPass = (document.getElementById('modalCurrPass')?.value || '').trim();
-  const newPass = (document.getElementById('modalNewPass')?.value || '').trim();
-  const confirmPass = (document.getElementById('modalConfirmPass')?.value || '').trim();
+function showModalPinError(msg){
+  const err = document.getElementById('modalPinError');
+  const card = document.getElementById('modalPinCard');
+  if(err){
+    err.textContent = msg;
+    err.style.display = 'block';
+  }
+  if(card){
+    card.classList.remove('shake-anim');
+    void card.offsetWidth;
+    card.classList.add('shake-anim');
+    setTimeout(()=>{ card.classList.remove('shake-anim'); }, 450);
+  }
+  MODAL_PIN_BUFFER = "";
+  renderModalDots();
+}
+
+function processModalStep(){
   const saved = getStoredAppPasscode();
 
-  if(!currPass){
-    showModalPassError("Iltimos, joriy parolingizni kiriting.");
-    return;
+  if(MODAL_PIN_MODE === 'setup'){
+    if(MODAL_PIN_STEP === 1){
+      MODAL_TEMP_PIN = MODAL_PIN_BUFFER;
+      MODAL_PIN_BUFFER = "";
+      MODAL_PIN_STEP = 2;
+      renderPasscodeModalContent();
+    } else {
+      if(MODAL_PIN_BUFFER === MODAL_TEMP_PIN){
+        try{
+          localStorage.setItem('arabication_app_passcode', MODAL_TEMP_PIN);
+          closePasscodeModal();
+          toast("6 xonali PIN kod muvaffaqiyatli o‘rnatildi 🔒", 3000);
+        }catch(e){
+          showModalPinError("Xotirada saqlashda xatolik yuz berdi.");
+        }
+      } else {
+        showModalPinError("PIN kodlar mos kelmadi. Boshidan kiriting.");
+        MODAL_PIN_STEP = 1;
+        MODAL_TEMP_PIN = "";
+        setTimeout(renderPasscodeModalContent, 600);
+      }
+    }
+  } else if(MODAL_PIN_MODE === 'change'){
+    if(MODAL_PIN_STEP === 1){
+      if(MODAL_PIN_BUFFER === saved){
+        MODAL_PIN_BUFFER = "";
+        MODAL_PIN_STEP = 2;
+        renderPasscodeModalContent();
+      } else {
+        showModalPinError("Joriy PIN kod noto‘g‘ri kiritildi.");
+      }
+    } else if(MODAL_PIN_STEP === 2){
+      MODAL_TEMP_PIN = MODAL_PIN_BUFFER;
+      MODAL_PIN_BUFFER = "";
+      MODAL_PIN_STEP = 3;
+      renderPasscodeModalContent();
+    } else {
+      if(MODAL_PIN_BUFFER === MODAL_TEMP_PIN){
+        try{
+          localStorage.setItem('arabication_app_passcode', MODAL_TEMP_PIN);
+          closePasscodeModal();
+          toast("PIN kod muvaffaqiyatli yangilandi ✅", 3000);
+        }catch(e){
+          showModalPinError("Xotirada saqlashda xatolik yuz berdi.");
+        }
+      } else {
+        showModalPinError("Yangi PIN kodlar mos kelmadi. Boshidan kiriting.");
+        MODAL_PIN_STEP = 2;
+        MODAL_TEMP_PIN = "";
+        setTimeout(renderPasscodeModalContent, 600);
+      }
+    }
+  } else if(MODAL_PIN_MODE === 'remove'){
+    if(MODAL_PIN_BUFFER === saved){
+      try{
+        localStorage.removeItem('arabication_app_passcode');
+        closePasscodeModal();
+        toast("PIN kod himoyasi olib tashlandi 🔓", 3000);
+      }catch(e){
+        showModalPinError("Xotirani tozalashda xatolik yuz berdi.");
+      }
+    } else {
+      showModalPinError("Joriy PIN kod noto‘g‘ri kiritildi.");
+    }
   }
-  if(currPass !== saved){
-    showModalPassError("Joriy parol noto'g'ri kiritildi.");
-    return;
-  }
-  if(!newPass){
-    showModalPassError("Iltimos, yangi parolni kiriting.");
-    return;
-  }
-  if(newPass.length < 3){
-    showModalPassError("Yangi parol kamida 3 ta belgidan iborat bo‘lishi kerak.");
-    return;
-  }
-  if(newPass !== confirmPass){
-    showModalPassError("Yangi parollar bir-biriga mos kelmadi.");
-    return;
-  }
-
-  try{
-    localStorage.setItem('arabication_app_passcode', newPass);
-  }catch(e){
-    showModalPassError("Xotirada saqlashda xatolik yuz berdi.");
-    return;
-  }
-
-  closePasscodeModal();
-  toast("Ilova paroli muvaffaqiyatli yangilandi ✅", 3000);
 }
 
-function removePasscode(){
-  const currPass = (document.getElementById('modalRemovePass')?.value || '').trim();
-  const saved = getStoredAppPasscode();
+/* Global physical keyboard input listener */
+window.addEventListener('keydown', (e) => {
+  const appLockOverlay = document.getElementById('appLockOverlay');
+  const passcodeModalOverlay = document.getElementById('passcodeModalOverlay');
 
-  if(!currPass){
-    showModalPassError("Tasdiqlash uchun joriy parolni kiriting.");
-    return;
-  }
-  if(currPass !== saved){
-    showModalPassError("Joriy parol noto'g'ri kiritildi.");
-    return;
-  }
+  const isLockActive = appLockOverlay && appLockOverlay.style.display !== 'none' && !appLockOverlay.classList.contains('unlocking');
+  const isModalActive = passcodeModalOverlay && passcodeModalOverlay.style.display !== 'none';
 
-  try{
-    localStorage.removeItem('arabication_app_passcode');
-  }catch(e){
-    showModalPassError("Xotirani tozalashda xatolik yuz berdi.");
-    return;
-  }
+  if(!isLockActive && !isModalActive) return;
 
-  closePasscodeModal();
-  toast("Ilova paroli olib tashlandi 🔓", 3000);
-}
+  if(e.key >= '0' && e.key <= '9'){
+    e.preventDefault();
+    if(isLockActive) handleLockKeyInput(e.key);
+    else if(isModalActive) handleModalKeyInput(e.key);
+  } else if(e.key === 'Backspace'){
+    e.preventDefault();
+    if(isLockActive) handleLockKeyBackspace();
+    else if(isModalActive) handleModalKeyBackspace();
+  } else if(e.key === 'Escape'){
+    e.preventDefault();
+    if(isLockActive) handleLockKeyClear();
+    else if(isModalActive) closePasscodeModal();
+  }
+});
 
 (function initAppLockImmediately(){
   checkAppLockOnStartup();
@@ -5263,7 +5523,101 @@ function closeSidebar(){ if(sidebar) sidebar.classList.remove('open'); if(overla
 /* view-dashboard is default active in HTML already */
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
 
-/* ---------------- Toast Notification (Minimalist Bottom-Right Glassmorphism) ---------------- */
+/* ---------------- Toast Notification (Minimalist Bottom-Right Glassmorphism with Dynamic SVGs) ---------------- */
+const TOAST_ICONS = {
+  success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+  delete: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+  sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+  moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  unlock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`,
+  loading: `<svg class="toast-loading-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  audio: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`
+};
+
+function getToastDefaultTitle(type){
+  switch(type){
+    case 'sun': return "Yorug' mavzu";
+    case 'moon': return "Qorong'i mavzu";
+    case 'delete': return "O'chirildi";
+    case 'warning': return "Ogohlantirish";
+    case 'info': return "Ma'lumot";
+    case 'lock': case 'unlock': return "Xavfsizlik";
+    case 'loading': return "Kuting...";
+    case 'audio': return "Audio";
+    case 'error': return "Xatolik";
+    case 'success': default: return "Muvaffaqiyatli";
+  }
+}
+
+function resolveToastCategory(rawMsg, explicitType){
+  if(explicitType && TOAST_ICONS[explicitType]){
+    return { type: explicitType, title: getToastDefaultTitle(explicitType) };
+  }
+  const str = String(rawMsg || '');
+  const lower = str.toLowerCase();
+
+  // Dark / light mode
+  if(str.includes('☀️') || lower.includes("yorug'") || lower.includes("light mode") || lower.includes("kunduzgi")){
+    return { type: 'sun', title: "Yorug' mavzu" };
+  }
+  if(str.includes('🌙') || lower.includes("qorong'i") || lower.includes("dark mode") || lower.includes("tungi")){
+    return { type: 'moon', title: "Qorong'i mavzu" };
+  }
+
+  // Lock / unlock PIN
+  if(str.includes('🔓') || lower.includes("qulfdan chiqarildi") || lower.includes("himoyasi olib tashlandi")){
+    return { type: 'unlock', title: "Xavfsizlik" };
+  }
+  if(str.includes('🔒') || lower.includes("qulflangan") || lower.includes("pin kod") || lower.includes("parol o‘rnatildi") || lower.includes("parol o'rnatildi") || (lower.includes("parol") && !lower.includes("xato"))){
+    return { type: 'lock', title: "Xavfsizlik" };
+  }
+
+  // Delete / Trash
+  if(str.includes('🗑️') || lower.includes("o'chirildi") || lower.includes("tozalandi") || lower.includes("olib tashlandi") || lower.includes("o'chirish") || lower.includes("tozalash")){
+    return { type: 'delete', title: "O'chirildi" };
+  }
+
+  // Audio / Sound
+  if(str.includes('🔊') || str.includes('🎧') || lower.includes("audio") || lower.includes("ijro") || lower.includes("eshittirilmoqda")){
+    return { type: 'audio', title: "Audio" };
+  }
+
+  // Loading / Progress
+  if(str.includes('⏳') || lower.includes("yuklanmoqda") || lower.includes("saqlanmoqda") || lower.includes("kuting") || lower.includes("tekshirilmoqda")){
+    return { type: 'loading', title: "Kuting..." };
+  }
+
+  // Warnings / Alerts
+  if(str.includes('⚠️') || lower.includes("ogohlantirish") || lower.includes("diqqat") || lower.includes("kutilmagan") || lower.includes("limit") || lower.includes("ruxsat yo‘q") || lower.includes("ruxsat yo'q") || lower.includes("topilmadi") || lower.includes("mavjud emas")){
+    return { type: 'warning', title: "Ogohlantirish" };
+  }
+
+  // Errors
+  if(str.includes('❌') || lower.includes("xato") || lower.includes("error") || lower.includes("muvaffaqiyatsiz") || lower.includes("saqlanmadi") || lower.includes("rad etildi") || lower.includes("mos kelmadi") || lower.includes("noto‘g‘ri") || lower.includes("noto'g'ri")){
+    return { type: 'error', title: "Xatolik" };
+  }
+
+  // Info
+  if(str.includes('ℹ️') || lower.includes("ma'lumot") || lower.includes("yo'riqnoma") || lower.includes("eslatma") || lower.includes("info") || lower.includes("username:")){
+    return { type: 'info', title: "Ma'lumot" };
+  }
+
+  // Positive / Success (default for positive or completed actions)
+  return { type: 'success', title: "Muvaffaqiyatli" };
+}
+
+function cleanToastMessage(str){
+  if(!str) return '';
+  return str
+    .replace(/^[\s\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}🔒🔓✅❌⚠️⏳ℹ️☀️🌙🗑️🔊🎧💡]+/gu, '')
+    .replace(/[\s\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}🔒🔓✅❌⚠️⏳ℹ️☀️🌙🗑️🔊🎧💡]+$/gu, '')
+    .trim();
+}
+
 function showToast(title, message, type = 'success', duration = 4000){
   let container = document.getElementById('toast-container');
   if(!container){
@@ -5272,12 +5626,10 @@ function showToast(title, message, type = 'success', duration = 4000){
     document.body.appendChild(container);
   }
 
-  const isError = type === 'error';
+  const iconSvg = TOAST_ICONS[type] || TOAST_ICONS.success;
   const toastEl = document.createElement('div');
-  toastEl.className = `toast-item ${isError ? 'toast-error' : 'toast-success'}`;
+  toastEl.className = `toast-item toast-${type}`;
 
-  const successIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-  const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
   const closeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
   function escapeHtml(str){
@@ -5287,11 +5639,11 @@ function showToast(title, message, type = 'success', duration = 4000){
     return d.innerHTML;
   }
 
-  const titleText = title || (isError ? 'Xatolik' : 'Muvaffaqiyatli');
+  const titleText = title || getToastDefaultTitle(type);
 
   toastEl.innerHTML = `
     <div class="toast-icon">
-      ${isError ? errorIcon : successIcon}
+      ${iconSvg}
     </div>
     <div class="toast-body">
       <div class="toast-title">${escapeHtml(titleText)}</div>
@@ -5335,13 +5687,12 @@ function showToast(title, message, type = 'success', duration = 4000){
   }
 }
 
-// Global wrapper for toast(msg, duration)
-function toast(msg, duration = 4000){
+// Global wrapper for toast(msg, duration, explicitType)
+function toast(msg, duration = 4000, explicitType = null){
   if(!msg) return;
-  const isErr = msg.includes('❌') || msg.includes('⚠️') || msg.toLowerCase().includes('xato') || msg.toLowerCase().includes('error');
-  const cleanMsg = msg.replace(/^[❌⚠️✅⏳🔤🔒\s]+/, '').trim();
-  const title = isErr ? 'Xatolik' : (msg.includes('✅') ? 'Muvaffaqiyatli' : 'Arabication');
-  showToast(title, cleanMsg || msg, isErr ? 'error' : 'success', duration);
+  const { type, title } = resolveToastCategory(msg, explicitType);
+  const cleanMsg = cleanToastMessage(msg);
+  showToast(title, cleanMsg || msg, type, duration);
 }
 
 /* ---------------- Skill hub ---------------- */
@@ -9075,7 +9426,9 @@ function startMockQuiz(mockId){
     mockTitle: mock.title,
     questions: mock.questions.map(q => ({
       ...q,
-      picked: null
+      picked: null,
+      timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60,
+      expired: false
     })),
     color: skillMeta.color || 'var(--indigo-600)',
     bg: skillMeta.bg || 'var(--indigo-100)',
@@ -10581,25 +10934,95 @@ function startTimer(seconds, onExpire){
   },1000);
 }
 
-/* ---------------- Per-question Timer (Grammatika: 1 daqiqa har savol uchun) ---------------- */
+/* ---------------- Per-question Timer (Grammatika / Istima savollari: 1 daqiqa har savol uchun) ---------------- */
 let mcqTimerInterval = null;
-function clearQuestionTimer(){ clearInterval(mcqTimerInterval); }
+function clearQuestionTimer(){
+  if(mcqTimerInterval){
+    clearInterval(mcqTimerInterval);
+    mcqTimerInterval = null;
+  }
+}
+
+function disableQuestionOptions(){
+  const opts = document.querySelectorAll('#quizBody .option');
+  opts.forEach(opt => {
+    opt.classList.add('disabled', 'is-expired');
+    opt.setAttribute('aria-disabled', 'true');
+  });
+}
+
 function startQuestionTimer(){
   clearQuestionTimer();
-  let remaining = 60;
+  if(!currentQuiz || !currentQuiz.questions || !currentQuiz.questions[currentQuiz.idx]) return;
+  const q = currentQuiz.questions[currentQuiz.idx];
   const el = document.getElementById('quizTimer');
-  if(!el) return;
-  function paint(){
-    el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">0:' + String(remaining).padStart(2,'0') + '</span>';
-    if(remaining<=10){ el.style.color = 'var(--red)'; el.style.borderColor = 'var(--red)'; }
-    else if(remaining<=30){ el.style.color = 'var(--amber)'; el.style.borderColor = 'var(--amber)'; }
-    else { el.style.color = ''; el.style.borderColor = ''; }
+
+  if(q.timeLeft === undefined){
+    q.timeLeft = 60;
   }
+
+  function paint(){
+    if(!el) return;
+    const remaining = Math.max(0, q.timeLeft);
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    
+    if(q.expired || remaining <= 0){
+      el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">0:00</span>';
+      el.style.color = 'var(--red)';
+      el.style.borderColor = 'var(--red)';
+    } else {
+      el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">' + m + ':' + String(s).padStart(2,'0') + '</span>';
+      if(remaining <= 10){
+        el.style.color = 'var(--red)';
+        el.style.borderColor = 'var(--red)';
+      } else if(remaining <= 30){
+        el.style.color = 'var(--amber)';
+        el.style.borderColor = 'var(--amber)';
+      } else {
+        el.style.color = '';
+        el.style.borderColor = '';
+      }
+    }
+  }
+
+  // Agar bu savolning vaqti allaqachon tugagan bo'lsa
+  if(q.expired || q.timeLeft <= 0){
+    q.timeLeft = 0;
+    q.expired = true;
+    paint();
+    disableQuestionOptions();
+    return;
+  }
+
   paint();
+
   mcqTimerInterval = setInterval(()=>{
-    remaining--; paint();
-    if(remaining<=0){ clearInterval(mcqTimerInterval); nextQ(); }
-  },1000);
+    if(!currentQuiz || !currentQuiz.questions || !currentQuiz.questions[currentQuiz.idx]){
+      clearQuestionTimer();
+      return;
+    }
+    const curQ = currentQuiz.questions[currentQuiz.idx];
+    if(curQ !== q){
+      clearQuestionTimer();
+      return;
+    }
+
+    if(q.timeLeft > 0){
+      q.timeLeft--;
+      paint();
+    }
+
+    if(q.timeLeft <= 0){
+      q.timeLeft = 0;
+      q.expired = true;
+      clearQuestionTimer();
+      paint();
+      disableQuestionOptions();
+      toast("⏰ Ushbu savol uchun ajratilgan vaqt tugadi!");
+      updateQGrid();
+    }
+  }, 1000);
 }
 
 /* ---------------- Grammatika: har bir mavzu uchun alohida savollar bazasi ---------------- */
@@ -10779,7 +11202,7 @@ function startQuiz(skillId, customLabel, topicId){
   const skillMeta = SKILLS.find(s=>s.id===skillId) || SKILLS.find(s=>s.id==='grammatika');
   currentQuiz = {
     skillId, topicId: topicId||null, type: bank.type, passage: bank.passage||null,
-    questions: questions.map(q=>({...q, picked:null})),
+    questions: questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})),
     color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
     idx:0, startedAt:Date.now(), duration: bank.type==='reading'?18*60: bank.type==='listening'?16*60:20*60,
   };
@@ -10804,7 +11227,7 @@ function startQiroaQuiz(customLabel){
       const tests = (QIROA_TESTS[meta.id]||[]).filter(t => t.questions.length > 0);
       if(!tests.length) return null;
       const picked = tests[Math.floor(Math.random()*tests.length)];
-      return { ...meta, passage: picked.passage || '', title: picked.title || '', questions: picked.questions.map(q=>({...q, picked:null})) };
+      return { ...meta, passage: picked.passage || '', title: picked.title || '', questions: picked.questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})) };
     })
     .filter(Boolean);
   if(availableJuz.length === 0){
@@ -10871,7 +11294,7 @@ function startIstimaQuiz(customLabel){
       const tests = (ISTIMA_TESTS[meta.id]||[]).filter(t => t.questions.length === meta.qCount);
       if(!tests.length) return null;
       const picked = tests[Math.floor(Math.random()*tests.length)];
-      return { ...meta, audioUrl: picked.audioUrl || '', questions: picked.questions.map(q=>({...q, picked:null})) };
+      return { ...meta, audioUrl: picked.audioUrl || '', questions: picked.questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})) };
     })
     .filter(Boolean);
   if(availableJuz.length === 0){
@@ -10966,11 +11389,18 @@ function buildQGrid(){
 }
 function updateQGrid(){
   document.querySelectorAll('.qbtn').forEach((b,i)=>{
-    b.classList.toggle('current', i===currentQuiz.idx);
-    b.classList.toggle('answered', currentQuiz.questions[i].picked!==null);
+    const q = currentQuiz?.questions?.[i];
+    b.classList.toggle('current', i===currentQuiz?.idx);
+    b.classList.toggle('answered', !!(q && q.picked!==null && q.picked!==undefined));
+    b.classList.toggle('expired', !!(q && (q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0))));
   });
 }
-function jumpTo(i){ currentQuiz.idx=i; renderQuestion(); }
+function jumpTo(i){
+  clearQuestionTimer();
+  currentQuiz.idx = i;
+  renderQuestion();
+  updateQGrid();
+}
 
 function renderQuestion(){
   const fontCtrl = document.getElementById('examFontCtrl');
@@ -11028,6 +11458,7 @@ function renderQuestion(){
     return;
   }
   const q = currentQuiz.questions[currentQuiz.idx];
+  const isExpired = !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
   let html = '';
   if(currentQuiz.type==='reading' && currentQuiz.passage){
     html += `<div class="passage">${currentQuiz.passage}</div>`;
@@ -11047,7 +11478,7 @@ function renderQuestion(){
   html += `<div class="q-sub">Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}</div>`;
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
-    <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
+    <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
       <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   html += `<div class="q-nav-row">
@@ -11055,14 +11486,27 @@ function renderQuestion(){
       <button class="btn btn-primary" onclick="nextQ()">${currentQuiz.idx===currentQuiz.questions.length-1?'Yakunlash':'Keyingi →'}</button>
     </div>`;
   body.innerHTML = html;
-  if(currentQuiz.type==='mcq'){ startQuestionTimer(); } else { clearQuestionTimer(); }
+  if(currentQuiz.type==='mcq' || currentQuiz.type==='mock' || currentQuiz.skillId==='grammatika'){ startQuestionTimer(); } else { clearQuestionTimer(); }
 }
 function pickOption(oi){
-  currentQuiz.questions[currentQuiz.idx].picked = oi;
-  renderQuestion();
+  if(!currentQuiz || !currentQuiz.questions) return;
+  const q = currentQuiz.questions[currentQuiz.idx];
+  if(!q) return;
+
+  if(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0)){
+    toast("⏰ Ushbu savol uchun vaqt tugagan, javob berib bo'lmaydi");
+    return;
+  }
+
+  q.picked = oi;
+  const optEls = document.querySelectorAll('#quizBody .option');
+  optEls.forEach((el, idx)=>{
+    el.classList.toggle('selected', idx === oi);
+  });
   updateQGrid();
 }
 function nextQ(){
+  clearQuestionTimer();
   if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
     const juz = currentQuiz.juz[currentQuiz.juzPointer];
     if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
@@ -11079,6 +11523,7 @@ function nextQ(){
   else finishQuiz();
 }
 function prevQ(){
+  clearQuestionTimer();
   if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
     const juz = currentQuiz.juz[currentQuiz.juzPointer];
     if(currentQuiz.idx > juz.startIdx){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
@@ -11113,12 +11558,13 @@ function renderQiroaPhase(){
   }
 
   const q = currentQuiz.questions[currentQuiz.idx];
+  const isExpired = !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
   const localNum = currentQuiz.idx - juz.startIdx + 1;
   const localTotal = juz.endIdx - juz.startIdx + 1;
   let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
-    <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
+    <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
       <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
@@ -11254,12 +11700,13 @@ function renderIstimaPhase(){
 
   // phase === 'questions'
   const q = currentQuiz.questions[currentQuiz.idx];
+  const isExpired = !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
   const localNum = currentQuiz.idx - juz.startIdx + 1;
   const localTotal = juz.endIdx - juz.startIdx + 1;
   let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
-    <div class="option ${q.picked===oi?'selected':''}" onclick="pickOption(${oi})">
+    <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
       <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
   const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
@@ -11268,7 +11715,7 @@ function renderIstimaPhase(){
       <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi qism →':'Keyingi →')}</button>
     </div>`;
   body.innerHTML = html;
-  startQuestionTimer(); // har savol uchun 1 daqiqa — vaqt tugasa avtomatik keyingisiga o'tadi
+  startQuestionTimer(); // har savol uchun qolgan vaqtdan davom etadi
 }
 
 /* Audio hodisalari va progress kuzatuvi */

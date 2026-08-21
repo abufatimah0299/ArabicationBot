@@ -1,0 +1,6 @@
+{
+  "name": "Arabication",
+  "description": "Arabication — Arab tili ta'lim va imtihon platformasi",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
