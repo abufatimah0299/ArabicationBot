@@ -12452,12 +12452,48 @@ async function refreshSpeakingFromBackend(){
   applyLiveSpeakingQuestions(rows);
 }
 
-/* ---------------- Kitaba (Yozma) — 3 qism, har biri o'z talablari bilan ---------------- */
+/* ---------------- Kitaba (Yozma) — 3 qism, har biri o'z talablari bilan (100, 150, 200 so'z) ---------------- */
 const KITABA_PARTS = [
-  {id:'part1', name:'1-qism', minWords:100, seconds:15*60},
-  {id:'part2', name:'2-qism', minWords:150, seconds:20*60},
-  {id:'part3', name:'3-qism', minWords:200, seconds:30*60},
+  {id:'part1', name:'1-qism', minWords:100, unlockWords:50, seconds:15*60},
+  {id:'part2', name:'2-qism', minWords:150, unlockWords:75, seconds:20*60},
+  {id:'part3', name:'3-qism', minWords:200, unlockWords:100, seconds:30*60},
 ];
+
+/* Tashkeel/harakat belgilari: Fatha, Damma, Kasra, Sukun, Shadda, Tanwin va boshqalar (\u064B-\u065F, \u0670) */
+const ARABIC_DIACRITICS_REGEX = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+
+/* Arabcha so'zlarni sanash:
+   1. Har bir so'zdan tashkeel/harakat belgilarini olib tashlaymiz.
+   2. Kamida 2 ta haqiqiy arab harfidan iborat bo'lgan bo'laklar 1 ta so'z deb hisoblanadi (masalan: و و و bitta harfliklar hisoblanmaydi, وَو yoki وو 2 harflik bo'lgani uchun 1 ta so'z). */
+function countArabicWords(text){
+  if(!text || typeof text !== 'string') return 0;
+  // Barcha arab harfli bloklarni ajratib olamiz
+  const tokens = text.trim().match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g);
+  if(!tokens) return 0;
+  let validCount = 0;
+  for(const token of tokens){
+    // Harakatlarni (fatha, kasra, damma, sukun, shadda...) tozalaymiz
+    const cleanLetters = token.replace(ARABIC_DIACRITICS_REGEX, '');
+    // Kamida 2 ta haqiqiy arab harfi bo'lsa bitta so'z
+    if(cleanLetters.length >= 2){
+      validCount++;
+    }
+  }
+  return validCount;
+}
+
+/* Faqat arab harflari, arab va oddiy tinish belgilari, raqamlar va probellarga ruxsat berish:
+   Matnni to'g'ridan-to'g'ri tozalash uchun (EN/RUS harflarini avtomatik kiritmaslik) */
+function sanitizeArabicInput(text){
+  if(!text || typeof text !== 'string') return '';
+  // Lotin va Kirill harflarini to'liq olib tashlash
+  return text.replace(/[a-zA-Z\u0400-\u04FF\u0500-\u052F]/g, '');
+}
+
+function containsNonArabicLetters(text){
+  if(!text || typeof text !== 'string') return false;
+  return /[a-zA-Z\u0400-\u04FF\u0500-\u052F]/.test(text);
+}
 /* KITABA_TOPICS[partId] = [ {id, partId, topicAr}, ... ] — admin panelda kiritilgan
    mavzular banki, backenddan ("writing_topics" jadvali) yuklanadi. */
 let KITABA_TOPICS = { part1:[], part2:[], part3:[] };
@@ -12984,22 +13020,63 @@ function renderQuestion(){
       renderKitabaSummary();
       return;
     }
+    const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
     body.innerHTML = `
       <div class="q-sub">${cur.part.name} · ${currentQuiz.idx+1} / ${currentQuiz.questions.length}</div>
       <div class="prompt-box">
         <div class="lbl">Mavzu</div>
         <div style="font-family:var(--font-ar);font-size:19px;direction:rtl;text-align:right;margin-bottom:10px;">${cur.topic.topicAr}</div>
         <div class="lbl" style="margin-top:10px;">Talablar:</div>
-        <ul><li>Kamida ${cur.part.minWords} so'z</li><li>Mavzudan chetga chiqmaslik</li><li>To'g'ri imlo va grammatikaga e'tibor berish</li></ul>
+        <ul>
+          <li>Faqat <strong>arab alifbosida</strong> yozish (lotin/kirill harflari kiritilmaydi)</li>
+          <li>Talab qilingan hajm: <strong>${cur.part.minWords}+ so'z</strong> (kamida ${unlockTarget} ta so'z bo'lganda yuborish ochiladi)</li>
+          <li>Mavzudan chetga chiqmaslik va imloga e'tibor berish</li>
+        </ul>
       </div>
-      <textarea class="write-area" id="writeArea" placeholder="Yozishni boshlang...">${cur.text||''}</textarea>
-      <div class="wordcount"><span id="wcount">0</span> / ${cur.part.minWords}+ so'z</div>
-      <button class="btn btn-primary" style="margin-top:14px;" onclick="submitWriting()">Yuborish</button>
+      <textarea class="write-area" id="writeArea" dir="rtl" style="font-family:var(--font-ar);font-size:16.5px;line-height:1.7;min-height:180px;" placeholder="اكتب هنا باللغة العربية...">${escapeHtml(cur.text||'')}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px;">
+        <div class="wordcount" id="wcWrap"><span id="wcount">0</span> / ${cur.part.minWords}+ so'z</div>
+        <div id="ktLangWarning" style="display:none;font-size:12px;color:var(--red);font-weight:600;background:var(--red-bg);padding:4px 10px;border-radius:8px;border:1px solid rgba(220,38,38,0.2);">⚠️ Faqat arab alifbosida yozing!</div>
+      </div>
+      <button id="ktSubmitBtn" class="btn btn-primary btn-block" style="margin-top:14px;" onclick="submitWriting()">Yuborish</button>
     `;
     const ta = document.getElementById('writeArea');
-    const wc = document.getElementById('wcount');
-    function count(){ const words = ta.value.trim().length ? ta.value.trim().split(/\s+/).length : 0; wc.textContent = words; cur.text = ta.value; }
-    ta.addEventListener('input', count); count();
+    const wcWrap = document.getElementById('wcWrap');
+    const warnEl = document.getElementById('ktLangWarning');
+    const btn = document.getElementById('ktSubmitBtn');
+    
+    function count(){
+      let val = ta.value;
+      if(containsNonArabicLetters(val)){
+        if(warnEl) warnEl.style.display = 'block';
+        val = sanitizeArabicInput(val);
+        ta.value = val;
+        setTimeout(()=>{ if(warnEl) warnEl.style.display = 'none'; }, 2500);
+      }
+      cur.text = val;
+      const words = countArabicWords(val);
+      
+      const isUnlocked = words >= unlockTarget;
+      if(ta) ta.style.borderColor = words >= cur.part.minWords ? 'var(--green)' : (isUnlocked ? 'var(--primary)' : '');
+      
+      if(btn){
+        btn.disabled = !isUnlocked;
+        btn.style.opacity = isUnlocked ? '1' : '0.55';
+        btn.style.cursor = isUnlocked ? 'pointer' : 'not-allowed';
+      }
+
+      if(wcWrap){
+        if(words >= cur.part.minWords){
+          wcWrap.innerHTML = `<span style="color:var(--green);font-weight:700;">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--green);font-weight:600;margin-left:4px;">✓ To'liq hajm</span>`;
+        } else if(isUnlocked){
+          wcWrap.innerHTML = `<span style="color:var(--primary);font-weight:700;">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--primary);font-weight:600;margin-left:4px;">✓ Yuborish mumkin (min: ${unlockTarget})</span>`;
+        } else {
+          wcWrap.innerHTML = `<span style="font-weight:700;color:var(--text-faint);">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--text-faint);font-size:11.5px;margin-left:4px;">(${unlockTarget} ta bo'lsa ochiladi)</span>`;
+        }
+      }
+    }
+    ta.addEventListener('input', count);
+    count();
     return;
   }
   if(currentQuiz.skillId==='muhavara'){
@@ -13768,20 +13845,52 @@ function renderMuhavaraPhase(){
 function submitWriting(){
   const cur = currentQuiz.questions[currentQuiz.idx];
   const text = (cur.text||'').trim();
-  const words = text.length ? text.split(/\s+/).length : 0;
-  const minCheck = Math.min(10, cur.part.minWords);
-  if(words < minCheck){
-    toast("⚠️ Yozganingiz juda qisqa — davom ettiring, kamida bir necha jumla yozing.", 4000);
+  if(containsNonArabicLetters(text)){
+    toast("⚠️ Faqat arab alifbosida yozing! Lotin yoki kirill harflari qabul qilinmaydi.", 5000);
+    return;
+  }
+  const words = countArabicWords(text);
+  const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
+  if(words < unlockTarget){
+    toast(`⚠️ Matn yetarli emas! ${cur.part.name} uchun kamida ${unlockTarget} ta arabcha so'z yozishingiz kerak (hozir: ${words} ta).`, 5000);
     return;
   }
   evaluateWritingAnswer(text);
 }
-/* Vaqt tugaganda (timer 0'ga yetganda) joriy qismni bor holicha (bo'sh bo'lsa ham)
-   avtomatik yuboradi — foydalanuvchi keyingi qismga o'tkazib yuboriladi. */
+/* Vaqt tugaganda (timer 0'ga yetganda) joriy qismni tekshiradi:
+   Agar minimal ruxsat etilgan so'zdan (unlockWords: 50/75/100) kam bo'lsa yoki noarabiy harflar bo'lsa,
+   AI ga so'rov YUBORILMAYDI (0 token sarflanadi), avtomatik 0 ball beriladi va
+   "Matn minimal hajmga yetmadi" deb keyingi qismga o'tkaziladi. */
 function forceSubmitWriting(){
   if(!currentQuiz || currentQuiz.phase !== 'writing') return;
   const cur = currentQuiz.questions[currentQuiz.idx];
-  evaluateWritingAnswer((cur.text||'').trim());
+  const text = (cur.text||'').trim();
+  const words = countArabicWords(text);
+  const hasForeign = containsNonArabicLetters(text);
+  const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
+
+  if(words < unlockTarget || hasForeign){
+    clearInterval(timerInterval);
+    cur.text = text;
+    cur.score = 0;
+    cur.feedback = hasForeign
+      ? "Matnda lotin yoki kirill harflari ishlatilgani sababli AI tomonidan baholanmadi (0 ball)."
+      : `Vaqt tugadi. Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`;
+    cur.criteria = null;
+    cur.corrected = '';
+
+    if(currentQuiz.idx < currentQuiz.questions.length-1){
+      currentQuiz.idx++;
+      currentQuiz.phase = 'writing';
+      renderQuestion();
+      startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
+    } else {
+      finishKitabaExam();
+    }
+    return;
+  }
+
+  evaluateWritingAnswer(text);
 }
 /* Kitaba javobini backendga (Supabase Edge Function "evaluate-writing") yuboradi —
    u matnni Groq AI'ga tekshirtirib, shu QISM uchun 0-10 ball + 6 mezon (punktuatsiya,
@@ -13793,12 +13902,36 @@ async function evaluateWritingAnswer(text){
   clearInterval(timerInterval);
   const cur = currentQuiz.questions[currentQuiz.idx];
   cur.text = text;
+
+  const words = countArabicWords(text);
+  const hasForeign = containsNonArabicLetters(text);
+  const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
+
+  // Zero-token guard: Agar matn minimal ochilish hajmiga yetmagan bo'lsa, AI chaqirilmaydi
+  if(words < unlockTarget || hasForeign){
+    cur.score = 0;
+    cur.feedback = hasForeign 
+      ? "Matnda lotin yoki kirill harflari ishlatilgani sababli AI tomonidan baholanmadi (0 ball)." 
+      : `Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`;
+    cur.criteria = null;
+    cur.corrected = '';
+    if(currentQuiz.idx < currentQuiz.questions.length-1){
+      currentQuiz.idx++;
+      currentQuiz.phase = 'writing';
+      renderQuestion();
+      startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
+    } else {
+      finishKitabaExam();
+    }
+    return;
+  }
+
   currentQuiz.phase = 'evaluating';
   renderQuestion();
   try{
     const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-writing`, {
       method:'POST', headers: authHeaders(),
-      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: cur.part.minWords })
+      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: minRequired })
     });
     const data = await res.json().catch(()=>null);
     if(!res.ok || !data || typeof data.score !== 'number'){
