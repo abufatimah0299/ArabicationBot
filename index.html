@@ -12340,9 +12340,28 @@ function rankLevelFor(r, skill){
   if(skill === 'hammasi') return overall;
   return pick(r, [`${skill}_level`, `level_${skill}`, `${skill}Level`], overall);
 }
+/* "Barchasi" (hammasi) tanlanganda XP ko'rsatilmay qolish sababi: leaderboard_view'da
+   umumiy XP uchun kutilgan ustunlar (xp_week/xp_total/total_xp va h.k.) hali mavjud
+   emas yoki bo'sh — shu sabab pick() 0'ga tushadi va foydalanuvchi (xp>0 filtridan
+   o'tolmay) reytingdan butunlay yo'qolib qoladi. Muayyan mahorat tanlanganda esa
+   ${skill}_score ustuni (get_user_dashboard'da ham ishlatiladigan, haqiqatan mavjud
+   ustun) topilib, XP to'g'ri chiqadi.
+   YECHIM: "hammasi" uchun asosiy ustunlar topilmasa/0 bo'lsa, har bir mahoratning
+   ALLAQACHON ISHLAYOTGAN ${skill}_score ustunlaridan yig'indi hisoblab, shuni
+   umumiy XP sifatida ko'rsatamiz. Eslatma: bu yig'indi har doim UMUMIY (butun davr)
+   ball asosida — agar backendda haftalik/oylik XP uchun alohida ustunlar hali
+   qo'shilmagan bo'lsa, "Haftalik"/"Oylik" + "Barchasi" birikmasi ham shu umumiy
+   ballni ko'rsatadi (backendga tegishli ustunlar qo'shilgach avtomatik tuzaladi). */
+function rankXpFor(r, skill, period){
+  const xpKeys = rankXpKeys(skill, period);
+  const val = Number(pick(r, xpKeys, 0)) || 0;
+  if(val > 0 || skill !== 'hammasi') return val;
+  const skillScoreKeys = ['grammatika_score','qiroa_score','istima_score','muhavara_score','kitaba_score'];
+  const sum = skillScoreKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
+  return sum;
+}
 function sortedRank(period, skill){
   const myId = TELEGRAM_PROFILE.rawId;
-  const xpKeys = rankXpKeys(skill, period);
   const list = RANK_RAW_ROWS.map(r=>{
     const rid = pick(r, ['user_id','telegram_id','id'], '');
     const isMe = String(rid) === String(myId);
@@ -12355,7 +12374,7 @@ function sortedRank(period, skill){
       photo: showAvatar ? rawPhoto : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
-      xp: Number(pick(r, xpKeys, 0)) || 0,
+      xp: rankXpFor(r, skill, period),
       me: isMe,
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
@@ -12364,6 +12383,7 @@ function sortedRank(period, skill){
   return list.sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
 }
 /* Profil rasmi bor bo'lsa uni, bo'lmasa harflardan iborat rangli doirani chizadi.
+
    Rasm yuklanmasa (buzilgan URL va h.k.) avtomatik harflarga qaytadi.
    Foydalanuvchi sozlamalarida profil rasmini yashirish yoqilgan bo'lsa (showAvatar===false),
    boshqa foydalanuvchilarda ham rasm o'rniga bosh harflar ko'rsatiladi. */
