@@ -5598,10 +5598,14 @@ async function refreshRankFromBackend(){
    Admin yangi savol qo'shganda backendga yoziladi, boshqa foydalanuvchilar
    ilovani ochganda shu funksiya orqali yuklanadi. */
 async function loadQuestionsFromBackend(){
+  // MUHIM: tarmoq/server xatosida `null` qaytaramiz, `[]` emas — chunki applyLiveQuestions()
+  // "[]" ni "backend rostdan ham bo'sh javob berdi" deb tushunib, mavjud savollarni tozalab
+  // yuborardi. `null` bo'lsa esa applyLiveQuestions hech narsaga tegmaydi va oldingi
+  // (kesh yoki avvalgi muvaffaqiyatli yuklangan) savollar saqlanib qoladi.
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/questions?select=*&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
-  }catch(e){ console.error(e); return []; }
+    return res.ok ? await res.json() : null;
+  }catch(e){ console.error(e); return null; }
 }
 /* Backend xatolarini konsoldan tashqari ilova ichida (toast) ko'rsatish uchun —
    Telegram Mini App'da DevTools ochib bo'lmaydi, shu sabab admin xato matnini
@@ -6439,6 +6443,14 @@ function renderGreetingFromProfile(){
 }
 
 async function bootApp(){
+  // Savollar banki keshi: internet/serverdan javob kelguncha, oldingi safar
+  // saqlangan savollar shu yerda darhol qo'llaniladi. Shu tufayli foydalanuvchi
+  // ilovani ochgan zahoti biror mahoratga kirsa ham, "hali savol yo'q" degan
+  // xato ko'rinmaydi — pastda haqiqiy (yangi) ma'lumot kelgach avtomatik yangilanadi.
+  try{
+    const cachedQuestions = JSON.parse(localStorage.getItem('arab_questions_cache_v1') || 'null');
+    if(Array.isArray(cachedQuestions) && cachedQuestions.length) applyLiveQuestions(cachedQuestions);
+  }catch(e){}
   const user = await tgInitAndAuth();
   const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
   const savedPhoto = (function(){ try { return localStorage.getItem('arabication_saved_photo_url'); }catch(e){ return null; } })();
@@ -13450,11 +13462,20 @@ const GRAMMAR_TOPIC_BANKS = {};
    ko'payib borar edi. Shuning oldini olish uchun har safar avval barcha mahalliy
    savol massivlarini bo'shatib, so'ng backenddan kelgan qatorlar bilan qayta to'ldiramiz. */
 function applyLiveQuestions(rows){
+  // rows === null -> tarmoq/server xatosi (loadQuestionsFromBackend() shuni bildiradi).
+  // Bu holda hech narsaga tegmaymiz — mavjud (kesh yoki oldingi muvaffaqiyatli
+  // yuklangan) savollar banki o'zgarishsiz qoladi, chunki bu "haqiqatan ham
+  // savol yo'q" degani emas, shunchaki javob kelmadi degani.
+  if(rows === null || rows === undefined) return;
   Object.keys(GRAMMAR_TOPIC_BANKS).forEach(topicId=>{ GRAMMAR_TOPIC_BANKS[topicId] = []; });
   Object.values(QIROA_TEST_BY_ID).forEach(test=>{ test.questions = []; });
   Object.values(ISTIMA_TEST_BY_ID).forEach(test=>{ test.questions = []; });
   Object.keys(QUESTION_BANKS).forEach(skillId=>{ if(QUESTION_BANKS[skillId]) QUESTION_BANKS[skillId].questions = []; });
   if(!Array.isArray(rows) || !rows.length) return;
+  // Savollar banki keshi: keyingi safar ilova ochilganda, tarmoqdan yangi javob
+  // kelguncha shu kesh darhol ko'rsatiladi — shu bilan "hali savol yo'q" degan
+  // vaqtinchalik (noto'g'ri) ko'rinish oldini oladi.
+  try{ localStorage.setItem('arab_questions_cache_v1', JSON.stringify(rows)); }catch(e){}
   rows.forEach(r=>{
     const item = {
       id: r.id,
@@ -13584,6 +13605,29 @@ function applyLiveAdminUsers(rows){
   if(document.getElementById('view-admin')?.classList.contains('active')) renderAdminPanel();
 }
 
+/* Ba'zan foydalanuvchi ilovani ochgan zahoti (savollar banki hali serverdan
+   to'liq yuklanib ulgurmasdan) biror mahoratga kirsa, bank vaqtincha bo'sh
+   ko'rinib, "hali savol yo'q" degan NOTO'G'RI xabar chiqib ketardi (bir necha
+   soniyadan keyin qayta bossa ishlab ketardi). Bu funksiya buni tuzatadi:
+   agar ilova hali APP_READY bo'lmagan bo'lsa (ma'lumotlar hali yuklanmoqda),
+   xato ko'rsatish o'rniga foydalanuvchini kutadi va yuklanish tugashi bilan
+   urinishni o'zi avtomatik qayta boshlaydi. Agar ilova ALLAQACHON APP_READY
+   bo'lsa (ya'ni ma'lumot rostdan ham yo'q — masalan admin hali qo'shmagan),
+   false qaytaradi va chaqiruvchi joydagi asl xato xabari ko'rsatiladi. */
+function retryWhenDataReady(retryFn){
+  if(typeof APP_READY !== 'undefined' && APP_READY) return false;
+  toast("⏳ Ma'lumotlar hali yuklanmoqda, biroz kuting...", 3000);
+  const start = Date.now();
+  const iv = setInterval(()=>{
+    const ready = (typeof APP_READY !== 'undefined' && APP_READY);
+    if(ready || Date.now() - start > 10000){
+      clearInterval(iv);
+      retryFn();
+    }
+  }, 300);
+  return true;
+}
+
 /* ---------------- Start quiz ---------------- */
 function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
@@ -13605,6 +13649,7 @@ function startQuiz(skillId, customLabel, topicId){
     }
   }
   if(!questions || !questions.length){
+    if(retryWhenDataReady(()=> startQuiz(skillId, customLabel, topicId))) return;
     toast("⚠️ Bu bo'lim/mavzu uchun hali savollar qo'shilmagan. Admin panelda qo'shing.");
     return;
   }
@@ -13640,6 +13685,7 @@ function startQiroaQuiz(customLabel){
     })
     .filter(Boolean);
   if(availableJuz.length === 0){
+    if(retryWhenDataReady(()=> startQiroaQuiz(customLabel))) return;
     toast("⚠️ Qiroa bo'limi uchun hali matn/savollar qo'shilmagan. Admin panelda qo'shing.");
     return;
   }
@@ -13720,6 +13766,7 @@ function startIstimaQuiz(customLabel){
   const pickedJuz3 = juz3Pool.length ? juz3Pool[Math.floor(Math.random() * juz3Pool.length)] : null;
 
   if(pickedJuz1.length === 0 && !pickedJuz2 && !pickedJuz3){
+    if(retryWhenDataReady(()=> startIstimaQuiz(customLabel))) return;
     toast("⚠️ Istima bo'limi uchun hali audio/savollar to'liq qo'shilmagan. Admin panelda qo'shing.");
     return;
   }
@@ -13843,6 +13890,7 @@ function startKitabaExam(){
   for(const part of KITABA_PARTS){
     const bank = KITABA_TOPICS[part.id] || [];
     if(bank.length === 0){
+      if(retryWhenDataReady(()=> startKitabaExam())) return;
       toast(`⚠️ Kitaba ${part.name} uchun hali mavzu qo'shilmagan. Admin panelda qo'shing.`);
       return;
     }
@@ -14710,6 +14758,7 @@ function startMuhavaraQuiz(customLabel){
     pool.slice(0, MUHAVARA_MAX_Q_PER_PART).forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
   });
   if(flat.length === 0){
+    if(retryWhenDataReady(()=> startMuhavaraQuiz(customLabel))) return;
     toast("⚠️ Muhavara bo'limi uchun hali savollar qo'shilmagan. Admin panelda qo'shing.");
     return;
   }
