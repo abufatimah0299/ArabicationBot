@@ -7122,21 +7122,159 @@ renderHistoryList();
 renderGrammarHistory();
 
 /* mistake modal (reused for history review) */
-/* STATIK NAMUNA OLIB TASHLANDI — endi haqiqiy xato ma'lumoti bo'lmasa, "Xatolik topilmadi" ko'rsatiladi. */
-const SAMPLE_MISTAKES = [];
+const ATTEMPT_MISTAKES_STORAGE_KEY = 'at_tanal_attempt_mistakes_v2';
+let ATTEMPT_MISTAKES_MAP = {};
+try {
+  const raw = localStorage.getItem(ATTEMPT_MISTAKES_STORAGE_KEY);
+  if(raw) ATTEMPT_MISTAKES_MAP = JSON.parse(raw);
+} catch(e){
+  ATTEMPT_MISTAKES_MAP = {};
+}
+
+function saveMistakesForAttempt(attemptKey, mistakes){
+  if(!attemptKey || !Array.isArray(mistakes)) return;
+  try {
+    ATTEMPT_MISTAKES_MAP[String(attemptKey)] = mistakes;
+    const keys = Object.keys(ATTEMPT_MISTAKES_MAP);
+    if(keys.length > 150){
+      keys.slice(0, keys.length - 150).forEach(k => delete ATTEMPT_MISTAKES_MAP[k]);
+    }
+    localStorage.setItem(ATTEMPT_MISTAKES_STORAGE_KEY, JSON.stringify(ATTEMPT_MISTAKES_MAP));
+  } catch(e){}
+}
+
+function retryQuizFromHistory(section, topicId, topicLabel){
+  const sStr = String(section || '').toLowerCase();
+  const skill = SKILLS.find(s => s.name.toLowerCase() === sStr || s.id.toLowerCase() === sStr);
+  const skillId = skill ? skill.id : (topicId ? 'grammatika' : 'grammatika');
+  startQuiz(skillId, topicLabel || skill?.name, topicId || null);
+}
+
 function openMistakeModal(id){
-  const rec = HISTORY_DATA.find(r=>r.id===id);
-  document.getElementById('modalTitle').textContent = rec ? rec.topic + ' — xatolar tahlili' : 'Xatolar tahlili';
-  const wrongCount = rec ? (rec.total - rec.correct) : 0;
-  const items = SAMPLE_MISTAKES.slice(0, Math.min(3, Math.max(1, wrongCount)));
-  document.getElementById('modalBody').innerHTML = items.map(m=>`
-    <div class="mistake-item">
-      <div class="mistake-q">${m.q}</div>
-      <div class="mistake-row wrong">✕ Sizning javobingiz: ${m.picked}</div>
-      <div class="mistake-row right">✓ To'g'ri javob: ${m.correct}</div>
-      <div class="mistake-exp">💡 ${m.exp}</div>
+  const rec = HISTORY_DATA.find(r=>String(r.id)===String(id)) ||
+              (Array.isArray(window.HISTORY_DATA_LIVE) ? window.HISTORY_DATA_LIVE.find(r=>String(r.id)===String(id)) : null);
+
+  const topicName = rec ? (rec.topic || rec.topic_name || rec.section || 'Test') : 'Test';
+  const wrongCount = rec ? Math.max(0, (rec.total || 0) - (rec.correct || 0)) : 0;
+  const isPerfect = rec && (rec.correct >= rec.total) && (rec.total > 0);
+
+  // 1. Agar foydalanuvchi barcha savollarga to'g'ri javob bergan bo'lsa (0 xato)
+  if(isPerfect){
+    document.getElementById('modalTitle').textContent = `${topicName} — Natija`;
+    document.getElementById('modalBody').innerHTML = `
+      <div class="placeholder-card" style="padding:32px 20px;text-align:center;">
+        <div style="font-size:44px;margin-bottom:12px;">🎉</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:6px;">Xatolik yo'q!</h3>
+        <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 18px 0;line-height:1.5;">
+          Siz ushbu testdagi barcha <b>${rec.total} ta</b> savolga to'liq to'g'ri javob berdingiz (100% natija).
+        </p>
+        <button type="button" class="btn btn-primary" onclick="closeModal()">Yopish</button>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('show');
+    return;
+  }
+
+  // 2. Xatolarni barcha mavjud manbalardan qidirish
+  let items = [];
+  if(rec && Array.isArray(rec.mistakes) && rec.mistakes.length > 0){
+    items = rec.mistakes;
+  } else if(ATTEMPT_MISTAKES_MAP[String(id)] && ATTEMPT_MISTAKES_MAP[String(id)].length > 0){
+    items = ATTEMPT_MISTAKES_MAP[String(id)];
+  } else if(rec && rec.id && ATTEMPT_MISTAKES_MAP[String(rec.id)] && ATTEMPT_MISTAKES_MAP[String(rec.id)].length > 0){
+    items = ATTEMPT_MISTAKES_MAP[String(rec.id)];
+  } else if(rec && rec.topicId && ATTEMPT_MISTAKES_MAP['topic_' + rec.topicId]){
+    items = ATTEMPT_MISTAKES_MAP['topic_' + rec.topicId];
+  } else if(rec && rec.topic && ATTEMPT_MISTAKES_MAP[rec.topic]){
+    items = ATTEMPT_MISTAKES_MAP[rec.topic];
+  } else if(rec && rec.section && ATTEMPT_MISTAKES_MAP['skill_' + rec.section]){
+    items = ATTEMPT_MISTAKES_MAP['skill_' + rec.section];
+  } else if(Array.isArray(window.USER_ERRORS_LIVE) && window.USER_ERRORS_LIVE.length > 0){
+    const sId = rec ? (rec.section || '').toLowerCase() : '';
+    const tId = rec ? (rec.topicId || '') : '';
+    const tName = rec ? (rec.topic || '').toLowerCase() : '';
+    const matchedErrors = window.USER_ERRORS_LIVE.filter(err => {
+      const eSkill = (err.skill_id || err.skillId || '').toLowerCase();
+      const eTopic = (err.topic_name || err.topicName || '').toLowerCase();
+      return (sId && eSkill.includes(sId)) || (tName && eTopic && (tName.includes(eTopic) || eTopic.includes(tName)));
+    });
+    if(matchedErrors.length > 0){
+      items = matchedErrors.map(e => ({
+        q: e.question || e.q || '',
+        picked: e.picked_answer || e.picked || '(Xato javob)',
+        correct: e.correct_answer || e.correct || e.correctAns || '(To\'g\'ri javob)',
+        exp: e.explanation || e.exp || ''
+      }));
+    }
+  }
+
+  // 3. Agar xatolar topilgan bo'lsa — to'liq tahlil bilan ko'rsatamiz
+  if(items && items.length > 0){
+    document.getElementById('modalTitle').textContent = `${topicName} — xatolar tahlili (${items.length} ta)`;
+    document.getElementById('modalBody').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:14px;padding:2px 0;">
+        ${items.map((m, idx) => `
+          <div class="card" style="padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+              <span style="font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:var(--red-bg);color:var(--red);">
+                ✕ ${idx + 1}-savol
+              </span>
+              ${m.category ? `<span style="font-size:11px;font-weight:600;color:var(--text-faint);">${escapeHtml(m.category)}</span>` : ''}
+            </div>
+
+            <div style="font-family:var(--font-ar);font-size:17px;line-height:1.7;direction:rtl;text-align:right;color:var(--text);font-weight:600;margin-bottom:12px;">
+              ${escapeHtml(m.q)}
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--red-bg);border:1px solid rgba(214,69,69,0.25);color:var(--red);font-size:13px;font-weight:600;">
+                <span style="font-weight:800;">✕ Sizning javobingiz:</span>
+                <span style="font-family:var(--font-ar);font-size:14.5px;direction:rtl;text-align:right;margin-left:auto;">${escapeHtml(m.picked || '—')}</span>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.25);color:var(--green);font-size:13px;font-weight:600;">
+                <span style="font-weight:800;">✓ To'g'ri javob:</span>
+                <span style="font-family:var(--font-ar);font-size:14.5px;direction:rtl;text-align:right;margin-left:auto;">${escapeHtml(m.correct || '—')}</span>
+              </div>
+            </div>
+
+            ${m.exp ? `
+              <div style="margin-top:10px;padding:10px 12px;background:var(--card-alt);border-radius:10px;border:1px solid var(--border);font-size:12.5px;color:var(--text-dim);font-weight:500;line-height:1.5;">
+                <b style="color:var(--indigo-700);">💡 Tushuntirish:</b> ${escapeHtml(m.exp)}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          ${rec ? `<button type="button" class="btn btn-primary btn-block" onclick="closeModal();retryQuizFromHistory('${rec.section||''}','${rec.topicId||''}','${(rec.topic||'').replace(/'/g,"\\'")}')">Qayta test topshirish</button>` : ''}
+          <button type="button" class="btn btn-outline btn-block" onclick="closeModal()">Yopish</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('show');
+    return;
+  }
+
+  // 4. Agar umumiy natija saqlangan-u, savollar matni lokal saqlanmagan bo'lsa
+  document.getElementById('modalTitle').textContent = `${topicName} — xatolar tahlili`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="placeholder-card" style="padding:26px 18px;text-align:center;">
+      <div style="font-size:38px;margin-bottom:12px;">📊</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">
+        Natija: ${rec ? `${rec.correct}/${rec.total}` : ''} (${wrongCount > 0 ? `${wrongCount} ta xato` : '0 ta xato'})
+      </h3>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px 0;line-height:1.5;">
+        ${wrongCount > 0
+          ? `Ushbu urinishda <b>${wrongCount} ta</b> savolga xato javob berilgan. Yangi topshirilgan barcha testlarning savolma-savol tahlili avtomatik saqlanib boriladi.`
+          : `Ushbu testda xatoliklar qayd etilmagan.`}
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        ${rec && rec.topicId ? `<button type="button" class="btn btn-outline" onclick="closeModal();viewTopicQuestions('${(rec.section||'').toLowerCase()==='grammatika'?'grammatika':rec.topicId}','${rec.topicId}')">Savollar bankini ko'rish</button>` : ''}
+        ${rec ? `<button type="button" class="btn btn-primary" onclick="closeModal();retryQuizFromHistory('${rec.section||''}','${rec.topicId||''}','${(rec.topic||'').replace(/'/g,"\\'")}')">Qayta test topshirish</button>` : `<button type="button" class="btn btn-primary" onclick="closeModal()">Yopish</button>`}
+      </div>
     </div>
-  `).join('') || '<div class="placeholder-card"><h3>Xatolik topilmadi 🎉</h3></div>';
+  `;
   document.getElementById('modalOverlay').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); }
@@ -11367,9 +11505,11 @@ function showFullExamResults(){
   const side = document.getElementById('quizSide');
   if(side) side.style.display = 'none';
   let sumCorrect = 0, sumTotal = 0;
+  let allMistakes = [];
   const rows = FULL_EXAM.order.filter(id=>id!=='break').map(id=>{
     const r = FULL_EXAM.results[id] || {correct:0, total:0};
     sumCorrect += (r.correct||0); sumTotal += (r.total||0);
+    if(Array.isArray(r.mistakes)) allMistakes.push(...r.mistakes);
     const meta = SKILLS.find(s=>s.id===id);
     const pct = r.total ? Math.round((r.correct/r.total)*100) : 0;
     return `
@@ -11384,6 +11524,40 @@ function showFullExamResults(){
   const overallPct = sumTotal ? Math.round((sumCorrect/sumTotal)*100) : 0;
   const sumCorrectDisplay = Math.round(sumCorrect*10)/10;
   const sumTotalDisplay = Math.round(sumTotal*10)/10;
+
+  // Tarixga to'liq imtihon natijasini va xatolarini yozamiz
+  const attemptId = 'exam_' + Date.now();
+  saveMistakesForAttempt(attemptId, allMistakes);
+  saveMistakesForAttempt("To'liq At-Tanal imtihoni", allMistakes);
+  const now = new Date();
+  const fullExamHistoryRow = {
+    id: attemptId,
+    section: 'Imtihon',
+    topic: "To'liq At-Tanal imtihoni",
+    date: now.toLocaleDateString('uz-UZ', { day:'numeric', month:'short' }),
+    time: now.toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' }),
+    dateGroup: '7kun',
+    correct: Math.round(sumCorrect),
+    total: Math.round(sumTotal),
+    icon: '🎓',
+    color: 'var(--indigo-600)',
+    bg: 'var(--indigo-100)',
+    mistakes: allMistakes
+  };
+  HISTORY_DATA.unshift(fullExamHistoryRow);
+  renderHistoryStats();
+  renderHistoryList();
+
+  if(TELEGRAM_PROFILE.rawId){
+    submitQuizResultToBackend({
+      skillId: 'attanal',
+      topicId: 'full_exam',
+      topicName: "To'liq At-Tanal imtihoni",
+      correct: Math.round(sumCorrect),
+      total: Math.round(sumTotal)
+    });
+  }
+
   const body = document.getElementById('quizBody');
   body.innerHTML = `
     <div class="prompt-box" style="text-align:center;">
@@ -13187,6 +13361,79 @@ function finishQuiz(force = false){
   const pct = Math.round((correct/total)*100);
   const xp = correct; // har bir to'g'ri javob uchun 1 XP
 
+  // Xato qilingan savollarni to'liq tahlil uchun ajratib olamiz
+  const mistakeItems = (currentQuiz.questions || []).map((q, idx) => {
+    const isCorrect = q.picked === q.a;
+    if(isCorrect) return null;
+    const isUnanswered = (q.picked === null || q.picked === undefined);
+    const pickedText = isUnanswered ? "(Javob belgilanmagan)" : (q.opts && q.opts[q.picked] ? q.opts[q.picked] : String(q.picked));
+    const correctText = (q.opts && q.opts[q.a] ? q.opts[q.a] : String(q.a));
+    return {
+      qIndex: idx,
+      q: q.q,
+      picked: pickedText,
+      pickedIdx: q.picked,
+      correct: correctText,
+      correctIdx: q.a,
+      opts: q.opts,
+      exp: q.exp || '',
+      category: q.category || '',
+      skillId: currentQuiz.skillId,
+      topicId: currentQuiz.topicId,
+      topicName: currentQuiz.label || currentQuiz.skillId
+    };
+  }).filter(Boolean);
+
+  // Attempt ID yaratib, xatolarni xotirada saqlaymiz
+  const attemptId = 'att_' + Date.now();
+  saveMistakesForAttempt(attemptId, mistakeItems);
+  if(currentQuiz.topicId) saveMistakesForAttempt('topic_' + currentQuiz.topicId, mistakeItems);
+  saveMistakesForAttempt('skill_' + currentQuiz.skillId, mistakeItems);
+  if(currentQuiz.label) saveMistakesForAttempt(currentQuiz.label, mistakeItems);
+
+  // Tarix ro'yxatiga lokal yozuv qo'shamiz (darhol Tarix va Xatoliklar tahlilida ko'rinishi uchun)
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('uz-UZ', { day:'numeric', month:'short' });
+  const timeStr = now.toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' });
+  const sMeta = SKILL_META[currentQuiz.skillId] || {section:currentQuiz.skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
+  const localHistoryRow = {
+    id: attemptId,
+    section: sMeta.section,
+    topic: currentQuiz.label ? `${sMeta.section} — ${currentQuiz.label}` : sMeta.section,
+    topicId: currentQuiz.topicId,
+    date: dateStr,
+    time: timeStr,
+    dateGroup: '7kun',
+    correct,
+    total,
+    icon: sMeta.icon,
+    color: sMeta.color,
+    bg: sMeta.bg,
+    mistakes: mistakeItems
+  };
+  HISTORY_DATA.unshift(localHistoryRow);
+  renderHistoryStats();
+  renderHistoryList();
+  renderGrammarHistory();
+
+  // Xatolarim bo'limiga ham qo'shamiz
+  if(mistakeItems.length > 0){
+    if(!Array.isArray(window.USER_ERRORS_LIVE)) window.USER_ERRORS_LIVE = [];
+    mistakeItems.forEach(m => {
+      window.USER_ERRORS_LIVE.unshift({
+        id: 'err_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        skill_id: currentQuiz.skillId,
+        topic_name: currentQuiz.label || currentQuiz.skillId,
+        question: m.q,
+        picked_answer: m.picked,
+        correct_answer: m.correct,
+        explanation: m.exp,
+        created_at: new Date().toISOString()
+      });
+    });
+    applyLiveErrors();
+  }
+
   // Natijani backendga yuborish (foydalanuvchi Telegram orqali autentifikatsiyadan o'tgan bo'lsa)
   if(TELEGRAM_PROFILE.rawId){
     submitQuizResultToBackend({
@@ -13205,7 +13452,7 @@ function finishQuiz(force = false){
   }
 
   if(FULL_EXAM && FULL_EXAM.active){
-    FULL_EXAM.results[currentQuiz.skillId] = { correct, total, label: currentQuiz.label };
+    FULL_EXAM.results[currentQuiz.skillId] = { correct, total, label: currentQuiz.label, mistakes: mistakeItems };
     advanceFullExam();
     return;
   }
