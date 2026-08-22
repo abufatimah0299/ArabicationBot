@@ -4579,6 +4579,20 @@ const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
 
+/* Global holat o'zgaruvchilari — ReferenceError / TDZ xatolarining oldini olish uchun script boshida e'lon qilinadi */
+var FULL_EXAM_ORDER = ['grammatika','qiroa','istima','break','muhavara','kitaba'];
+var FULL_EXAM = null;
+var TELEGRAM_PROFILE = {
+  name: '',
+  username: '',
+  id: '',
+  rawId: null,
+  photoUrl: null,
+  gender: 'unspecified'
+};
+var PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
+var HISTORY_DATA = [];
+
 /* MOSLASHTIRING: bu yerga faqat admin panelni ko'rishi kerak bo'lgan Telegram foydalanuvi ID'larini yozing.
    DIQQAT: bu faqat tugmani yashiradi — haqiqiy himoya emas! Admin ma'lumotlariga backend (Supabase RLS)
    tarafida ham shu ID'lar uchun ruxsat berilishi shart, aks holda boshqa foydalanuvchi ham API orqali
@@ -6977,7 +6991,7 @@ if(grammarHistFilterEl){
 /* ================= HISTORY (Tarix) ================= */
 /* STATIK NAMUNA OLIB TASHLANDI. Bu massiv endi bo'sh boshlanadi — haqiqiy foydalanuvchi
    tarixi backenddan (quiz_attempts jadvali) kelgach, applyLiveHistory() uni to'ldiradi. */
-let HISTORY_DATA = [];
+HISTORY_DATA = HISTORY_DATA || [];
 let historyLoaded = false;
 /* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi.
    MOSLASHTIRING: agar sizning jadval ustunlaringiz boshqacha nomlansa, pick() ichidagi nomlarga qo'shing. */
@@ -10934,7 +10948,7 @@ renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 /* ================= PROFILE ================= */
 /* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
    (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
-let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
+PROFILE_STATS = PROFILE_STATS || { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
   const el = document.getElementById('profileStats');
   if(!el) return;
@@ -10970,7 +10984,7 @@ function applyProfileHeader(dash){
 /* ================= EDIT PROFILE & ONBOARDING (Telegram / Web) ================= */
 /* Endi bu ma'lumot Telegram autentifikatsiyasidan (tgInitAndAuth) real vaqtda keladi.
    rawId — bazadagi bigint id (RPC chaqiruvlarida ishlatiladi), id — ko'rsatish uchun matn. */
-let TELEGRAM_PROFILE = {
+TELEGRAM_PROFILE = TELEGRAM_PROFILE || {
   name: '',
   username: '',
   id: '',
@@ -11235,8 +11249,8 @@ const ARABIC_OPT_LETTERS = ['أ','ب','ج','د','هـ','و'];
    ichida to'planadi, oxirida esa umumiy (5 mahorat yig'indisi) natija ekrani
    ko'rsatiladi. Har bir mahorat baribir alohida-alohida backendga (odatdagidek)
    yoziladi — shu sabab bu funksiya alohida backend jadvali talab qilmaydi. */
-const FULL_EXAM_ORDER = ['grammatika','qiroa','istima','break','muhavara','kitaba'];
-let FULL_EXAM = null;
+/* FULL_EXAM_ORDER va FULL_EXAM o'zgaruvchilari yuqorida global holatda e'lon qilingan */
+FULL_EXAM_ORDER = FULL_EXAM_ORDER || ['grammatika','qiroa','istima','break','muhavara','kitaba'];
 function openFullExamIntro(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   showView('fullexamintro');
