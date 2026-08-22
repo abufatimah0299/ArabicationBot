@@ -3091,15 +3091,15 @@ html[data-theme="light"] .pin-dot.filled{
             <div><div style="font-size:30px;font-weight:600;">23 / 30</div><div style="font-size:12px;color:var(--text-faint);font-weight:600;">B2 daraja</div></div>
           </div>
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="skill-row"><span class="dot" style="background:var(--qiroa)"></span><span class="name">Qiroa</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="83" style="width:0%;background:var(--qiroa)"></div></div><span class="val">25/30</span></div>
-            <div class="skill-row"><span class="dot" style="background:var(--istima)"></span><span class="name">Istima</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="73" style="width:0%;background:var(--istima)"></div></div><span class="val">22/30</span></div>
+            <div class="skill-row"><span class="dot" style="background:var(--qiroa)"></span><span class="name">O'qish</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="83" style="width:0%;background:var(--qiroa)"></div></div><span class="val">25/30</span></div>
+            <div class="skill-row"><span class="dot" style="background:var(--istima)"></span><span class="name">Tinglash</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="73" style="width:0%;background:var(--istima)"></div></div><span class="val">22/30</span></div>
             <div class="skill-row"><span class="dot" style="background:var(--grammatika)"></span><span class="name">Grammatika</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="90" style="width:0%;background:var(--grammatika)"></div></div><span class="val">27/30</span></div>
-            <div class="skill-row"><span class="dot" style="background:var(--muhavara)"></span><span class="name">Muhovara</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="70" style="width:0%;background:var(--muhavara)"></div></div><span class="val">21/30</span></div>
-            <div class="skill-row"><span class="dot" style="background:var(--kitaba)"></span><span class="name">Kitaba</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="63" style="width:0%;background:var(--kitaba)"></div></div><span class="val">19/30</span></div>
+            <div class="skill-row"><span class="dot" style="background:var(--muhavara)"></span><span class="name">So'zlashuv</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="70" style="width:0%;background:var(--muhavara)"></div></div><span class="val">21/30</span></div>
+            <div class="skill-row"><span class="dot" style="background:var(--kitaba)"></span><span class="name">Yozish</span><div class="bar-bg" style="flex:1;"><div class="bar-fill" data-target="63" style="width:0%;background:var(--kitaba)"></div></div><span class="val">19/30</span></div>
           </div>
           <div style="margin-top:20px;background:var(--indigo-100);border-radius:13px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;">
             <span style="font-size:18px;">🎯</span>
-            <div><div style="font-weight:600;font-size:13.5px;">Tavsiya</div><div style="font-size:12.5px;color:var(--text-dim);font-weight:600;margin-top:2px;">Grammatika bo'yicha natijangiz yaxshi. Istima va Kitaba ustida ko'proq ishlashingiz tavsiya etiladi.</div></div>
+            <div><div style="font-weight:600;font-size:13.5px;">Tavsiya</div><div style="font-size:12.5px;color:var(--text-dim);font-weight:600;margin-top:2px;">Grammatika bo'yicha natijangiz yaxshi. Tinglash va Yozish ustida ko'proq ishlashingiz tavsiya etiladi.</div></div>
           </div>
         </div>
       </div>
@@ -4633,7 +4633,7 @@ function renderGreetingFromProfile(){
   }
   const pId = document.getElementById('profileId');
   if(pId){
-    const uid = (TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '7593629910');
+    const uid = (TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '5400174077');
     pId.textContent = `ID: ${uid}`;
   }
 
@@ -4658,7 +4658,8 @@ async function bootApp(){
     };
   } else {
     // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
-    TELEGRAM_PROFILE = { name:'Mehmon', username:'@arabication_admin', id:'7593629910', rawId:7593629910, photoUrl:null };
+    TELEGRAM_PROFILE = { name:'Admin', username:'@admin', id:'5400174077', rawId:5400174077, photoUrl:null };
+    if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
   }
   try{
     const savedName = localStorage.getItem('arabication_custom_name');
@@ -5695,10 +5696,10 @@ function toast(msg, duration = 4000, explicitType = null){
    haqiqiy foydalanuvchi ballari bilan almashtiriladi (renderSkillHub() qayta chaqiriladi). */
 const SKILLS = [
   {id:'grammatika', name:'Grammatika', ar:'القواعد', score:0, total:30, pct:0, color:'var(--grammatika)', bg:'var(--grammatika-bg)', icon:'📗', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-qiroa', desc:"Ushbu bo'limda arab tili grammatikasi (nahv, sarf va boshqa mavzular) bo'yicha savollarga javob berasiz. Har bir savol uchun 1 daqiqadan vaqt beriladi."},
-  {id:'qiroa', name:'Qiroa', ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
-  {id:'istima', name:'Istima', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
-  {id:'muhavara', name:'Muhovara', ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
-  {id:'kitaba', name:'Kitaba', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat: 1-qism (100+ so'z, 15 daqiqa), 2-qism (150+ so'z, 20 daqiqa), 3-qism (200+ so'z, 30 daqiqa). Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
+  {id:'qiroa', name:"O'qish", ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
+  {id:'istima', name:'Tinglash', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
+  {id:'muhavara', name:"So'zlashuv", ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
+  {id:'kitaba', name:'Yozish', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat: 1-qism (100+ so'z, 15 daqiqa), 2-qism (150+ so'z, 20 daqiqa), 3-qism (200+ so'z, 30 daqiqa). Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
 ];
 function applyBackendSkillScores(dash){
   if(!dash) return;
@@ -6379,14 +6380,7 @@ function renderHistoryList(){
 }
 initCustomDropdown('historySkillDropdown', {
   label: 'Mahorat',
-  options: [
-    { value: 'Barchasi', label: 'Barchasi' },
-    { value: 'Qiroa', label: 'Qiroa' },
-    { value: 'Istima', label: 'Istima' },
-    { value: 'Grammatika', label: 'Grammatika' },
-    { value: 'Muhovara', label: 'Muhovara' },
-    { value: 'Kitaba', label: 'Kitaba' },
-  ],
+  options: [{ value: 'Barchasi', label: 'Barchasi' }].concat(SKILLS.map(s => ({ value: s.name, label: s.name }))),
   value: historyFilters.section,
   onChange: (val) => {
     historyFilters.section = val;
