@@ -7140,7 +7140,7 @@ function showView(name, push=true){
   window.scrollTo(0,0);
   closeSidebar();
   const activeEl = document.getElementById('view-'+name);
-  if(activeEl) runEntranceAnimations(activeEl);
+  if(activeEl) runEntranceAnimations(activeEl, false, name === 'dashboard');
   if(name==='admin') renderAdminPanel();
   if(name==='hamjamiyat') renderCommunityView();
   if(name==='grammar') switchGrammarTab('practice');
@@ -7209,7 +7209,7 @@ function animateNumber(targetEl, targetVal, options = {}){
 }
 
 /* ---------------- Entrance animations (bars, rings, counters) ---------------- */
-function runEntranceAnimations(root, force = false){
+function runEntranceAnimations(root, force = false, instant = false){
   if(!root) return;
   const selector = force ? '.num-target[data-target]' : '.num-target[data-target]:not([data-animated])';
   const nums = root.querySelectorAll(selector);
@@ -7219,7 +7219,7 @@ function runEntranceAnimations(root, force = false){
     const decimals = parseInt(n.dataset.decimals || '0', 10);
     const prefix = n.dataset.prefix || '';
     const suffix = n.dataset.suffix || '';
-    const dur = parseInt(n.dataset.duration || '900', 10);
+    const dur = instant ? 0 : parseInt(n.dataset.duration || '900', 10);
     animateNumber(n, target, { duration: dur, decimals, prefix, suffix, from: 0 });
   });
 
@@ -7227,7 +7227,7 @@ function runEntranceAnimations(root, force = false){
   const ringSelector = force ? '.ring-progress[data-target-offset]' : '.ring-progress[data-target-offset]:not([data-animated])';
   const bars = root.querySelectorAll(barSelector);
   const rings = root.querySelectorAll(ringSelector);
-  if(reduceMotion){
+  if(reduceMotion || instant){
     bars.forEach(b=>{ b.style.width = b.dataset.target+'%'; b.setAttribute('data-animated','1'); });
     rings.forEach(r=>{ r.setAttribute('stroke-dashoffset', r.dataset.targetOffset); r.setAttribute('data-animated','1'); });
     return;
@@ -16265,7 +16265,7 @@ function renderDashboardPracticeCards(){
 
     if(valEl){
       valEl.setAttribute('data-target', String(correct));
-      animateNumber(valEl, correct, { duration: 800 });
+      animateNumber(valEl, correct, { duration: 0 }); // Asosiy sahifa: animatsiyasiz, darhol
     }
     if(totalEl) totalEl.textContent = String(total);
     if(titleEl) titleEl.textContent = "MOCK TESTLAR";
@@ -16295,7 +16295,7 @@ function renderDashboardPracticeCards(){
 
   if(fcValEl){
     fcValEl.setAttribute('data-target', String(masteredCount));
-    animateNumber(fcValEl, masteredCount, { duration: 800 });
+    animateNumber(fcValEl, masteredCount, { duration: 0 }); // Asosiy sahifa: animatsiyasiz, darhol
   }
   if(fcTotalEl) fcTotalEl.textContent = String(totalCount);
   if(fcSubEl) fcSubEl.textContent = totalCount > 0 ? `${totalCount} ta so'z · ${masteredCount} ta yodlangan` : "Mening lug‘atim (Anki)";
@@ -16316,7 +16316,7 @@ function renderDashboardPracticeCards(){
 
   if(marValEl){
     marValEl.setAttribute('data-target', String(marAnsweredCount));
-    animateNumber(marValEl, marAnsweredCount, { duration: 800 });
+    animateNumber(marValEl, marAnsweredCount, { duration: 0 }); // Asosiy sahifa: animatsiyasiz, darhol
   }
   if(marTotalEl) marTotalEl.textContent = String(marTotal);
   if(marTitleEl) marTitleEl.textContent = "Marafon";
@@ -16739,8 +16739,8 @@ function startGrammarMarathon(reset = false){
   }
 }
 
-/* Animate the initially-active dashboard view on first paint */
-runEntranceAnimations(document.getElementById('view-dashboard'));
+/* Asosiy sahifa (dashboard) raqamlari animatsiyasiz, darhol o'z qiymatida ko'rinadi */
+runEntranceAnimations(document.getElementById('view-dashboard'), false, true);
 
 /* Telegram autentifikatsiya + backend ma'lumotlarini yuklashni ishga tushirish */
 bootApp();
