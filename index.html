@@ -458,54 +458,60 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .skill-banner:hover .skill-banner-arrow-btn{ background:rgba(255,255,255,0.32); transform:scale(1.08); }
 
 /* ---------- Skill & Exam Full-Page Intro Screens ---------- */
-.skill-intro-wrap{ display:flex; flex-direction:column; width:100%; max-width:100%; gap:18px; }
+.skill-intro-wrap{ display:flex; flex-direction:column; width:100%; max-width:100%; gap:14px; }
 .skill-intro-card{
-  max-width:100% !important; width:100%; padding:32px 28px;
+  max-width:100% !important; width:100%; padding:22px 24px;
   display:flex; flex-direction:column; align-items:stretch; text-align:left;
-  border-radius:24px; box-shadow:var(--shadow);
+  border-radius:20px; box-shadow:var(--shadow);
 }
 .skill-intro-hero{
-  display:flex; align-items:center; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--border);
 }
 .skill-intro-icon{
-  width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; box-shadow:0 8px 20px -4px rgba(0,0,0,0.12);
+  width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; box-shadow:none;
 }
-.skill-intro-icon svg{ width:32px; height:32px; }
-.skill-intro-title-wrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-.skill-intro-title-ar{ font-family:var(--font-ar-bold); font-size:28px; font-weight:600; line-height:1.2; }
-.skill-intro-title-uz{ font-size:15px; color:var(--text-dim); font-weight:600; }
-.skill-intro-desc{ font-size:14px; color:var(--text-dim); font-weight:500; line-height:1.65; margin:16px 0; }
+.skill-intro-icon svg{ width:26px; height:26px; }
+.skill-intro-title-wrap{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.skill-intro-title-ar{ font-family:var(--font-ar-bold); font-size:24px; font-weight:600; line-height:1.2; }
+.skill-intro-title-uz{ font-size:14.5px; color:var(--text-dim); font-weight:600; }
+.skill-intro-desc{ font-size:13.5px; color:var(--text-dim); font-weight:500; line-height:1.55; margin:10px 0 12px 0; }
 .skill-intro-meta{
-  display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:12px; margin:8px 0 16px 0;
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:8px 0 12px 0; width:100%;
+}
+#view-fullexamintro .skill-intro-meta{
+  grid-template-columns:repeat(2, 1fr);
 }
 .skill-intro-meta .meta-pill{
-  display:flex; align-items:center; gap:10px; padding:12px 14px;
-  background:var(--bg); border:1px solid var(--border); border-radius:14px;
-  font-size:13px; font-weight:600; color:var(--text);
+  display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 8px;
+  background:var(--bg); border:1px solid var(--border); border-radius:12px;
+  font-size:12.5px; font-weight:600; color:var(--text); text-align:center; min-width:0; white-space:nowrap;
 }
-.skill-intro-meta .meta-pill svg{ width:18px; height:18px; color:var(--indigo-700); flex-shrink:0; }
+.skill-intro-meta .meta-pill svg{ width:15px; height:15px; color:var(--indigo-700); flex-shrink:0; }
+.skill-intro-meta .meta-pill span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .skill-intro-btn{
-  margin-top:20px; width:100% !important; padding:16px 28px; font-size:15.5px; font-weight:600;
-  border-radius:14px; display:flex; align-items:center; justify-content:center; gap:10px;
-  border:none; cursor:pointer; box-shadow:0 8px 24px -4px rgba(22,163,104,0.3);
+  margin-top:14px; width:100% !important; padding:13px 24px; font-size:14.5px; font-weight:600;
+  border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px;
+  border:none; cursor:pointer; box-shadow:none !important;
   transition:transform .15s ease, filter .15s ease;
 }
 .skill-intro-btn:active{ transform:scale(0.99); }
-.mic-check-box{ width:100%; margin:18px 0; }
-.mic-level-track{ width:100%; height:16px; border-radius:10px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
-.mic-level-fill{ height:100%; width:0%; border-radius:10px; background:linear-gradient(90deg, var(--muhavara), #22C57F); transition:width .08s linear; }
-.mic-check-status{ margin-top:14px; font-size:13.5px; font-weight:600; color:var(--text-dim); text-align:left; line-height:1.5; }
+.mic-check-box{ width:100%; margin:14px 0; }
+.mic-level-track{ width:100%; height:14px; border-radius:8px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
+.mic-level-fill{ height:100%; width:0%; border-radius:8px; background:linear-gradient(90deg, var(--muhavara), #22C57F); transition:width .08s linear; }
+.mic-check-status{ margin-top:10px; font-size:13px; font-weight:600; color:var(--text-dim); text-align:left; line-height:1.4; }
 .mic-check-status.ok{ color:#22C57F; }
 .mic-check-status.err{ color:var(--red); }
 @media (max-width:560px){
-  .skill-intro-card{ padding:24px 18px; border-radius:20px; }
-  .skill-intro-hero{ gap:14px; padding-bottom:16px; }
-  .skill-intro-icon{ width:52px; height:52px; border-radius:16px; }
-  .skill-intro-icon svg{ width:26px; height:26px; }
-  .skill-intro-title-ar{ font-size:24px; }
-  .skill-intro-title-uz{ font-size:14px; }
-  .skill-intro-meta{ grid-template-columns:1fr; }
+  .skill-intro-card{ padding:18px 14px; border-radius:16px; }
+  .skill-intro-hero{ gap:12px; padding-bottom:12px; }
+  .skill-intro-icon{ width:44px; height:44px; border-radius:13px; }
+  .skill-intro-icon svg{ width:22px; height:22px; }
+  .skill-intro-title-ar{ font-size:20px; }
+  .skill-intro-title-uz{ font-size:13.5px; }
+  .skill-intro-meta{ grid-template-columns:repeat(3, 1fr); gap:5px; margin:6px 0 10px 0; }
+  .skill-intro-meta .meta-pill{ padding:7px 4px; font-size:11px; gap:4px; border-radius:9px; }
+  .skill-intro-meta .meta-pill svg{ width:13px; height:13px; }
 }
 @media (max-width:640px){
   .skill-banner{ padding:18px 18px; min-height:92px; }
@@ -702,12 +708,12 @@ html[data-theme="dark"] .istima-wf-bar.active{
   height:26px;
 }
 
-/* Central Green Main Play Button */
+/* Central Main Play Button — mahorat bo'limi rangiga moslanadi */
 .istima-center-play{
   width:62px;
   height:62px;
   border-radius:50%;
-  background:var(--green);
+  background:var(--quiz-accent, var(--istima, var(--green)));
   border:none;
   color:#ffffff;
   display:flex;
@@ -715,13 +721,14 @@ html[data-theme="dark"] .istima-wf-bar.active{
   justify-content:center;
   cursor:pointer;
   box-shadow:none;
-  transition:transform .18s cubic-bezier(0.4, 0, 0.2, 1), opacity .2s ease;
+  transition:transform .18s cubic-bezier(0.4, 0, 0.2, 1), opacity .2s ease, background-color .2s ease;
   position:relative;
   flex-shrink:0;
   margin:0 4px;
 }
 .istima-center-play:hover:not(:disabled){
   transform:scale(1.08);
+  filter:brightness(0.92);
   box-shadow:none;
 }
 .istima-center-play:active:not(:disabled){
@@ -733,12 +740,14 @@ html[data-theme="dark"] .istima-wf-bar.active{
   box-shadow:none;
 }
 .istima-center-play svg{
-  width:26px;
-  height:26px;
-  margin-inline-start:2px;
+  width:40px;
+  height:40px;
+  margin-inline-start:0;
+  margin-left:0;
 }
 .istima-card-container.is-playing .istima-center-play svg{
   margin-inline-start:0;
+  margin-left:0;
 }
 
 /* Speed button as clean text (no border, fixed width to prevent layout shift) */
@@ -783,8 +792,8 @@ html[data-theme="dark"] .istima-wf-bar.active{
   .istima-icon-btn{ width:38px; min-width:38px; max-width:38px; height:38px; padding:6px; }
   .istima-icon-btn svg{ width:22px; height:22px; }
   .istima-speed-text-btn{ width:38px; min-width:38px; max-width:38px; height:38px; font-size:13px; padding:6px 0; }
-  .istima-center-play{ width:50px; height:50px; margin:0 2px; }
-  .istima-center-play svg{ width:20px; height:20px; }
+  .istima-center-play{ width:52px; height:52px; margin:0 2px; }
+  .istima-center-play svg{ width:26px; height:26px; }
 }
 .passage{
   background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:18px;
@@ -816,8 +825,21 @@ html[data-theme="dark"] .istima-wf-bar.active{
 .q-nav-row .btn{ flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; text-align:center; min-height:44px; padding:11px 16px; font-size:13.5px; border-radius:11px; }
 .q-nav-row[style*="justify-content:center"] .btn{ flex:0 1 auto; min-width:200px; }
 
+/* Dynamic section buttons in quiz (toza rang, nursiz / no glowing shadows) */
+#quizBody .btn-primary, #view-quiz .btn-primary:not(#quizFinishBtn) {
+  background: var(--quiz-accent, var(--indigo-700));
+  border-color: var(--quiz-accent, var(--indigo-700));
+  color: #fff;
+  box-shadow: none !important;
+}
+#quizBody .btn-primary:hover, #view-quiz .btn-primary:not(#quizFinishBtn):hover {
+  filter: brightness(0.92);
+  box-shadow: none !important;
+}
+
 /* side question grid */
-.side-card{ padding:18px; }
+.side-card{ padding:18px; border:none; background:transparent; box-shadow:none; }
+.side-card:hover{ transform:none; box-shadow:none; border-color:transparent; }
 .side-card h4{ font-size:12.5px; font-weight:600; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;}
 .qgrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
 .qgrid.qgrid-compact{ grid-template-columns:repeat(6,1fr); gap:6px; }
@@ -826,12 +848,46 @@ html[data-theme="dark"] .istima-wf-bar.active{
   aspect-ratio:1; border-radius:9px; border:1.5px solid var(--border); background:var(--card); font-weight:600; font-size:12.5px;
   cursor:pointer; font-family:inherit; color:var(--text-dim);
 }
-.qbtn.current{ border-color:var(--indigo-700); background:var(--indigo-700); color:#fff; }
+.qbtn.current{ border-color:var(--quiz-accent, var(--indigo-700)); background:var(--quiz-accent, var(--indigo-700)); color:#fff; }
 .qbtn.answered{ border-color:var(--green); background:var(--green-bg); color:var(--green); }
 .qbtn.expired:not(.answered){ border-color:var(--red); color:var(--red); opacity:0.75; }
 .legend{ margin-top:14px; display:flex; flex-direction:column; gap:7px; font-size:11.5px; font-weight:600; color:var(--text-dim);}
 .legend .row{ display:flex; align-items:center; gap:8px;}
 .legend .sw{ width:12px; height:12px; border-radius:4px; }
+
+/* Soft red finish test button */
+.quiz-finish-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+.btn-finish-soft-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 150px;
+  max-width: 100%;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  background: #E55353;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px -3px rgba(229, 83, 83, 0.4);
+  transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.btn-finish-soft-red:hover {
+  background: #D94444;
+  box-shadow: 0 6px 18px -3px rgba(229, 83, 83, 0.5);
+  transform: translateY(-1px);
+}
+.btn-finish-soft-red:active {
+  transform: translateY(0) scale(0.98);
+}
 
 /* mic / writing views */
 .mic-wrap{ display:flex; flex-direction:column; align-items:center; padding:30px 20px 10px 20px; }
@@ -3653,17 +3709,19 @@ html[data-theme="light"] .pin-dot.filled{
             <div style="height:1px;background:var(--border);"></div>
             <div class="quiz-body" id="quizBody"></div>
           </div>
-          <div class="side-card card" id="quizSide">
+          <div class="side-card" id="quizSide">
             <div id="qgridWrap">
               <h4 id="sideTitle">Savollar</h4>
               <div class="qgrid" id="qgrid"></div>
               <div class="legend">
-                <div class="row"><span class="sw" style="background:var(--indigo-700)"></span>Hozirgi savol</div>
+                <div class="row"><span class="sw" id="legendCurrentSw" style="background:var(--quiz-accent, var(--indigo-700))"></span>Hozirgi savol</div>
                 <div class="row"><span class="sw" style="background:var(--green-bg);border:1px solid var(--green)"></span>Javob berilgan</div>
                 <div class="row"><span class="sw" style="background:var(--card);border:1px solid var(--border)"></span>Javob berilmagan</div>
               </div>
             </div>
-            <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="finishQuiz()">Testni yakunlash</button>
+            <div class="quiz-finish-btn-wrap">
+              <button class="btn-finish-soft-red" id="quizFinishBtn" onclick="finishQuiz()">Testni yakunlash</button>
+            </div>
           </div>
         </div>
       </div>
@@ -6678,7 +6736,7 @@ const SKILLS = [
   {id:'qiroa', name:"O'qish", ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
   {id:'istima', name:'Tinglash', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
   {id:'muhavara', name:"So'zlashuv", ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
-  {id:'kitaba', name:'Yozish', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat: 1-qism (100+ so'z, 15 daqiqa), 2-qism (150+ so'z, 20 daqiqa), 3-qism (200+ so'z, 30 daqiqa). Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
+  {id:'kitaba', name:'Yozish', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat:<br>• 1-qism (100+ so'z, 15 daqiqa)<br>• 2-qism (150+ so'z, 20 daqiqa)<br>• 3-qism (200+ so'z, 30 daqiqa)<br>Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
 ];
 function applyBackendSkillScores(dash){
   if(!dash) return;
@@ -6918,11 +6976,11 @@ function openSkillIntro(id){
   icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS[s.id]}</svg>`;
   document.getElementById('skillIntroAr').textContent = s.ar;
   document.getElementById('skillIntroUz').textContent = s.name;
-  document.getElementById('skillIntroDesc').textContent = s.desc;
+  document.getElementById('skillIntroDesc').innerHTML = s.desc;
   document.getElementById('skillIntroMeta').innerHTML = `
-    <div class="meta-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>${s.qCount} ta savol</span></div>
-    <div class="meta-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>${s.mins} daqiqa</span></div>
-    <div class="meta-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Maksimal ${s.total} ball</span></div>
+    <div class="meta-pill"><svg style="color:${s.color}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>${s.qCount} ta savol</span></div>
+    <div class="meta-pill"><svg style="color:${s.color}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>${s.mins} daqiqa</span></div>
+    <div class="meta-pill"><svg style="color:${s.color}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Max: ${s.total} ball</span></div>
   `;
   const btn = document.getElementById('skillIntroBtn');
   btn.textContent = s.btn;
@@ -12998,6 +13056,12 @@ function jumpTo(i){
 }
 
 function renderQuestion(){
+  if(currentQuiz && currentQuiz.color){
+    const quizWrapEl = document.getElementById('view-quiz');
+    if(quizWrapEl) quizWrapEl.style.setProperty('--quiz-accent', currentQuiz.color);
+    const legendSw = document.getElementById('legendCurrentSw');
+    if(legendSw) legendSw.style.background = currentQuiz.color;
+  }
   const fontCtrl = document.getElementById('examFontCtrl');
   if(fontCtrl){
     const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening');
@@ -13028,51 +13092,48 @@ function renderQuestion(){
         <div style="font-family:var(--font-ar);font-size:19px;direction:rtl;text-align:right;margin-bottom:10px;">${cur.topic.topicAr}</div>
         <div class="lbl" style="margin-top:10px;">Talablar:</div>
         <ul>
-          <li>Faqat <strong>arab alifbosida</strong> yozish (lotin/kirill harflari kiritilmaydi)</li>
-          <li>Talab qilingan hajm: <strong>${cur.part.minWords}+ so'z</strong> (kamida ${unlockTarget} ta so'z bo'lganda yuborish ochiladi)</li>
+          <li>Faqat <strong>arab alifbosida</strong> yozish</li>
+          <li>Talab qilingan hajm: <strong>${cur.part.minWords}+ so'z</strong></li>
           <li>Mavzudan chetga chiqmaslik va imloga e'tibor berish</li>
         </ul>
       </div>
       <textarea class="write-area" id="writeArea" dir="rtl" style="font-family:var(--font-ar);font-size:16.5px;line-height:1.7;min-height:180px;" placeholder="اكتب هنا باللغة العربية...">${escapeHtml(cur.text||'')}</textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px;">
         <div class="wordcount" id="wcWrap"><span id="wcount">0</span> / ${cur.part.minWords}+ so'z</div>
-        <div id="ktLangWarning" style="display:none;font-size:12px;color:var(--red);font-weight:600;background:var(--red-bg);padding:4px 10px;border-radius:8px;border:1px solid rgba(220,38,38,0.2);">⚠️ Faqat arab alifbosida yozing!</div>
       </div>
-      <button id="ktSubmitBtn" class="btn btn-primary btn-block" style="margin-top:14px;" onclick="submitWriting()">Yuborish</button>
+      <div style="display:flex;justify-content:center;margin-top:16px;">
+        <button id="ktSubmitBtn" class="btn btn-primary" style="padding:12px 36px;border-radius:9999px;min-width:180px;" onclick="submitWriting()">Yuborish</button>
+      </div>
     `;
     const ta = document.getElementById('writeArea');
     const wcWrap = document.getElementById('wcWrap');
-    const warnEl = document.getElementById('ktLangWarning');
     const btn = document.getElementById('ktSubmitBtn');
+    let lastToastTime = 0;
     
     function count(){
       let val = ta.value;
       if(containsNonArabicLetters(val)){
-        if(warnEl) warnEl.style.display = 'block';
+        const now = Date.now();
+        if(now - lastToastTime > 2000){
+          toast("⚠️ Faqat arab alifbosida yozing!", 3000);
+          lastToastTime = now;
+        }
         val = sanitizeArabicInput(val);
         ta.value = val;
-        setTimeout(()=>{ if(warnEl) warnEl.style.display = 'none'; }, 2500);
       }
       cur.text = val;
       const words = countArabicWords(val);
       
       const isUnlocked = words >= unlockTarget;
-      if(ta) ta.style.borderColor = words >= cur.part.minWords ? 'var(--green)' : (isUnlocked ? 'var(--primary)' : '');
+      if(ta) ta.style.borderColor = words >= cur.part.minWords ? 'var(--green)' : '';
       
       if(btn){
-        btn.disabled = !isUnlocked;
         btn.style.opacity = isUnlocked ? '1' : '0.55';
         btn.style.cursor = isUnlocked ? 'pointer' : 'not-allowed';
       }
 
       if(wcWrap){
-        if(words >= cur.part.minWords){
-          wcWrap.innerHTML = `<span style="color:var(--green);font-weight:700;">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--green);font-weight:600;margin-left:4px;">✓ To'liq hajm</span>`;
-        } else if(isUnlocked){
-          wcWrap.innerHTML = `<span style="color:var(--primary);font-weight:700;">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--primary);font-weight:600;margin-left:4px;">✓ Yuborish mumkin (min: ${unlockTarget})</span>`;
-        } else {
-          wcWrap.innerHTML = `<span style="font-weight:700;color:var(--text-faint);">${words}</span> / ${cur.part.minWords}+ so'z <span style="color:var(--text-faint);font-size:11.5px;margin-left:4px;">(${unlockTarget} ta bo'lsa ochiladi)</span>`;
-        }
+        wcWrap.innerHTML = `<span style="font-weight:700;${words >= cur.part.minWords ? 'color:var(--green);' : ''}">${words}</span> / ${cur.part.minWords}+ so'z`;
       }
     }
     ta.addEventListener('input', count);
@@ -13300,10 +13361,10 @@ function renderIstimaPhase(){
             </svg>
           </button>
 
-          <!-- 3. Markaziy Yashil Play/Pauza -->
+          <!-- 3. Markaziy Play/Pauza (Mavzu rangiga mos, yumshoq burchakli katta uchburchak) -->
           <button type="button" class="istima-center-play" id="istimaMainPlayBtn" onclick="toggleIstimaAudio()" ${canPlay?'':'disabled'} title="${canPlay ? 'Ijro etish' : 'Audio mavjud emas'}">
             <svg id="istimaPlayIcon" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="7 5 19 12 7 19 7 5"/>
+              <path d="M7.5 4.8c-1 .6-1.5 1.5-1.5 2.7v9c0 1.2.5 2.1 1.5 2.7 1 .6 2.1.5 3.1-.1l8-4.5c1-.6 1.5-1.5 1.5-2.6s-.5-2-1.5-2.6l-8-4.5c-1-.6-2.1-.7-3.1-.1z"/>
             </svg>
           </button>
 
@@ -13330,7 +13391,7 @@ function renderIstimaPhase(){
       <audio id="istimaAudioEl" src="${juz.audioUrl||''}" preload="metadata" style="display:none;"></audio>
       
       <div class="q-nav-row" style="justify-content:center;margin-top:20px;">
-        <button class="btn btn-primary" onclick="skipIstimaListening()" style="padding:13px 34px;font-size:14.5px;font-weight:700;border-radius:14px;box-shadow:0 6px 20px -4px color-mix(in srgb, var(--primary) 45%, transparent);">Savollarga o'tish →</button>
+        <button class="btn btn-primary" onclick="skipIstimaListening()" style="padding:13px 34px;font-size:14.5px;font-weight:700;border-radius:14px;box-shadow:none;">Savollarga o'tish →</button>
       </div>
       <div style="text-align:center;font-size:12px;color:var(--text-faint);font-weight:500;margin-top:12px;line-height:1.5;">Audioni tinglab bo'lgach savollar avtomatik boshlanadi — tayyor bo'lsangiz darhol savollarga o'tishingiz mumkin.</div>
     `;
@@ -13406,14 +13467,14 @@ function setupIstimaAudioEvents(){
     const box = document.getElementById('istimaPlayerBox');
     if(box) box.classList.add('is-playing');
     const playIcon = document.getElementById('istimaPlayIcon');
-    if(playIcon) playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/>';
+    if(playIcon) playIcon.innerHTML = '<rect x="6" y="5" width="4.5" height="14" rx="2"/><rect x="13.5" y="5" width="4.5" height="14" rx="2"/>';
   };
 
   audio.onpause = function(){
     const box = document.getElementById('istimaPlayerBox');
     if(box) box.classList.remove('is-playing');
     const playIcon = document.getElementById('istimaPlayIcon');
-    if(playIcon) playIcon.innerHTML = '<polygon points="7 5 19 12 7 19 7 5"/>';
+    if(playIcon) playIcon.innerHTML = '<path d="M7.5 4.8c-1 .6-1.5 1.5-1.5 2.7v9c0 1.2.5 2.1 1.5 2.7 1 .6 2.1.5 3.1-.1l8-4.5c1-.6 1.5-1.5 1.5-2.6s-.5-2-1.5-2.6l-8-4.5c-1-.6-2.1-.7-3.1-.1z"/>';
   };
 
   audio.onended = function(){
@@ -13421,7 +13482,7 @@ function setupIstimaAudioEvents(){
     const box = document.getElementById('istimaPlayerBox');
     if(box) box.classList.remove('is-playing');
     const playIcon = document.getElementById('istimaPlayIcon');
-    if(playIcon) playIcon.innerHTML = '<polygon points="7 5 19 12 7 19 7 5"/>';
+    if(playIcon) playIcon.innerHTML = '<path d="M7.5 4.8c-1 .6-1.5 1.5-1.5 2.7v9c0 1.2.5 2.1 1.5 2.7 1 .6 2.1.5 3.1-.1l8-4.5c1-.6 1.5-1.5 1.5-2.6s-.5-2-1.5-2.6l-8-4.5c-1-.6-2.1-.7-3.1-.1z"/>';
     handleIstimaAudioEnded();
   };
 
@@ -13846,13 +13907,13 @@ function submitWriting(){
   const cur = currentQuiz.questions[currentQuiz.idx];
   const text = (cur.text||'').trim();
   if(containsNonArabicLetters(text)){
-    toast("⚠️ Faqat arab alifbosida yozing! Lotin yoki kirill harflari qabul qilinmaydi.", 5000);
+    toast("⚠️ Faqat arab alifbosida yozing! Lotin yoki kirill harflari qabul qilinmaydi.", 4000);
     return;
   }
   const words = countArabicWords(text);
   const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
   if(words < unlockTarget){
-    toast(`⚠️ Matn yetarli emas! ${cur.part.name} uchun kamida ${unlockTarget} ta arabcha so'z yozishingiz kerak (hozir: ${words} ta).`, 5000);
+    toast(`⚠️ Kamida ${unlockTarget} ta so'z bo'lganda yuborish ochiladi (hozir: ${words} ta)`, 4500);
     return;
   }
   evaluateWritingAnswer(text);
