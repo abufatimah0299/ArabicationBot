@@ -533,7 +533,10 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 /* ---------- Quiz view ---------- */
 .quiz-wrap{ display:grid; grid-template-columns:minmax(0, 1fr) 260px; gap:18px; align-items:start; width:100%; max-width:100%; min-width:0; }
 .quiz-wrap > .card{ width:100%; max-width:100%; min-width:0; box-sizing:border-box; }
-.quiz-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; gap:10px; flex-wrap:wrap; }
+.quiz-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; gap:10px; flex-wrap:nowrap; }
+@media (max-width:480px){
+  .quiz-head{ padding:12px 14px; gap:8px; }
+}
 .quiz-head .tag{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; display:inline-flex; align-items:center; transition:background-color .35s var(--ease), color .35s var(--ease); }
 .quiz-head .timer{
   display:inline-flex;
@@ -2614,14 +2617,21 @@ html[data-theme="dark"] .dash-main-heading {
   color: #F8FAFC;
 }
 
-/* ============ DASHBOARD 2 CARDS (PRACTICE QUE. & FLASHCARD) ============ */
+/* ============ DASHBOARD 2 CARDS (MOCK & FLASHCARD) ============ */
 .dash-cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   width: 100%;
-  max-width: 680px;
+  max-width: 860px;
   margin-top: 20px;
+}
+
+@media (max-width: 580px) {
+  .dash-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 
 .dash-feature-card {
@@ -2634,7 +2644,7 @@ html[data-theme="dark"] .dash-main-heading {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 168px;
+  min-height: 172px;
   text-decoration: none;
   user-select: none;
 }
@@ -2668,24 +2678,64 @@ html[data-theme="dark"] .dash-feature-card.card-peach {
   box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.09);
 }
 
+.dash-feature-card:hover .dfc-action-arrow {
+  transform: translateX(3px);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="dark"] .dash-feature-card:hover .dfc-action-arrow {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .dash-feature-card:active {
   transform: scale(0.97);
 }
 
-/* 40% kattalashtirilgan card emojilari / 3D ikonkalari */
+.dfc-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
 .dfc-badge {
-  width: 62px;
-  height: 62px;
-  margin-bottom: 14px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
 
 .dfc-3d-svg {
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   display: block;
+}
+
+.dfc-action-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  transition: transform .2s ease, background .2s ease, color .2s ease;
+}
+
+html[data-theme="dark"] .dfc-action-arrow {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94A3B8;
+}
+
+.dash-feature-card.card-mock:hover .dfc-action-arrow {
+  color: #2563EB;
+}
+
+.dash-feature-card.card-peach:hover .dfc-action-arrow {
+  color: #EA580C;
 }
 
 .dfc-stats-row {
@@ -2781,40 +2831,487 @@ html[data-theme="dark"] .dfc-progress-bar {
   background: #EA580C;
 }
 
+.dfc-progress-fill.fill-green {
+  background: #10B981;
+}
+
+/* ============ MARAFON HORIZONTAL SECTION & CARD ============ */
+.dash-section-wrap {
+  width: 100%;
+  max-width: 860px;
+  margin-top: 22px;
+}
+
+.dash-section-label {
+  font-family: 'Onest', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+html[data-theme="dark"] .dash-section-label {
+  color: #F8FAFC;
+}
+
+.dash-marathon-banner {
+  width: 100%;
+  border-radius: 22px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  user-select: none;
+  background: #ECFDF5;
+  border: 1px solid #D1FAE5;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.04);
+}
+
+html[data-theme="dark"] .dash-marathon-banner {
+  background: rgba(6, 78, 59, 0.22);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.dash-marathon-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -6px rgba(16, 185, 129, 0.14);
+  border-color: #A7F3D0;
+}
+
+html[data-theme="dark"] .dash-marathon-banner:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.dash-marathon-banner:hover .dmb-arrow {
+  transform: translateX(4px);
+  color: #10B981;
+}
+
+html[data-theme="dark"] .dash-marathon-banner:hover .dmb-arrow {
+  color: #34D399;
+}
+
+.dash-marathon-banner:active {
+  transform: scale(0.985);
+}
+
+.dmb-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.dmb-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dmb-badge-svg {
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+
+.dmb-text-block {
+  min-width: 0;
+}
+
+.dmb-title {
+  font-family: 'Onest', sans-serif;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="dark"] .dmb-title {
+  color: #F8FAFC;
+}
+
+.dmb-sub {
+  font-family: 'Onest', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+  margin-top: 3px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme="dark"] .dmb-sub {
+  color: #94A3B8;
+}
+
+.dmb-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.dmb-score-pill {
+  display: flex;
+  align-items: baseline;
+  font-family: 'Onest', sans-serif;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+html[data-theme="dark"] .dmb-score-pill {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.dmb-val {
+  font-weight: 800;
+  color: #059669;
+}
+
+html[data-theme="dark"] .dmb-val {
+  color: #34D399;
+}
+
+.dmb-slash {
+  margin: 0 1px;
+  color: #10B981;
+  font-size: 11px;
+}
+
+.dmb-total {
+  color: #047857;
+  font-size: 12px;
+}
+
+html[data-theme="dark"] .dmb-total {
+  color: #6EE7B7;
+}
+
+.dmb-arrow {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  transition: transform .2s ease, color .2s ease;
+}
+
+html[data-theme="dark"] .dmb-arrow {
+  color: #94A3B8;
+}
+
 @media (max-width: 480px) {
   .dash-cards-grid {
-    gap: 10px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .dash-section-wrap {
+    margin-top: 16px;
   }
   .dash-feature-card {
-    padding: 16px 14px 14px 14px;
-    min-height: 154px;
-    border-radius: 20px;
+    padding: 14px 12px 12px 12px;
+    min-height: 146px;
+    border-radius: 18px;
+  }
+  .dash-marathon-banner {
+    padding: 12px 14px;
+    border-radius: 18px;
+  }
+  .dmb-badge {
+    width: 46px;
+    height: 46px;
+  }
+  .dmb-badge-svg {
+    width: 46px;
+    height: 46px;
+  }
+  .dmb-title {
+    font-size: 15px;
+  }
+  .dmb-sub {
+    font-size: 12px;
   }
   .dfc-badge {
-    width: 53px;
-    height: 53px;
-    margin-bottom: 12px;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 0;
   }
   .dfc-3d-svg {
-    width: 50px;
-    height: 50px;
+    width: 42px;
+    height: 42px;
   }
   .dfc-val {
-    font-size: 23px;
+    font-size: 21px;
   }
   .dfc-slash {
-    font-size: 17px;
+    font-size: 16px;
   }
   .dfc-total {
-    font-size: 14.5px;
+    font-size: 13.5px;
   }
   .dfc-title {
     font-size: 11px;
   }
   .dfc-sub {
-    font-size: 10.5px;
+    font-size: 10px;
   }
+}
+
+/* ============ MARAFON HUB & QUIZ NAVIGATION STYLES ============ */
+.marathon-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.marathon-action-card {
+  width: 100%;
+  border-radius: 20px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  user-select: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 3px 14px rgba(0,0,0,0.03);
+}
+.marathon-action-card.card-continue {
+  background: #ECFDF5;
+  border-color: #D1FAE5;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-continue {
+  background: rgba(6, 78, 59, 0.22);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+.marathon-action-card.card-restart {
+  background: #FFF7ED;
+  border-color: #FFEDD5;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-restart {
+  background: rgba(124, 45, 18, 0.22);
+  border-color: rgba(249, 115, 22, 0.28);
+}
+.marathon-action-card.card-saved {
+  background: #FEFCE8;
+  border-color: #FEF08A;
+  box-shadow: 0 4px 16px rgba(202, 138, 4, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-saved {
+  background: rgba(113, 63, 18, 0.22);
+  border-color: rgba(234, 179, 8, 0.28);
+}
+.marathon-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(0,0,0,0.08);
+}
+.marathon-action-card:hover .dmb-arrow {
+  transform: translateX(4px);
+}
+.marathon-action-card:active {
+  transform: scale(0.985);
+}
+
+/* Marathon Quiz Compact Nav Buttons & Bookmark Icon */
+.marathon-nav-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 20px !important;
+}
+.q-nav-btn-compact {
+  flex: 1 !important;
+  max-width: 140px !important;
+  min-width: 110px !important;
+  padding: 11px 14px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+.btn-save-bookmark {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--card) !important;
+  color: var(--text-faint) !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all .18s ease !important;
+  padding: 0 !important;
+}
+.btn-save-bookmark.visible {
+  display: inline-flex !important;
+}
+.btn-save-bookmark:hover {
+  background: var(--card-alt) !important;
+  border-color: var(--text-dim) !important;
+  color: var(--text) !important;
+  transform: scale(1.05);
+}
+.btn-save-bookmark.active {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #10B981 !important;
+}
+.btn-save-bookmark:active {
+  transform: scale(0.94);
+}
+
+/* Saved Questions List in Modal */
+#savedMarathonModalBody {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+#savedMarathonModalBody::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.saved-q-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  user-select: none;
+}
+.saved-q-card:hover {
+  border-color: var(--indigo-500);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+}
+.saved-q-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.saved-q-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--indigo-700);
+  background: var(--indigo-100);
+  padding: 3px 9px;
+  border-radius: 8px;
+}
+.saved-q-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s ease, background .15s ease;
+}
+.saved-q-del-btn:hover {
+  color: var(--red);
+  background: var(--red-bg);
+}
+.saved-q-text {
+  font-family: var(--font-ar);
+  font-size: 17px;
+  line-height: 1.6;
+  direction: rtl;
+  text-align: right;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.saved-q-opt {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.saved-q-opt.correct {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #047857;
+}
+html[data-theme="dark"] .saved-q-opt.correct {
+  color: #34D399;
+}
+.saved-q-opt.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #B91C1C;
+}
+html[data-theme="dark"] .saved-q-opt.incorrect {
+  color: #F87171;
+}
+.saved-q-exp-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  transition: color .15s ease;
+}
+.saved-q-card:hover .saved-q-exp-hint {
+  color: var(--indigo-500);
+}
+.saved-q-exp-box {
+  display: none;
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--card-alt);
+  border-left: 3px solid var(--indigo-500);
+  line-height: 1.5;
+  animation: fadeInFast .2s ease;
+}
+.saved-q-exp-box.open {
+  display: block;
 }
 
 /* ============ FLASHCARDS / MENING LUG'ATIM STYLES ============ */
@@ -3355,22 +3852,29 @@ html[data-theme="light"] .pin-dot.filled{
           <div class="dash-cards-grid" id="dashCardsGrid">
             <!-- 1-Card: MOCK TESTLAR (Grammatika mock testlarga olib o'tadi) -->
             <div class="dash-feature-card card-mock" id="dashMockCard" onclick="handleDashMockCardClick()" role="button" tabindex="0">
-              <div class="dfc-badge">
-                <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
-                  <defs>
-                    <linearGradient id="dfcBlueGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#38BDF8"/>
-                      <stop offset="0.65" stop-color="#2563EB"/>
-                      <stop offset="1" stop-color="#1D4ED8"/>
-                    </linearGradient>
-                    <filter id="dfcBlueGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.32"/>
-                    </filter>
-                  </defs>
-                  <circle cx="22" cy="22" r="18" fill="url(#dfcBlueGrad)" filter="url(#dfcBlueGlow)"/>
-                  <path d="M16 34L20 30H22C27.52 30 32 25.52 32 20C32 14.48 27.52 10 22 10C16.48 10 12 14.48 12 20C12 23.3 13.62 26.22 16.12 28.02L16 34Z" fill="url(#dfcBlueGrad)"/>
-                  <path d="M22 14C19.79 14 18 15.61 18 17.6H20.4C20.4 16.72 21.12 16 22 16C22.88 16 23.6 16.72 23.6 17.6C23.6 18.32 23.12 18.8 22.4 19.28C21.36 20 20.56 21.04 20.56 22.64H22.96C22.96 21.68 23.44 21.28 24.16 20.72C25.12 20 26 18.96 26 17.6C26 15.61 24.21 14 22 14ZM20.64 24.8V27.2H23.04V24.8H20.64Z" fill="#FFFFFF"/>
-                </svg>
+              <div class="dfc-top-bar">
+                <div class="dfc-badge">
+                  <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
+                    <defs>
+                      <linearGradient id="dfcBlueGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#38BDF8"/>
+                        <stop offset="0.65" stop-color="#2563EB"/>
+                        <stop offset="1" stop-color="#1D4ED8"/>
+                      </linearGradient>
+                      <filter id="dfcBlueGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.32"/>
+                      </filter>
+                    </defs>
+                    <circle cx="22" cy="22" r="18" fill="url(#dfcBlueGrad)" filter="url(#dfcBlueGlow)"/>
+                    <path d="M16 34L20 30H22C27.52 30 32 25.52 32 20C32 14.48 27.52 10 22 10C16.48 10 12 14.48 12 20C12 23.3 13.62 26.22 16.12 28.02L16 34Z" fill="url(#dfcBlueGrad)"/>
+                    <path d="M22 14C19.79 14 18 15.61 18 17.6H20.4C20.4 16.72 21.12 16 22 16C22.88 16 23.6 16.72 23.6 17.6C23.6 18.32 23.12 18.8 22.4 19.28C21.36 20 20.56 21.04 20.56 22.64H22.96C22.96 21.68 23.44 21.28 24.16 20.72C25.12 20 26 18.96 26 17.6C26 15.61 24.21 14 22 14ZM20.64 24.8V27.2H23.04V24.8H20.64Z" fill="#FFFFFF"/>
+                  </svg>
+                </div>
+                <div class="dfc-action-arrow">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </div>
               </div>
               <div>
                 <div class="dfc-stats-row">
@@ -3390,28 +3894,35 @@ html[data-theme="light"] .pin-dot.filled{
 
             <!-- 2-Card: LUG'ATLARIM (Mening Lug'atim) -->
             <div class="dash-feature-card card-peach" id="dashFlashCard" onclick="openFlashcardsView()" role="button" tabindex="0">
-              <div class="dfc-badge">
-                <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
-                  <defs>
-                    <linearGradient id="dfcPurpleGrad" x1="6" y1="6" x2="34" y2="38" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#8B5CF6"/>
-                      <stop offset="1" stop-color="#6D28D9"/>
-                    </linearGradient>
-                    <linearGradient id="dfcGreenBadge" x1="22" y1="4" x2="38" y2="20" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#4ADE80"/>
-                      <stop offset="1" stop-color="#16A34A"/>
-                    </linearGradient>
-                    <filter id="dfcPurpleGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#6D28D9" flood-opacity="0.3"/>
-                    </filter>
-                  </defs>
-                  <rect x="7" y="8" width="24" height="28" rx="6" fill="url(#dfcPurpleGrad)" filter="url(#dfcPurpleGlow)"/>
-                  <rect x="12" y="15" width="8" height="2.5" rx="1.25" fill="#F59E0B"/>
-                  <rect x="12" y="20" width="14" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.85"/>
-                  <rect x="12" y="24.5" width="11" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.85"/>
-                  <circle cx="30" cy="12" r="8" fill="url(#dfcGreenBadge)"/>
-                  <path d="M30 8C28.67 8 27.6 8.88 27.6 10H29C29 9.52 29.43 9.12 30 9.12C30.53 9.12 30.96 9.52 30.96 10C30.96 10.48 30.64 10.72 30.24 11.04C29.68 11.44 29.2 12 29.2 13H30.6C30.6 12.44 30.92 12.2 31.32 11.88C31.88 11.48 32.4 10.84 32.4 10C32.4 8.88 31.33 8 30 8ZM29.28 14.2V15.6H30.72V14.2H29.28Z" fill="#FFFFFF"/>
-                </svg>
+              <div class="dfc-top-bar">
+                <div class="dfc-badge">
+                  <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
+                    <defs>
+                      <linearGradient id="dfcPurpleGrad" x1="6" y1="6" x2="34" y2="38" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#8B5CF6"/>
+                        <stop offset="1" stop-color="#6D28D9"/>
+                      </linearGradient>
+                      <linearGradient id="dfcGreenBadge" x1="22" y1="4" x2="38" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#4ADE80"/>
+                        <stop offset="1" stop-color="#16A34A"/>
+                      </linearGradient>
+                      <filter id="dfcPurpleGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#6D28D9" flood-opacity="0.3"/>
+                      </filter>
+                    </defs>
+                    <rect x="7" y="8" width="24" height="28" rx="6" fill="url(#dfcPurpleGrad)" filter="url(#dfcPurpleGlow)"/>
+                    <rect x="12" y="15" width="8" height="2.5" rx="1.25" fill="#F59E0B"/>
+                    <rect x="12" y="20" width="14" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.85"/>
+                    <rect x="12" y="24.5" width="11" height="2" rx="1" fill="#FFFFFF" fill-opacity="0.85"/>
+                    <circle cx="30" cy="12" r="8" fill="url(#dfcGreenBadge)"/>
+                    <path d="M30 8C28.67 8 27.6 8.88 27.6 10H29C29 9.52 29.43 9.12 30 9.12C30.53 9.12 30.96 9.52 30.96 10C30.96 10.48 30.64 10.72 30.24 11.04C29.68 11.44 29.2 12 29.2 13H30.6C30.6 12.44 30.92 12.2 31.32 11.88C31.88 11.48 32.4 10.84 32.4 10C32.4 8.88 31.33 8 30 8ZM29.28 14.2V15.6H30.72V14.2H29.28Z" fill="#FFFFFF"/>
+                  </svg>
+                </div>
+                <div class="dfc-action-arrow">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </div>
               </div>
               <div>
                 <div class="dfc-stats-row">
@@ -3426,6 +3937,51 @@ html[data-theme="light"] .pin-dot.filled{
               </div>
               <div class="dfc-progress-bar">
                 <div class="dfc-progress-fill fill-orange" id="dashFlashCardFill" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MARAFON HORIZONTAL SECTION & CARD -->
+          <div class="dash-section-wrap" id="dashMarathonSection">
+            <div class="dash-section-label">Marafon</div>
+            <div class="dash-marathon-banner" id="dashMarathonCard" onclick="handleDashMarathonCardClick()" role="button" tabindex="0">
+              <div class="dmb-left">
+                <div class="dmb-badge">
+                  <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                    <defs>
+                      <linearGradient id="dmbGreenGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#34D399"/>
+                        <stop offset="0.6" stop-color="#10B981"/>
+                        <stop offset="1" stop-color="#059669"/>
+                      </linearGradient>
+                      <filter id="dmbGreenGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#059669" flood-opacity="0.32"/>
+                      </filter>
+                    </defs>
+                    <circle cx="22" cy="22" r="18" fill="url(#dmbGreenGrad)" filter="url(#dmbGreenGlow)"/>
+                    <path d="M22 11C22.6 14.5 25.5 16.5 25.5 19.5C25.5 22 23.5 24 21 24C20.4 24 19.8 23.9 19.3 23.6C19.8 22.3 20.8 21.2 20.8 19.8C20.8 18 19.5 16.8 18.5 15.3C16.8 17.5 15.5 20.4 15.5 23.2C15.5 27.5 18.4 31 22.5 31C26.6 31 30 27.6 30 23.5C30 18.8 25.5 15.2 22 11Z" fill="#FFFFFF"/>
+                    <path d="M21.5 25C20.5 25 19.5 24.2 19.5 23C19.5 21.8 20.4 21 21.2 20.2C22 21.2 22.8 22.2 22.8 23.2C22.8 24.2 22.2 25 21.5 25Z" fill="#FEF08A"/>
+                  </svg>
+                </div>
+                <div class="dmb-text-block">
+                  <div class="dmb-title" id="dashMarathonCardTitle">Marafon</div>
+                  <div class="dmb-sub" id="dashMarathonCardSub">Grammatika savollari bo‘yicha to‘liq marafon</div>
+                </div>
+              </div>
+              <div class="dmb-right">
+                <div class="dmb-score-pill">
+                  <span class="dmb-val num-target" id="dashMarathonCardVal" data-target="0">0</span>
+                  <span class="dmb-slash">/</span>
+                  <span class="dmb-total" id="dashMarathonCardTotal">0</span>
+                </div>
+                <div class="dmb-arrow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="dfc-progress-bar" style="display:none;">
+                <div class="dfc-progress-fill fill-green" id="dashMarathonCardFill" style="width: 0%;"></div>
               </div>
             </div>
           </div>
@@ -3537,6 +4093,130 @@ html[data-theme="light"] .pin-dot.filled{
           </div>
 
           <div class="fc-list-grid" id="fcWordsGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============ MARAFON HUB VIEW ============ -->
+      <div class="view" id="view-marathon">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+
+        <div class="fc-header-wrap" style="margin-bottom:12px;">
+          <div>
+            <div class="view-title" style="margin:0;">Marafon</div>
+            <div style="font-size:13px;color:var(--text-dim);font-weight:600;margin-top:3px;">
+              Grammatika savollari bo‘yicha to‘liq marafon
+            </div>
+          </div>
+        </div>
+
+        <div class="fc-info-banner" style="margin-bottom:20px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>Arab tili testlari va qiroa matnlaridagi grammatika savollarini marafon usulida ketma-ket ishlab, bilimingizni mustahkamlab boring.</span>
+        </div>
+
+        <!-- Ustma-ust joylashgan Marafon Cardlari -->
+        <div class="marathon-cards-stack">
+          
+          <!-- 1-Card: Davom ettirish (eski marafonni) -->
+          <div class="marathon-action-card card-continue" onclick="resumeMarathonFromHub()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbGreenGrad)" filter="url(#dmbGreenGlow)"/>
+                  <path d="M18 14l12 8-12 8V14z" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Davom ettirish</div>
+                <div class="dmb-sub" id="marathonHubResumeSub">1-savoldan boshlash</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-score-pill" id="marathonHubResumePill">
+                <span class="dmb-val" id="marathonHubResumeVal">0</span>
+                <span class="dmb-slash">/</span>
+                <span class="dmb-total" id="marathonHubResumeTotal">0</span>
+              </div>
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Card: Marafonni qayta boshlash (0 dan) -->
+          <div class="marathon-action-card card-restart" onclick="confirmRestartMarathon()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbOrangeGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#FB923C"/>
+                      <stop offset="1" stop-color="#EA580C"/>
+                    </linearGradient>
+                    <filter id="dmbOrangeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#EA580C" flood-opacity="0.3"/>
+                    </filter>
+                    <linearGradient id="dmbAmberGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#FBBF24"/>
+                      <stop offset="1" stop-color="#D97706"/>
+                    </linearGradient>
+                    <filter id="dmbAmberGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#D97706" flood-opacity="0.3"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbOrangeGrad)" filter="url(#dmbOrangeGlow)"/>
+                  <path d="M22 13v-3l-4 4 4 4v-3a7 7 0 1 1-7 7h-2a9 9 0 1 0 9-9z" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Qayta boshlash</div>
+                <div class="dmb-sub">0 dan boshlash · Natijalarni yangilash</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Card: Saqlangan savollar -->
+          <div class="marathon-action-card card-saved" onclick="openSavedMarathonQuestions()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbAmberGrad)" filter="url(#dmbAmberGlow)"/>
+                  <path d="M22 12l2.6 5.3 5.9.8-4.3 4.2 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.2 5.9-.8L22 12z" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Saqlangan savollar</div>
+                <div class="dmb-sub" id="marathonHubSavedSub">0 ta savol saqlangan</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-score-pill" style="min-width:32px;justify-content:center;" id="marathonHubSavedBadge">
+                <span class="dmb-val" id="marathonHubSavedCount">0</span>
+              </div>
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -4659,6 +5339,17 @@ html[data-theme="light"] .pin-dot.filled{
         Saqlash
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ============ MARAFON SAQLANGAN SAVOLLAR MODAL ============ -->
+<div class="modal-overlay" id="savedMarathonModalOverlay" onclick="if(event.target===this) closeSavedMarathonModal()" style="display:none;">
+  <div class="modal-box" style="max-width:540px;border-radius:24px;">
+    <div class="modal-head">
+      <h3 id="savedMarathonModalTitle">⭐ Saqlangan savollar</h3>
+      <button class="modal-close" onclick="closeSavedMarathonModal()">✕</button>
+    </div>
+    <div class="modal-body" id="savedMarathonModalBody" style="padding:16px 20px 22px;max-height:75vh;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -6343,7 +7034,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -6352,7 +7043,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -6441,6 +7132,7 @@ function showView(name, push=true){
   if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
   if(name==='dashboard') renderDashboardPracticeCards();
   if(name==='flashcards') renderFlashcardsView();
+  if(name==='marathon') renderMarathonHub();
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
   // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
@@ -12786,6 +13478,7 @@ function applyLiveQuestions(rows){
       QUESTION_BANKS[r.skill_id].questions.push(item);
     }
   });
+  renderDashboardPracticeCards();
 }
 
 /* ---------------- Grammatika: umumiy imtihon uchun kategoriya bo'yicha taqsimot ----------------
@@ -13171,12 +13864,41 @@ function startKitabaExam(){
 
 /* Speaking quiz has its own simplified entry through hub button too (skillId muhavara) */
 
+function updateMarathonHeaderStats(){
+  const timerEl = document.getElementById('quizTimer');
+  if(!timerEl) return;
+  let wrong = 0;
+  let correct = 0;
+  if(currentQuiz && currentQuiz.questions){
+    currentQuiz.questions.forEach(q => {
+      if(q.picked !== null && q.picked !== undefined){
+        if(q.picked === q.a){
+          correct++;
+        } else {
+          wrong++;
+        }
+      }
+    });
+  }
+  timerEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums;"><span style="color:var(--red,#EF4444);">${wrong}</span><span style="color:var(--text-faint,#94a3b8);font-weight:500;">/</span><span style="color:var(--green,#10B981);">${correct}</span></span>`;
+  timerEl.style.borderColor = 'var(--border)';
+  timerEl.style.color = '';
+  timerEl.style.minWidth = 'auto';
+  timerEl.style.padding = '3px 8px';
+}
+
 function buildQGrid(){
   const grid = document.getElementById('qgrid');
   const wrap = document.getElementById('qgridWrap');
-  document.getElementById('quizSide').style.display = '';
-  if(currentQuiz.type==='writing'){ document.getElementById('quizSide').style.display='none'; return; }
-  if(FULL_EXAM && FULL_EXAM.active){ document.getElementById('quizSide').style.display='none'; return; }
+  if(currentQuiz && currentQuiz.isMarathon){
+    const sideEl = document.getElementById('quizSide');
+    if(sideEl) sideEl.style.display = 'none';
+    return;
+  }
+  const sideEl = document.getElementById('quizSide');
+  if(sideEl) sideEl.style.display = '';
+  if(currentQuiz.type==='writing'){ if(sideEl) sideEl.style.display='none'; return; }
+  if(FULL_EXAM && FULL_EXAM.active){ if(sideEl) sideEl.style.display='none'; return; }
   const noGrid = ['muhavara','istima','qiroa'].includes(currentQuiz.skillId);
   wrap.style.display = noGrid ? 'none' : '';
   grid.classList.toggle('qgrid-compact', currentQuiz.skillId==='grammatika');
@@ -13196,6 +13918,11 @@ function jumpTo(i){
   currentQuiz.idx = i;
   renderQuestion();
   updateQGrid();
+  if(currentQuiz && currentQuiz.isMarathon){
+    const state = getMarathonState();
+    state.currentIndex = i;
+    saveMarathonState(state);
+  }
 }
 
 function renderQuestion(){
@@ -13204,6 +13931,33 @@ function renderQuestion(){
     if(quizWrapEl) quizWrapEl.style.setProperty('--quiz-accent', currentQuiz.color);
     const legendSw = document.getElementById('legendCurrentSw');
     if(legendSw) legendSw.style.background = currentQuiz.color;
+  }
+  const qTag = document.getElementById('quizTag');
+  if(qTag){
+    if(currentQuiz && currentQuiz.isMarathon){
+      qTag.style.display = 'inline-flex';
+      qTag.style.background = 'transparent';
+      qTag.style.border = 'none';
+      qTag.style.padding = '0';
+      qTag.style.fontSize = '15px';
+      qTag.style.fontWeight = '700';
+      qTag.style.color = 'var(--text)';
+      qTag.style.lineHeight = '1.2';
+      qTag.textContent = `Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}`;
+    } else {
+      qTag.style.display = '';
+      qTag.style.background = '';
+      qTag.style.border = '';
+      qTag.style.padding = '';
+      qTag.style.fontSize = '';
+      qTag.style.fontWeight = '';
+      qTag.style.color = '';
+      qTag.style.lineHeight = '';
+    }
+  }
+  const sideCard = document.getElementById('quizSide');
+  if(sideCard){
+    sideCard.style.display = (currentQuiz && (currentQuiz.isMarathon || currentQuiz.type === 'writing' || (FULL_EXAM && FULL_EXAM.active))) ? 'none' : '';
   }
   const fontCtrl = document.getElementById('examFontCtrl');
   if(fontCtrl){
@@ -13298,7 +14052,7 @@ function renderQuestion(){
     return;
   }
   const q = currentQuiz.questions[currentQuiz.idx];
-  const isExpired = !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
+  const isExpired = !currentQuiz.isMarathon && !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
   let html = '';
   if(currentQuiz.type==='reading' && currentQuiz.passage){
     html += `<div class="passage">${currentQuiz.passage}</div>`;
@@ -13315,23 +14069,109 @@ function renderQuestion(){
         <span style="font-size:12px;color:var(--text-faint);font-weight:600;">0:32 / 1:24</span>
       </div>`;
   }
-  html += `<div class="q-sub">Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}</div>`;
+  
+  if(!currentQuiz.isMarathon){
+    html += `<div class="q-sub">Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}</div>`;
+  }
   html += `<div class="q-text">${q.q}</div>`;
-  html += `<div class="options">` + q.opts.map((opt,oi)=>`
-    <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
-      <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
-    </div>`).join('') + `</div>`;
-  html += `<div class="q-nav-row">
-      <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
-      <button class="btn btn-primary" onclick="nextQ()">${currentQuiz.idx===currentQuiz.questions.length-1?'Yakunlash':'Keyingi →'}</button>
-    </div>`;
+
+  if(currentQuiz.isMarathon){
+    const hasPicked = q.picked !== null && q.picked !== undefined;
+    html += `<div class="options">` + q.opts.map((opt,oi)=>{
+      let cls = '';
+      if(hasPicked){
+        if(oi === q.picked){
+          cls = (q.picked === q.a) ? 'selected correct disabled' : 'selected incorrect disabled';
+        } else if(oi === q.a && q.picked !== q.a){
+          cls = 'correct disabled';
+        } else {
+          cls = 'disabled';
+        }
+      }
+      const clickHandler = hasPicked ? '' : `onclick="pickOption(${oi})"`;
+      const pointerStyle = hasPicked ? 'style="pointer-events:none;"' : '';
+      return `<div class="option ${cls}" ${clickHandler} ${pointerStyle}>
+        <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
+      </div>`;
+    }).join('') + `</div>`;
+  } else {
+    html += `<div class="options">` + q.opts.map((opt,oi)=>`
+      <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
+        <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
+      </div>`).join('') + `</div>`;
+  }
+
+  if(currentQuiz.isMarathon){
+    const isLast = currentQuiz.idx === currentQuiz.questions.length - 1;
+    const isSaved = isCurrentMarathonQuestionSaved();
+    const hasPicked = (q.picked !== null && q.picked !== undefined);
+    html += `<div class="q-nav-row marathon-nav-row">
+        <button type="button" class="btn btn-outline q-nav-btn-compact" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
+        <button type="button" class="btn-save-bookmark ${isSaved ? 'active' : ''} ${hasPicked ? 'visible' : ''}" id="marathonSaveBtn" onclick="toggleSaveCurrentMarathonQuestion()" title="${isSaved ? 'Saqlanganlardan olib tashlash' : 'Savolni saqlash'}" aria-label="Savolni saqlash">
+          ${isSaved ? `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+          ` : `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+          `}
+        </button>
+        <button type="button" class="btn btn-primary q-nav-btn-compact" onclick="nextQ()">${isLast ? 'Yakunlash' : 'Keyingi →'}</button>
+      </div>`;
+  } else {
+    html += `<div class="q-nav-row">
+        <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
+        <button class="btn btn-primary" onclick="nextQ()">${currentQuiz.idx===currentQuiz.questions.length-1?'Yakunlash':'Keyingi →'}</button>
+      </div>`;
+  }
   body.innerHTML = html;
-  if(currentQuiz.type==='mcq' || currentQuiz.type==='mock' || currentQuiz.skillId==='grammatika'){ startQuestionTimer(); } else { clearQuestionTimer(); }
+  if(currentQuiz.isMarathon){
+    clearQuestionTimer();
+    updateMarathonHeaderStats();
+  } else if(currentQuiz.type==='mcq' || currentQuiz.type==='mock' || currentQuiz.skillId==='grammatika'){
+    startQuestionTimer();
+  } else {
+    clearQuestionTimer();
+  }
 }
 function pickOption(oi){
   if(!currentQuiz || !currentQuiz.questions) return;
   const q = currentQuiz.questions[currentQuiz.idx];
   if(!q) return;
+
+  if(currentQuiz.isMarathon){
+    if(q.picked !== null && q.picked !== undefined) return;
+    q.picked = oi;
+    const isCorrect = (oi === q.a);
+    const optEls = document.querySelectorAll('#quizBody .option');
+    optEls.forEach((el, idx)=>{
+      el.classList.remove('selected', 'correct', 'incorrect');
+      el.classList.add('disabled');
+      el.style.pointerEvents = 'none';
+      if(idx === oi){
+        el.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+      } else if(idx === q.a && !isCorrect){
+        el.classList.add('correct');
+      }
+    });
+
+    const saveBtn = document.getElementById('marathonSaveBtn');
+    if(saveBtn){
+      saveBtn.classList.add('visible');
+    }
+
+    const state = getMarathonState();
+    if(!state.answers) state.answers = {};
+    state.answers[currentQuiz.idx] = oi;
+    state.currentIndex = currentQuiz.idx;
+    state.completedCount = Object.keys(state.answers).length;
+    saveMarathonState(state);
+
+    updateMarathonHeaderStats();
+    return;
+  }
 
   if(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0)){
     toast("⏰ Ushbu savol uchun vaqt tugagan, javob berib bo'lmaydi");
@@ -13359,7 +14199,16 @@ function nextQ(){
     else { advanceAfterIstimaJuz(); }
     return;
   }
-  if(currentQuiz.idx < currentQuiz.questions.length-1){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
+  if(currentQuiz.idx < currentQuiz.questions.length-1){
+    currentQuiz.idx++;
+    if(currentQuiz.isMarathon){
+      const state = getMarathonState();
+      state.currentIndex = currentQuiz.idx;
+      saveMarathonState(state);
+    }
+    renderQuestion();
+    updateQGrid();
+  }
   else finishQuiz();
 }
 function prevQ(){
@@ -13374,7 +14223,16 @@ function prevQ(){
     if(currentQuiz.idx > juz.startIdx){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
     return;
   }
-  if(currentQuiz.idx>0){ currentQuiz.idx--; renderQuestion(); updateQGrid(); }
+  if(currentQuiz.idx>0){
+    currentQuiz.idx--;
+    if(currentQuiz.isMarathon){
+      const state = getMarathonState();
+      state.currentIndex = currentQuiz.idx;
+      saveMarathonState(state);
+    }
+    renderQuestion();
+    updateQGrid();
+  }
 }
 
 /* ---------------- Qiroa: joriy juz/fazaga qarab render qilish ---------------- */
@@ -15269,7 +16127,7 @@ function makeArabicPassageInteractive(containerEl){
 }
 
 /* ============================================================
-   DASHBOARD 2 TA ASOSIY CARDLARNI CHIZISH
+   DASHBOARD 3 TA ASOSIY CARDLARNI CHIZISH (MOCK, LUG'AT, MARAFON)
    ============================================================ */
 
 function renderDashboardPracticeCards(){
@@ -15337,11 +16195,443 @@ function renderDashboardPracticeCards(){
   if(fcTotalEl) fcTotalEl.textContent = String(totalCount);
   if(fcSubEl) fcSubEl.textContent = totalCount > 0 ? `${totalCount} ta so'z · ${masteredCount} ta yodlangan` : "Mening lug‘atim (Anki)";
   if(fcFillEl) fcFillEl.style.width = `${flashPct}%`;
+
+  // 3-Card: MARAFON (Grammatika marafoni - qat'iy tartibda barcha testlar)
+  const marValEl = document.getElementById('dashMarathonCardVal');
+  const marTotalEl = document.getElementById('dashMarathonCardTotal');
+  const marSubEl = document.getElementById('dashMarathonCardSub');
+  const marFillEl = document.getElementById('dashMarathonCardFill');
+  const marTitleEl = document.getElementById('dashMarathonCardTitle');
+
+  const allMarQuestions = getGrammarMarathonQuestions();
+  const marTotal = allMarQuestions.length;
+  const marState = getMarathonState();
+  const marAnsweredCount = Object.keys(marState.answers || {}).length;
+  const marPct = marTotal > 0 ? Math.min(100, Math.round((marAnsweredCount / marTotal) * 100)) : 0;
+
+  if(marValEl){
+    marValEl.setAttribute('data-target', String(marAnsweredCount));
+    animateNumber(marValEl, marAnsweredCount, { duration: 800 });
+  }
+  if(marTotalEl) marTotalEl.textContent = String(marTotal);
+  if(marTitleEl) marTitleEl.textContent = "Marafon";
+  if(marSubEl){
+    if(marAnsweredCount > 0){
+      const nextQNum = Math.min(marTotal, (marState.currentIndex || 0) + 1);
+      marSubEl.textContent = `${nextQNum}-savol · Qolgan joyidan davom etish`;
+    } else {
+      marSubEl.textContent = marTotal > 0 ? `${marTotal} ta savol · Ketma-ket yechish` : "Grammatika marafoni";
+    }
+  }
+  if(marFillEl) marFillEl.style.width = `${marPct}%`;
 }
 
 function handleDashMockCardClick(){
   openSkillIntro('grammatika');
   switchSkillTab('mocks');
+}
+
+/* ============================================================
+   GRAMMATIKA MARAFONI (Barcha grammatika savollarini qat'iy tartibda yechish)
+   ============================================================ */
+
+function getGrammarMarathonQuestions(){
+  const list = [];
+  const seenKeys = new Set();
+
+  // 1. Grammatika mavzulari bo'yicha ketma-ketlik
+  (GRAMMAR_TOPICS || []).forEach(t => {
+    const topicBank = GRAMMAR_TOPIC_BANKS[t.id] || [];
+    topicBank.forEach((q, qIndex) => {
+      const key = q.id ? `id_${q.id}` : `t_${t.id}_${qIndex}_${q.q}`;
+      if(!seenKeys.has(key)){
+        seenKeys.add(key);
+        list.push({
+          ...q,
+          _marathonTopicName: t.name || t.ar || 'Grammatika',
+          _marathonTopicId: t.id
+        });
+      }
+    });
+  });
+
+  // 2. Umumiy grammatika savollari (agar biror savol mavzuga biriktirilmagan bo'lsa)
+  const general = (QUESTION_BANKS.grammatika && QUESTION_BANKS.grammatika.questions) || [];
+  general.forEach((q, qIndex) => {
+    const key = q.id ? `id_${q.id}` : `g_${qIndex}_${q.q}`;
+    if(!seenKeys.has(key)){
+      seenKeys.add(key);
+      list.push({
+        ...q,
+        _marathonTopicName: 'Umumiy grammatika',
+        _marathonTopicId: null
+      });
+    }
+  });
+
+  return list;
+}
+
+function getMarathonState(){
+  try {
+    const raw = localStorage.getItem('arabication_grammar_marathon_v1');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object') return parsed;
+    }
+  }catch(e){}
+  return {
+    currentIndex: 0,
+    answers: {},
+    completedCount: 0
+  };
+}
+
+function saveMarathonState(state){
+  try {
+    localStorage.setItem('arabication_grammar_marathon_v1', JSON.stringify(state));
+  }catch(e){}
+  renderDashboardPracticeCards();
+}
+
+/* ============================================================
+   GRAMMATIKA MARAFONI VA SAQLANGAN SAVOLLAR FUNKSIYALARI
+   ============================================================ */
+
+function getSavedMarathonQuestions(){
+  try {
+    const raw = localStorage.getItem('arabication_saved_marathon_questions_v1');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed;
+    }
+  }catch(e){}
+  return [];
+}
+
+function saveSavedMarathonQuestions(list){
+  try {
+    localStorage.setItem('arabication_saved_marathon_questions_v1', JSON.stringify(list));
+  }catch(e){}
+}
+
+function isCurrentMarathonQuestionSaved(){
+  if(!currentQuiz || !currentQuiz.questions) return false;
+  const q = currentQuiz.questions[currentQuiz.idx];
+  if(!q) return false;
+  const list = getSavedMarathonQuestions();
+  return list.some(item => (q.id && item.id === q.id) || item.q === q.q);
+}
+
+function toggleSaveCurrentMarathonQuestion(){
+  if(!currentQuiz || !currentQuiz.questions) return;
+  const q = currentQuiz.questions[currentQuiz.idx];
+  if(!q) return;
+  let list = getSavedMarathonQuestions();
+  const existingIdx = list.findIndex(item => (q.id && item.id === q.id) || item.q === q.q);
+  if(existingIdx >= 0){
+    list.splice(existingIdx, 1);
+    saveSavedMarathonQuestions(list);
+    toast("Savol saqlanganlardan olib tashlandi 🗑️", 2200);
+  } else {
+    list.unshift({
+      id: q.id || null,
+      q: q.q,
+      opts: q.opts || [],
+      a: q.a,
+      userPicked: (q.picked !== null && q.picked !== undefined) ? q.picked : null,
+      exp: q.exp || '',
+      category: q.category || 'Grammatika',
+      topicName: q._marathonTopicName || 'Grammatika',
+      savedAt: Date.now()
+    });
+    saveSavedMarathonQuestions(list);
+    toast("Savol muvaffaqiyatli saqlandi ⭐", 2200);
+  }
+
+  const btn = document.getElementById('marathonSaveBtn');
+  const isSaved = isCurrentMarathonQuestionSaved();
+  if(btn){
+    btn.classList.toggle('active', isSaved);
+    btn.title = isSaved ? 'Saqlanganlardan olib tashlash' : 'Savolni saqlash';
+    btn.innerHTML = isSaved ? `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+    ` : `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+    `;
+  }
+}
+
+function handleDashMarathonCardClick(){
+  openMarathonHubView();
+}
+
+function openMarathonHubView(){
+  renderMarathonHub();
+  showView('marathon');
+}
+
+function renderMarathonHub(){
+  const allMarQuestions = getGrammarMarathonQuestions();
+  const total = allMarQuestions.length;
+  const state = getMarathonState();
+  const answeredCount = Object.keys(state.answers || {}).length;
+  const currentIdx = state.currentIndex || 0;
+
+  const resumeSubEl = document.getElementById('marathonHubResumeSub');
+  const resumeValEl = document.getElementById('marathonHubResumeVal');
+  const resumeTotalEl = document.getElementById('marathonHubResumeTotal');
+
+  if(resumeValEl) resumeValEl.textContent = String(answeredCount);
+  if(resumeTotalEl) resumeTotalEl.textContent = String(total);
+
+  if(resumeSubEl){
+    if(answeredCount > 0){
+      const nextQNum = Math.min(total, currentIdx + 1);
+      resumeSubEl.textContent = `${nextQNum}-savol · Qolgan joyidan davom etish`;
+    } else {
+      resumeSubEl.textContent = total > 0 ? `1-savoldan boshlash (${total} ta savol)` : "1-savoldan boshlash";
+    }
+  }
+
+  const savedList = getSavedMarathonQuestions();
+  const savedCount = savedList.length;
+  const savedSubEl = document.getElementById('marathonHubSavedSub');
+  const savedCountEl = document.getElementById('marathonHubSavedCount');
+  if(savedSubEl) savedSubEl.textContent = savedCount > 0 ? `${savedCount} ta savol saqlangan` : "0 ta savol saqlangan";
+  if(savedCountEl) savedCountEl.textContent = String(savedCount);
+}
+
+function resumeMarathonFromHub(){
+  const questions = getGrammarMarathonQuestions();
+  if(!questions || !questions.length){
+    toast("⚠️ Grammatika bo'limida hali savollar mavjud emas. Admin panelda savollar qo'shing.");
+    return;
+  }
+  startGrammarMarathon(false);
+}
+
+function confirmRestartMarathon(){
+  const questions = getGrammarMarathonQuestions();
+  if(!questions || !questions.length){
+    toast("⚠️ Grammatika bo'limida hali savollar mavjud emas.");
+    return;
+  }
+  const state = getMarathonState();
+  const answered = Object.keys(state.answers || {}).length;
+  if(answered > 0){
+    if(confirm("Marafonni 0 dan qayta boshlashni xohlaysizmi? Oldingi javoblaringiz tozalanadi va 1-savoldan boshlanadi.")){
+      startGrammarMarathon(true);
+    }
+  } else {
+    startGrammarMarathon(true);
+  }
+}
+
+function openSavedMarathonQuestions(){
+  const list = getSavedMarathonQuestions();
+  const modal = document.getElementById('savedMarathonModalOverlay');
+  if(!modal) return;
+  renderSavedMarathonQuestionsList();
+  modal.style.display = 'flex';
+}
+
+function closeSavedMarathonModal(){
+  const modal = document.getElementById('savedMarathonModalOverlay');
+  if(modal) modal.style.display = 'none';
+  renderMarathonHub();
+}
+
+function toggleSavedQExplanation(cardEl){
+  const expBox = cardEl.querySelector('.saved-q-exp-box');
+  const hintEl = cardEl.querySelector('.saved-q-exp-hint');
+  if(!expBox) return;
+  const isOpen = expBox.classList.toggle('open');
+  if(hintEl){
+    hintEl.innerHTML = isOpen ? `💡 Izohni yashirish ▲` : `💡 Izohni ko'rish uchun bosing ▼`;
+  }
+}
+
+function renderSavedMarathonQuestionsList(){
+  const body = document.getElementById('savedMarathonModalBody');
+  if(!body) return;
+  const list = getSavedMarathonQuestions();
+
+  if(!list.length){
+    body.innerHTML = `
+      <div style="text-align:center;padding:36px 16px;">
+        <div style="font-size:36px;margin-bottom:12px;">⭐</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Hozircha saqlangan savollar yo'q</div>
+        <div style="font-size:13px;color:var(--text-dim);font-weight:600;max-width:320px;margin:0 auto;line-height:1.5;">
+          Marafon jarayonida har bir savol ostidagi saqlash (bookmark) belgisini bosib, qiyin yoki muhim savollarni bu yerga saqlab boring.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text-dim);">Jami saqlangan: ${list.length} ta savol</div>
+      <button class="btn btn-primary btn-sm" style="padding:7px 14px;border-radius:10px;font-size:12.5px;" onclick="startSavedQuestionsPractice()">
+        ▶ Barchasini yechish
+      </button>
+    </div>
+  `;
+
+  list.forEach((item, idx) => {
+    const hasUserPicked = (item.userPicked !== null && item.userPicked !== undefined);
+    html += `
+      <div class="saved-q-card" onclick="toggleSavedQExplanation(this)" role="button" tabindex="0">
+        <div class="saved-q-head">
+          <div class="saved-q-badge">${item.topicName || item.category || 'Grammatika'}</div>
+          <button class="saved-q-del-btn" onclick="event.stopPropagation(); removeSavedMarathonQuestion(${idx})" title="Saqlanganlardan o'chirish" aria-label="O'chirish">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+        <div class="saved-q-text">${item.q}</div>
+        <div class="saved-q-opts">
+          ${(item.opts || []).map((opt, oi) => {
+            const isCorrect = (oi === item.a);
+            const isUserPicked = hasUserPicked && (oi === item.userPicked);
+            const isUserWrong = isUserPicked && !isCorrect;
+
+            let optClass = '';
+            let optBadge = '';
+            if(isCorrect){
+              optClass = 'correct';
+              optBadge = `<span style="font-size:11px;font-weight:700;margin-left:auto;">To'g'ri javob ✓</span>`;
+            } else if(isUserWrong){
+              optClass = 'incorrect';
+              optBadge = `<span style="font-size:11px;font-weight:700;margin-left:auto;">Sizning javobingiz (xato) ✗</span>`;
+            }
+
+            return `
+              <div class="saved-q-opt ${optClass}">
+                <span style="font-family:var(--font-ar);font-size:13px;width:18px;text-align:center;">${ARABIC_OPT_LETTERS[oi] || ''}</span>
+                <span style="flex:1;">${opt}</span>
+                ${optBadge}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        ${item.exp ? `
+          <div class="saved-q-exp-hint">💡 Izohni ko'rish uchun bosing ▼</div>
+          <div class="saved-q-exp-box">
+            <strong>💡 Izoh:</strong><br>${item.exp}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  body.innerHTML = html;
+}
+
+function removeSavedMarathonQuestion(idx){
+  let list = getSavedMarathonQuestions();
+  if(idx >= 0 && idx < list.length){
+    list.splice(idx, 1);
+    saveSavedMarathonQuestions(list);
+    renderSavedMarathonQuestionsList();
+    renderMarathonHub();
+    toast("Savol saqlanganlardan o'chirildi", 2000);
+  }
+}
+
+function startSavedQuestionsPractice(){
+  const list = getSavedMarathonQuestions();
+  if(!list.length){
+    toast("Saqlangan savollar mavjud emas");
+    return;
+  }
+  closeSavedMarathonModal();
+
+  currentQuiz = {
+    skillId: 'grammatika',
+    topicId: null,
+    isMarathon: true,
+    type: 'mcq',
+    questions: list.map(q => ({
+      ...q,
+      picked: null,
+      timeLeft: 60,
+      expired: false
+    })),
+    color: '#D97706',
+    bg: '#FEFCE8',
+    label: 'Saqlangan savollar',
+    idx: 0,
+    startedAt: Date.now()
+  };
+
+  const sideEl = document.getElementById('quizSide');
+  if(sideEl) sideEl.style.display = 'none';
+
+  clearQuestionTimer();
+  if(timerInterval) clearInterval(timerInterval);
+  updateMarathonHeaderStats();
+
+  buildQGrid();
+  renderQuestion();
+  showView('quiz');
+  toast(`⭐ Saqlangan savollar: ${list.length} ta savol yechilmoqda`, 3500);
+}
+
+function startGrammarMarathon(reset = false){
+  const questions = getGrammarMarathonQuestions();
+  if(!questions || !questions.length){
+    toast("⚠️ Grammatika bo'limida hali savollar mavjud emas.");
+    return;
+  }
+
+  let state = getMarathonState();
+  if(reset){
+    state = { currentIndex: 0, answers: {}, completedCount: 0 };
+    saveMarathonState(state);
+  }
+
+  const startIdx = Math.max(0, Math.min(state.currentIndex || 0, questions.length - 1));
+
+  currentQuiz = {
+    skillId: 'grammatika',
+    topicId: null,
+    isMarathon: true,
+    type: 'mcq',
+    questions: questions.map((q, idx) => ({
+      ...q,
+      picked: (state.answers && state.answers[idx] !== undefined) ? state.answers[idx] : null,
+      timeLeft: 60,
+      expired: false
+    })),
+    color: '#059669',
+    bg: '#ECFDF5',
+    label: 'Marafon',
+    idx: startIdx,
+    startedAt: Date.now()
+  };
+
+  const sideEl = document.getElementById('quizSide');
+  if(sideEl){
+    sideEl.style.display = 'none';
+  }
+
+  clearQuestionTimer();
+  if(timerInterval) clearInterval(timerInterval);
+  updateMarathonHeaderStats();
+
+  buildQGrid();
+  renderQuestion();
+  showView('quiz');
+  if(startIdx > 0 && !reset){
+    toast(`🏃 Marafon: ${startIdx + 1}-savoldan davom etyapsiz (Jami: ${questions.length} ta savol)`, 3500);
+  }
 }
 
 /* Animate the initially-active dashboard view on first paint */
