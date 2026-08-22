@@ -9057,6 +9057,23 @@ async function clearAllExamHistoryOnBackend(){
     return await res.json(); // nechta yozuv o'chirilganini qaytaradi
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
+/* MUHIM: serverdagi quiz_attempts jadvali tozalanganidan KEYIN, shu belgini
+   ham yangilab qo'yamiz — aks holda boshqa foydalanuvchilarning telefonidagi
+   eski lokal Tarix keshi (ATTEMPTS_STORE_MAP) hech qachon tozalanmay qoladi
+   (pastdagi purgeLocalHistoryIfStale() shu belgini kutib turadi). Avvalgi
+   holatda bu chaqiruv umuman yo'q edi — shuning uchun admin tozalasa ham
+   boshqa userlarda eski tarix ko'rinishda davom etardi. */
+async function setHistoryPurgeMarkerOnBackend(){
+  if(!SESSION_TOKEN) return null;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_set_history_purge_marker`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    const text = await res.text();
+    return text ? JSON.parse(text) : true;
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
 function clearAllExamHistory(){
   showConfirmModal({
     title: "Diqqat",
@@ -9070,6 +9087,9 @@ function clearAllExamHistory(){
         onConfirm: async () => {
           const result = await clearAllExamHistoryOnBackend();
           if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+          // Boshqa foydalanuvchilarning telefonidagi eski lokal keshni ham
+          // tozalash uchun belgini yangilaymiz (tafsilot yuqoridagi izohda).
+          await setHistoryPurgeMarkerOnBackend();
           toast(`🗑 Imtihon tarixi tozalandi (${result} ta yozuv o'chirildi)`);
           // Bu qurilmada (admin ham test yechgan bo'lsa) lokal keshni darhol tozalaymiz.
           // Boshqa foydalanuvchilarning qurilmalari esa keyingi loadAppConfig() chaqirilganda
