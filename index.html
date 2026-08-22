@@ -3864,6 +3864,13 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="si-text"><div class="t">Ilova PIN kodi (6 xonali)</div><div class="s" id="passcodeSettingSub">O'rnatilmagan</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
+          <div class="settings-item" onclick="clearMyExamHistory()" style="cursor:pointer;">
+            <div class="si-icon" style="background:rgba(220,38,38,0.12);color:#DC2626;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </div>
+            <div class="si-text"><div class="t">Test tarixini tozalash</div><div class="s">O'zingizning barcha urinish va natijalaringizni o'chirish</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
         </div>
       </div>
 
@@ -7953,7 +7960,102 @@ async function clearAllExamHistory(){
   const result = await clearAllExamHistoryOnBackend();
   if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
   toast(`🗑 Imtihon tarixi tozalandi (${result} ta yozuv o'chirildi)`);
+  // Bu qurilmada (admin ham test yechgan bo'lsa) lokal keshni darhol tozalaymiz.
+  // Boshqa foydalanuvchilarning qurilmalari esa keyingi loadAppConfig() chaqirilganda
+  // (har 30 soniyada bir) purgeLocalHistoryIfStale() orqali o'z-o'zidan tozalanadi —
+  // pastdagi izohga qarang.
+  ATTEMPTS_STORE_MAP = {};
+  try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
+  window.HISTORY_DATA_LIVE = [];
+  HISTORY_DATA = [];
+  if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
   renderAdminPanel();
+}
+
+/* ---- BOSHQA qurilmalardagi eski lokal Tarix keshini tozalash mexanizmi ----
+   Muammo: admin serverdagi `quiz_attempts` jadvalini tozalasa ham, har bir
+   foydalanuvchining O'Z TELEFONIDA (localStorage, ATTEMPTS_STORE_MAP) test
+   tugagach saqlangan lokal nusxa qolib ketadi — admin bu keshga
+   to'g'ridan-to'g'ri tega olmaydi. Buning yechimi: umumiy APP_CONFIG'ga
+   (get_app_config orqali barcha qurilmalar muntazam yuklab turadigan
+   konfiguratsiyaga) bitta "tozalash belgisi" — history_purged_at — vaqt
+   belgisini qo'shamiz. admin_clear_all_exam_history serverda ishlaganda shu
+   belgini ham yangilashi kerak (pastdagi SQL'ga qarang). Har bir qurilma
+   keyingi loadAppConfig() chaqiruvida bu belgini o'zining oxirgi ko'rgan
+   belgisi bilan solishtiradi va agar server yangiroq bo'lsa — o'z lokal
+   keshini (ATTEMPTS_STORE_MAP) tozalaydi.
+
+   SUPABASE'DA KERAK BO'LADIGAN O'ZGARISH (bir marta bajarish kifoya):
+     alter table app_config add column if not exists history_purged_at timestamptz;
+
+     create or replace function admin_clear_all_exam_history()
+     returns integer language plpgsql security definer as $$
+     declare n integer; begin
+       delete from quiz_attempts; get diagnostics n = row_count;
+       update app_config set history_purged_at = now();
+       return n;
+     end; $$;
+
+   Va get_app_config funksiyasi qaytaradigan JSON'ga history_purged_at
+   ustunini ham qo'shib yuboring (masalan json_build_object(...,
+   'history_purged_at', history_purged_at)). Agar bu ustun hali qo'shilmagan
+   bo'lsa, cfg.history_purged_at shunchaki undefined bo'ladi va quyidagi
+   funksiya hech narsa qilmaydi — xavfsiz. */
+/* ---- Foydalanuvchi: FAQAT o'zining imtihon tarixini tozalash ----
+   Admin funksiyasidan farqli o'laroq, bu faqat joriy foydalanuvchining
+   quiz_attempts qatorlarini o'chiradi. Supabase'da quyidagi RPC funksiyasi
+   talab qilinadi (bir marta yaratish kifoya):
+   create or replace function clear_my_exam_history(p_user_id text)
+   returns integer language plpgsql security definer as $$
+   declare n integer; begin
+     delete from quiz_attempts where user_id = p_user_id;
+     get diagnostics n = row_count; return n;
+   end; $$; */
+async function clearMyExamHistoryOnBackend(){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/clear_my_exam_history`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json(); // nechta yozuv o'chirilganini qaytaradi
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+async function clearMyExamHistory(){
+  if(!confirm("⚠️ Bu SIZNING barcha test/imtihon tarixingizni (natijalar, urinishlar) butunlay o'chiradi. XP va darajangiz bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?")) return;
+  const result = await clearMyExamHistoryOnBackend();
+  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+  // Lokal keshni ham tozalaymiz — aks holda eski urinishlar Tarixda yana chiqib qolaveradi
+  ATTEMPTS_STORE_MAP = {};
+  try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
+  window.HISTORY_DATA_LIVE = [];
+  HISTORY_DATA = [];
+  renderHistoryStats();
+  renderHistoryList();
+  renderGrammarHistory();
+  computeGrammarTopicProgress();
+  toast(`🗑 Tarixingiz tozalandi (${result} ta yozuv o'chirildi)`);
+}
+
+const HISTORY_PURGE_ACK_KEY = 'history_purge_ack_v1';
+function purgeLocalHistoryIfStale(){
+  try{
+    const serverMarker = APP_CONFIG && APP_CONFIG.history_purged_at;
+    if(!serverMarker) return;
+    const serverTime = new Date(serverMarker).getTime();
+    if(isNaN(serverTime)) return;
+    const ackRaw = localStorage.getItem(HISTORY_PURGE_ACK_KEY);
+    const ackTime = ackRaw ? new Date(ackRaw).getTime() : 0;
+    if(serverTime > ackTime){
+      ATTEMPTS_STORE_MAP = {};
+      localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP));
+      localStorage.setItem(HISTORY_PURGE_ACK_KEY, new Date(serverTime).toISOString());
+      window.HISTORY_DATA_LIVE = [];
+      HISTORY_DATA = [];
+      if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
+    }
+  }catch(e){ console.warn('[purgeLocalHistoryIfStale]', e); }
 }
 
 /* ---- 3) SAVOLLAR BANKI ---- */
@@ -14924,10 +15026,14 @@ bootApp();
         APP_CONFIG = {
           exam_cards: cfg.exam_cards || {},
           grammar_order: cfg.grammar_order || [],
-          community_cards: cfg.community_cards || []
+          community_cards: cfg.community_cards || [],
+          history_purged_at: cfg.history_purged_at || null
         };
 
         localSet('arab_app_config_cache', APP_CONFIG);
+        // Admin "hammasini tozalash"ni bosgan bo'lsa, shu qurilmadagi eski
+        // lokal Tarix keshini (agar hali tozalanmagan bo'lsa) shu yerda tozalaymiz.
+        try{ purgeLocalHistoryIfStale(); }catch(e){}
       }
     } catch (e) {
       console.warn('App config yuklanmadi, fallback ishlatiladi:', e);
