@@ -4990,11 +4990,12 @@ async function clearCurrentSectionQuestions(){
   renderAdminQuestions();
 }
 
-/* ---------- Savollar bazasini backup qilish (yuklab olish) va qayta yuklash (import) ----------
-   Backup fayli "bulk-add-with-topics" formatida saqlanadi (skillId, topic nomi, topicAr,
-   category, q, opts, a, exp) — shu tufayli AI orqali tuzatilgandan keyin ham xuddi shu
-   faylni o'zgarishsiz qayta import qilish mumkin. Import paytida allaqachon mavjud
-   savollar avtomatik o'tkazib yuboriladi (takrorlanmaydi). */
+/* ---------- Savollar/mazmun bazasini backup qilish (yuklab olish) va qayta yuklash (import) ----------
+   Har bir bo'lim o'zining backend jadvaliga ega bo'lgani uchun (Grammatika/Qiroa/Istima —
+   "questions" jadvali + kerak bo'lsa "qiroa_texts"/"istima_audio"; Muhavara — "speaking_questions";
+   Kitaba — "writing_topics"), backup/import shu FARQNI hisobga oladi: adminActiveSkill'ga qarab
+   to'g'ri jadval(lar)dan o'qiydi/yozadi. Fayl formatini "format" maydonidan aniqlaydi, shu bois
+   eski (faqat "questions" jadvali uchun chiqarilgan) backup fayllari ham hamon ishlayveradi. */
 function downloadJSONFile(filename, dataObj){
   const blob = new Blob([JSON.stringify(dataObj, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -5003,11 +5004,103 @@ function downloadJSONFile(filename, dataObj){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+function backupStamp(){ return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'); }
 
 async function exportAllQuestionsData(){
   const targetSkill = adminActiveSkill;
   const skillName = SKILL_META[targetSkill]?.name || targetSkill;
   toast('⏳ Ma\'lumotlar yuklanmoqda...');
+
+  /* ---- Muhavara (so'zlashuv) — "speaking_questions" jadvali ---- */
+  if(targetSkill === 'muhavara'){
+    const rows = await loadSpeakingQuestionsFromBackend();
+    if(!rows.length){
+      toast(`⚠️ "${skillName}" bo'limida hali savol yo'q — backup qilinadigan narsa topilmadi`, 6000);
+      return;
+    }
+    const items = rows.map(r => ({ partId: r.part_id, prompt: r.prompt }));
+    const payload = {
+      exported_at: new Date().toISOString(), app: 'Arabication',
+      format: 'speaking_questions_v1', skillId: targetSkill, count: items.length, items,
+    };
+    downloadJSONFile(`arabication-muhavara-backup-${backupStamp()}.json`, payload);
+    toast(`✅ "${skillName}" bo'limidan ${items.length} ta savol backup qilindi (yuklab olindi)`);
+    return;
+  }
+
+  /* ---- Kitaba (yozish) — "writing_topics" jadvali ---- */
+  if(targetSkill === 'kitaba'){
+    const rows = await loadWritingTopicsFromBackend();
+    if(!rows.length){
+      toast(`⚠️ "${skillName}" bo'limida hali mavzu yo'q — backup qilinadigan narsa topilmadi`, 6000);
+      return;
+    }
+    const items = rows.map(r => ({ partId: r.part_id, topicAr: r.topic_ar }));
+    const payload = {
+      exported_at: new Date().toISOString(), app: 'Arabication',
+      format: 'writing_topics_v1', skillId: targetSkill, count: items.length, items,
+    };
+    downloadJSONFile(`arabication-kitaba-backup-${backupStamp()}.json`, payload);
+    toast(`✅ "${skillName}" bo'limidan ${items.length} ta mavzu backup qilindi (yuklab olindi)`);
+    return;
+  }
+
+  /* ---- Qiroa (o'qish) — "qiroa_texts" (matnlar) + ularga bog'liq savollar ---- */
+  if(targetSkill === 'qiroa'){
+    const [texts, questions] = await Promise.all([
+      loadQiroaTextsFromBackend(),
+      loadQuestionsFromBackend(),
+    ]);
+    if(!texts.length){
+      toast(`⚠️ "${skillName}" bo'limida hali matn yo'q — backup qilinadigan narsa topilmadi`, 6000);
+      return;
+    }
+    const items = texts.map(t => ({
+      juzId: t.juz_id,
+      title: t.title || '',
+      passage: t.passage || '',
+      questions: (questions||[])
+        .filter(q => q.skill_id === 'qiroa' && q.topic_id === t.id)
+        .map(q => ({ q: q.q, opts: q.opts, a: q.correct_index, exp: q.exp || '' })),
+    }));
+    const payload = {
+      exported_at: new Date().toISOString(), app: 'Arabication',
+      format: 'qiroa_texts_v1', skillId: targetSkill, count: items.length, items,
+    };
+    downloadJSONFile(`arabication-qiroa-backup-${backupStamp()}.json`, payload);
+    const qCount = items.reduce((s,it)=>s+it.questions.length, 0);
+    toast(`✅ "${skillName}" bo'limidan ${items.length} ta matn (${qCount} ta savol bilan) backup qilindi`);
+    return;
+  }
+
+  /* ---- Istima (tinglash) — "istima_audio" (audio testlar) + ularga bog'liq savollar ---- */
+  if(targetSkill === 'istima'){
+    const [audios, questions] = await Promise.all([
+      loadIstimaAudioFromBackend(),
+      loadQuestionsFromBackend(),
+    ]);
+    if(!audios.length){
+      toast(`⚠️ "${skillName}" bo'limida hali audio yo'q — backup qilinadigan narsa topilmadi`, 6000);
+      return;
+    }
+    const items = audios.map(a => ({
+      juzId: a.juz_id,
+      audioUrl: a.audio_url || '',
+      questions: (questions||[])
+        .filter(q => q.skill_id === 'istima' && q.topic_id === a.id)
+        .map(q => ({ q: q.q, opts: q.opts, a: q.correct_index, exp: q.exp || '' })),
+    }));
+    const payload = {
+      exported_at: new Date().toISOString(), app: 'Arabication',
+      format: 'istima_audio_v1', skillId: targetSkill, count: items.length, items,
+    };
+    downloadJSONFile(`arabication-istima-backup-${backupStamp()}.json`, payload);
+    const qCount = items.reduce((s,it)=>s+it.questions.length, 0);
+    toast(`✅ "${skillName}" bo'limidan ${items.length} ta audio-test (${qCount} ta savol bilan) backup qilindi`);
+    return;
+  }
+
+  /* ---- Grammatika (va boshqa hamma narsa) — eski usul: "questions" jadvali ---- */
   const [topics, questions] = await Promise.all([
     loadGrammarTopicsFromBackend(),
     loadQuestionsFromBackend(),
@@ -5044,8 +5137,7 @@ async function exportAllQuestionsData(){
     count: items.length,
     questions: items,
   };
-  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-  downloadJSONFile(`arabication-${targetSkill}-backup-${stamp}.json`, payload);
+  downloadJSONFile(`arabication-${targetSkill}-backup-${backupStamp()}.json`, payload);
   toast(`✅ "${skillName}" bo'limidan ${items.length} ta savol backup qilindi (yuklab olindi)`);
 }
 
@@ -5063,14 +5155,179 @@ async function importQuestionsFromFile(event){
     return;
   }
 
+  const targetSkill = adminActiveSkill;
+  const skillName = SKILL_META[targetSkill]?.name || targetSkill;
+  const format = parsed && typeof parsed === 'object' ? (parsed.format || '') : '';
+
+  /* ---- Muhavara import ("speaking_questions_v1") ---- */
+  if(format === 'speaking_questions_v1'){
+    if(targetSkill !== 'muhavara'){
+      toast(`❌ Bu fayl "So'zlashuv" bo'limi uchun — avval admin panelda "So'zlashuv" bo'limini tanlang`, 8000);
+      return;
+    }
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    if(!items.length){ toast('❌ Faylda savollar topilmadi ("items" massivi kerak)', 6000); return; }
+    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud savollar avtomatik o'tkazib yuboriladi)`)) return;
+
+    toast(`⏳ ${items.length} ta savol tekshirilmoqda...`);
+    const existing = await loadSpeakingQuestionsFromBackend();
+    const existingSet = new Set((existing||[]).map(r => `${r.part_id}::${(r.prompt||'').trim()}`));
+    const validItems = items.filter(it => it.partId && it.prompt);
+    const toAdd = validItems.filter(it => !existingSet.has(`${it.partId}::${String(it.prompt).trim()}`));
+    const skipped = validItems.length - toAdd.length;
+
+    let inserted = 0, failed = 0;
+    if(toAdd.length){
+      toast(`⏳ ${toAdd.length} ta yangi savol yuborilmoqda...`);
+      const result = await saveSpeakingQuestionsBulkToBackend(toAdd);
+      if(result){
+        inserted = result.inserted_count ?? toAdd.length;
+      } else {
+        failed = toAdd.length;
+      }
+    }
+
+    await refreshSpeakingFromBackend();
+    renderAdminQuestions();
+    let msg = `✅ "${skillName}" uchun import tugadi: ${inserted} ta qo'shildi, ${skipped} ta takroriy o'tkazib yuborildi`;
+    if(failed > 0) msg += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+    toast(msg, 9000);
+    return;
+  }
+
+  /* ---- Kitaba import ("writing_topics_v1") ---- */
+  if(format === 'writing_topics_v1'){
+    if(targetSkill !== 'kitaba'){
+      toast(`❌ Bu fayl "Yozish" bo'limi uchun — avval admin panelda "Yozish" bo'limini tanlang`, 8000);
+      return;
+    }
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    if(!items.length){ toast('❌ Faylda mavzular topilmadi ("items" massivi kerak)', 6000); return; }
+    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta mavzu topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud mavzular avtomatik o'tkazib yuboriladi)`)) return;
+
+    toast(`⏳ ${items.length} ta mavzu yuborilmoqda...`);
+    const existing = await loadWritingTopicsFromBackend();
+    const existingSet = new Set((existing||[]).map(r => `${r.part_id}::${(r.topic_ar||'').trim()}`));
+
+    let inserted = 0, skipped = 0, failed = 0;
+    for(const it of items){
+      if(!it.partId || !it.topicAr){ failed++; continue; }
+      const key = `${it.partId}::${String(it.topicAr).trim()}`;
+      if(existingSet.has(key)){ skipped++; continue; }
+      const saved = await addWritingTopicToBackend(it.partId, it.topicAr);
+      if(saved){ inserted++; existingSet.add(key); } else { failed++; }
+    }
+
+    await refreshKitabaFromBackend();
+    renderAdminQuestions();
+    let msg = `✅ "${skillName}" uchun import tugadi: ${inserted} ta qo'shildi, ${skipped} ta takroriy o'tkazib yuborildi`;
+    if(failed > 0) msg += `, ⚠️ ${failed} ta yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+    toast(msg, 9000);
+    return;
+  }
+
+  /* ---- Qiroa import ("qiroa_texts_v1") — har bir matn + unga bog'liq savollar ---- */
+  if(format === 'qiroa_texts_v1'){
+    if(targetSkill !== 'qiroa'){
+      toast(`❌ Bu fayl "O'qish" bo'limi uchun — avval admin panelda "O'qish" bo'limini tanlang`, 8000);
+      return;
+    }
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    if(!items.length){ toast('❌ Faylda matnlar topilmadi ("items" massivi kerak)', 6000); return; }
+    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta matn topildi. Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil matn allaqachon mavjud bo'lsa, o'tkazib yuboriladi)`)) return;
+
+    const existingTexts = await loadQiroaTextsFromBackend();
+    const existingSet = new Set((existingTexts||[]).map(r => `${r.juz_id}::${(r.passage||'').trim()}`));
+
+    let textsAdded = 0, textsSkipped = 0, textsFailed = 0, qInserted = 0, qFailed = 0;
+    toast(`⏳ ${items.length} ta matn yaratilmoqda...`);
+    for(const it of items){
+      if(!it.juzId || !it.passage){ textsFailed++; continue; }
+      const key = `${it.juzId}::${String(it.passage).trim()}`;
+      if(existingSet.has(key)){ textsSkipped++; continue; }
+
+      const savedText = await addQiroaTextToBackend(it.juzId, it.passage, it.title || '');
+      if(!savedText){ textsFailed++; continue; }
+      const testId = Array.isArray(savedText) ? savedText[0]?.id : savedText?.id;
+      if(!testId){ textsFailed++; continue; }
+      textsAdded++;
+      existingSet.add(key);
+
+      const qRows = Array.isArray(it.questions) ? it.questions : [];
+      if(qRows.length){
+        const qItems = qRows
+          .filter(row => row.q && Array.isArray(row.opts))
+          .map(row => ({ skillId: 'qiroa', topicId: testId, q: row.q, opts: row.opts, a: (typeof row.a === 'number' ? row.a : row.correct_index), exp: row.exp || '' }));
+        if(qItems.length){
+          const result = await saveQuestionsBulkWithTopicsToBackend(qItems);
+          if(result){ qInserted += result.inserted_count ?? qItems.length; }
+          else { qFailed += qItems.length; }
+        }
+      }
+    }
+
+    await refreshQiroaFromBackend();
+    renderAdminQuestions();
+    let msg = `✅ "${skillName}" uchun import tugadi: ${textsAdded} ta matn qo'shildi (${qInserted} ta savol bilan), ${textsSkipped} ta takroriy matn o'tkazib yuborildi`;
+    if(textsFailed > 0 || qFailed > 0) msg += `, ⚠️ ${textsFailed} ta matn / ${qFailed} ta savol yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+    toast(msg, 10000);
+    return;
+  }
+
+  /* ---- Istima import ("istima_audio_v1") — har bir audio-test + unga bog'liq savollar ---- */
+  if(format === 'istima_audio_v1'){
+    if(targetSkill !== 'istima'){
+      toast(`❌ Bu fayl "Tinglash" bo'limi uchun — avval admin panelda "Tinglash" bo'limini tanlang`, 8000);
+      return;
+    }
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    if(!items.length){ toast('❌ Faylda audio-testlar topilmadi ("items" massivi kerak)', 6000); return; }
+    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta audio-test topildi. Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil audio URL allaqachon mavjud bo'lsa, o'tkazib yuboriladi)`)) return;
+
+    const existingAudios = await loadIstimaAudioFromBackend();
+    const existingSet = new Set((existingAudios||[]).map(r => `${r.juz_id}::${(r.audio_url||'').trim()}`));
+
+    let audiosAdded = 0, audiosSkipped = 0, audiosFailed = 0, qInserted = 0, qFailed = 0;
+    toast(`⏳ ${items.length} ta audio-test yaratilmoqda...`);
+    for(const it of items){
+      if(!it.juzId || !it.audioUrl){ audiosFailed++; continue; }
+      const key = `${it.juzId}::${String(it.audioUrl).trim()}`;
+      if(existingSet.has(key)){ audiosSkipped++; continue; }
+
+      const savedAudio = await addIstimaAudioToBackend(it.juzId, it.audioUrl);
+      if(!savedAudio){ audiosFailed++; continue; }
+      const testId = Array.isArray(savedAudio) ? savedAudio[0]?.id : savedAudio?.id;
+      if(!testId){ audiosFailed++; continue; }
+      audiosAdded++;
+      existingSet.add(key);
+
+      const qRows = Array.isArray(it.questions) ? it.questions : [];
+      if(qRows.length){
+        const qItems = qRows
+          .filter(row => row.q && Array.isArray(row.opts))
+          .map(row => ({ skillId: 'istima', topicId: testId, q: row.q, opts: row.opts, a: (typeof row.a === 'number' ? row.a : row.correct_index), exp: row.exp || '' }));
+        if(qItems.length){
+          const result = await saveQuestionsBulkWithTopicsToBackend(qItems);
+          if(result){ qInserted += result.inserted_count ?? qItems.length; }
+          else { qFailed += qItems.length; }
+        }
+      }
+    }
+
+    await refreshIstimaFromBackend();
+    renderAdminQuestions();
+    let msg = `✅ "${skillName}" uchun import tugadi: ${audiosAdded} ta audio-test qo'shildi (${qInserted} ta savol bilan), ${audiosSkipped} ta takroriy o'tkazib yuborildi`;
+    if(audiosFailed > 0 || qFailed > 0) msg += `, ⚠️ ${audiosFailed} ta audio / ${qFailed} ta savol yuborilmadi (xato: ${window.LAST_BACKEND_ERROR})`;
+    toast(msg, 10000);
+    return;
+  }
+
+  /* ---- Grammatika (va eski formatdagi barcha fayllar) — "questions" jadvali orqali ---- */
   const rows = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.questions) ? parsed.questions : null);
   if(!rows || !rows.length){
     toast('❌ Faylda savollar topilmadi ("questions" massivi kerak)', 6000);
     return;
   }
-
-  const targetSkill = adminActiveSkill;
-  const skillName = SKILL_META[targetSkill]?.name || targetSkill;
 
   const matching = rows.filter(row => (row.skillId || row.skill_id) === targetSkill);
   const foreignCount = rows.length - matching.length;
@@ -5127,6 +5384,7 @@ async function importQuestionsFromFile(event){
   await refreshQiroaFromBackend();
   renderAdminQuestions();
 }
+
 
 /* Mavjud savolni tahrirlash — Supabase'da `admin_edit_question` RPC funksiyasi talab qilinadi. */
 async function updateQuestionOnBackend({id, q, opts, a, exp}){
