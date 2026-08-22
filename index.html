@@ -2804,39 +2804,55 @@ html[data-theme="dark"] .dfc-progress-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
-.fc-tab-toggle {
-  display: flex;
-  background: var(--card-alt);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 4px;
-  gap: 4px;
-  width: fit-content;
-  margin-bottom: 20px;
-}
-.fc-tab-btn {
-  padding: 9px 18px;
-  border-radius: 10px;
-  border: none;
+.fc-add-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
   background: transparent;
   color: var(--text-dim);
-  font-size: 13.5px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-family: inherit;
-  transition: all .2s ease;
+  flex-shrink: 0;
+  transition: transform .15s ease, border-color .15s ease, color .15s ease, background .15s ease;
+}
+.fc-add-icon-btn:hover {
+  background: var(--card-alt);
+  border-color: var(--indigo-600);
+  color: var(--indigo-600);
+}
+.fc-add-icon-btn:active {
+  transform: scale(0.93);
+}
+.fc-info-banner {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  background: var(--indigo-100);
+  border: 1px solid var(--hover-border);
+  color: var(--indigo-900);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 16px;
 }
-.fc-tab-btn.active {
-  background: var(--card);
-  color: var(--text);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+html[data-theme="dark"] .fc-info-banner {
+  background: rgba(34, 197, 127, 0.08);
+  border-color: rgba(34, 197, 127, 0.2);
+  color: var(--indigo-500);
+}
+.fc-info-banner svg {
+  flex-shrink: 0;
+  color: var(--indigo-700);
+}
+html[data-theme="dark"] .fc-info-banner svg {
+  color: var(--indigo-500);
 }
 .fc-anki-stage {
   max-width: 580px;
@@ -2845,12 +2861,12 @@ html[data-theme="dark"] .dfc-progress-bar {
 }
 .fc-flashcard-box {
   width: 100%;
-  min-height: 290px;
-  border-radius: 28px;
+  min-height: 260px;
+  border-radius: 24px;
   position: relative;
   cursor: pointer;
   transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1);
   box-shadow: var(--shadow-lg);
 }
 .fc-flashcard-box.flipped {
@@ -2859,14 +2875,14 @@ html[data-theme="dark"] .dfc-progress-bar {
 .fc-card-face {
   position: absolute;
   inset: 0;
-  border-radius: 28px;
+  border-radius: 24px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  padding: 28px 24px;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   text-align: center;
 }
 .fc-card-front {
@@ -2879,73 +2895,68 @@ html[data-theme="dark"] .dfc-progress-bar {
   transform: rotateY(180deg);
 }
 .fc-ar-word {
-  font-family: 'Graphik Arabic', 'Noto Sans Arabic', 'Amiri', serif;
-  font-size: 38px;
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-size: calc(36px * var(--exam-font-scale));
   font-weight: 700;
   line-height: 1.4;
   color: var(--text);
   direction: rtl;
-  margin: 16px 0 10px;
+  margin: 0;
 }
 .fc-uz-meaning {
-  font-size: 23px;
+  font-size: calc(18px * var(--exam-font-scale));
   font-weight: 700;
   color: var(--indigo-700);
-  margin: 10px 0 8px;
+  margin: 0 0 10px 0;
   font-family: 'Onest', sans-serif;
 }
 html[data-theme="dark"] .fc-uz-meaning {
-  color: #38BDF8;
+  color: var(--indigo-500);
 }
 .fc-example-box {
   background: var(--card);
   border: 1px dashed var(--border);
   border-radius: 14px;
   padding: 12px 16px;
-  margin-top: 10px;
+  margin-top: 8px;
   width: 100%;
 }
 .fc-example-ar {
-  font-family: 'Graphik Arabic', 'Noto Sans Arabic', serif;
-  font-size: 16.5px;
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-size: calc(16px * var(--exam-font-scale));
   direction: rtl;
   color: var(--text);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  line-height: 1.7;
 }
 .fc-example-uz {
-  font-size: 13px;
+  font-size: calc(13px * var(--exam-font-scale));
   color: var(--text-dim);
   font-weight: 500;
-}
-.fc-flip-hint {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-faint);
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  line-height: 1.5;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
 }
 .fc-anki-controls {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 18px;
   max-width: 580px;
   margin-left: auto;
   margin-right: auto;
 }
 .fc-anki-btn {
-  padding: 13px 10px;
-  border-radius: 16px;
-  font-size: 13.5px;
+  padding: 13px 8px;
+  border-radius: 14px;
+  font-size: 14px;
   font-weight: 700;
   border: none;
   cursor: pointer;
   font-family: inherit;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
   transition: transform .15s ease, filter .15s ease;
 }
 .fc-anki-btn:active {
@@ -2977,6 +2988,56 @@ html[data-theme="dark"] .fc-uz-meaning {
   max-width: 580px;
   margin-left: auto;
   margin-right: auto;
+}
+.fc-word-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fc-word-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fc-tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card-alt);
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s ease;
+  padding: 0;
+}
+.fc-tool-btn:hover {
+  transform: translateY(-1px);
+}
+.fc-tool-btn.btn-reset:hover {
+  color: var(--istima);
+  background: var(--istima-bg);
+  border-color: var(--istima);
+}
+.fc-tool-btn.btn-edit:hover {
+  color: var(--indigo-600);
+  background: var(--indigo-100);
+  border-color: var(--indigo-600);
+}
+.fc-tool-btn.btn-del:hover {
+  color: var(--red);
+  background: var(--red-bg);
+  border-color: var(--red);
+}
+.fc-word-ar {
+  font-family: 'Noto Sans Arabic', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  direction: rtl;
+  color: var(--text);
 }
 .fc-list-grid {
   display: grid;
@@ -3350,7 +3411,7 @@ html[data-theme="light"] .pin-dot.filled{
         </div>
       </div>
 
-      <!-- ============ MENING LUG'ATIM (FLASHCARDS / ANKI) ============ -->
+      <!-- ============ MENING LUG'ATIM (FLASHCARDS) ============ -->
       <div class="view" id="view-flashcards">
         <div class="back-row" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
@@ -3361,32 +3422,45 @@ html[data-theme="light"] .pin-dot.filled{
           <div>
             <div class="view-title" style="margin:0;">Mening Lug‘atim</div>
             <div style="font-size:13px;color:var(--text-dim);font-weight:600;margin-top:3px;">
-              مُعْجَمِي الشَّخْصِيّ · Flashcard (Anki) uslubida so'z boyligini oshirish
+              So'z boyligini oshirish
             </div>
           </div>
-          <button class="btn btn-primary" onclick="openAddFlashcardModal()" style="display:flex;align-items:center;gap:6px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            + Yangi so'z
+          <button type="button" class="fc-add-icon-btn" onclick="openAddFlashcardModal()" title="Yangi so'z qo'shish" aria-label="Yangi so'z qo'shish">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
           </button>
         </div>
 
-        <!-- Mode switcher: Anki mashqi | Barcha so'zlar -->
-        <div class="fc-tab-toggle">
-          <button type="button" class="fc-tab-btn active" id="fcTabAnkiBtn" onclick="switchFlashcardTab('anki')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m9 10 2 2 4-4"/></svg>
-            Flashcard mashqi (Anki)
+        <div class="fc-info-banner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>Arab tili testlari va qiroa matnlaridagi yangi so'zlarni interval takrorlash usulida mustahkamlab boring.</span>
+        </div>
+
+        <!-- 1-QATOR: Flashcard mashqi | Barcha so'zlar (Rank bo'limidagi At-Tanal va CEFR kabi tugmalar) -->
+        <div class="rank-type-toggle" style="margin-bottom:14px;">
+          <button type="button" class="rank-type-btn active" id="fcTabAnkiBtn" onclick="switchFlashcardTab('anki')">
+            Flashcard mashqi
           </button>
-          <button type="button" class="fc-tab-btn" id="fcTabListBtn" onclick="switchFlashcardTab('list')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Barcha so'zlarim (<span id="fcTotalWordCountBadge">0</span>)
+          <button type="button" class="rank-type-btn" id="fcTabListBtn" onclick="switchFlashcardTab('list')">
+            Barcha so'zlar
           </button>
         </div>
 
-        <!-- PANE 1: ANKI FLASHCARD MASHQI -->
+        <!-- PANE 1: FLASHCARD MASHQI -->
         <div id="fcPaneAnki">
           <div class="fc-progress-meta">
-            <span id="fcSessionStatusText">Kartani bosing — orqa tomoni ochiladi</span>
-            <span id="fcProgressCounter">0 / 0</span>
+            <div class="font-zoom-ctrl" title="Matn o'lchami">
+              <button type="button" onclick="examFontStep(-1)" title="Matnni kichiklashtirish">A−</button>
+              <button type="button" onclick="examFontStep(1)" title="Matnni kattalashtirish">A+</button>
+            </div>
+            <span id="fcSessionStatusText" style="font-weight:600;"></span>
+            <span id="fcProgressCounter" style="font-weight:700;">0 / 0</span>
           </div>
           <div class="bar-bg" style="max-width:580px;margin:0 auto 18px;height:5px;">
             <div class="bar-fill" id="fcSessionProgressBar" style="width:0%;"></div>
@@ -3396,52 +3470,30 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="fc-flashcard-box" id="fcCardBox" onclick="flipActiveFlashcard()">
               <!-- Front of Card -->
               <div class="fc-card-face fc-card-front">
-                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                  <span class="badge" id="fcFrontCategoryBadge" style="background:var(--indigo-100);color:var(--indigo-700);font-size:11px;">Lug'at</span>
-                  <button type="button" class="fc-audio-pill" onclick="playActiveWordAudio(event)" title="Talaffuzni tinglash" aria-label="Talaffuz">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                  </button>
-                </div>
                 <div class="fc-ar-word" id="fcFrontArabic">...</div>
-                <div class="fc-flip-hint">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M16 6l6 6-6 6"/></svg>
-                  Tarjimasini ko'rish uchun bosing
-                </div>
               </div>
               <!-- Back of Card -->
               <div class="fc-card-face fc-card-back">
-                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                  <span class="badge" style="background:var(--green-bg);color:var(--green);font-size:11px;">Tarjima & Misol</span>
-                  <button type="button" class="fc-audio-pill" onclick="playActiveWordAudio(event)" title="Talaffuzni tinglash" aria-label="Talaffuz">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-                  </button>
-                </div>
-                <div>
+                <div style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                   <div class="fc-uz-meaning" id="fcBackMeaning">...</div>
                   <div class="fc-example-box" id="fcBackExampleBox">
                     <div class="fc-example-ar" id="fcBackExampleAr">...</div>
-                    <div class="fc-example-uz" id="fcBackExampleUz">...</div>
+                    <div class="fc-example-uz" id="fcBackExampleUz"></div>
                   </div>
-                </div>
-                <div class="fc-flip-hint" style="color:var(--indigo-500);">
-                  Quyidagi tugmalardan birini tanlang 👇
                 </div>
               </div>
             </div>
 
-            <!-- Anki Response Controls -->
+            <!-- Response Controls -->
             <div class="fc-anki-controls">
               <button type="button" class="fc-anki-btn fc-btn-again" onclick="handleAnkiAnswer('again')">
-                <span>🔁 Qaytarish</span>
-                <span style="font-size:11px;opacity:0.8;font-weight:500;">(Takrorlash)</span>
+                <span>Qaytarish</span>
               </button>
               <button type="button" class="fc-anki-btn fc-btn-good" onclick="handleAnkiAnswer('good')">
-                <span>💡 Yaxshi</span>
-                <span style="font-size:11px;opacity:0.8;font-weight:500;">(Keyingisi)</span>
+                <span>Yaxshi</span>
               </button>
               <button type="button" class="fc-anki-btn fc-btn-easy" onclick="handleAnkiAnswer('easy')">
-                <span>✅ Yodladim</span>
-                <span style="font-size:11px;opacity:0.8;font-weight:500;">(O'zlashtirildi)</span>
+                <span>Yodladim</span>
               </button>
             </div>
           </div>
@@ -3449,16 +3501,17 @@ html[data-theme="light"] .pin-dot.filled{
 
         <!-- PANE 2: BARCHA SO'ZLAR RO'YXATI (LUG'AT) -->
         <div id="fcPaneList" style="display:none;">
-          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:240px;position:relative;">
-              <input type="text" id="fcSearchInput" class="input" placeholder="🔍 Arabcha yoki o'zbekcha so'z qidirish..." oninput="renderFlashcardWordsList()" style="width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13.5px;">
-              <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-dim);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <div class="fc-tab-toggle" style="margin-bottom:0;">
-              <button type="button" class="fc-tab-btn active" id="fcFilterAllBtn" onclick="setFlashcardFilter('all')">Barchasi</button>
-              <button type="button" class="fc-tab-btn" id="fcFilterLearningBtn" onclick="setFlashcardFilter('learning')">O'rganilmoqda</button>
-              <button type="button" class="fc-tab-btn" id="fcFilterMasteredBtn" onclick="setFlashcardFilter('mastered')">Yodlangan</button>
-            </div>
+          <!-- 2-QATOR: Barchasi | O'rganilmoqda | Yodlangan filtrlari -->
+          <div class="rank-type-toggle" style="margin-bottom:12px;">
+            <button type="button" class="rank-type-btn active" id="fcFilterAllBtn" onclick="setFlashcardFilter('all')">Barchasi</button>
+            <button type="button" class="rank-type-btn" id="fcFilterLearningBtn" onclick="setFlashcardFilter('learning')">O'rganilmoqda</button>
+            <button type="button" class="rank-type-btn" id="fcFilterMasteredBtn" onclick="setFlashcardFilter('mastered')">Yodlangan</button>
+          </div>
+
+          <!-- 3-QATOR: Qidiruv qismi -->
+          <div style="position:relative;margin-bottom:16px;">
+            <input type="text" id="fcSearchInput" class="input" placeholder="Arabcha yoki o'zbekcha so'z qidirish..." oninput="renderFlashcardWordsList()" style="width:100%;padding:12px 14px 12px 40px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13.5px;box-sizing:border-box;">
+            <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-dim);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
 
           <div class="fc-list-grid" id="fcWordsGrid"></div>
@@ -4533,11 +4586,11 @@ html[data-theme="light"] .pin-dot.filled{
 <div class="modal-overlay" id="quickPassageWordModalOverlay" onclick="if(event.target===this) closeQuickPassageWordModal()" style="display:none;">
   <div class="modal-box" style="max-width:440px;border-radius:24px;">
     <div class="modal-head">
-      <h3>📝 Lug'atga saqlash</h3>
+      <h3>Lug'atga saqlash</h3>
       <button class="modal-close" onclick="closeQuickPassageWordModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px 20px 22px;">
-      <div style="font-family:'Graphik Arabic', 'Noto Sans Arabic', serif;font-size:26px;font-weight:700;direction:rtl;text-align:center;color:var(--indigo-700);margin-bottom:14px;background:var(--card-alt);padding:10px 14px;border-radius:14px;" id="quickSaveArWord">
+      <div style="font-family:'Noto Sans Arabic', sans-serif;font-size:26px;font-weight:700;direction:rtl;text-align:center;color:var(--indigo-700);margin-bottom:14px;background:var(--card-alt);padding:10px 14px;border-radius:14px;" id="quickSaveArWord">
         ...
       </div>
       <div class="form-field">
@@ -4545,11 +4598,11 @@ html[data-theme="light"] .pin-dot.filled{
         <input type="text" id="quickSaveUzMeaning" placeholder="Masalan: Qamrab olmoq, to'liq tushunmoq" style="font-size:14px;" autofocus>
       </div>
       <div class="form-field">
-        <label>Misol jumla (ixtiyoriy)</label>
+        <label>Misol jumla</label>
         <input type="text" id="quickSaveExample" placeholder="Kontekstdagi gap...">
       </div>
       <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="saveWordFromPassageModal()">
-        Lug'atga saqlash 💾
+        Lug'atga saqlash
       </button>
     </div>
   </div>
@@ -4559,14 +4612,14 @@ html[data-theme="light"] .pin-dot.filled{
 <div class="modal-overlay" id="flashcardModalOverlay" onclick="if(event.target===this) closeFlashcardModal()" style="display:none;">
   <div class="modal-box" style="max-width:460px;border-radius:24px;">
     <div class="modal-head">
-      <h3 id="flashcardModalTitle">+ Yangi so'z qo'shish</h3>
+      <h3 id="flashcardModalTitle">Yangi so'z qo'shish</h3>
       <button class="modal-close" onclick="closeFlashcardModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px 20px 22px;">
       <input type="hidden" id="fcEditWordId">
       <div class="form-field">
-        <label>Arabcha so'z (tashkeelli)</label>
-        <input type="text" id="fcInputAr" placeholder="Masalan: سَعَى / يَسْعَى" style="font-family:'Graphik Arabic', 'Noto Sans Arabic', serif;font-size:18px;direction:rtl;">
+        <label>Arabcha so'z</label>
+        <input type="text" id="fcInputAr" placeholder="Masalan: سَعَى / يَسْعَى" style="font-family:'Noto Sans Arabic', sans-serif;font-size:18px;direction:rtl;">
       </div>
       <div class="form-field">
         <label>O'zbekcha tarjimasi</label>
@@ -4574,7 +4627,7 @@ html[data-theme="light"] .pin-dot.filled{
       </div>
       <div class="form-field">
         <label>Arabcha misol jumla</label>
-        <input type="text" id="fcInputExAr" placeholder="Masalan: يَسْعَى الإِنْسَانُ إِلَى النَّجَاحِ" style="font-family:'Graphik Arabic', 'Noto Sans Arabic', serif;font-size:16px;direction:rtl;">
+        <input type="text" id="fcInputExAr" placeholder="Masalan: يَسْعَى الإِنْسَانُ إِلَى النَّجَاحِ" style="font-family:'Noto Sans Arabic', sans-serif;font-size:16px;direction:rtl;">
       </div>
       <div class="form-field">
         <label>Misolning o'zbekcha tarjimasi</label>
@@ -5763,6 +5816,7 @@ async function bootApp(){
     await safeBootStep('Istima', refreshIstimaFromBackend);
     await safeBootStep('Muhavara', refreshSpeakingFromBackend);
     await safeBootStep('Kitaba', refreshKitabaFromBackend);
+    await safeBootStep('Lug\'atim (Flashcard)', syncVocabularyFromBackend);
 
     await safeBootStep('Admin huquqi', async ()=>{
       if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
@@ -6258,7 +6312,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -6267,7 +6321,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -14531,6 +14585,104 @@ function saveStoredVocabulary(deck){
   renderDashboardPracticeCards();
 }
 
+/* ============================================================
+   LUG'AT (FLASHCARD) — SUPABASE BILAN SINXRONLASH
+   Jadval: user_vocabulary (id text PK, user_id bigint, ar, uz, ex_ar, ex_uz,
+   cat, state, again_count, good_count, easy_count, last_reviewed, created_at)
+   Har bir so'z lokal (localStorage) keshda ham saqlanadi — internet bo'lmasa
+   yoki Telegram tashqarisida ochilsa ham ilova ishlashda davom etadi.
+   ============================================================ */
+function vocabRowToWord(row){
+  return {
+    id: row.id,
+    ar: row.ar,
+    uz: row.uz,
+    exAr: row.ex_ar || '',
+    exUz: row.ex_uz || '',
+    cat: row.cat || '',
+    state: row.state || 'learning',
+    againCount: row.again_count || 0,
+    goodCount: row.good_count || 0,
+    easyCount: row.easy_count || 0,
+    lastReviewed: row.last_reviewed || null,
+  };
+}
+function wordToVocabRow(word, userId){
+  return {
+    id: word.id,
+    user_id: userId,
+    ar: word.ar,
+    uz: word.uz,
+    ex_ar: word.exAr || null,
+    ex_uz: word.exUz || null,
+    cat: word.cat || null,
+    state: word.state || 'learning',
+    again_count: word.againCount || 0,
+    good_count: word.goodCount || 0,
+    easy_count: word.easyCount || 0,
+    last_reviewed: word.lastReviewed || null,
+  };
+}
+async function loadVocabularyFromBackend(userId){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?user_id=eq.${userId}&order=created_at.desc`, {
+      headers: authHeaders()
+    });
+    if(!res.ok) return null; // jadval mavjud emas yoki tarmoq/ruxsat xatosi — lokal keshda davom etamiz
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows.map(vocabRowToWord) : null;
+  }catch(e){ console.error('[loadVocabularyFromBackend]', e); return null; }
+}
+async function insertVocabularyWordToBackend(word){
+  if(!TELEGRAM_PROFILE?.rawId) return false;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary`, {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify(wordToVocabRow(word, TELEGRAM_PROFILE.rawId))
+    });
+    return res.ok;
+  }catch(e){ console.error('[insertVocabularyWordToBackend]', e); return false; }
+}
+async function updateVocabularyWordOnBackend(word){
+  if(!TELEGRAM_PROFILE?.rawId) return false;
+  try{
+    const row = wordToVocabRow(word, TELEGRAM_PROFILE.rawId);
+    delete row.id; delete row.user_id;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?id=eq.${encodeURIComponent(word.id)}&user_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+      method: "PATCH", headers: authHeaders(), body: JSON.stringify(row)
+    });
+    return res.ok;
+  }catch(e){ console.error('[updateVocabularyWordOnBackend]', e); return false; }
+}
+async function deleteVocabularyWordFromBackend(id){
+  if(!TELEGRAM_PROFILE?.rawId) return false;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?id=eq.${encodeURIComponent(id)}&user_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+      method: "DELETE", headers: authHeaders()
+    });
+    return res.ok;
+  }catch(e){ console.error('[deleteVocabularyWordFromBackend]', e); return false; }
+}
+/* Ilova ochilganda chaqiriladi: backenddagi lug'at bu qurilmadagi lokal keshni
+   almashtiradi (backend — asosiy manba). Agar backendda hali hech narsa bo'lmasa
+   (foydalanuvchi birinchi marta ochyapti), joriy lokal/namunaviy lug'at backendga
+   ko'chiriladi — shunda boshqa qurilmadan kirganda ham so'zlar ko'rinadi. */
+async function syncVocabularyFromBackend(){
+  if(!TELEGRAM_PROFILE?.rawId) return;
+  const remote = await loadVocabularyFromBackend(TELEGRAM_PROFILE.rawId);
+  if(remote === null) return; // tarmoq/jadval xatosi — lokal keshni tegmasdan qoldiramiz
+  if(remote.length > 0){
+    try{ localStorage.setItem('arabication_my_vocabulary', JSON.stringify(remote)); }catch(e){}
+  } else {
+    const local = getStoredVocabulary();
+    for(const w of local){ await insertVocabularyWordToBackend(w); }
+  }
+  try{
+    if(document.getElementById('view-flashcards')?.classList.contains('active')) renderFlashcardsView();
+    renderDashboardPracticeCards();
+  }catch(e){}
+}
+
 /* Flashcards session state */
 let FC_CURRENT_TAB = 'anki'; // 'anki' | 'list'
 let FC_FILTER_TYPE = 'all'; // 'all' | 'learning' | 'mastered'
@@ -14581,13 +14733,34 @@ function initFlashcardAnkiSession(){
   if(deck.length === 0){
     FC_SESSION_QUEUE = [];
   } else {
-    // prioritize learning, then mastered
+    // Only queue words that are currently being learned (mastered words are excluded from active practice)
     const learning = deck.filter(w => w.state !== 'mastered');
-    const mastered = deck.filter(w => w.state === 'mastered');
-    FC_SESSION_QUEUE = learning.length > 0 ? [...learning, ...mastered] : [...mastered];
+    FC_SESSION_QUEUE = learning;
   }
   FC_SESSION_INDEX = 0;
   renderCurrentFlashcard();
+}
+
+function restartAllWordsSession(){
+  const deck = getStoredVocabulary();
+  deck.forEach(w => { w.state = 'learning'; });
+  saveStoredVocabulary(deck);
+  renderFlashcardsView();
+  initFlashcardAnkiSession();
+  toast("Barcha so'zlar mashqqa qaytarildi", 2000);
+}
+
+function resetWordToLearning(id){
+  const deck = getStoredVocabulary();
+  const word = deck.find(w => w.id === id);
+  if(word){
+    word.state = 'learning';
+    word.againCount = (word.againCount || 0) + 1;
+    saveStoredVocabulary(deck);
+    renderFlashcardsView();
+    updateVocabularyWordOnBackend(word);
+    toast("So'z mashq qilish ro'yxatiga qaytarildi", 2000);
+  }
 }
 
 function renderCurrentFlashcard(){
@@ -14600,14 +14773,21 @@ function renderCurrentFlashcard(){
   if(cardBox) cardBox.classList.remove('flipped');
 
   if(FC_SESSION_QUEUE.length === 0){
+    const deck = getStoredVocabulary();
     if(counterEl) counterEl.textContent = "0 / 0";
     if(barEl) barEl.style.width = "0%";
-    if(statusEl) statusEl.textContent = "Lug'atingizda hali so'zlar yo'q";
-    if(cardBox){
-      const arEl = document.getElementById('fcFrontArabic');
-      if(arEl) arEl.textContent = "Lug'at bo'sh";
-      const catEl = document.getElementById('fcFrontCategoryBadge');
-      if(catEl) catEl.textContent = "Yangi";
+    if(deck.length === 0){
+      if(statusEl) statusEl.textContent = "Lug'atingizda hali so'zlar yo'q";
+      if(cardBox){
+        const arEl = document.getElementById('fcFrontArabic');
+        if(arEl) arEl.textContent = "Lug'at bo'sh";
+      }
+    } else {
+      if(statusEl) statusEl.textContent = "Barcha so'zlar yodlangan";
+      if(cardBox){
+        const arEl = document.getElementById('fcFrontArabic');
+        if(arEl) arEl.innerHTML = `<span style="font-size:22px;color:var(--green);font-weight:700;">Barcha so'zlar yodlangan!</span><div style="font-size:13px;color:var(--text-dim);margin-top:8px;font-family:'Onest',sans-serif;">Qayta takrorlash uchun so'zlar ro'yxatidan qaytarish tugmasini bosing yoki barchasini qaytadan boshlang</div><button type="button" class="btn btn-primary" onclick="restartAllWordsSession()" style="margin-top:12px;padding:8px 16px;font-size:13px;">Barchasini qayta takrorlash</button>`;
+      }
     }
     return;
   }
@@ -14616,12 +14796,10 @@ function renderCurrentFlashcard(){
     // Session complete
     if(counterEl) counterEl.textContent = `${FC_SESSION_QUEUE.length} / ${FC_SESSION_QUEUE.length}`;
     if(barEl) barEl.style.width = "100%";
-    if(statusEl) statusEl.textContent = "🎉 Mashq tugadi! Barcha kartalar takrorlandi";
+    if(statusEl) statusEl.textContent = "Mashq tugadi. Barcha kartalar takrorlandi";
     if(cardBox){
       const arEl = document.getElementById('fcFrontArabic');
-      if(arEl) arEl.innerHTML = `<span style="font-size:24px;color:var(--green);">Muvaffaqiyatli! ✅</span><div style="font-size:14px;color:var(--text-dim);margin-top:8px;font-family:'Onest',sans-serif;">Qaytadan boshlash uchun bosing</div>`;
-      const catEl = document.getElementById('fcFrontCategoryBadge');
-      if(catEl) catEl.textContent = "Yakunlandi";
+      if(arEl) arEl.innerHTML = `<span style="font-size:24px;color:var(--green);font-weight:700;">Muvaffaqiyatli</span><div style="font-size:14px;color:var(--text-dim);margin-top:8px;font-family:'Onest',sans-serif;">Qaytadan boshlash uchun bosing</div>`;
     }
     return;
   }
@@ -14633,10 +14811,7 @@ function renderCurrentFlashcard(){
 
   if(counterEl) counterEl.textContent = `${currentNum} / ${total}`;
   if(barEl) barEl.style.width = `${pct}%`;
-  if(statusEl) statusEl.textContent = word.state === 'mastered' ? "🟢 Yodlangan so'z (mustahkamlash)" : "🟡 O'rganilayotgan so'z";
-
-  const catEl = document.getElementById('fcFrontCategoryBadge');
-  if(catEl) catEl.textContent = word.cat || "Lug'at";
+  if(statusEl) statusEl.textContent = word.state === 'mastered' ? "Yodlangan so'z" : "O'rganilayotgan so'z";
 
   const arEl = document.getElementById('fcFrontArabic');
   if(arEl) arEl.textContent = word.ar;
@@ -14681,46 +14856,18 @@ function handleAnkiAnswer(rating){
       target.againCount = (target.againCount || 0) + 1;
       target.state = 'learning';
       FC_SESSION_QUEUE.push(word);
-      toast("🔁 So'z takrorlash ro'yxatiga qo'shildi", 1800);
     } else if(rating === 'good'){
       target.goodCount = (target.goodCount || 0) + 1;
-      toast("💡 Yaxshi o'zlashtirildi", 1500);
     } else if(rating === 'easy'){
       target.easyCount = (target.easyCount || 0) + 1;
       target.state = 'mastered';
-      toast("✅ So'z yodlangan deb belgilandi!", 1800);
     }
     saveStoredVocabulary(deck);
+    updateVocabularyWordOnBackend(target);
   }
 
   FC_SESSION_INDEX++;
   renderCurrentFlashcard();
-}
-
-function playActiveWordAudio(e){
-  if(e) e.stopPropagation();
-  if(FC_SESSION_QUEUE.length === 0 || FC_SESSION_INDEX >= FC_SESSION_QUEUE.length) return;
-  const word = FC_SESSION_QUEUE[FC_SESSION_INDEX];
-  playArabicTTS(word.ar);
-}
-
-function playArabicTTS(text){
-  if(!text) return;
-  try{
-    if('speechSynthesis' in window){
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ar-SA';
-      utter.rate = 0.85;
-      utter.pitch = 1.0;
-      window.speechSynthesis.speak(utter);
-      toast("🔊 O'qilmoqda: " + text.slice(0, 20), 1500, 'audio');
-    } else {
-      toast("⚠️ Brauzeringiz ovozli talaffuzni qo'llab-quvvatlamaydi", 2500, 'warning');
-    }
-  }catch(e){
-    console.error("TTS error:", e);
-  }
 }
 
 /* Words list rendering and filter */
@@ -14763,10 +14910,9 @@ function renderFlashcardWordsList(){
   if(filtered.length === 0){
     grid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:36px 16px;background:var(--card);border-radius:18px;border:1px dashed var(--border);">
-        <div style="font-size:32px;margin-bottom:10px;">📖</div>
         <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Hech qanday so'z topilmadi</div>
         <p style="font-size:13px;color:var(--text-dim);max-width:320px;margin:0 auto 16px;">O'qish matnlaridan so'zni tanlang yoki yangi so'z qo'shing.</p>
-        <button class="btn btn-primary" onclick="openAddFlashcardModal()">+ Yangi so'z qo'shish</button>
+        <button class="btn btn-primary" onclick="openAddFlashcardModal()">Yangi so'z qo'shish</button>
       </div>
     `;
     return;
@@ -14779,27 +14925,40 @@ function renderFlashcardWordsList(){
         <div class="fc-word-head">
           <div class="fc-word-ar">${escapeHtml(w.ar)}</div>
           <div class="fc-word-tools">
-            <button type="button" class="fc-tool-btn" onclick="playArabicTTS('${escapeHtml(w.ar).replace(/'/g,"\\'")}')" title="Tinglash">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <button type="button" class="fc-tool-btn btn-reset" onclick="resetWordToLearning('${w.id}')" title="Mashqqa qaytarish (qayta o'rganish)" aria-label="Mashqqa qaytarish">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+              </svg>
             </button>
-            <button type="button" class="fc-tool-btn" onclick="openEditFlashcardModal('${w.id}')" title="Tahrirlash">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            <button type="button" class="fc-tool-btn btn-edit" onclick="openEditFlashcardModal('${w.id}')" title="Tahrirlash" aria-label="Tahrirlash">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
             </button>
-            <button type="button" class="fc-tool-btn" onclick="deleteFlashcardWord('${w.id}')" title="O'chirish" style="color:var(--red);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button type="button" class="fc-tool-btn btn-del" onclick="deleteFlashcardWord('${w.id}')" title="O'chirish" aria-label="O'chirish">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
             </button>
           </div>
         </div>
         <div class="fc-word-uz">${escapeHtml(w.uz)}</div>
         ${w.exAr ? `
-          <div style="font-size:12.5px;color:var(--text-dim);margin-top:6px;direction:rtl;text-align:right;font-family:var(--font-ar);line-height:1.6;">
+          <div style="font-size:13px;color:var(--text-dim);margin-top:6px;direction:rtl;text-align:right;font-family:'Noto Sans Arabic',sans-serif;line-height:1.6;">
             ${escapeHtml(w.exAr)}
+          </div>
+        ` : ''}
+        ${w.exUz ? `
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">
+            ${escapeHtml(w.exUz)}
           </div>
         ` : ''}
         <div class="fc-word-footer">
           <span class="badge" style="background:var(--indigo-100);color:var(--indigo-700);font-size:11px;">${escapeHtml(w.cat || "Lug'at")}</span>
           <button type="button" class="badge" onclick="toggleWordMastered('${w.id}')" style="cursor:pointer;border:none;background:${isMastered ? 'var(--green-bg)' : 'var(--card-alt)'};color:${isMastered ? 'var(--green)' : 'var(--text-dim)'};font-size:11px;font-weight:700;">
-            ${isMastered ? '✅ Yodlangan' : '⏳ O‘rganilmoqda'}
+            ${isMastered ? 'Yodlangan' : "O'rganilmoqda"}
           </button>
         </div>
       </div>
@@ -14808,7 +14967,7 @@ function renderFlashcardWordsList(){
 }
 
 function openAddFlashcardModal(){
-  document.getElementById('flashcardModalTitle').textContent = "+ Yangi so'z qo'shish";
+  document.getElementById('flashcardModalTitle').textContent = "Yangi so'z qo'shish";
   document.getElementById('fcEditWordId').value = "";
   document.getElementById('fcInputAr').value = "";
   document.getElementById('fcInputUz').value = "";
@@ -14849,7 +15008,7 @@ function saveFlashcardModalData(){
   const cat = (document.getElementById('fcInputCat').value || '').trim() || "Shaxsiy lug'at";
 
   if(!ar || !uz){
-    toast("⚠️ Arabcha so'z va o'zbekcha tarjimasini kiriting", 3000, 'warning');
+    toast("Arabcha so'z va o'zbekcha tarjimasini kiriting", 3000, 'warning');
     return;
   }
 
@@ -14862,7 +15021,7 @@ function saveFlashcardModalData(){
       target.exAr = exAr;
       target.exUz = exUz;
       target.cat = cat;
-      toast("So'z muvaffaqiyatli yangilandi ✅", 2500);
+      toast("So'z muvaffaqiyatli yangilandi", 2500);
     }
   } else {
     const newWord = {
@@ -14873,20 +15032,28 @@ function saveFlashcardModalData(){
       lastReviewed: null
     };
     deck.unshift(newWord);
-    toast("Yangi so'z lug'atga qo'shildi! 📝", 2500);
+    toast("Yangi so'z lug'atga qo'shildi", 2500);
   }
 
   saveStoredVocabulary(deck);
   closeFlashcardModal();
   renderFlashcardsView();
+
+  if(id){
+    const target = deck.find(w => w.id === id);
+    if(target) updateVocabularyWordOnBackend(target);
+  } else {
+    insertVocabularyWordToBackend(deck[0]);
+  }
 }
 
 function deleteFlashcardWord(id){
   const deck = getStoredVocabulary();
   const filtered = deck.filter(w => w.id !== id);
   saveStoredVocabulary(filtered);
-  toast("So'z lug'atdan o'chirildi 🗑️", 2000, 'delete');
+  toast("So'z lug'atdan o'chirildi", 2000, 'delete');
   renderFlashcardsView();
+  deleteVocabularyWordFromBackend(id);
 }
 
 function toggleWordMastered(id){
@@ -14896,7 +15063,8 @@ function toggleWordMastered(id){
     word.state = (word.state === 'mastered') ? 'learning' : 'mastered';
     saveStoredVocabulary(deck);
     renderFlashcardsView();
-    toast(word.state === 'mastered' ? "✅ Yodlangan deb belgilandi" : "⏳ O'rganishga qaytarildi", 2000);
+    toast(word.state === 'mastered' ? "Yodlangan deb belgilandi" : "O'rganishga qaytarildi", 2000);
+    updateVocabularyWordOnBackend(word);
   }
 }
 
@@ -14944,12 +15112,12 @@ function saveWordFromPassageModal(){
   if(existing){
     if(uzMeaning) existing.uz = uzMeaning;
     if(example) existing.exAr = example;
-    toast("Lug'atdagi mavjud so'z yangilandi ✅", 2500);
+    toast("Lug'atdagi mavjud so'z yangilandi", 2500);
   } else {
     deck.unshift({
       id: "fc_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
       ar: arWord,
-      uz: uzMeaning || "(Tarjimasi kiritilmagan)",
+      uz: uzMeaning || "Tarjimasi kiritilmagan",
       exAr: example || "",
       exUz: "",
       cat: "Qiroa matni",
@@ -14957,7 +15125,7 @@ function saveWordFromPassageModal(){
       againCount: 0, goodCount: 0, easyCount: 0,
       lastReviewed: null
     });
-    toast(`"${arWord}" so'zi lug'atga saqlandi! 💾`, 3000);
+    toast(`"${arWord}" so'zi lug'atga saqlandi`, 3000);
   }
 
   saveStoredVocabulary(deck);
