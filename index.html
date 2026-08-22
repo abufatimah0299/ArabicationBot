@@ -16094,7 +16094,7 @@ async function evaluateWritingAnswer(text){
   try{
     const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-writing`, {
       method:'POST', headers: authHeaders(),
-      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: minRequired })
+      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: cur.part.minWords })
     });
     const data = await res.json().catch(()=>null);
     if(!res.ok || !data || typeof data.score !== 'number'){
