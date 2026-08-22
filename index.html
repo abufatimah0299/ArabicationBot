@@ -7976,41 +7976,44 @@ async function clearAllExamHistory(){
    Muammo: admin serverdagi `quiz_attempts` jadvalini tozalasa ham, har bir
    foydalanuvchining O'Z TELEFONIDA (localStorage, ATTEMPTS_STORE_MAP) test
    tugagach saqlangan lokal nusxa qolib ketadi — admin bu keshga
-   to'g'ridan-to'g'ri tega olmaydi. Buning yechimi: umumiy APP_CONFIG'ga
-   (get_app_config orqali barcha qurilmalar muntazam yuklab turadigan
-   konfiguratsiyaga) bitta "tozalash belgisi" — history_purged_at — vaqt
-   belgisini qo'shamiz. admin_clear_all_exam_history serverda ishlaganda shu
-   belgini ham yangilashi kerak (pastdagi SQL'ga qarang). Har bir qurilma
-   keyingi loadAppConfig() chaqiruvida bu belgini o'zining oxirgi ko'rgan
-   belgisi bilan solishtiradi va agar server yangiroq bo'lsa — o'z lokal
-   keshini (ATTEMPTS_STORE_MAP) tozalaydi.
+   to'g'ridan-to'g'ri tega olmaydi.
 
-   SUPABASE'DA KERAK BO'LADIGAN O'ZGARISH (bir marta bajarish kifoya):
-     alter table app_config add column if not exists history_purged_at timestamptz;
+   Yechim: shu maqsad uchun ALOHIDA, kichkina jadval va ikkita funksiya
+   yaratamiz (mavjud hech qanday jadval yoki funksiyaga tegilmaydi — xavfsiz).
+   Admin "hammasini tozalash"ni bosganda shu jadvaldagi vaqt belgisi
+   yangilanadi; har bir qurilma esa ilova ochilganda/30 soniyada bir shu
+   belgini so'rab, agar u o'zining oxirgi ko'rgan belgisidan yangiroq bo'lsa —
+   o'z lokal keshini tozalaydi.
 
-     create or replace function admin_clear_all_exam_history()
-     returns integer language plpgsql security definer as $$
-     declare n integer; begin
-       delete from quiz_attempts; get diagnostics n = row_count;
-       update app_config set history_purged_at = now();
-       return n;
-     end; $$;
-
-   Va get_app_config funksiyasi qaytaradigan JSON'ga history_purged_at
-   ustunini ham qo'shib yuboring (masalan json_build_object(...,
-   'history_purged_at', history_purged_at)). Agar bu ustun hali qo'shilmagan
-   bo'lsa, cfg.history_purged_at shunchaki undefined bo'ladi va quyidagi
-   funksiya hech narsa qilmaydi — xavfsiz. */
+   PASTDAGI SQL'NI SUPABASE > SQL EDITOR'DA BIR MARTA ISHGA TUSHIRING: */
+const HISTORY_PURGE_ACK_KEY = 'history_purge_ack_v1';
+async function purgeLocalHistoryIfStale(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_history_purge_marker`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok) return;
+    const text = await res.text();
+    const serverMarker = text ? JSON.parse(text) : null;
+    if(!serverMarker) return;
+    const serverTime = new Date(serverMarker).getTime();
+    if(isNaN(serverTime)) return;
+    const ackRaw = localStorage.getItem(HISTORY_PURGE_ACK_KEY);
+    const ackTime = ackRaw ? new Date(ackRaw).getTime() : 0;
+    if(serverTime > ackTime){
+      ATTEMPTS_STORE_MAP = {};
+      localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP));
+      localStorage.setItem(HISTORY_PURGE_ACK_KEY, new Date(serverTime).toISOString());
+      window.HISTORY_DATA_LIVE = [];
+      HISTORY_DATA = [];
+      if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
+    }
+  }catch(e){ console.warn('[purgeLocalHistoryIfStale]', e); }
+}
 /* ---- Foydalanuvchi: FAQAT o'zining imtihon tarixini tozalash ----
    Admin funksiyasidan farqli o'laroq, bu faqat joriy foydalanuvchining
-   quiz_attempts qatorlarini o'chiradi. Supabase'da quyidagi RPC funksiyasi
-   talab qilinadi (bir marta yaratish kifoya):
-   create or replace function clear_my_exam_history(p_user_id text)
-   returns integer language plpgsql security definer as $$
-   declare n integer; begin
-     delete from quiz_attempts where user_id = p_user_id;
-     get diagnostics n = row_count; return n;
-   end; $$; */
+   quiz_attempts qatorlarini o'chiradi. Kerakli SQL pastda, admin funksiyasi
+   bilan bir joyda. */
 async function clearMyExamHistoryOnBackend(){
   if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
   try{
@@ -8038,25 +8041,6 @@ async function clearMyExamHistory(){
   toast(`🗑 Tarixingiz tozalandi (${result} ta yozuv o'chirildi)`);
 }
 
-const HISTORY_PURGE_ACK_KEY = 'history_purge_ack_v1';
-function purgeLocalHistoryIfStale(){
-  try{
-    const serverMarker = APP_CONFIG && APP_CONFIG.history_purged_at;
-    if(!serverMarker) return;
-    const serverTime = new Date(serverMarker).getTime();
-    if(isNaN(serverTime)) return;
-    const ackRaw = localStorage.getItem(HISTORY_PURGE_ACK_KEY);
-    const ackTime = ackRaw ? new Date(ackRaw).getTime() : 0;
-    if(serverTime > ackTime){
-      ATTEMPTS_STORE_MAP = {};
-      localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP));
-      localStorage.setItem(HISTORY_PURGE_ACK_KEY, new Date(serverTime).toISOString());
-      window.HISTORY_DATA_LIVE = [];
-      HISTORY_DATA = [];
-      if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
-    }
-  }catch(e){ console.warn('[purgeLocalHistoryIfStale]', e); }
-}
 
 /* ---- 3) SAVOLLAR BANKI ---- */
 /* ---- "Amallar" action-sheet: joriy bo'limga (grammatika/qiroa/boshqa) mos ravishda
