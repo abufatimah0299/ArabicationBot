@@ -3850,9 +3850,7 @@ html[data-theme="light"] .pin-dot.filled{
       <div class="view" id="view-history">
         <div class="view-title">Tarix</div>
 
-        <div class="grid4 stagger" id="historyStats" style="grid-template-columns:repeat(3,1fr);"></div>
-
-        <div class="rank-filter-row" style="margin:16px 0 18px 0;">
+        <div class="rank-filter-row" style="margin:8px 0 18px 0;">
           <div class="rank-dropdown" id="historySkillDropdown"></div>
           <div class="rank-dropdown" id="historyPeriodDropdown"></div>
         </div>
@@ -7518,38 +7516,7 @@ function statusOf(pct){
   return {label:'Qoniqarsiz', cls:'badge-poor'};
 }
 function renderHistoryStats(){
-  const el = document.getElementById('historyStats');
-  if(!el) return;
-  if(!historyLoaded){
-    el.innerHTML = `
-      <div class="card stat-card skel-stat-card">
-        <div class="skel skel-line" style="width:60%;height:13px;"></div>
-        <div class="skel skel-box" style="width:40%;height:26px;margin:4px 0;"></div>
-        <div class="skel skel-line" style="width:75%;height:11px;"></div>
-      </div>
-      <div class="card stat-card skel-stat-card">
-        <div class="skel skel-line" style="width:55%;height:13px;"></div>
-        <div class="skel skel-box" style="width:45%;height:26px;margin:4px 0;"></div>
-        <div class="skel skel-line" style="width:70%;height:11px;"></div>
-      </div>
-      <div class="card stat-card skel-stat-card">
-        <div class="skel skel-line" style="width:50%;height:13px;"></div>
-        <div class="skel skel-box" style="width:35%;height:26px;margin:4px 0;"></div>
-        <div class="skel skel-line" style="width:65%;height:11px;"></div>
-      </div>
-    `;
-    return;
-  }
-  const totalTests = HISTORY_DATA.length;
-  const avgAcc = totalTests ? Math.round(HISTORY_DATA.reduce((s,r)=>s+(r.correct/r.total*100),0)/totalTests) : 0;
-  const totalMinutes = totalTests*9;
-  const hours = Math.round(totalMinutes/60*10)/10;
-  el.innerHTML = `
-    <div class="card stat-card fade-in-enter"><div class="top">📝 Jami yechilgan testlar</div><div class="num"><span class="num-target" data-target="${totalTests}">0</span></div><div class="sub" style="color:var(--text-faint)">Barcha bo'limlar bo'yicha</div></div>
-    <div class="card stat-card fade-in-enter"><div class="top">🎯 O'rtacha aniqlik</div><div class="num"><span class="num-target" data-target="${avgAcc}" data-suffix="%">0%</span></div><div class="sub">So'nggi testlar bo'yicha</div></div>
-    <div class="card stat-card fade-in-enter"><div class="top">⏱ Sarflangan vaqt</div><div class="num"><span class="num-target" data-target="${hours}" data-decimals="1" data-suffix=" soat">0 soat</span></div><div class="sub" style="color:var(--text-faint)">Taxminiy</div></div>
-  `;
-  runEntranceAnimations(el, true);
+  // Tarix sahifasidagi umumiy statistika kartalari foydalanuvchi talabiga ko'ra olib tashlangan
 }
 function renderHistoryList(){
   const el = document.getElementById('historyList');
@@ -11116,9 +11083,11 @@ function startMockQuiz(mockId){
   buildQGrid();
   showView('quiz');
   renderQuestion();
-  const qCount = currentQuiz.questions.length;
-  const durationSeconds = Math.max(60, qCount * 60);
-  startTimer(durationSeconds, () => finishQuiz());
+  if(mock.skill !== 'grammatika'){
+    const qCount = currentQuiz.questions.length;
+    const durationSeconds = Math.max(60, qCount * 60);
+    startTimer(durationSeconds, () => finishQuiz());
+  }
 }
 
 function openAddQuestionModal(presetSkill, presetTopic){
@@ -12760,8 +12729,14 @@ function startQuestionTimer(){
       clearQuestionTimer();
       paint();
       disableQuestionOptions();
-      toast("⏰ Ushbu savol uchun ajratilgan vaqt tugadi!");
       updateQGrid();
+      toast("⏰ Vaqt tugadi! Keyingi savolga o'tilmoqda...", 1200);
+      setTimeout(()=>{
+        if(!currentQuiz || !currentQuiz.questions) return;
+        if(currentQuiz.questions[currentQuiz.idx] === q){
+          nextQ();
+        }
+      }, 700);
     }
   }, 1000);
 }
@@ -13026,28 +13001,108 @@ function advanceAfterQiroaJuz(){
     finishQuiz();
   }
 }
-/* ---------------- Istima: qism-ma-qism audio + savollar oqimi ---------------- */
+/* ---------------- Istima: qism-ma-qism audio + savollar oqimi ----------------
+   1-qism: 6 ta qisqa audio va har birining o'z savoli ketma-ket (Audio 1 -> Savol 1 -> Audio 2 -> Savol 2 ... -> Audio 6 -> Savol 6)
+   2-qism: 1 ta dialog audio + 6 ta savol (7-12)
+   3-qism: 1 ta monolog/ma'ruza audio + 6 ta savol (13-18)
+   Jami: 18 ta savol. */
 function startIstimaQuiz(customLabel){
-  // Har bir qismdan (agar shu qismda kamida 1 ta TO'LIQ test — audio+kerakli sondagi
-  // savol bo'lsa) TASODIFIY bitta test tanlanadi.
-  const availableJuz = ISTIMA_JUZ
-    .map(meta => {
-      const tests = (ISTIMA_TESTS[meta.id]||[]).filter(t => t.questions.length === meta.qCount);
-      if(!tests.length) return null;
-      const picked = tests[Math.floor(Math.random()*tests.length)];
-      return { ...meta, audioUrl: picked.audioUrl || '', questions: picked.questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})) };
-    })
-    .filter(Boolean);
-  if(availableJuz.length === 0){
+  // 1-qism uchun bankdan 6 ta test (har birida 1 audio + 1 savol) tanlaymiz
+  const juz1Pool = (ISTIMA_TESTS['juz1'] || []).filter(t => t.questions && t.questions.length >= 1);
+  const shuffledJuz1 = shuffleArray([...juz1Pool]);
+  let pickedJuz1 = [];
+  if(shuffledJuz1.length >= 6){
+    pickedJuz1 = shuffledJuz1.slice(0, 6);
+  } else if(shuffledJuz1.length > 0){
+    for(let i = 0; i < 6; i++){
+      pickedJuz1.push(shuffledJuz1[i % shuffledJuz1.length]);
+    }
+  }
+
+  // 2-qism va 3-qism uchun bittadan to'liq test tanlaymiz
+  const juz2Pool = (ISTIMA_TESTS['juz2'] || []).filter(t => t.questions && t.questions.length >= 1);
+  const pickedJuz2 = juz2Pool.length ? juz2Pool[Math.floor(Math.random() * juz2Pool.length)] : null;
+
+  const juz3Pool = (ISTIMA_TESTS['juz3'] || []).filter(t => t.questions && t.questions.length >= 1);
+  const pickedJuz3 = juz3Pool.length ? juz3Pool[Math.floor(Math.random() * juz3Pool.length)] : null;
+
+  if(pickedJuz1.length === 0 && !pickedJuz2 && !pickedJuz3){
     toast("⚠️ Istima bo'limi uchun hali audio/savollar to'liq qo'shilmagan. Admin panelda qo'shing.");
     return;
   }
+
   let flat = [];
-  const juzMeta = availableJuz.map(j=>{
+  const juzMeta = [];
+
+  // 1-qism: 6 ta mustaqil audio-savol juftligi
+  pickedJuz1.forEach((t, idx) => {
+    const qObj = t.questions[0];
+    const qCopy = {
+      ...qObj,
+      picked: null,
+      timeLeft: qObj.timeLeft !== undefined ? qObj.timeLeft : 60,
+      expired: false
+    };
     const startIdx = flat.length;
-    flat = flat.concat(j.questions);
-    return { id:j.id, name:j.name, audioUrl:j.audioUrl, maxPlays:(FULL_EXAM && FULL_EXAM.active) ? Infinity : j.maxPlays, startIdx, endIdx: flat.length-1 };
+    flat.push(qCopy);
+    const endIdx = flat.length - 1;
+    juzMeta.push({
+      id: 'juz1',
+      partNum: 1,
+      name: '1-qism',
+      audioIndex: idx + 1,
+      totalAudiosInPart: pickedJuz1.length,
+      audioUrl: t.audioUrl || '',
+      maxPlays: (FULL_EXAM && FULL_EXAM.active) ? Infinity : 2,
+      startIdx,
+      endIdx
+    });
   });
+
+  // 2-qism: 1 ta dialog audio va 6 ta savol
+  if(pickedJuz2){
+    const startIdx = flat.length;
+    const qCopies = (pickedJuz2.questions || []).map(q => ({
+      ...q,
+      picked: null,
+      timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60,
+      expired: false
+    }));
+    flat = flat.concat(qCopies);
+    const endIdx = flat.length - 1;
+    juzMeta.push({
+      id: 'juz2',
+      partNum: 2,
+      name: '2-qism',
+      audioUrl: pickedJuz2.audioUrl || '',
+      maxPlays: (FULL_EXAM && FULL_EXAM.active) ? Infinity : 2,
+      startIdx,
+      endIdx
+    });
+  }
+
+  // 3-qism: 1 ta monolog/ma'ruza audio va 6 ta savol
+  if(pickedJuz3){
+    const startIdx = flat.length;
+    const qCopies = (pickedJuz3.questions || []).map(q => ({
+      ...q,
+      picked: null,
+      timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60,
+      expired: false
+    }));
+    flat = flat.concat(qCopies);
+    const endIdx = flat.length - 1;
+    juzMeta.push({
+      id: 'juz3',
+      partNum: 3,
+      name: '3-qism',
+      audioUrl: pickedJuz3.audioUrl || '',
+      maxPlays: (FULL_EXAM && FULL_EXAM.active) ? Infinity : 2,
+      startIdx,
+      endIdx
+    });
+  }
+
   const skillMeta = SKILLS.find(s=>s.id==='istima');
   currentQuiz = {
     skillId:'istima', topicId:null, type:'listening-juz',
@@ -13399,13 +13454,31 @@ function fmtAudioTime(secs){
 function renderIstimaPhase(){
   const body = document.getElementById('quizBody');
   const juz = currentQuiz.juz[currentQuiz.juzPointer];
-  const juzLabel = `${juz.name} / ${currentQuiz.juz.length}`;
 
   if(currentQuiz.phase === 'listening'){
     const playsLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
     const canPlay = !!juz.audioUrl && playsLeft > 0;
-    const currentQNumber = (juz.startIdx !== undefined ? juz.startIdx : currentQuiz.idx) + 1;
-    const subText = `${currentQNumber}-savol | Qolgan imkoniyat: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    
+    let titleText = juz.name || 'Istima · Tinglab tushunish';
+    let subText = '';
+    
+    if(juz.partNum === 1){
+      titleText = `1-qism · ${juz.audioIndex}-audio (${juz.audioIndex}/${juz.totalAudiosInPart || 6})`;
+      subText = `${currentQuiz.idx + 1}-savol | Qolgan imkoniyat: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    } else if(juz.partNum === 2){
+      titleText = `2-qism · Dialog audio`;
+      const sNum = juz.startIdx + 1;
+      const eNum = juz.endIdx + 1;
+      subText = `${sNum}-${eNum}-savollar | Qolgan imkoniyat: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    } else if(juz.partNum === 3){
+      titleText = `3-qism · Monolog / Ma'ruza audio`;
+      const sNum = juz.startIdx + 1;
+      const eNum = juz.endIdx + 1;
+      subText = `${sNum}-${eNum}-savollar | Qolgan imkoniyat: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    } else {
+      const currentQNumber = (juz.startIdx !== undefined ? juz.startIdx : currentQuiz.idx) + 1;
+      subText = `${currentQNumber}-savol | Qolgan imkoniyat: ${fmtPlays(playsLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    }
 
     // 36 ta audio to'lqin balandliklari (Waveform bars)
     const waveHeights = [16, 24, 34, 44, 30, 18, 28, 42, 52, 38, 24, 18, 32, 46, 56, 42, 26, 18, 30, 44, 52, 38, 24, 18, 32, 46, 50, 36, 22, 16, 26, 40, 34, 22, 16, 12];
@@ -13418,7 +13491,7 @@ function renderIstimaPhase(){
         
         <!-- Sarlavha va Qism ma'lumoti -->
         <div class="istima-card-head">
-          <div class="istima-card-title">${juz.name || 'Istima · Tinglab tushunish'}</div>
+          <div class="istima-card-title">${titleText}</div>
           <div class="istima-card-sub" id="istimaCardSub">${subText}</div>
         </div>
 
@@ -13491,18 +13564,48 @@ function renderIstimaPhase(){
   // phase === 'questions'
   const q = currentQuiz.questions[currentQuiz.idx];
   const isExpired = !!(q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0));
-  const localNum = currentQuiz.idx - juz.startIdx + 1;
-  const localTotal = juz.endIdx - juz.startIdx + 1;
-  let html = `<div class="q-sub">${juzLabel} · Savol ${localNum} / ${localTotal}</div>`;
+  
+  let sectionLabel = '';
+  if(juz.partNum === 1){
+    sectionLabel = `1-qism · ${juz.audioIndex}-audio (${juz.audioIndex}/${juz.totalAudiosInPart || 6})`;
+  } else if(juz.partNum === 2){
+    const localNum = currentQuiz.idx - juz.startIdx + 1;
+    const localTotal = juz.endIdx - juz.startIdx + 1;
+    sectionLabel = `2-qism · Savol ${localNum} / ${localTotal}`;
+  } else if(juz.partNum === 3){
+    const localNum = currentQuiz.idx - juz.startIdx + 1;
+    const localTotal = juz.endIdx - juz.startIdx + 1;
+    sectionLabel = `3-qism · Savol ${localNum} / ${localTotal}`;
+  } else {
+    const localNum = currentQuiz.idx - juz.startIdx + 1;
+    const localTotal = juz.endIdx - juz.startIdx + 1;
+    sectionLabel = `${juz.name} · Savol ${localNum} / ${localTotal}`;
+  }
+  const globalLabel = `Savol ${currentQuiz.idx + 1} / ${currentQuiz.questions.length}`;
+
+  let html = `<div class="q-sub">${sectionLabel} · ${globalLabel}</div>`;
   html += `<div class="q-text">${q.q}</div>`;
   html += `<div class="options">` + q.opts.map((opt,oi)=>`
     <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
       <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
     </div>`).join('') + `</div>`;
-  const isVeryLast = currentQuiz.juzPointer===currentQuiz.juz.length-1 && currentQuiz.idx===juz.endIdx;
+  
+  const isVeryLast = (currentQuiz.juzPointer === currentQuiz.juz.length - 1) && (currentQuiz.idx === juz.endIdx);
+  let nextBtnText = 'Keyingi →';
+  if(isVeryLast){
+    nextBtnText = 'Yakunlash';
+  } else if(currentQuiz.idx === juz.endIdx){
+    if(juz.partNum === 1 && juz.audioIndex < (juz.totalAudiosInPart || 6)){
+      nextBtnText = 'Keyingi audio →';
+    } else {
+      nextBtnText = 'Keyingi qism →';
+    }
+  }
+
+  const canGoPrev = currentQuiz.idx > juz.startIdx;
   html += `<div class="q-nav-row">
-      <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===juz.startIdx?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
-      <button class="btn btn-primary" onclick="nextQ()">${isVeryLast?'Yakunlash':(currentQuiz.idx===juz.endIdx?'Keyingi qism →':'Keyingi →')}</button>
+      <button class="btn btn-outline" onclick="prevQ()" ${canGoPrev ? '' : 'disabled style="opacity:.4;cursor:default;"'}>← Oldingi</button>
+      <button class="btn btn-primary" onclick="nextQ()">${nextBtnText}</button>
     </div>`;
   body.innerHTML = html;
   startQuestionTimer(); // har savol uchun qolgan vaqtdan davom etadi
@@ -13624,8 +13727,20 @@ function toggleIstimaAudio(){
     // Qolgan imkoniyat va sarlavhani yangilash
     const newPlaysLeft = Math.max(0, juz.maxPlays - currentQuiz.playsUsed);
     const subEl = document.getElementById('istimaCardSub');
-    const currentQNumber = (juz.startIdx !== undefined ? juz.startIdx : currentQuiz.idx) + 1;
-    if(subEl) subEl.textContent = `${currentQNumber}-savol | Qolgan imkoniyat: ${fmtPlays(newPlaysLeft)} / ${fmtPlays(juz.maxPlays)}`;
+    if(subEl){
+      let subText = '';
+      if(juz.partNum === 1){
+        subText = `${currentQuiz.idx + 1}-savol | Qolgan imkoniyat: ${fmtPlays(newPlaysLeft)} / ${fmtPlays(juz.maxPlays)}`;
+      } else if(juz.partNum === 2 || juz.partNum === 3){
+        const sNum = juz.startIdx + 1;
+        const eNum = juz.endIdx + 1;
+        subText = `${sNum}-${eNum}-savollar | Qolgan imkoniyat: ${fmtPlays(newPlaysLeft)} / ${fmtPlays(juz.maxPlays)}`;
+      } else {
+        const currentQNumber = (juz.startIdx !== undefined ? juz.startIdx : currentQuiz.idx) + 1;
+        subText = `${currentQNumber}-savol | Qolgan imkoniyat: ${fmtPlays(newPlaysLeft)} / ${fmtPlays(juz.maxPlays)}`;
+      }
+      subEl.textContent = subText;
+    }
   }
 
   audio.play().catch(()=>{
@@ -14415,7 +14530,7 @@ function renderReviewGrid(){
     return `
       <div class="review-card ${canClick?'clickable':''}" data-idx="${i}" ${canClick?`onclick="toggleReviewDetail(${i})"`:''}>
         <div class="review-icon ${iconClass}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
-        <div class="review-label">Savol ${i+1}${isUnanswered ? ' <span style="font-size:10px;opacity:0.7;display:block;">(belgilanmagan)</span>' : ''}</div>
+        <div class="review-label">Savol ${i+1}</div>
       </div>`;
   }).join('');
   if(detail){
