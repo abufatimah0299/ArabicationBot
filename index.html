@@ -4355,13 +4355,13 @@ html[data-theme="light"] .pin-dot.filled{
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
     <span>Reyting</span>
   </button>
-  <button class="bn-btn" data-view="admin" id="bnAdminBtn" style="display:none;">
-    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
-    <span>Admin</span>
-  </button>
   <button class="bn-btn" data-view="profil" id="bnProfilBtn">
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
     <span>Profil</span>
+  </button>
+  <button class="bn-btn" data-view="admin" id="bnAdminBtn" style="display:none;">
+    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+    <span>Admin</span>
   </button>
 </nav>
 
@@ -4711,12 +4711,8 @@ function showAdminButtons(show){
   if(profileAdminLink) profileAdminLink.style.display = show ? '' : 'none';
   const bnAdminBtn = document.getElementById('bnAdminBtn');
   if(bnAdminBtn) bnAdminBtn.style.display = show ? '' : 'none';
-  // Admin uchun pastki bardagi "Profil" tugmasi "Admin" tugmasiga almashadi
-  // (joy cheklangani uchun ikkalasi bir vaqtda ko'rinmaydi). "Reyting" esa
-  // admin uchun ham doim ko'rinib turadi. Profilga kirish uchun admin
-  // sidebar'dagi alohida "Profil" havolasidan foydalanadi.
   const bnProfilBtn = document.getElementById('bnProfilBtn');
-  if(bnProfilBtn) bnProfilBtn.style.display = show ? 'none' : '';
+  if(bnProfilBtn) bnProfilBtn.style.display = ''; // Profil doim ko'rinadi (admin uchun ham Admin tugmasi oldida)
   const sidebarProfilLink = document.getElementById('sidebarProfilLink');
   if(sidebarProfilLink) sidebarProfilLink.style.display = show ? '' : 'none';
 }
