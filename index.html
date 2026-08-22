@@ -3768,67 +3768,7 @@ html[data-theme="light"] .pin-dot.filled{
 
         <div class="grid3 stagger" id="profileStats" style="margin-bottom:20px;"></div>
 
-        <!-- ============ MENING LUG'ATIM (FLASHCARDS / ANKI) SUMMARY CARD ============ -->
-        <div class="card" style="padding:18px 20px;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(79,70,229,0.12);color:var(--indigo-700);display:flex;align-items:center;justify-content:center;font-size:18px;">
-                📚
-              </div>
-              <div>
-                <div style="font-weight:700;font-size:15px;color:var(--text);font-family:'Onest', sans-serif;">Mening Lug‘atim</div>
-                <div style="font-size:12px;color:var(--text-faint);font-weight:600;">Flashcard (Anki) shaxsiy lug'at va takrorlash</div>
-              </div>
-            </div>
-            <button class="btn btn-outline" style="padding:6px 12px;font-size:12px;border-radius:10px;" onclick="showView('flashcards')">
-              Barchasi →
-            </button>
-          </div>
-
-          <div class="grid3" style="margin-bottom:14px;gap:8px;">
-            <div style="background:var(--card-alt);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;">
-              <div style="font-size:11px;color:var(--text-faint);font-weight:600;">Jami so‘zlar</div>
-              <div style="font-size:18px;font-weight:700;color:var(--indigo-700);margin-top:2px;" id="profileVocabTotal">0</div>
-            </div>
-            <div style="background:var(--card-alt);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;">
-              <div style="font-size:11px;color:var(--text-faint);font-weight:600;">Yodlangan</div>
-              <div style="font-size:18px;font-weight:700;color:var(--green);margin-top:2px;" id="profileVocabMastered">0</div>
-            </div>
-            <div style="background:var(--card-alt);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;">
-              <div style="font-size:11px;color:var(--text-faint);font-weight:600;">O‘rganilmoqda</div>
-              <div style="font-size:18px;font-weight:700;color:var(--amber, #D97706);margin-top:2px;" id="profileVocabLearning">0</div>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary" style="flex:1;padding:10px 14px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="showView('flashcards')">
-              <span>Flashcard mashqini boshlash 🔁</span>
-            </button>
-            <button class="btn btn-outline" style="padding:10px 14px;font-size:13px;" onclick="openAddFlashcardModal()">
-              + Yangi so'z
-            </button>
-          </div>
-        </div>
-
         <div class="card settings-list">
-          <div class="settings-item" data-view="flashcards" id="profileVocabLink" onclick="showView('flashcards')">
-            <div class="si-icon" style="background:rgba(79,70,229,0.12);color:var(--indigo-700);">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                <line x1="12" y1="6" x2="12" y2="12"/>
-                <line x1="9" y1="9" x2="15" y2="9"/>
-              </svg>
-            </div>
-            <div class="si-text">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                <div class="t">Mening Lug‘atim</div>
-                <span class="tag tag-indigo" id="profileVocabBadge" style="font-size:11px;padding:2px 8px;border-radius:12px;">0 ta so‘z</span>
-              </div>
-              <div class="s" id="profileVocabSub">Saqlangan so‘zlar va Anki takrorlash mashqlari</div>
-            </div>
-            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-          </div>
           <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
             <div class="si-icon" style="background:var(--indigo-100);color:var(--indigo-700);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -4578,20 +4518,6 @@ const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
-
-/* Global holat o'zgaruvchilari — ReferenceError / TDZ xatolarining oldini olish uchun script boshida e'lon qilinadi */
-var FULL_EXAM_ORDER = ['grammatika','qiroa','istima','break','muhavara','kitaba'];
-var FULL_EXAM = null;
-var TELEGRAM_PROFILE = {
-  name: '',
-  username: '',
-  id: '',
-  rawId: null,
-  photoUrl: null,
-  gender: 'unspecified'
-};
-var PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
-var HISTORY_DATA = [];
 
 /* MOSLASHTIRING: bu yerga faqat admin panelni ko'rishi kerak bo'lgan Telegram foydalanuvi ID'larini yozing.
    DIQQAT: bu faqat tugmani yashiradi — haqiqiy himoya emas! Admin ma'lumotlariga backend (Supabase RLS)
@@ -5497,10 +5423,6 @@ async function bootApp(){
     await safeBootStep('Muhavara', refreshSpeakingFromBackend);
     await safeBootStep('Kitaba', refreshKitabaFromBackend);
 
-    await safeBootStep('Lug\'atlarim', async ()=>{
-      await loadVocabularyFromBackend(TELEGRAM_PROFILE.rawId);
-    });
-
     await safeBootStep('Admin huquqi', async ()=>{
       if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
         const liveAdminUsers = await loadAdminUsersFromBackend();
@@ -5520,7 +5442,6 @@ async function bootApp(){
   }
   window.APP_READY = true;
   renderDashboardPracticeCards();
-  renderProfileVocabCard();
   checkOnboardingRegistration();
 }
 
@@ -5996,7 +5917,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -6991,7 +6912,7 @@ if(grammarHistFilterEl){
 /* ================= HISTORY (Tarix) ================= */
 /* STATIK NAMUNA OLIB TASHLANDI. Bu massiv endi bo'sh boshlanadi — haqiqiy foydalanuvchi
    tarixi backenddan (quiz_attempts jadvali) kelgach, applyLiveHistory() uni to'ldiradi. */
-HISTORY_DATA = HISTORY_DATA || [];
+let HISTORY_DATA = [];
 let historyLoaded = false;
 /* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi.
    MOSLASHTIRING: agar sizning jadval ustunlaringiz boshqacha nomlansa, pick() ichidagi nomlarga qo'shing. */
@@ -10948,7 +10869,7 @@ renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 /* ================= PROFILE ================= */
 /* Boshlang'ich (default) qiymatlar 0 — bular applyProfileStats() orqali backenddan
    (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
-PROFILE_STATS = PROFILE_STATS || { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
+let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
   const el = document.getElementById('profileStats');
   if(!el) return;
@@ -10958,7 +10879,6 @@ function renderProfileStats(){
     <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}" data-suffix="%">0%</span></div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
   `;
   runEntranceAnimations(el, true);
-  renderProfileVocabCard();
 }
 renderProfileStats();
 /* Backend get_user_dashboard javobidan XP/mavzular/aniqlikni oladi.
@@ -10973,7 +10893,6 @@ function applyProfileStats(dash){
   const delta = pick(dash, ['accuracy_delta_pct','accuracy_delta'], null);
   PROFILE_STATS.accuracyDeltaText = (delta!==null && delta!==undefined) ? `${Number(delta)>=0?'+':''}${delta}% bu oy` : '';
   renderProfileStats();
-  renderProfileVocabCard();
 }
 /* Profil sarlavhasidagi daraja belgisi va ro'yxatdan o'tgan sana — backenddan keladi,
    bo'lmasa umumiy % asosida hisoblanadi (statik "B1" endi yo'q). */
@@ -10984,7 +10903,7 @@ function applyProfileHeader(dash){
 /* ================= EDIT PROFILE & ONBOARDING (Telegram / Web) ================= */
 /* Endi bu ma'lumot Telegram autentifikatsiyasidan (tgInitAndAuth) real vaqtda keladi.
    rawId — bazadagi bigint id (RPC chaqiruvlarida ishlatiladi), id — ko'rsatish uchun matn. */
-TELEGRAM_PROFILE = TELEGRAM_PROFILE || {
+let TELEGRAM_PROFILE = {
   name: '',
   username: '',
   id: '',
@@ -11249,8 +11168,8 @@ const ARABIC_OPT_LETTERS = ['أ','ب','ج','د','هـ','و'];
    ichida to'planadi, oxirida esa umumiy (5 mahorat yig'indisi) natija ekrani
    ko'rsatiladi. Har bir mahorat baribir alohida-alohida backendga (odatdagidek)
    yoziladi — shu sabab bu funksiya alohida backend jadvali talab qilmaydi. */
-/* FULL_EXAM_ORDER va FULL_EXAM o'zgaruvchilari yuqorida global holatda e'lon qilingan */
-FULL_EXAM_ORDER = FULL_EXAM_ORDER || ['grammatika','qiroa','istima','break','muhavara','kitaba'];
+const FULL_EXAM_ORDER = ['grammatika','qiroa','istima','break','muhavara','kitaba'];
+let FULL_EXAM = null;
 function openFullExamIntro(){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   showView('fullexamintro');
@@ -13405,206 +13324,6 @@ function saveStoredVocabulary(deck){
     localStorage.setItem('arabication_my_vocabulary', JSON.stringify(deck));
   }catch(e){}
   renderDashboardPracticeCards();
-  renderProfileVocabCard();
-}
-
-function renderProfileVocabCard(){
-  const deck = getStoredVocabulary();
-  const total = deck.length;
-  const mastered = deck.filter(w => w.state === 'mastered').length;
-  const learning = total - mastered;
-
-  const totalEl = document.getElementById('profileVocabTotal');
-  const masteredEl = document.getElementById('profileVocabMastered');
-  const learningEl = document.getElementById('profileVocabLearning');
-  const badgeEl = document.getElementById('profileVocabBadge');
-  const subEl = document.getElementById('profileVocabSub');
-
-  if(totalEl) totalEl.textContent = String(total);
-  if(masteredEl) masteredEl.textContent = String(mastered);
-  if(learningEl) learningEl.textContent = String(learning);
-  if(badgeEl) badgeEl.textContent = `${total} ta so‘z`;
-  if(subEl) subEl.textContent = total > 0 ? `${mastered} ta yodlangan · ${learning} ta o'rganilmoqda` : "Saqlangan so‘zlar va Anki takrorlash mashqlari";
-}
-
-/* ================= BACKEND SUPABASE INTEGRATSIYASI ================= */
-
-async function loadVocabularyFromBackend(userId){
-  if(!userId) return getStoredVocabulary();
-  try{
-    // 1) RPC get_user_vocabulary chaqirib ko'rish
-    let res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_vocabulary`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ p_user_id: userId })
-    });
-    
-    let list = null;
-    if(res.ok){
-      list = await res.json();
-    } else {
-      // 2) Agar RPC bo'lmasa, to'g'ridan-to'g'ri user_vocabulary jadvalidan so'rash
-      const tableRes = await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?user_id=eq.${userId}&order=created_at.desc`, {
-        method: "GET",
-        headers: authHeaders()
-      });
-      if(tableRes.ok){
-        list = await tableRes.json();
-      }
-    }
-
-    if(Array.isArray(list) && list.length > 0){
-      const mapped = list.map(item => ({
-        id: String(item.id || item.word_id || ("fc_" + Math.random())),
-        ar: item.ar || item.arabic_word || item.word || "",
-        uz: item.uz || item.uzbek_meaning || item.meaning || "",
-        exAr: item.ex_ar || item.exAr || item.example_ar || "",
-        exUz: item.ex_uz || item.exUz || item.example_uz || "",
-        cat: item.cat || item.category || "Shaxsiy lug'at",
-        state: item.state || (item.is_mastered ? 'mastered' : 'learning'),
-        againCount: Number(item.again_count || item.againCount || 0),
-        goodCount: Number(item.good_count || item.goodCount || 0),
-        easyCount: Number(item.easy_count || item.easyCount || 0),
-        lastReviewed: item.last_reviewed || item.lastReviewed || null
-      }));
-      localStorage.setItem('arabication_my_vocabulary', JSON.stringify(mapped));
-      renderDashboardPracticeCards();
-      renderProfileVocabCard();
-      return mapped;
-    }
-  }catch(e){
-    console.warn("loadVocabularyFromBackend fallback:", e);
-  }
-  return getStoredVocabulary();
-}
-
-async function saveVocabularyWordToBackend(word){
-  const uid = TELEGRAM_PROFILE.rawId || 5400174077;
-  try{
-    const payload = {
-      p_user_id: uid,
-      p_word_id: word.id,
-      p_ar: word.ar,
-      p_uz: word.uz,
-      p_ex_ar: word.exAr || '',
-      p_ex_uz: word.exUz || '',
-      p_cat: word.cat || "Shaxsiy lug'at",
-      p_state: word.state || 'learning'
-    };
-    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_vocabulary_word`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify(payload)
-    });
-    if(!rpcRes.ok){
-      await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary`, {
-        method: "POST",
-        headers: { ...authHeaders(), "Prefer": "resolution=merge-duplicates" },
-        body: JSON.stringify({
-          user_id: uid,
-          id: word.id,
-          ar: word.ar,
-          uz: word.uz,
-          ex_ar: word.exAr || '',
-          ex_uz: word.exUz || '',
-          cat: word.cat || "Shaxsiy lug'at",
-          state: word.state || 'learning',
-          again_count: word.againCount || 0,
-          good_count: word.goodCount || 0,
-          easy_count: word.easyCount || 0,
-          last_reviewed: word.lastReviewed || null
-        })
-      });
-    }
-  }catch(e){
-    console.warn("saveVocabularyWordToBackend:", e);
-  }
-}
-
-async function updateVocabularyWordOnBackend(word){
-  const uid = TELEGRAM_PROFILE.rawId || 5400174077;
-  try{
-    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/edit_vocabulary_word`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        p_user_id: uid,
-        p_word_id: word.id,
-        p_ar: word.ar,
-        p_uz: word.uz,
-        p_ex_ar: word.exAr || '',
-        p_ex_uz: word.exUz || '',
-        p_cat: word.cat || "Shaxsiy lug'at"
-      })
-    });
-    if(!rpcRes.ok){
-      await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?id=eq.${word.id}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          ar: word.ar,
-          uz: word.uz,
-          ex_ar: word.exAr || '',
-          ex_uz: word.exUz || '',
-          cat: word.cat || "Shaxsiy lug'at"
-        })
-      });
-    }
-  }catch(e){
-    console.warn("updateVocabularyWordOnBackend:", e);
-  }
-}
-
-async function deleteVocabularyWordOnBackend(wordId){
-  const uid = TELEGRAM_PROFILE.rawId || 5400174077;
-  try{
-    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_vocabulary_word`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ p_user_id: uid, p_word_id: wordId })
-    });
-    if(!rpcRes.ok){
-      await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?id=eq.${wordId}`, {
-        method: "DELETE",
-        headers: authHeaders()
-      });
-    }
-  }catch(e){
-    console.warn("deleteVocabularyWordOnBackend:", e);
-  }
-}
-
-async function updateVocabularyProgressOnBackend(word){
-  const uid = TELEGRAM_PROFILE.rawId || 5400174077;
-  try{
-    const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_vocabulary_progress`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        p_user_id: uid,
-        p_word_id: word.id,
-        p_state: word.state,
-        p_again_count: word.againCount || 0,
-        p_good_count: word.goodCount || 0,
-        p_easy_count: word.easyCount || 0
-      })
-    });
-    if(!rpcRes.ok){
-      await fetch(`${SUPABASE_URL}/rest/v1/user_vocabulary?id=eq.${word.id}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          state: word.state,
-          again_count: word.againCount || 0,
-          good_count: word.goodCount || 0,
-          easy_count: word.easyCount || 0,
-          last_reviewed: word.lastReviewed || new Date().toISOString()
-        })
-      });
-    }
-  }catch(e){
-    console.warn("updateVocabularyProgressOnBackend:", e);
-  }
 }
 
 /* Flashcards session state */
@@ -13767,7 +13486,6 @@ function handleAnkiAnswer(rating){
       toast("✅ So'z yodlangan deb belgilandi!", 1800);
     }
     saveStoredVocabulary(deck);
-    updateVocabularyProgressOnBackend(target);
   }
 
   FC_SESSION_INDEX++;
@@ -13940,7 +13658,6 @@ function saveFlashcardModalData(){
       target.exUz = exUz;
       target.cat = cat;
       toast("So'z muvaffaqiyatli yangilandi ✅", 2500);
-      updateVocabularyWordOnBackend(target);
     }
   } else {
     const newWord = {
@@ -13952,7 +13669,6 @@ function saveFlashcardModalData(){
     };
     deck.unshift(newWord);
     toast("Yangi so'z lug'atga qo'shildi! 📝", 2500);
-    saveVocabularyWordToBackend(newWord);
   }
 
   saveStoredVocabulary(deck);
@@ -13964,7 +13680,6 @@ function deleteFlashcardWord(id){
   const deck = getStoredVocabulary();
   const filtered = deck.filter(w => w.id !== id);
   saveStoredVocabulary(filtered);
-  deleteVocabularyWordOnBackend(id);
   toast("So'z lug'atdan o'chirildi 🗑️", 2000, 'delete');
   renderFlashcardsView();
 }
@@ -13975,7 +13690,6 @@ function toggleWordMastered(id){
   if(word){
     word.state = (word.state === 'mastered') ? 'learning' : 'mastered';
     saveStoredVocabulary(deck);
-    updateVocabularyProgressOnBackend(word);
     renderFlashcardsView();
     toast(word.state === 'mastered' ? "✅ Yodlangan deb belgilandi" : "⏳ O'rganishga qaytarildi", 2000);
   }
@@ -14025,10 +13739,9 @@ function saveWordFromPassageModal(){
   if(existing){
     if(uzMeaning) existing.uz = uzMeaning;
     if(example) existing.exAr = example;
-    updateVocabularyWordOnBackend(existing);
     toast("Lug'atdagi mavjud so'z yangilandi ✅", 2500);
   } else {
-    const newWord = {
+    deck.unshift({
       id: "fc_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
       ar: arWord,
       uz: uzMeaning || "(Tarjimasi kiritilmagan)",
@@ -14038,9 +13751,7 @@ function saveWordFromPassageModal(){
       state: "learning",
       againCount: 0, goodCount: 0, easyCount: 0,
       lastReviewed: null
-    };
-    deck.unshift(newWord);
-    saveVocabularyWordToBackend(newWord);
+    });
     toast(`"${arWord}" so'zi lug'atga saqlandi! 💾`, 3000);
   }
 
