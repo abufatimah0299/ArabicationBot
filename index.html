@@ -3336,6 +3336,7 @@ html[data-theme="light"] .pin-dot.filled{
           </svg>
           <span class="user-msg-badge" id="userMsgBadge">0</span>
         </button>
+        <div class="avatar" id="topAvatar" onclick="showView('profil')" title="Profil" style="cursor:pointer; display:none;">?</div>
       </div>
     </div>
 
@@ -6420,6 +6421,11 @@ function showView(name, push=true){
   }
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   if(themeToggleBtn) themeToggleBtn.style.display = '';
+  const topAvatarEl = document.getElementById('topAvatar');
+  if(topAvatarEl){
+    const hideAvatar = (name === 'dashboard' || name === 'profil' || name === 'sozlamalar');
+    topAvatarEl.style.display = hideAvatar ? 'none' : 'flex';
+  }
   if(push){
     if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== name){
       viewHistory.push(name);
