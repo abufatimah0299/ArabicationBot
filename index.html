@@ -6427,6 +6427,10 @@ function applyBackendSkillScores(dash){
 /* Bo'lim nomi -> ikonka/rang, tarix va xatolar ro'yxatini backend qatoridan chizish uchun */
 const SKILL_META = {};
 SKILLS.forEach(s=>{ SKILL_META[s.id] = {name:s.name, section:s.name, icon:s.icon, color:s.color, bg:s.bg}; });
+/* "To'liq At-Tanal imtihoni" backendga skillId:'attanal' bilan yoziladi (finishFullExam),
+   lekin bu SKILLS ro'yxatida yo'q — shu sabab uni ham shu yerga qo'shamiz, aks holda
+   Tarix ro'yxatida u xom "attanal" nomi va grammatika ikonkasi/rangi bilan chiqib qolardi. */
+SKILL_META['attanal'] = {name:'Imtihon', section:'Imtihon', icon:'🎓', color:'var(--indigo-600)', bg:'var(--indigo-100)'};
 /* Backend qator shakli aniq bo'lmagani uchun bir nechta mumkin bo'lgan ustun nomini sinab ko'radi */
 function pick(obj, keys, fallback){
   for(const k of keys){ if(obj && obj[k]!==undefined && obj[k]!==null) return obj[k]; }
@@ -7010,10 +7014,27 @@ function applyLiveHistory(){
     backendList = window.HISTORY_DATA_LIVE.map(mapBackendHistoryRow);
   }
 
-  // Lokal saqlangan urinishlarni ham qo'shamiz (backendda hali bo'lmaganlari)
-  const localList = Object.values(ATTEMPTS_STORE_MAP).filter(loc =>
-    !backendList.some(b => String(b.id) === String(loc.id))
-  );
+  // Lokal saqlangan urinishlarni ham qo'shamiz (backendda hali bo'lmaganlari).
+  // MUHIM: bu yerda faqat ID bo'yicha solishtirib bo'lmaydi — lokal urinish
+  // tugagan zahoti mijozda o'zi uchun o'ylab topilgan ID (att_...) bilan
+  // saqlanadi, keyin backendga yuboriladi va u yerda Supabase o'zining
+  // BUTUNLAY BOSHQA ID'sini beradi. Shu sabab ID bo'yicha solishtirsak,
+  // hech qachon mos kelmaydi va bitta urinish ikki marta (bittasi lokal
+  // saqlangan "22-avg" formatidagi sana bilan, ikkinchisi backenddan kelib,
+  // "Bugun" kabi nisbiy sana bilan) Tarixda qatorlanib qolaveradi. Shuning
+  // uchun mahorat+mavzu+ball+vaqt yaqinligiga qarab solishtiramiz.
+  const localList = Object.values(ATTEMPTS_STORE_MAP).filter(loc => {
+    const locTime = loc.createdAt ? new Date(loc.createdAt).getTime() : 0;
+    return !backendList.some(b => {
+      if(String(b.id) === String(loc.id)) return true;
+      const sameSkill = b.skillId === loc.skillId;
+      const sameTopic = (b.topicId ?? null) === (loc.topicId ?? null);
+      const sameScore = b.correct === loc.correct && b.total === loc.total;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const closeTime = !!locTime && !!bTime && Math.abs(bTime - locTime) < 10*60*1000; // 10 daqiqa ichida
+      return sameSkill && sameTopic && sameScore && closeTime;
+    });
+  });
 
   HISTORY_DATA = [...localList, ...backendList].sort((a,b) => {
     const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -7161,7 +7182,7 @@ function renderHistoryList(){
 }
 initCustomDropdown('historySkillDropdown', {
   label: 'Mahorat',
-  options: [{ value: 'Barchasi', label: 'Barchasi' }].concat(SKILLS.map(s => ({ value: s.name, label: s.name }))),
+  options: [{ value: 'Barchasi', label: 'Barchasi' }].concat(SKILLS.map(s => ({ value: s.name, label: s.name }))).concat([{ value: 'Imtihon', label: 'Imtihon' }]),
   value: historyFilters.section,
   onChange: (val) => {
     historyFilters.section = val;
