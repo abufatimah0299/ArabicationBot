@@ -7944,6 +7944,32 @@ async function resetAllUsersXp(){
    declare n integer; begin
      delete from quiz_attempts; get diagnostics n = row_count; return n;
    end; $$; */
+/* ---- Ilova ichidagi (brauzerning tizim oynasi emas) tasdiqlash modali ----
+   Native `confirm()` chaqirilsa, WebView/brauzer o'zining tashqi oynasini
+   (yuqorisida sayt domeni yozilgan) ko'rsatadi — ilova dizayniga mos kelmaydi.
+   Shu sabab mavjud #modalOverlay/#modalTitle/#modalBody tizimidan foydalanib,
+   xuddi shunday ishlaydigan, lekin ilova ichida chiqadigan versiya yasaymiz. */
+function showConfirmModal({title, message, confirmLabel = 'Ha', cancelLabel = "Bekor qilish", onConfirm}){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="text-align:center;padding:10px 4px 6px;">
+      <div style="font-size:38px;margin-bottom:12px;">⚠️</div>
+      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;white-space:pre-line;">${escapeHtml(message)}</p>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-outline" style="flex:1;padding:12px;" id="confirmModalCancelBtn">${escapeHtml(cancelLabel)}</button>
+        <button type="button" class="btn btn-primary" style="flex:1;padding:12px;background:var(--red);border-color:var(--red);" id="confirmModalOkBtn">${escapeHtml(confirmLabel)}</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('confirmModalCancelBtn').onclick = () => {
+    document.getElementById('modalOverlay').classList.remove('show');
+  };
+  document.getElementById('confirmModalOkBtn').onclick = () => {
+    document.getElementById('modalOverlay').classList.remove('show');
+    onConfirm();
+  };
+}
 async function clearAllExamHistoryOnBackend(){
   if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
   try{
@@ -7954,22 +7980,34 @@ async function clearAllExamHistoryOnBackend(){
     return await res.json(); // nechta yozuv o'chirilganini qaytaradi
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
-async function clearAllExamHistory(){
-  if(!confirm("⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning BARCHA imtihon tarixini (natijalar, urinishlar) butunlay o'chiradi. Foydalanuvchilarning o'zi, XP va darajasi bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?")) return;
-  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA foydalanuvchilarning imtihon tarixini butunlay o'chirmoqchimisiz?")) return;
-  const result = await clearAllExamHistoryOnBackend();
-  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
-  toast(`🗑 Imtihon tarixi tozalandi (${result} ta yozuv o'chirildi)`);
-  // Bu qurilmada (admin ham test yechgan bo'lsa) lokal keshni darhol tozalaymiz.
-  // Boshqa foydalanuvchilarning qurilmalari esa keyingi loadAppConfig() chaqirilganda
-  // (har 30 soniyada bir) purgeLocalHistoryIfStale() orqali o'z-o'zidan tozalanadi —
-  // pastdagi izohga qarang.
-  ATTEMPTS_STORE_MAP = {};
-  try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
-  window.HISTORY_DATA_LIVE = [];
-  HISTORY_DATA = [];
-  if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
-  renderAdminPanel();
+function clearAllExamHistory(){
+  showConfirmModal({
+    title: "Diqqat",
+    message: "Bu BARCHA foydalanuvchilarning BARCHA imtihon tarixini (natijalar, urinishlar) butunlay o'chiradi. Foydalanuvchilarning o'zi, XP va darajasi bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?",
+    confirmLabel: "Davom etish",
+    onConfirm: () => {
+      showConfirmModal({
+        title: "So'nggi tasdiq",
+        message: "Haqiqatan ham BARCHA foydalanuvchilarning imtihon tarixini butunlay o'chirmoqchimisiz?",
+        confirmLabel: "Ha, butunlay o'chirish",
+        onConfirm: async () => {
+          const result = await clearAllExamHistoryOnBackend();
+          if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+          toast(`🗑 Imtihon tarixi tozalandi (${result} ta yozuv o'chirildi)`);
+          // Bu qurilmada (admin ham test yechgan bo'lsa) lokal keshni darhol tozalaymiz.
+          // Boshqa foydalanuvchilarning qurilmalari esa keyingi loadAppConfig() chaqirilganda
+          // (har 30 soniyada bir) purgeLocalHistoryIfStale() orqali o'z-o'zidan tozalanadi —
+          // pastdagi izohga qarang.
+          ATTEMPTS_STORE_MAP = {};
+          try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
+          window.HISTORY_DATA_LIVE = [];
+          HISTORY_DATA = [];
+          if(historyLoaded){ renderHistoryStats(); renderHistoryList(); renderGrammarHistory(); }
+          renderAdminPanel();
+        }
+      });
+    }
+  });
 }
 
 /* ---- BOSHQA qurilmalardagi eski lokal Tarix keshini tozalash mexanizmi ----
@@ -8025,20 +8063,26 @@ async function clearMyExamHistoryOnBackend(){
     return await res.json(); // nechta yozuv o'chirilganini qaytaradi
   }catch(e){ setLastBackendError('—', e.message); return null; }
 }
-async function clearMyExamHistory(){
-  if(!confirm("⚠️ Bu SIZNING barcha test/imtihon tarixingizni (natijalar, urinishlar) butunlay o'chiradi. XP va darajangiz bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?")) return;
-  const result = await clearMyExamHistoryOnBackend();
-  if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
-  // Lokal keshni ham tozalaymiz — aks holda eski urinishlar Tarixda yana chiqib qolaveradi
-  ATTEMPTS_STORE_MAP = {};
-  try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
-  window.HISTORY_DATA_LIVE = [];
-  HISTORY_DATA = [];
-  renderHistoryStats();
-  renderHistoryList();
-  renderGrammarHistory();
-  computeGrammarTopicProgress();
-  toast(`🗑 Tarixingiz tozalandi (${result} ta yozuv o'chirildi)`);
+function clearMyExamHistory(){
+  showConfirmModal({
+    title: "Test tarixini tozalash",
+    message: "Bu SIZNING barcha test/imtihon tarixingizni (natijalar, urinishlar) butunlay o'chiradi. XP va darajangiz bunga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?",
+    confirmLabel: "Ha, o'chirish",
+    onConfirm: async () => {
+      const result = await clearMyExamHistoryOnBackend();
+      if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
+      // Lokal keshni ham tozalaymiz — aks holda eski urinishlar Tarixda yana chiqib qolaveradi
+      ATTEMPTS_STORE_MAP = {};
+      try{ localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP)); }catch(e){}
+      window.HISTORY_DATA_LIVE = [];
+      HISTORY_DATA = [];
+      renderHistoryStats();
+      renderHistoryList();
+      renderGrammarHistory();
+      computeGrammarTopicProgress();
+      toast(`🗑 Tarixingiz tozalandi (${result} ta yozuv o'chirildi)`);
+    }
+  });
 }
 
 
