@@ -1875,42 +1875,53 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 
 /* ============ ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ============ */
 .reports-stats-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 .report-stat-pill {
-  padding: 12px 14px;
-  border-radius: 14px;
+  flex: 1 1 120px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--card);
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: border-color .15s ease, background-color .15s ease;
 }
 .report-stat-pill:hover {
-  transform: translateY(-1px);
-  border-color: var(--indigo-400);
+  border-color: var(--hover-border);
 }
-.report-stat-pill .num {
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
+.report-stat-pill .lbl-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.report-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .report-stat-pill .lbl {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-dim);
+}
+.report-stat-pill .num {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .report-filter-bar {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .report-search-wrap {
   position: relative;
@@ -1919,13 +1930,14 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .report-search-wrap input {
   width: 100%;
   box-sizing: border-box;
-  padding: 11px 36px 11px 38px;
-  border-radius: 12px;
+  padding: 10px 36px 10px 36px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
+  transition: border-color .15s ease;
 }
 .report-search-wrap input:focus {
   outline: none;
@@ -1938,6 +1950,8 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   transform: translateY(-50%);
   color: var(--text-faint);
   pointer-events: none;
+  display: flex;
+  align-items: center;
 }
 .report-search-clear {
   position: absolute;
@@ -1980,20 +1994,21 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .report-status-btn:hover {
   background: var(--bg);
   color: var(--text);
+  border-color: var(--hover-border);
 }
 .report-status-btn.active {
-  background: var(--indigo-500);
+  background: var(--indigo-600);
   color: #fff;
-  border-color: var(--indigo-500);
+  border-color: var(--indigo-600);
 }
 .report-status-btn .badge-num {
   padding: 1px 6px;
   border-radius: 10px;
-  font-size: 10.5px;
+  font-size: 11px;
   background: rgba(0,0,0,0.08);
 }
 .report-status-btn.active .badge-num {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.22);
   color: #fff;
 }
 
@@ -2003,7 +2018,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   gap: 8px;
 }
 .report-filter-select {
-  padding: 9px 12px;
+  padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card);
@@ -2019,109 +2034,142 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 }
 
 .report-card-modern {
-  padding: 18px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--card);
-  margin-bottom: 14px;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 .report-card-modern:hover {
-  border-color: rgba(99,102,241,0.4);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+  border-color: var(--hover-border);
 }
 .report-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
-.report-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.report-status-select {
-  padding: 4px 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.report-user-row {
+.report-user-wrap {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
+.report-user-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .report-tg-link {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
-  border-radius: 12px;
+  padding: 3px 9px;
+  border-radius: 10px;
   background: rgba(34,158,217,0.12);
   color: #0284c7;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 600;
   text-decoration: none;
   transition: background .15s ease;
 }
 .report-tg-link:hover {
   background: rgba(34,158,217,0.22);
 }
-.report-content-box {
-  padding: 14px 16px;
+.report-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
   border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.report-status-select {
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.report-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--card-alt);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.report-meta-pill svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.report-content-box {
+  padding: 12px 14px;
+  border-radius: 10px;
   background: var(--bg);
   color: var(--text);
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
   border: 1px solid var(--border);
 }
+
 .report-note-container {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(245, 158, 11, 0.07);
-  border: 1px dashed rgba(245, 158, 11, 0.4);
-  font-size: 12.5px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(245, 193, 72, 0.06);
+  border: 1px solid rgba(245, 193, 72, 0.25);
+  font-size: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 .report-note-text {
   color: var(--text);
-  font-weight: 600;
-  line-height: 1.45;
+  font-weight: 500;
+  line-height: 1.4;
 }
+
 .report-action-buttons {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 .report-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 13px;
-  border-radius: 10px;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -2132,44 +2180,37 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 }
 .report-btn:hover {
   background: var(--bg);
-  border-color: var(--indigo-400);
+  border-color: var(--hover-border);
 }
 .report-btn-primary {
-  background: var(--indigo-500);
+  background: var(--indigo-600);
   color: #fff;
-  border-color: var(--indigo-500);
+  border-color: var(--indigo-600);
 }
 .report-btn-primary:hover {
-  background: var(--indigo-600);
+  background: var(--indigo-700);
+  border-color: var(--indigo-700);
 }
 .report-btn-success {
-  background: rgba(16,185,129,0.12);
-  color: #059669;
-  border-color: rgba(16,185,129,0.3);
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: rgba(59,214,144,0.3);
 }
 .report-btn-success:hover {
-  background: rgba(16,185,129,0.22);
-}
-.report-btn-purple {
-  background: rgba(139,92,246,0.12);
-  color: #7c3aed;
-  border-color: rgba(139,92,246,0.3);
-}
-.report-btn-purple:hover {
-  background: rgba(139,92,246,0.22);
+  background: rgba(59,214,144,0.22);
 }
 .report-btn-danger {
   color: var(--red);
-  border-color: rgba(239,68,68,0.3);
+  border-color: rgba(246,113,113,0.3);
 }
 .report-btn-danger:hover {
-  background: rgba(239,68,68,0.1);
+  background: var(--red-bg);
 }
 .quick-template-chip {
-  padding: 7px 12px;
-  border-radius: 12px;
-  font-size: 11.5px;
-  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text-dim);
@@ -2179,9 +2220,9 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   width: 100%;
 }
 .quick-template-chip:hover {
-  background: var(--indigo-50);
-  color: var(--indigo-700);
-  border-color: var(--indigo-300);
+  background: var(--card-alt);
+  color: var(--text);
+  border-color: var(--hover-border);
 }
 .search-result-card{
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -12579,10 +12620,10 @@ async function submitBulkQuestions(e){
 
 /* ================= ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ================= */
 const REPORT_STATUS_CONFIG = {
-  yangi: { label: 'Yangi', color: '#EF4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', icon: '🔴' },
-  korildi: { label: 'Ko\u2018rib chiqildi', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)', icon: '👁️' },
-  qoshildi: { label: 'Bankka qo\u2018shildi', color: '#10B981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', icon: '✅' },
-  arxiv: { label: 'Arxiv', color: '#6B7280', bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)', icon: '📁' }
+  yangi: { label: 'Yangi', color: '#EF4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', dot: '#EF4444' },
+  korildi: { label: 'Ko\u2018rib chiqildi', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.25)', dot: '#3B82F6' },
+  qoshildi: { label: 'Bankka qo\u2018shildi', color: '#10B981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', dot: '#10B981' },
+  arxiv: { label: 'Arxiv', color: '#6B7280', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.25)', dot: '#6B7280' }
 };
 
 let rawExamReportsData = [];
@@ -12642,10 +12683,10 @@ function updateAdminReportsBadge(){
   if(unreadCount > 0){
     badge.style.display = 'inline-flex';
     badge.textContent = `${unreadCount} yangi`;
-    if(sub) sub.textContent = `${unreadCount} ta ko\u2018rilmagan xabar`;
+    if(sub) sub.textContent = `${unreadCount} ta yangi hisobot`;
   } else {
     badge.style.display = totalActive > 0 ? 'inline-flex' : 'none';
-    badge.style.background = 'var(--indigo-500)';
+    badge.style.background = 'var(--indigo-600)';
     badge.textContent = `${totalActive} ta`;
     if(sub) sub.textContent = totalActive > 0 ? `${totalActive} ta xabar mavjud` : `O\u2018quvchi hisobotlari`;
   }
@@ -12665,11 +12706,9 @@ async function loadExamReportsFromBackend(){
 
 async function renderAdminReports(){
   const list = document.getElementById('adminReportsList');
-  const statsContainer = document.getElementById('adminReportStatsStrip');
-  const filterContainer = document.getElementById('adminReportFilterBar');
   if(!list) return;
 
-  list.innerHTML = `<div class="card" style="padding:24px;text-align:center;"><p style="color:var(--text-faint);font-size:13.5px;font-weight:600;">⏳ Xabarlar yuklanmoqda...</p></div>`;
+  list.innerHTML = `<div class="card" style="padding:24px;text-align:center;"><p style="color:var(--text-faint);font-size:13px;font-weight:500;">Xabarlar yuklanmoqda...</p></div>`;
 
   let rows;
   try{
@@ -12690,7 +12729,7 @@ async function renderAdminReports(){
     }));
   }catch(e){
     console.error(e);
-    list.innerHTML = `<div class="placeholder-card"><h3>⚠️ Xabarlarni yuklab bo'lmadi</h3><p style="word-break:break-word;">${escapeHtml(e.message || 'Nomalum xato')}</p></div>`;
+    list.innerHTML = `<div class="placeholder-card"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--red)" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><h3>Xabarlarni yuklab bo'lmadi</h3><p style="word-break:break-word;">${escapeHtml(e.message || 'Nomalum xato')}</p></div>`;
     return;
   }
 
@@ -12722,25 +12761,40 @@ function renderAdminReportsContent(){
 
   if(statsContainer){
     statsContainer.innerHTML = `
-      <div class="report-stat-pill" style="border-color:var(--indigo-400);">
-        <span class="num" style="color:var(--indigo-500);">${totalCount}</span>
-        <span class="lbl">Jami xabarlar</span>
+      <div class="report-stat-pill">
+        <div class="lbl-wrap">
+          <span class="report-stat-dot" style="background:var(--indigo-500);"></span>
+          <span class="lbl">Jami xabarlar</span>
+        </div>
+        <span class="num">${totalCount}</span>
       </div>
-      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.yangi.border};">
+      <div class="report-stat-pill">
+        <div class="lbl-wrap">
+          <span class="report-stat-dot" style="background:${REPORT_STATUS_CONFIG.yangi.dot};"></span>
+          <span class="lbl">Yangi</span>
+        </div>
         <span class="num" style="color:${REPORT_STATUS_CONFIG.yangi.color};">${yangiCount}</span>
-        <span class="lbl">🔴 Yangi (kutilmoqda)</span>
       </div>
-      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.korildi.border};">
+      <div class="report-stat-pill">
+        <div class="lbl-wrap">
+          <span class="report-stat-dot" style="background:${REPORT_STATUS_CONFIG.korildi.dot};"></span>
+          <span class="lbl">Ko\u2018rib chiqildi</span>
+        </div>
         <span class="num" style="color:${REPORT_STATUS_CONFIG.korildi.color};">${korildiCount}</span>
-        <span class="lbl">👁️ Ko\u2018rib chiqilgan</span>
       </div>
-      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.qoshildi.border};">
+      <div class="report-stat-pill">
+        <div class="lbl-wrap">
+          <span class="report-stat-dot" style="background:${REPORT_STATUS_CONFIG.qoshildi.dot};"></span>
+          <span class="lbl">Bankka qo\u2018shildi</span>
+        </div>
         <span class="num" style="color:${REPORT_STATUS_CONFIG.qoshildi.color};">${qoshildiCount}</span>
-        <span class="lbl">✅ Bankka qo\u2018shildi</span>
       </div>
-      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.arxiv.border};">
+      <div class="report-stat-pill">
+        <div class="lbl-wrap">
+          <span class="report-stat-dot" style="background:${REPORT_STATUS_CONFIG.arxiv.dot};"></span>
+          <span class="lbl">Arxiv</span>
+        </div>
         <span class="num" style="color:${REPORT_STATUS_CONFIG.arxiv.color};">${arxivCount}</span>
-        <span class="lbl">📁 Arxivlangan</span>
       </div>
     `;
   }
@@ -12753,10 +12807,10 @@ function renderAdminReportsContent(){
     filterContainer.innerHTML = `
       <div class="report-search-wrap">
         <span class="report-search-icon">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </span>
-        <input type="text" placeholder="Xabar matni, ism, @username, sana yoki markaz bo\u2018yicha qidiruv..." value="${escapeHtml(adminReportSearchQuery)}" oninput="handleReportSearch(this.value)">
-        ${adminReportSearchQuery ? `<button class="report-search-clear" onclick="clearReportSearch()" title="Tozalash"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ''}
+        <input type="text" placeholder="Xabar matni, ism, @username yoki sana bo\u2018yicha qidiruv..." value="${escapeHtml(adminReportSearchQuery)}" oninput="handleReportSearch(this.value)">
+        ${adminReportSearchQuery ? `<button class="report-search-clear" onclick="clearReportSearch()" title="Tozalash"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ''}
       </div>
 
       <div class="report-status-pills">
@@ -12764,33 +12818,33 @@ function renderAdminReportsContent(){
           Barchasi <span class="badge-num">${totalCount}</span>
         </button>
         <button class="report-status-btn ${adminReportStatusFilter==='yangi'?'active':''}" onclick="setAdminReportStatusFilter('yangi')">
-          🔴 Yangi <span class="badge-num">${yangiCount}</span>
+          Yangi <span class="badge-num">${yangiCount}</span>
         </button>
         <button class="report-status-btn ${adminReportStatusFilter==='korildi'?'active':''}" onclick="setAdminReportStatusFilter('korildi')">
-          👁️ Ko\u2018rib chiqildi <span class="badge-num">${korildiCount}</span>
+          Ko\u2018rib chiqildi <span class="badge-num">${korildiCount}</span>
         </button>
         <button class="report-status-btn ${adminReportStatusFilter==='qoshildi'?'active':''}" onclick="setAdminReportStatusFilter('qoshildi')">
-          ✅ Bankka qo\u2018shildi <span class="badge-num">${qoshildiCount}</span>
+          Bankka qo\u2018shildi <span class="badge-num">${qoshildiCount}</span>
         </button>
         <button class="report-status-btn ${adminReportStatusFilter==='arxiv'?'active':''}" onclick="setAdminReportStatusFilter('arxiv')">
-          📁 Arxiv <span class="badge-num">${arxivCount}</span>
+          Arxiv <span class="badge-num">${arxivCount}</span>
         </button>
       </div>
 
       <div class="report-filter-dropdowns">
         <select class="report-filter-select" onchange="setAdminReportExamFilter(this.value)">
-          <option value="all" ${adminReportExamFilter==='all'?'selected':''}>🎓 Barcha imtihonlar</option>
+          <option value="all" ${adminReportExamFilter==='all'?'selected':''}>Barcha imtihonlar</option>
           ${uniqueExams.map(ex => `<option value="${escapeHtml(ex)}" ${adminReportExamFilter===ex?'selected':''}>${escapeHtml(ex)}</option>`).join('')}
         </select>
 
         <select class="report-filter-select" onchange="setAdminReportSectionFilter(this.value)">
-          <option value="all" ${adminReportSectionFilter==='all'?'selected':''}>📚 Barcha bo\u2018limlar</option>
+          <option value="all" ${adminReportSectionFilter==='all'?'selected':''}>Barcha bo\u2018limlar</option>
           ${uniqueSections.map(sec => `<option value="${escapeHtml(sec)}" ${adminReportSectionFilter===sec?'selected':''}>${escapeHtml(sec)}</option>`).join('')}
         </select>
 
         <select class="report-filter-select" onchange="setAdminReportSortOrder(this.value)">
-          <option value="newest" ${adminReportSortOrder==='newest'?'selected':''}>⏱️ Eng yangilari oldinda</option>
-          <option value="oldest" ${adminReportSortOrder==='oldest'?'selected':''}>⏳ Eng eskilari oldinda</option>
+          <option value="newest" ${adminReportSortOrder==='newest'?'selected':''}>Eng yangilari oldinda</option>
+          <option value="oldest" ${adminReportSortOrder==='oldest'?'selected':''}>Eng eskilari oldinda</option>
         </select>
       </div>
     `;
@@ -12824,10 +12878,10 @@ function renderAdminReportsContent(){
 
   if(filtered.length === 0){
     list.innerHTML = `
-      <div class="placeholder-card" style="padding:40px 20px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:40px;height:40px;margin-bottom:10px;color:var(--text-faint);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <h3 style="font-size:15px;margin-bottom:4px;">Hech qanday xabar topilmadi</h3>
-        <p style="font-size:12.5px;color:var(--text-dim);">Qidiruv yoki filtr parametrlarini o\u2018zgartirib ko\u2018ring.</p>
+      <div class="placeholder-card" style="padding:36px 16px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:36px;height:36px;margin-bottom:8px;color:var(--text-faint);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <h3 style="font-size:14px;margin-bottom:4px;">Hech qanday xabar topilmadi</h3>
+        <p style="font-size:12px;color:var(--text-dim);">Qidiruv yoki filtr parametrlarini o\u2018zgartirib ko\u2018ring.</p>
       </div>
     `;
     return;
@@ -12841,42 +12895,68 @@ function renderAdminReportsContent(){
     return `
       <div class="report-card-modern" id="reportCard_${r.reportKey}">
         <div class="report-card-top">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span class="report-status-badge" style="background:${statusCfg.bg};color:${statusCfg.color};border:1px solid ${statusCfg.border};">
-              ${statusCfg.icon} ${statusCfg.label}
+          <div class="report-user-wrap">
+            <span class="report-user-name">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              ${escapeHtml(r.name || 'Foydalanuvchi')}
             </span>
-            <span style="font-weight:700;font-size:14px;color:var(--text);">
-              🎓 ${escapeHtml(r.type)} imtihoni · ${escapeHtml(r.date || 'Sana ko\u2018rsatilmagan')}
+
+            ${tgUsernameClean ? `
+              <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link" title="Telegram profilini ochish">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                @${escapeHtml(tgUsernameClean)}
+              </a>
+            ` : (r.userId ? `<span style="font-size:11px;color:var(--text-faint);font-weight:600;">ID: ${r.userId}</span>` : '')}
+
+            <span style="font-size:11.5px;color:var(--text-faint);display:inline-flex;align-items:center;gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${escapeHtml(r.submittedAt)}
             </span>
           </div>
 
-          <div style="display:flex;align-items:center;gap:8px;">
-            <label style="font-size:11.5px;color:var(--text-faint);font-weight:600;">Holat:</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="report-status-badge" style="background:${statusCfg.bg};color:${statusCfg.color};border:1px solid ${statusCfg.border};">
+              <span style="width:6px;height:6px;border-radius:50%;background:${statusCfg.dot};display:inline-block;"></span>
+              ${statusCfg.label}
+            </span>
             <select class="report-status-select" onchange="changeReportStatus('${r.reportKey}', this.value)">
-              <option value="yangi" ${r.status==='yangi'?'selected':''}>🔴 Yangi</option>
-              <option value="korildi" ${r.status==='korildi'?'selected':''}>👁️ Ko\u2018rib chiqildi</option>
-              <option value="qoshildi" ${r.status==='qoshildi'?'selected':''}>✅ Bankka qo\u2018shildi</option>
-              <option value="arxiv" ${r.status==='arxiv'?'selected':''}>📁 Arxiv</option>
+              <option value="yangi" ${r.status==='yangi'?'selected':''}>Yangi</option>
+              <option value="korildi" ${r.status==='korildi'?'selected':''}>Ko\u2018rib chiqildi</option>
+              <option value="qoshildi" ${r.status==='qoshildi'?'selected':''}>Bankka qo\u2018shildi</option>
+              <option value="arxiv" ${r.status==='arxiv'?'selected':''}>Arxiv</option>
             </select>
           </div>
         </div>
 
-        <div class="report-user-row">
-          <span style="font-size:12.5px;font-weight:700;color:var(--text);display:inline-flex;align-items:center;gap:5px;">
-            👤 ${escapeHtml(r.name || 'Foydalanuvchi')}
+        <div class="report-meta-row">
+          <span class="report-meta-pill" style="font-weight:600;color:var(--indigo-600);background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.2);">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            ${escapeHtml(r.type)} imtihoni
           </span>
-
-          ${tgUsernameClean ? `
-            <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link" title="Telegram profilini ochish">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-              @${escapeHtml(tgUsernameClean)}
-            </a>
-          ` : (r.userId ? `<span style="font-size:11.5px;color:var(--text-faint);font-weight:600;">ID: ${r.userId}</span>` : '')}
-
-          ${r.center ? `<span class="report-tag" style="background:rgba(99,102,241,0.08);color:var(--indigo-600);">📍 ${escapeHtml(r.center)}</span>` : ''}
-          ${r.seat ? `<span class="report-tag" style="background:rgba(245,158,11,0.1);color:#d97706;">🪑 ${escapeHtml(r.seat)}</span>` : ''}
-          ${r.sections.map(s => `<span class="report-tag" style="background:rgba(16,185,129,0.1);color:#059669;">📚 ${escapeHtml(s)}</span>`).join('')}
-          <span style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-inline-start:auto;">🕒 ${escapeHtml(r.submittedAt)}</span>
+          ${r.date ? `
+            <span class="report-meta-pill">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${escapeHtml(r.date)}
+            </span>
+          ` : ''}
+          ${r.center ? `
+            <span class="report-meta-pill">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${escapeHtml(r.center)}
+            </span>
+          ` : ''}
+          ${r.seat ? `
+            <span class="report-meta-pill">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+              ${escapeHtml(r.seat)}
+            </span>
+          ` : ''}
+          ${r.sections.map(s => `
+            <span class="report-meta-pill">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              ${escapeHtml(s)}
+            </span>
+          `).join('')}
         </div>
 
         <div class="report-content-box">
@@ -12886,55 +12966,56 @@ function renderAdminReportsContent(){
         <!-- Admin Internal Note -->
         <div class="report-note-container" id="noteContainer_${r.reportKey}">
           <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.5px;">
-              📝 Admin ichki eslatmasi:
+            <span style="font-size:11px;font-weight:600;color:var(--text-dim);display:inline-flex;align-items:center;gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Ichki eslatma
             </span>
-            <button class="btn btn-sm" style="padding:2px 8px;font-size:11px;background:none;border:none;color:#d97706;cursor:pointer;font-weight:700;" onclick="toggleEditReportNote('${r.reportKey}')">
-              ${r.note ? 'Tahrirlash ✏️' : '+ Eslatma qo\u2018shish'}
+            <button class="btn btn-sm" style="padding:1px 6px;font-size:11px;background:none;border:none;color:var(--indigo-600);cursor:pointer;font-weight:600;" onclick="toggleEditReportNote('${r.reportKey}')">
+              ${r.note ? 'Tahrirlash' : '+ Eslatma qo\u2018shish'}
             </button>
           </div>
-          <div id="noteText_${r.reportKey}" class="report-note-text" style="${r.note ? '' : 'color:var(--text-faint);font-style:italic;font-weight:500;'}">
-            ${r.note ? escapeHtml(r.note) : 'Hali ichki eslatma yozilmagan...'}
+          <div id="noteText_${r.reportKey}" class="report-note-text" style="${r.note ? '' : 'color:var(--text-faint);font-style:italic;'}">
+            ${r.note ? escapeHtml(r.note) : 'Hali ichki eslatma yozilmagan'}
           </div>
           <div id="noteForm_${r.reportKey}" style="display:none;flex-direction:column;gap:6px;margin-top:4px;">
-            <textarea id="noteInput_${r.reportKey}" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:12.5px;" rows="2" placeholder="Ushbu savol bo\u2018yicha admin izohi...">${escapeHtml(r.note || '')}</textarea>
+            <textarea id="noteInput_${r.reportKey}" style="width:100%;box-sizing:border-box;padding:6px 8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;" rows="2" placeholder="Ushbu xabar bo\u2018yicha admin izohi...">${escapeHtml(r.note || '')}</textarea>
             <div style="display:flex;gap:6px;justify-content:flex-end;">
-              <button class="btn btn-sm" onclick="toggleEditReportNote('${r.reportKey}')" style="font-size:11.5px;padding:4px 10px;">Bekor qilish</button>
-              <button class="btn btn-sm btn-primary" onclick="saveReportNote('${r.reportKey}')" style="font-size:11.5px;padding:4px 12px;">Saqlash</button>
+              <button class="btn btn-sm" onclick="toggleEditReportNote('${r.reportKey}')" style="font-size:11px;padding:3px 8px;">Bekor qilish</button>
+              <button class="btn btn-sm btn-primary" onclick="saveReportNote('${r.reportKey}')" style="font-size:11px;padding:3px 10px;">Saqlash</button>
             </div>
           </div>
         </div>
 
         <div class="report-action-buttons">
-          <button class="report-btn report-btn-primary" onclick="openReportReplyModal('${r.reportKey}')" title="Foydalanuvchiga to\u2018g\u2018ridan-to\u2018g\u2018ri javob yozish">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          <button class="report-btn report-btn-primary" onclick="openReportReplyModal('${r.reportKey}')" title="Foydalanuvchiga javob yozish">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Javob yozish
           </button>
 
-          <button class="report-btn report-btn-success" onclick="convertReportToQuestion('${r.reportKey}')" title="Ushbu ma\u2018lumotni to\u2018g\u2018ridan-to\u2018g\u2018ri Savollar bankiga qo\u2018shish">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button class="report-btn report-btn-success" onclick="convertReportToQuestion('${r.reportKey}')" title="Savollar bankiga qo\u2018shish">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Savolga aylantirish
           </button>
 
           <button class="report-btn" onclick="copyReportDetails('${r.reportKey}')" title="Xabar matnini nusxalash">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             Nusxalash
           </button>
 
           ${r.status !== 'arxiv' ? `
             <button class="report-btn" onclick="changeReportStatus('${r.reportKey}', 'arxiv')" title="Arxivga o\u2018tkazish">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect width="22" height="5" x="1" y="3"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
               Arxivlash
             </button>
           ` : `
-            <button class="report-btn report-btn-purple" onclick="changeReportStatus('${r.reportKey}', 'yangi')" title="Arxivdan qaytarish">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <button class="report-btn" onclick="changeReportStatus('${r.reportKey}', 'yangi')" title="Arxivdan qaytarish">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
               Arxivdan chiqarish
             </button>
           `}
 
           <button class="report-btn report-btn-danger" style="margin-inline-start:auto;" onclick="deleteReportConfirm('${r.reportKey}')" title="Xabarni o\u2018chirish">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             O\u2018chirish
           </button>
         </div>
@@ -12970,7 +13051,7 @@ function setAdminReportSortOrder(val){
 
 function changeReportStatus(reportKey, newStatus){
   updateReportMetaItem(reportKey, { status: newStatus });
-  toast(`✅ Holat o\u2018zgartirildi: ${REPORT_STATUS_CONFIG[newStatus]?.label || newStatus}`);
+  toast(`Holat o\u2018zgartirildi: ${REPORT_STATUS_CONFIG[newStatus]?.label || newStatus}`);
   renderAdminReportsContent();
 }
 
@@ -12993,14 +13074,14 @@ function saveReportNote(reportKey){
   const input = document.getElementById(`noteInput_${reportKey}`);
   const val = input ? input.value.trim() : '';
   updateReportMetaItem(reportKey, { note: val });
-  toast("✅ Ichki eslatma saqlandi");
+  toast("Ichki eslatma saqlandi");
   renderAdminReportsContent();
 }
 
 function deleteReportConfirm(reportKey){
   if(!confirm("Haqiqatan ham ushbu xabarni ro\u2018yxatdan o\u2018chirmoqchimisiz?")) return;
   updateReportMetaItem(reportKey, { deleted: true });
-  toast("🗑️ Xabar ro\u2018yxatdan o\u2018chirildi");
+  toast("Xabar ro\u2018yxatdan o\u2018chirildi");
   renderAdminReportsContent();
 }
 
@@ -13008,12 +13089,12 @@ function copyReportDetails(reportKey){
   const r = rawExamReportsData.find(x => getReportKey(x) === reportKey);
   if(!r) return;
   const meta = getReportMetaItem(reportKey);
-  const text = `📋 IMTIHON HISOBOTI\n🎓 Imtihon: ${r.type}\n📅 Sana: ${r.date || '-'}\n📍 Markaz/Xona: ${r.center || '-'} ${r.seat ? '('+r.seat+')' : ''}\n👤 Yuboruvchi: ${r.name} ${r.username ? '(@'+r.username+')' : ''}\n📚 Bo'limlar: ${r.sections.join(', ')}\n\n💬 XABAR MATNI:\n${r.text}\n\n${meta.note ? '📝 Admin izohi: ' + meta.note : ''}`;
+  const text = `IMTIHON HISOBOTI\nImtihon: ${r.type}\nSana: ${r.date || '-'}\nMarkaz/Xona: ${r.center || '-'} ${r.seat ? '('+r.seat+')' : ''}\nYuboruvchi: ${r.name} ${r.username ? '(@'+r.username+')' : ''}\nBo'limlar: ${r.sections.join(', ')}\n\nXabar matni:\n${r.text}\n\n${meta.note ? 'Admin izohi: ' + meta.note : ''}`;
   
   navigator.clipboard.writeText(text).then(() => {
-    toast("📋 Xabar matni buferga nusxalandi");
+    toast("Xabar matni buferga nusxalandi");
   }).catch(() => {
-    toast("⚠️ Nusxalash imkoni bo'lmadi");
+    toast("Nusxalash imkoni bo'lmadi");
   });
 }
 
@@ -13034,8 +13115,8 @@ function convertReportToQuestion(reportKey){
   const presetExp = `Manba: ${r.type} imtihoni (${r.date || 'real test'}). Yuboruvchi: ${r.name || 'O\u2018quvchi'}`;
 
   openAddQuestionModal(detectedSkill, null, presetText, ['', '', '', ''], presetExp, (newQ) => {
-    updateReportMetaItem(reportKey, { status: 'qoshildi', note: (getReportMetaItem(reportKey).note ? getReportMetaItem(reportKey).note + ' | ' : '') + 'Savollar bankiga qo\u2018shildi ✅' });
-    toast("🎉 Savol bankka qo\u2018shildi va xabar holati 'Bankka qo\u2018shildi'ga o\u2018zgartirildi!");
+    updateReportMetaItem(reportKey, { status: 'qoshildi', note: (getReportMetaItem(reportKey).note ? getReportMetaItem(reportKey).note + ' | ' : '') + 'Savollar bankiga qo\u2018shildi' });
+    toast("Savol bankka qo\u2018shildi va xabar holati yangilandi");
     renderAdminReportsContent();
   });
 }
@@ -13046,52 +13127,52 @@ function openReportReplyModal(reportKey){
   const tgUsernameClean = (r.username || '').replace(/^@+/, '');
   const tgProfileUrl = tgUsernameClean ? `https://t.me/${tgUsernameClean}` : (r.userId ? `tg://user?id=${r.userId}` : null);
 
-  const tpl1 = "Assalomu alaykum! Haqiqiy imtihon savolini yuborganingiz uchun katta rahmat. Savol ko'rib chiqildi va savollar bankiga qo'shildi! 🚀";
-  const tpl2 = "Tashakkur! Iltimos, bu savol qaysi bo'lim (masalan, Nahv yoki Sarf) bo'yicha tushganini aniqlashtira olasizmi? 🔍";
-  const tpl3 = "Xabaringiz uchun rahmat! Taklifingiz va savolingiz tez orada platformaga kiritiladi. ✍️";
+  const tpl1 = "Assalomu alaykum! Haqiqiy imtihon savolini yuborganingiz uchun katta rahmat. Savol ko'rib chiqildi va savollar bankiga qo'shildi.";
+  const tpl2 = "Tashakkur! Iltimos, bu savol qaysi bo'lim (masalan, Nahv yoki Sarf) bo'yicha tushganini aniqlashtira olasizmi?";
+  const tpl3 = "Xabaringiz uchun rahmat! Taklifingiz va savolingiz tez orada platformaga kiritiladi.";
 
   document.getElementById('modalTitle').textContent = "Foydalanuvchiga javob yozish";
   document.getElementById('modalBody').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:14px;padding:4px;">
-      <div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          <span style="font-weight:700;font-size:13.5px;color:var(--text);">Qabul qiluvchi: ${escapeHtml(r.name || 'Foydalanuvchi')}</span>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:2px;">
+      <div style="padding:10px 12px;border-radius:10px;background:var(--card-alt);border:1px solid var(--border);display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+          <span style="font-weight:600;font-size:13px;color:var(--text);">Qabul qiluvchi: ${escapeHtml(r.name || 'Foydalanuvchi')}</span>
           ${tgUsernameClean ? `
-            <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link" style="font-size:12px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
               Telegramda yozish (@${escapeHtml(tgUsernameClean)})
             </a>
           ` : ''}
         </div>
-        <div style="font-size:12px;color:var(--text-faint);">
-          🎓 ${escapeHtml(r.type)} imtihoni (${escapeHtml(r.date || '')}) ${r.userId ? '· ID: ' + r.userId : ''}
+        <div style="font-size:11.5px;color:var(--text-faint);">
+          ${escapeHtml(r.type)} imtihoni ${r.date ? '(' + escapeHtml(r.date) + ')' : ''} ${r.userId ? '· ID: ' + r.userId : ''}
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <label style="font-size:12px;font-weight:700;color:var(--text-dim);">⚡ Tezkor tayyor shablonlar (bosing):</label>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11.5px;font-weight:600;color:var(--text-dim);">Tayyor shablonlar:</label>
         <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl1.replace(/'/g, "\\'"))}')">
-          🚀 <b>Qo\u2018shildi:</b> "Savol ko'rib chiqildi va savollar bankiga qo'shildi!"
+          <b>Qo\u2018shildi:</b> "Savol ko'rib chiqildi va savollar bankiga qo'shildi."
         </button>
         <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl2.replace(/'/g, "\\'"))}')">
-          🔍 <b>Aniqlashtirish:</b> "Qaysi bo'lim yoki mavzuga oid ekanini aniqlashtira olasizmi?"
+          <b>Aniqlashtirish:</b> "Savol qaysi bo'lim yoki mavzuga oid ekanini aniqlashtira olasizmi?"
         </button>
         <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl3.replace(/'/g, "\\'"))}')">
-          ✍️ <b>Tashakkur:</b> "Taklifingiz va savolingiz tez orada platformaga kiritiladi."
+          <b>Tashakkur:</b> "Xabaringiz uchun rahmat, tez orada platformaga kiritiladi."
         </button>
       </div>
 
-      <form onsubmit="return handleSendReportReply(event, '${r.reportKey}')" style="display:flex;flex-direction:column;gap:12px;">
+      <form onsubmit="return handleSendReportReply(event, '${r.reportKey}')" style="display:flex;flex-direction:column;gap:10px;">
         <div class="form-field">
           <label>Xabar sarlavhasi</label>
           <input type="text" id="replyMsgTitle" value="Imtihon hisobotingiz yuzasidan javob" required>
         </div>
         <div class="form-field">
           <label>Xabar matni</label>
-          <textarea id="replyMsgBody" rows="4" placeholder="Foydalanuvchiga yuboriladigan javob xabari..." required></textarea>
+          <textarea id="replyMsgBody" rows="3" placeholder="Foydalanuvchiga yuboriladigan javob xabari..." required></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-block" id="replySubmitBtn">
-          Yuborish va "Ko\u2018rib chiqildi" qilish
+          Yuborish va ko\u2018rib chiqildi qilish
         </button>
       </form>
     </div>
@@ -13122,7 +13203,6 @@ async function handleSendReportReply(e, reportKey){
 
   try{
     if(r.userId){
-      // Supabase orqali xabar yuborish
       const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_send_message`, {
         method: "POST",
         headers: authHeaders(),
@@ -13140,13 +13220,13 @@ async function handleSendReportReply(e, reportKey){
 
     updateReportMetaItem(reportKey, { status: 'korildi' });
     closeModal();
-    toast("✅ Javob foydalanuvchiga yuborildi va xabar 'Ko\u2018rib chiqildi' qilindi");
+    toast("Javob yuborildi va xabar holati yangilandi");
     renderAdminReportsContent();
   }catch(err){
     console.error(err);
     updateReportMetaItem(reportKey, { status: 'korildi' });
     closeModal();
-    toast("✅ Xabar 'Ko\u2018rib chiqildi' holatiga o\u2018tkazildi");
+    toast("Xabar ko\u2018rib chiqildi holatiga o\u2018tkazildi");
     renderAdminReportsContent();
   }
   return false;
