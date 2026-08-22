@@ -15796,6 +15796,8 @@ function restartAllWordsSession(){
   renderFlashcardsView();
   initFlashcardAnkiSession();
   toast("Barcha so'zlar mashqqa qaytarildi", 2000);
+  // XATOLIK TUZATILDI: ilgari bu o'zgarish faqat localStorage'da qolib, Supabase'ga tushmasdi.
+  for(const w of deck){ updateVocabularyWordOnBackend(w); }
 }
 
 function resetWordToLearning(id){
@@ -16157,11 +16159,13 @@ function saveWordFromPassageModal(){
 
   const deck = getStoredVocabulary();
   const existing = deck.find(w => w.ar === arWord);
+  let isNewWord = false;
   if(existing){
     if(uzMeaning) existing.uz = uzMeaning;
     if(example) existing.exAr = example;
     toast("Lug'atdagi mavjud so'z yangilandi", 2500);
   } else {
+    isNewWord = true;
     deck.unshift({
       id: "fc_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
       ar: arWord,
@@ -16178,6 +16182,14 @@ function saveWordFromPassageModal(){
 
   saveStoredVocabulary(deck);
   closeQuickPassageWordModal();
+
+  // XATOLIK TUZATILDI: bu yerda ilgari Supabase'ga yuborish umuman yo'q edi —
+  // so'z faqat shu qurilmaning localStorage'ida qolib, backendga tushmasdi.
+  if(isNewWord){
+    insertVocabularyWordToBackend(deck[0]);
+  } else if(existing){
+    updateVocabularyWordOnBackend(existing);
+  }
 }
 
 /* Attach interactive word click listeners to Arabic reading passages */
