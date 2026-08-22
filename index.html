@@ -6546,6 +6546,12 @@ function handleResultsBack(){
   while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'results' || viewHistory[viewHistory.length - 1] === 'quiz')){
     viewHistory.pop();
   }
+  if(currentQuiz && currentQuiz.originView){
+    const dest = currentQuiz.originView;
+    currentQuiz.originView = null;
+    showView(dest, false);
+    return;
+  }
   if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
     const sId = window.lastCompletedQuiz.skillId || 'grammatika';
     openSkillIntro(sId);
@@ -6556,8 +6562,10 @@ function handleResultsBack(){
     showView('skillintro', false);
     return;
   }
-  if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'attanal'){
-    viewHistory.push('attanal');
+  if(viewHistory.length > 0){
+    const prev = viewHistory.pop();
+    showView(prev, false);
+    return;
   }
   showView('attanal', false);
 }
@@ -6904,7 +6912,8 @@ function renderGrammarHistory(){
     const gt = GRAMMAR_TOPICS.find(t=>t.id===r.topicId);
     const mainLine = gt
       ? `<div class="t ar">${gt.ar}</div>`
-      : `<div class="t">${r.topic}</div>`;
+      : `<div class="t">${escapeHtml(r.topic)}</div>`;
+    const attemptIdStr = String(r.id).replace(/'/g, "\\'");
     return `
     <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
@@ -6914,7 +6923,7 @@ function renderGrammarHistory(){
       </div>
       <div class="history-score"><b>${r.correct}/${r.total}</b><div class="p">${pct}%</div></div>
       <span class="badge-status ${st.cls}">${st.label}</span>
-      <button class="btn btn-outline" onclick="openMistakeModal(${r.id})">Xatolarni tahlil qilish</button>
+      <button type="button" class="btn btn-outline" onclick="openAttemptResults('${attemptIdStr}')">Xatolarni tahlil qilish</button>
     </div>`;
   }).join('');
 }
@@ -6927,38 +6936,94 @@ if(grammarHistFilterEl){
   });
 }
 
-/* ================= HISTORY (Tarix) ================= */
-/* STATIK NAMUNA OLIB TASHLANDI. Bu massiv endi bo'sh boshlanadi — haqiqiy foydalanuvchi
-   tarixi backenddan (quiz_attempts jadvali) kelgach, applyLiveHistory() uni to'ldiradi. */
+/* ================= HISTORY (Tarix) VA SAQLANGAN URINISHLAR ================= */
+const ATTEMPTS_STORE_KEY = 'at_tanal_full_attempts_store_v3';
+let ATTEMPTS_STORE_MAP = {};
+try {
+  const raw = localStorage.getItem(ATTEMPTS_STORE_KEY);
+  if(raw) ATTEMPTS_STORE_MAP = JSON.parse(raw);
+} catch(e){
+  ATTEMPTS_STORE_MAP = {};
+}
+
+function saveFullAttemptSnapshot(attempt){
+  if(!attempt || !attempt.id) return;
+  try {
+    const key = String(attempt.id);
+    ATTEMPTS_STORE_MAP[key] = attempt;
+    const keys = Object.keys(ATTEMPTS_STORE_MAP);
+    if(keys.length > 200){
+      keys.slice(0, keys.length - 200).forEach(k => delete ATTEMPTS_STORE_MAP[k]);
+    }
+    localStorage.setItem(ATTEMPTS_STORE_KEY, JSON.stringify(ATTEMPTS_STORE_MAP));
+  } catch(e){
+    console.warn("Attempt store saving error", e);
+  }
+}
+
 let HISTORY_DATA = [];
 let historyLoaded = false;
-/* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi.
-   MOSLASHTIRING: agar sizning jadval ustunlaringiz boshqacha nomlansa, pick() ichidagi nomlarga qo'shing. */
+
+/* Backend qatorini (quiz_attempts) ekranda ishlatiladigan shaklga o'giradi */
 function mapBackendHistoryRow(row, idx){
   const skillId = pick(row, ['skill_id','skillId'], 'grammatika');
   const meta = SKILL_META[skillId] || {section:skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
   const topicName = pick(row, ['topic_name','topicName'], null);
+  const topicId = pick(row, ['topic_id','topicId'], undefined);
   const {date, time, dateGroup} = fmtBackendDate(pick(row, ['created_at','createdAt','inserted_at'], null));
+  const id = pick(row, ['id'], 'b_att_' + (idx+1));
+  const correct = pick(row, ['correct'], 0);
+  const total = pick(row, ['total'], 1);
+
+  // Lokal saqlangan savollar snapshotini qidiramiz
+  const saved = ATTEMPTS_STORE_MAP[String(id)] ||
+                Object.values(ATTEMPTS_STORE_MAP).find(s =>
+                  (topicId && s.topicId === topicId && s.correct === correct && s.total === total) ||
+                  (topicName && s.topic && s.topic.includes(topicName) && s.correct === correct)
+                );
+
   return {
-    id: pick(row, ['id'], idx+1),
+    id: id,
+    skillId,
     section: meta.section,
     topic: topicName ? `${meta.section} — ${topicName}` : meta.section,
-    topicId: pick(row, ['topic_id','topicId'], undefined),
+    topicId,
     date, time, dateGroup,
-    correct: pick(row, ['correct'], 0),
-    total: pick(row, ['total'], 1),
+    correct,
+    total,
+    wrong: total - correct,
+    pct: total > 0 ? Math.round((correct/total)*100) : 0,
     icon: meta.icon, color: meta.color, bg: meta.bg,
+    questions: saved?.questions || null,
+    mistakes: saved?.mistakes || null,
+    elapsed: saved?.elapsed || '',
+    xp: saved?.xp || correct,
+    level: saved?.level || null,
+    createdAt: pick(row, ['created_at','createdAt','inserted_at'], new Date().toISOString())
   };
 }
+
 function applyLiveHistory(){
   historyLoaded = true;
+  let backendList = [];
   if(Array.isArray(window.HISTORY_DATA_LIVE) && window.HISTORY_DATA_LIVE.length){
-    HISTORY_DATA = window.HISTORY_DATA_LIVE.map(mapBackendHistoryRow);
+    backendList = window.HISTORY_DATA_LIVE.map(mapBackendHistoryRow);
   }
+
+  // Lokal saqlangan urinishlarni ham qo'shamiz (backendda hali bo'lmaganlari)
+  const localList = Object.values(ATTEMPTS_STORE_MAP).filter(loc =>
+    !backendList.some(b => String(b.id) === String(loc.id))
+  );
+
+  HISTORY_DATA = [...localList, ...backendList].sort((a,b) => {
+    const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return db - da;
+  });
+
   renderHistoryStats();
   renderHistoryList();
   renderGrammarHistory();
-  // Grammar mavzular foizini (avval static bo'lgan) haqiqiy urinishlar asosida qayta hisoblaymiz.
   computeGrammarTopicProgress();
   if(document.getElementById('view-grammar')?.classList.contains('active')) renderGrammarCategories();
   renderDashboardPracticeCards();
@@ -7080,16 +7145,17 @@ function renderHistoryList(){
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
     const st = statusOf(pct);
+    const attemptIdStr = String(r.id).replace(/'/g, "\\'");
     return `
     <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
       <div class="history-main">
-        <div class="t">${r.topic}</div>
+        <div class="t">${escapeHtml(r.topic)}</div>
         <div class="s">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${r.correct}/${r.total}</b><div class="p">${pct}%</div></div>
       <span class="badge-status ${st.cls}">${st.label}</span>
-      <button class="btn btn-outline" onclick="openMistakeModal(${r.id})">Xatolarni tahlil qilish</button>
+      <button type="button" class="btn btn-outline" onclick="openAttemptResults('${attemptIdStr}')">Xatolarni tahlil qilish</button>
     </div>`;
   }).join('');
 }
@@ -7150,15 +7216,126 @@ function retryQuizFromHistory(section, topicId, topicLabel){
   startQuiz(skillId, topicLabel || skill?.name, topicId || null);
 }
 
-function openMistakeModal(id){
-  const rec = HISTORY_DATA.find(r=>String(r.id)===String(id)) ||
-              (Array.isArray(window.HISTORY_DATA_LIVE) ? window.HISTORY_DATA_LIVE.find(r=>String(r.id)===String(id)) : null);
+/* ============================================================
+   URINISHDAGI BARCHA SAVOLLAR VA NATIJANI OCHISH (REVIEW SCREEN)
+   ============================================================ */
+function openAttemptResults(id){
+  const idStr = String(id || '');
+  let rec = ATTEMPTS_STORE_MAP[idStr] ||
+            HISTORY_DATA.find(r => String(r.id) === idStr) ||
+            (Array.isArray(window.HISTORY_DATA_LIVE) ? window.HISTORY_DATA_LIVE.find(r => String(r.id) === idStr) : null);
 
+  if(!rec){
+    rec = HISTORY_DATA.find(r => String(r.id).includes(idStr) || (r.topic && r.topic === idStr));
+  }
+
+  const savedQuestions = (rec && Array.isArray(rec.questions) && rec.questions.length > 0)
+    ? rec.questions
+    : (ATTEMPTS_STORE_MAP[idStr] && Array.isArray(ATTEMPTS_STORE_MAP[idStr].questions) ? ATTEMPTS_STORE_MAP[idStr].questions : null);
+
+  const activeViewEl = document.querySelector('.view.active');
+  const activeViewName = activeViewEl ? activeViewEl.id.replace('view-', '') : 'history';
+
+  // 1. Agar ushbu urinishda tushgan savollarning to'liq ro'yxati (va user bergan javoblari) mavjud bo'lsa:
+  // Natijalar ekrani (view-results)ni ochib, to'liq Savollar bo'yicha tahlilni ko'rsatamiz!
+  if(savedQuestions && savedQuestions.length > 0){
+    const total = savedQuestions.length;
+    const correct = savedQuestions.filter(q => q.picked === q.a).length;
+    const wrong = total - correct;
+    const pct = total > 0 ? Math.round((correct / total) * 100) : (rec && rec.total ? Math.round((rec.correct / rec.total) * 100) : 0);
+    const xp = correct;
+    const sMeta = SKILL_META[rec?.skillId] || { section: rec?.section || 'Grammatika', color: rec?.color || 'var(--indigo-600)', bg: rec?.bg || 'var(--indigo-100)' };
+
+    currentQuiz = {
+      id: rec?.id || idStr,
+      skillId: rec?.skillId || 'grammatika',
+      topicId: rec?.topicId || null,
+      label: rec?.label || rec?.topic || sMeta.section,
+      mockId: rec?.mockId || null,
+      type: rec?.type || 'quiz',
+      color: rec?.color || sMeta.color,
+      bg: rec?.bg || sMeta.bg,
+      questions: savedQuestions,
+      isReviewMode: true,
+      originView: (activeViewName === 'results' || activeViewName === 'quiz') ? 'history' : activeViewName
+    };
+
+    window.lastCompletedQuiz = { ...currentQuiz };
+
+    // Natijalar ekranidagi elementlarni yangilaymiz
+    const topicEl = document.getElementById('resultTopic');
+    if(topicEl) topicEl.textContent = currentQuiz.label;
+
+    const isMock = !!(rec?.mockId || rec?.type === 'mock');
+    const isSkillExam = !isMock && !rec?.topicId;
+    const levelWrap = document.querySelector('.result-level-wrap');
+    if(levelWrap){
+      levelWrap.style.display = (isSkillExam && rec?.level) ? 'flex' : 'none';
+      if(rec?.level) document.getElementById('resultLevel').textContent = rec.level;
+    }
+
+    const resTimeEl = document.getElementById('resTime');
+    if(resTimeEl) resTimeEl.textContent = rec?.elapsed || '00:00';
+
+    const r = 52, c = 2 * Math.PI * r;
+    const ring = document.getElementById('resultRing');
+    if(ring){
+      ring.style.stroke = currentQuiz.color;
+      ring.setAttribute('stroke-dasharray', c);
+      ring.setAttribute('stroke-dashoffset', c - (pct / 100) * c);
+    }
+
+    const cEl = document.getElementById('resultCorrect');
+    const tEl = document.getElementById('resultTotal');
+    const xpEl = document.getElementById('resultXP');
+    const wEl = document.getElementById('resWrong');
+    if(cEl) cEl.textContent = String(correct);
+    if(tEl) tEl.textContent = String(total);
+    if(xpEl) xpEl.textContent = `+${xp}`;
+    if(wEl) wEl.textContent = String(wrong);
+
+    const titleEl = document.getElementById('resultTitle');
+    const subEl = document.getElementById('resultSub');
+    if(pct === 100){
+      titleEl.textContent = 'Ajoyibsiz! 🎉';
+      subEl.textContent = "Siz barcha savollarga to'g'ri javob berdingiz.";
+    } else if(pct >= 80){
+      titleEl.textContent = "Zo'r natija! 👏";
+      subEl.textContent = `Siz ${total} tadan ${correct} tasiga to'g'ri javob berdingiz.`;
+    } else if(pct >= 50){
+      titleEl.textContent = 'Yaxshi harakat! 💪';
+      subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+    } else {
+      titleEl.textContent = 'Davom eting! 📚';
+      subEl.textContent = "Mavzuni qayta ko'rib chiqish tavsiya etiladi.";
+    }
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if(analyzeBtn){
+      analyzeBtn.textContent = 'Savollar tahlilini ko‘rish';
+      analyzeBtn.onclick = showMistakes;
+    }
+
+    renderReviewGrid();
+    showView('results');
+    return;
+  }
+
+  // 2. Agar to'liq savollar ro'yxati yo'q bo'lsa (eski backend ma'lumoti) - xatolar tahlili modalini ochamiz
+  openMistakeModalFallback(rec, idStr);
+}
+
+// Alias for backwards-compatibility
+function openMistakeModal(id){
+  openAttemptResults(id);
+}
+
+function openMistakeModalFallback(rec, idStr){
   const topicName = rec ? (rec.topic || rec.topic_name || rec.section || 'Test') : 'Test';
   const wrongCount = rec ? Math.max(0, (rec.total || 0) - (rec.correct || 0)) : 0;
   const isPerfect = rec && (rec.correct >= rec.total) && (rec.total > 0);
 
-  // 1. Agar foydalanuvchi barcha savollarga to'g'ri javob bergan bo'lsa (0 xato)
+  // 1. Agar barcha savollarga to'g'ri javob berilgan bo'lsa
   if(isPerfect){
     document.getElementById('modalTitle').textContent = `${topicName} — Natija`;
     document.getElementById('modalBody').innerHTML = `
@@ -7175,12 +7352,12 @@ function openMistakeModal(id){
     return;
   }
 
-  // 2. Xatolarni barcha mavjud manbalardan qidirish
+  // 2. Xatolarni manbalardan qidirish
   let items = [];
   if(rec && Array.isArray(rec.mistakes) && rec.mistakes.length > 0){
     items = rec.mistakes;
-  } else if(ATTEMPT_MISTAKES_MAP[String(id)] && ATTEMPT_MISTAKES_MAP[String(id)].length > 0){
-    items = ATTEMPT_MISTAKES_MAP[String(id)];
+  } else if(ATTEMPT_MISTAKES_MAP[idStr] && ATTEMPT_MISTAKES_MAP[idStr].length > 0){
+    items = ATTEMPT_MISTAKES_MAP[idStr];
   } else if(rec && rec.id && ATTEMPT_MISTAKES_MAP[String(rec.id)] && ATTEMPT_MISTAKES_MAP[String(rec.id)].length > 0){
     items = ATTEMPT_MISTAKES_MAP[String(rec.id)];
   } else if(rec && rec.topicId && ATTEMPT_MISTAKES_MAP['topic_' + rec.topicId]){
@@ -7189,26 +7366,8 @@ function openMistakeModal(id){
     items = ATTEMPT_MISTAKES_MAP[rec.topic];
   } else if(rec && rec.section && ATTEMPT_MISTAKES_MAP['skill_' + rec.section]){
     items = ATTEMPT_MISTAKES_MAP['skill_' + rec.section];
-  } else if(Array.isArray(window.USER_ERRORS_LIVE) && window.USER_ERRORS_LIVE.length > 0){
-    const sId = rec ? (rec.section || '').toLowerCase() : '';
-    const tId = rec ? (rec.topicId || '') : '';
-    const tName = rec ? (rec.topic || '').toLowerCase() : '';
-    const matchedErrors = window.USER_ERRORS_LIVE.filter(err => {
-      const eSkill = (err.skill_id || err.skillId || '').toLowerCase();
-      const eTopic = (err.topic_name || err.topicName || '').toLowerCase();
-      return (sId && eSkill.includes(sId)) || (tName && eTopic && (tName.includes(eTopic) || eTopic.includes(tName)));
-    });
-    if(matchedErrors.length > 0){
-      items = matchedErrors.map(e => ({
-        q: e.question || e.q || '',
-        picked: e.picked_answer || e.picked || '(Xato javob)',
-        correct: e.correct_answer || e.correct || e.correctAns || '(To\'g\'ri javob)',
-        exp: e.explanation || e.exp || ''
-      }));
-    }
   }
 
-  // 3. Agar xatolar topilgan bo'lsa — to'liq tahlil bilan ko'rsatamiz
   if(items && items.length > 0){
     document.getElementById('modalTitle').textContent = `${topicName} — xatolar tahlili (${items.length} ta)`;
     document.getElementById('modalBody').innerHTML = `
@@ -7256,8 +7415,8 @@ function openMistakeModal(id){
     return;
   }
 
-  // 4. Agar umumiy natija saqlangan-u, savollar matni lokal saqlanmagan bo'lsa
-  document.getElementById('modalTitle').textContent = `${topicName} — xatolar tahlili`;
+  // 3. Fallback summarasi
+  document.getElementById('modalTitle').textContent = `${topicName} — Natija`;
   document.getElementById('modalBody').innerHTML = `
     <div class="placeholder-card" style="padding:26px 18px;text-align:center;">
       <div style="font-size:38px;margin-bottom:12px;">📊</div>
@@ -7266,8 +7425,8 @@ function openMistakeModal(id){
       </h3>
       <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px 0;line-height:1.5;">
         ${wrongCount > 0
-          ? `Ushbu urinishda <b>${wrongCount} ta</b> savolga xato javob berilgan. Yangi topshirilgan barcha testlarning savolma-savol tahlili avtomatik saqlanib boriladi.`
-          : `Ushbu testda xatoliklar qayd etilmagan.`}
+          ? `Ushbu urinishda <b>${wrongCount} ta</b> savolga xato javob berilgan.`
+          : `Ushbu testda barcha savollarga to'g'ri javob berilgan.`}
       </p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
         ${rec && rec.topicId ? `<button type="button" class="btn btn-outline" onclick="closeModal();viewTopicQuestions('${(rec.section||'').toLowerCase()==='grammatika'?'grammatika':rec.topicId}','${rec.topicId}')">Savollar bankini ko'rish</button>` : ''}
@@ -13378,40 +13537,66 @@ function finishQuiz(force = false){
       opts: q.opts,
       exp: q.exp || '',
       category: q.category || '',
+      passage: q.passage || '',
       skillId: currentQuiz.skillId,
       topicId: currentQuiz.topicId,
       topicName: currentQuiz.label || currentQuiz.skillId
     };
   }).filter(Boolean);
 
-  // Attempt ID yaratib, xatolarni xotirada saqlaymiz
-  const attemptId = 'att_' + Date.now();
-  saveMistakesForAttempt(attemptId, mistakeItems);
-  if(currentQuiz.topicId) saveMistakesForAttempt('topic_' + currentQuiz.topicId, mistakeItems);
-  saveMistakesForAttempt('skill_' + currentQuiz.skillId, mistakeItems);
-  if(currentQuiz.label) saveMistakesForAttempt(currentQuiz.label, mistakeItems);
+  const elapsedSeconds = Math.round((Date.now() - (currentQuiz.startedAt || Date.now())) / 1000);
+  const elMin = Math.floor(elapsedSeconds / 60), elSec = elapsedSeconds % 60;
+  const elapsedFormatted = String(elMin).padStart(2, '0') + ':' + String(elSec).padStart(2, '0');
 
-  // Tarix ro'yxatiga lokal yozuv qo'shamiz (darhol Tarix va Xatoliklar tahlilida ko'rinishi uchun)
+  // Savollarning to'liq snapshotini nusxalaymiz
+  const fullQuestionsSnapshot = JSON.parse(JSON.stringify(currentQuiz.questions || []));
+
+  // Attempt ID yaratib, to'liq urinish va savollarni xotirada saqlaymiz
+  const attemptId = 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const now = new Date();
   const dateStr = now.toLocaleDateString('uz-UZ', { day:'numeric', month:'short' });
   const timeStr = now.toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' });
   const sMeta = SKILL_META[currentQuiz.skillId] || {section:currentQuiz.skillId, icon:'📘', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
-  const localHistoryRow = {
+
+  const isMock = !!(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock'));
+  const isSkillExam = !isMock && !currentQuiz.topicId;
+  const answeredCount = currentQuiz.questions.filter(q => q.picked !== null && q.picked !== undefined).length;
+  const calculatedLevel = isSkillExam ? getCEFRLevel(pct, answeredCount) : null;
+
+  const attemptSnapshot = {
     id: attemptId,
-    section: sMeta.section,
+    skillId: currentQuiz.skillId,
+    topicId: currentQuiz.topicId || null,
     topic: currentQuiz.label ? `${sMeta.section} — ${currentQuiz.label}` : sMeta.section,
-    topicId: currentQuiz.topicId,
+    label: currentQuiz.label || sMeta.section,
+    mockId: currentQuiz.mockId || null,
+    type: currentQuiz.type || (currentQuiz.mockId ? 'mock' : 'quiz'),
     date: dateStr,
     time: timeStr,
     dateGroup: '7kun',
     correct,
     total,
+    wrong,
+    pct,
+    xp,
+    level: calculatedLevel,
+    elapsed: elapsedFormatted,
     icon: sMeta.icon,
     color: sMeta.color,
     bg: sMeta.bg,
-    mistakes: mistakeItems
+    questions: fullQuestionsSnapshot,
+    mistakes: mistakeItems,
+    createdAt: now.toISOString()
   };
-  HISTORY_DATA.unshift(localHistoryRow);
+
+  saveFullAttemptSnapshot(attemptSnapshot);
+  saveMistakesForAttempt(attemptId, mistakeItems);
+  if(currentQuiz.topicId) saveMistakesForAttempt('topic_' + currentQuiz.topicId, mistakeItems);
+  saveMistakesForAttempt('skill_' + currentQuiz.skillId, mistakeItems);
+  if(currentQuiz.label) saveMistakesForAttempt(currentQuiz.label, mistakeItems);
+
+  // Tarix ro'yxatiga lokal yozuv qo'shamiz
+  HISTORY_DATA.unshift(attemptSnapshot);
   renderHistoryStats();
   renderHistoryList();
   renderGrammarHistory();
@@ -13460,20 +13645,15 @@ function finishQuiz(force = false){
   document.getElementById('resultTopic').textContent = currentQuiz.label || 'Test natijasi';
   
   // Daraja faqat Mahorat imtihonlarida ko'rsatiladi (Mock testlar va alohida mavzularda ko'rsatilmaydi)
-  const isMock = !!(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock'));
-  const isSkillExam = !isMock && !currentQuiz.topicId;
   const levelWrap = document.querySelector('.result-level-wrap');
   if(levelWrap){
     levelWrap.style.display = isSkillExam ? 'flex' : 'none';
   }
   if(isSkillExam){
-    const answeredCount = currentQuiz.questions.filter(q => q.picked !== null && q.picked !== undefined).length;
-    document.getElementById('resultLevel').textContent = getCEFRLevel(pct, answeredCount);
+    document.getElementById('resultLevel').textContent = calculatedLevel;
   }
 
-  const elapsed = Math.round((Date.now()-currentQuiz.startedAt)/1000);
-  const m = Math.floor(elapsed/60), s = elapsed%60;
-  document.getElementById('resTime').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  document.getElementById('resTime').textContent = elapsedFormatted;
 
   const r = 52, c = 2*Math.PI*r;
   const ring = document.getElementById('resultRing');
@@ -13524,60 +13704,88 @@ function finishQuiz(force = false){
   showView('results');
 }
 
-/* ---- Review grid: har bir savol uchun to'g'ri/xato belgi, xatoga bossa tahlil chiqadi ---- */
+/* ---- Review grid: har bir savol uchun to'g'ri/xato belgi, bossa to'liq tahlil chiqadi ---- */
 const reviewIconSVG = {
   correct: `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
   wrong: `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`
 };
+
 function renderReviewGrid(){
   const grid = document.getElementById('reviewGrid');
   const detail = document.getElementById('reviewDetail');
-  if(!grid) return;
+  if(!grid || !currentQuiz || !Array.isArray(currentQuiz.questions)) return;
   grid.innerHTML = currentQuiz.questions.map((q,i)=>{
     const correct = q.picked===q.a;
     const isUnanswered = q.picked === null || q.picked === undefined;
-    // Faqat belgilangan va xato bo'lgan savollar ustiga bosganda tahlil ochiladi
-    const canClick = !correct && !isUnanswered;
     const iconClass = correct ? 'correct' : (isUnanswered ? 'unanswered' : 'wrong');
     return `
-      <div class="review-card ${canClick?'clickable':''}" data-idx="${i}" ${canClick?`onclick="toggleReviewDetail(${i})"`:''}>
+      <div class="review-card clickable" data-idx="${i}" onclick="toggleReviewDetail(${i})">
         <div class="review-icon ${iconClass}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
         <div class="review-label">Savol ${i+1}</div>
       </div>`;
   }).join('');
-  detail.style.display = 'none';
-  detail.innerHTML = '';
-  delete detail.dataset.idx;
+  if(detail){
+    detail.style.display = 'none';
+    detail.innerHTML = '';
+  }
 }
+
 function toggleReviewDetail(i){
+  if(!currentQuiz || !Array.isArray(currentQuiz.questions)) return;
   const q = currentQuiz.questions[i];
   if(!q) return;
-  document.getElementById('modalTitle').textContent = `${i+1}-savol tahlili`;
+  const isCorrect = q.picked === q.a;
+  const isUnanswered = q.picked === null || q.picked === undefined;
+  const totalQ = currentQuiz.questions.length;
+  const hasPrev = i > 0;
+  const hasNext = i < totalQ - 1;
+
+  document.getElementById('modalTitle').textContent = `${i+1}-savol tahlili (${i+1}/${totalQ})`;
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:16px;">
+      ${q.passage ? `
+        <div style="background:var(--card-alt);padding:14px;border-radius:12px;border:1px solid var(--border);max-height:160px;overflow-y:auto;">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;margin-bottom:6px;">📖 Matn</div>
+          <div dir="rtl" style="font-family:var(--font-ar);font-size:16px;line-height:1.7;color:var(--text);">${escapeHtml(q.passage)}</div>
+        </div>
+      ` : ''}
+
       <div style="background:var(--bg);padding:16px;border-radius:14px;border:1px solid var(--border);">
-        <div style="font-size:11.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Savol</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <span style="font-size:11.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Savol</span>
+          ${q.category ? `<span style="font-size:11px;font-weight:600;color:var(--indigo-700);">${escapeHtml(q.category)}</span>` : ''}
+        </div>
         <div style="font-family:var(--font-ar);font-size:20px;line-height:1.7;direction:rtl;text-align:right;color:var(--text);font-weight:600;">
           ${escapeHtml(q.q)}
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:9px;">
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--red-bg);border:1px solid rgba(214,69,69,0.3);color:var(--red);">
-          <span style="font-size:16px;font-weight:800;line-height:1;">✕</span>
-          <div style="font-size:13.5px;font-weight:600;line-height:1.4;">
-            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">Sizning javobingiz:</span>
-            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;">${q.picked===null || q.picked===undefined ? '<i>(javob berilmagan)</i>' : escapeHtml(q.opts[q.picked])}</span>
+        ${isCorrect ? `
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
+            <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
+            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">Sizning javobingiz (To'g'ri):</span>
+              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.picked] !== undefined ? escapeHtml(q.opts[q.picked]) : String(q.picked)}</span>
+            </div>
           </div>
-        </div>
+        ` : `
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:${isUnanswered ? 'var(--card-alt)' : 'var(--red-bg)'};border:1px solid ${isUnanswered ? 'var(--border)' : 'rgba(214,69,69,0.3)'};color:${isUnanswered ? 'var(--text-dim)' : 'var(--red)'};">
+            <span style="font-size:16px;font-weight:800;line-height:1;">${isUnanswered ? '⚠️' : '✕'}</span>
+            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">${isUnanswered ? 'Javob berilmagan' : 'Sizning javobingiz:'}</span>
+              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${isUnanswered ? '(belgilanmagan)' : (q.opts && q.opts[q.picked] !== undefined ? escapeHtml(q.opts[q.picked]) : String(q.picked))}</span>
+            </div>
+          </div>
 
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
-          <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
-          <div style="font-size:13.5px;font-weight:600;line-height:1.4;">
-            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
-            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;">${escapeHtml(q.opts[q.a])}</span>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
+            <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
+            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
+              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.a] !== undefined ? escapeHtml(q.opts[q.a]) : String(q.a)}</span>
+            </div>
           </div>
-        </div>
+        `}
       </div>
 
       ${q.exp ? `
@@ -13591,7 +13799,11 @@ function toggleReviewDetail(i){
         </div>
       ` : ''}
 
-      <button class="btn btn-primary btn-block" style="padding:12px;margin-top:4px;" onclick="document.getElementById('modalOverlay').classList.remove('show')">Tushundim</button>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button type="button" class="btn btn-outline" style="flex:1;" ${hasPrev ? `onclick="toggleReviewDetail(${i-1})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>⬅ Oldingi</button>
+        <button type="button" class="btn btn-outline" style="flex:1;" ${hasNext ? `onclick="toggleReviewDetail(${i+1})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Keyingi ➡</button>
+      </div>
+      <button type="button" class="btn btn-primary btn-block" onclick="document.getElementById('modalOverlay').classList.remove('show')">Yopish</button>
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('show');
