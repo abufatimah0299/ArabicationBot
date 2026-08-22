@@ -13715,13 +13715,16 @@ function renderReviewGrid(){
   const detail = document.getElementById('reviewDetail');
   if(!grid || !currentQuiz || !Array.isArray(currentQuiz.questions)) return;
   grid.innerHTML = currentQuiz.questions.map((q,i)=>{
-    const correct = q.picked===q.a;
     const isUnanswered = q.picked === null || q.picked === undefined;
+    const correct = !isUnanswered && (q.picked === q.a);
+    const isWrong = !isUnanswered && !correct;
     const iconClass = correct ? 'correct' : (isUnanswered ? 'unanswered' : 'wrong');
+    // Javob berilmagan va to'g'ri savollar tahlilga bosilmaydi — faqat xato javob berilgan savollargina tahlil qilinadi
+    const canClick = isWrong;
     return `
-      <div class="review-card clickable" data-idx="${i}" onclick="toggleReviewDetail(${i})">
+      <div class="review-card ${canClick?'clickable':''}" data-idx="${i}" ${canClick?`onclick="toggleReviewDetail(${i})"`:''}>
         <div class="review-icon ${iconClass}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
-        <div class="review-label">Savol ${i+1}</div>
+        <div class="review-label">Savol ${i+1}${isUnanswered ? ' <span style="font-size:10px;opacity:0.7;display:block;">(belgilanmagan)</span>' : ''}</div>
       </div>`;
   }).join('');
   if(detail){
@@ -13734,13 +13737,24 @@ function toggleReviewDetail(i){
   if(!currentQuiz || !Array.isArray(currentQuiz.questions)) return;
   const q = currentQuiz.questions[i];
   if(!q) return;
-  const isCorrect = q.picked === q.a;
-  const isUnanswered = q.picked === null || q.picked === undefined;
-  const totalQ = currentQuiz.questions.length;
-  const hasPrev = i > 0;
-  const hasNext = i < totalQ - 1;
 
-  document.getElementById('modalTitle').textContent = `${i+1}-savol tahlili (${i+1}/${totalQ})`;
+  // Javob berilmagan yoki to'g'ri bo'lgan savollar tahlili ochilmaydi
+  const isUnanswered = q.picked === null || q.picked === undefined;
+  const isCorrect = !isUnanswered && (q.picked === q.a);
+  if(isUnanswered || isCorrect) return;
+
+  // Faqat belgilangan va xato qilingan savollar ro'yxati
+  const wrongIndices = currentQuiz.questions
+    .map((item, idx) => (item.picked !== null && item.picked !== undefined && item.picked !== item.a) ? idx : -1)
+    .filter(idx => idx !== -1);
+
+  const currentMistakeNum = wrongIndices.indexOf(i) + 1;
+  const totalMistakes = wrongIndices.length;
+
+  const prevWrongIdx = wrongIndices.filter(idx => idx < i).pop();
+  const nextWrongIdx = wrongIndices.find(idx => idx > i);
+
+  document.getElementById('modalTitle').textContent = `${i+1}-savol xatosi (${currentMistakeNum}/${totalMistakes})`;
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:16px;">
       ${q.passage ? `
@@ -13761,31 +13775,21 @@ function toggleReviewDetail(i){
       </div>
 
       <div style="display:flex;flex-direction:column;gap:9px;">
-        ${isCorrect ? `
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
-            <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
-            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
-              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">Sizning javobingiz (To'g'ri):</span>
-              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.picked] !== undefined ? escapeHtml(q.opts[q.picked]) : String(q.picked)}</span>
-            </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--red-bg);border:1px solid rgba(214,69,69,0.3);color:var(--red);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">✕</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">Sizning javobingiz:</span>
+            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.picked] !== undefined ? escapeHtml(q.opts[q.picked]) : String(q.picked)}</span>
           </div>
-        ` : `
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:${isUnanswered ? 'var(--card-alt)' : 'var(--red-bg)'};border:1px solid ${isUnanswered ? 'var(--border)' : 'rgba(214,69,69,0.3)'};color:${isUnanswered ? 'var(--text-dim)' : 'var(--red)'};">
-            <span style="font-size:16px;font-weight:800;line-height:1;">${isUnanswered ? '⚠️' : '✕'}</span>
-            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
-              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">${isUnanswered ? 'Javob berilmagan' : 'Sizning javobingiz:'}</span>
-              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${isUnanswered ? '(belgilanmagan)' : (q.opts && q.opts[q.picked] !== undefined ? escapeHtml(q.opts[q.picked]) : String(q.picked))}</span>
-            </div>
-          </div>
+        </div>
 
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
-            <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
-            <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
-              <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
-              <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.a] !== undefined ? escapeHtml(q.opts[q.a]) : String(q.a)}</span>
-            </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
+            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${q.opts && q.opts[q.a] !== undefined ? escapeHtml(q.opts[q.a]) : String(q.a)}</span>
           </div>
-        `}
+        </div>
       </div>
 
       ${q.exp ? `
@@ -13800,15 +13804,23 @@ function toggleReviewDetail(i){
       ` : ''}
 
       <div style="display:flex;gap:10px;margin-top:4px;">
-        <button type="button" class="btn btn-outline" style="flex:1;" ${hasPrev ? `onclick="toggleReviewDetail(${i-1})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>⬅ Oldingi</button>
-        <button type="button" class="btn btn-outline" style="flex:1;" ${hasNext ? `onclick="toggleReviewDetail(${i+1})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Keyingi ➡</button>
+        <button type="button" class="btn btn-outline" style="flex:1;" ${prevWrongIdx !== undefined ? `onclick="toggleReviewDetail(${prevWrongIdx})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>⬅ Oldingi xato</button>
+        <button type="button" class="btn btn-outline" style="flex:1;" ${nextWrongIdx !== undefined ? `onclick="toggleReviewDetail(${nextWrongIdx})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Keyingi xato ➡</button>
       </div>
       <button type="button" class="btn btn-primary btn-block" onclick="document.getElementById('modalOverlay').classList.remove('show')">Yopish</button>
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('show');
 }
-function showMistakes(){ document.getElementById('reviewGrid').scrollIntoView({behavior:'smooth', block:'start'}); }
+function showMistakes(){
+  if(!currentQuiz || !Array.isArray(currentQuiz.questions)) return;
+  const firstWrongIdx = currentQuiz.questions.findIndex(q => q.picked !== null && q.picked !== undefined && q.picked !== q.a);
+  if(firstWrongIdx !== -1){
+    toggleReviewDetail(firstWrongIdx);
+  } else {
+    toast("Ushbu testda xato javob berilgan savollar yo'q");
+  }
+}
 function retryQuiz(){
   if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
     startMockQuiz(window.lastCompletedQuiz.mockId);
