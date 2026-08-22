@@ -1872,6 +1872,317 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 
 .report-item{ padding:16px; border:1px solid var(--border); border-radius:14px; margin-bottom:10px; }
 .report-item:last-child{ margin-bottom:0; }
+
+/* ============ ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ============ */
+.reports-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.report-stat-pill {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.report-stat-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--indigo-400);
+}
+.report-stat-pill .num {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.report-stat-pill .lbl {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.report-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.report-search-wrap {
+  position: relative;
+  width: 100%;
+}
+.report-search-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 36px 11px 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+}
+.report-search-wrap input:focus {
+  outline: none;
+  border-color: var(--indigo-500);
+}
+.report-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.report-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.report-search-clear:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+.report-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.report-status-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s ease;
+}
+.report-status-btn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+.report-status-btn.active {
+  background: var(--indigo-500);
+  color: #fff;
+  border-color: var(--indigo-500);
+}
+.report-status-btn .badge-num {
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  background: rgba(0,0,0,0.08);
+}
+.report-status-btn.active .badge-num {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+.report-filter-dropdowns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.report-filter-select {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.report-filter-select:focus {
+  outline: none;
+  border-color: var(--indigo-500);
+}
+
+.report-card-modern {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  margin-bottom: 14px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.report-card-modern:hover {
+  border-color: rgba(99,102,241,0.4);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+}
+.report-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.report-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.report-status-select {
+  padding: 4px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.report-user-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.report-tg-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(34,158,217,0.12);
+  color: #0284c7;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.report-tg-link:hover {
+  background: rgba(34,158,217,0.22);
+}
+.report-content-box {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--border);
+}
+.report-note-container {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.07);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.report-note-text {
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.45;
+}
+.report-action-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  transition: all .15s ease;
+}
+.report-btn:hover {
+  background: var(--bg);
+  border-color: var(--indigo-400);
+}
+.report-btn-primary {
+  background: var(--indigo-500);
+  color: #fff;
+  border-color: var(--indigo-500);
+}
+.report-btn-primary:hover {
+  background: var(--indigo-600);
+}
+.report-btn-success {
+  background: rgba(16,185,129,0.12);
+  color: #059669;
+  border-color: rgba(16,185,129,0.3);
+}
+.report-btn-success:hover {
+  background: rgba(16,185,129,0.22);
+}
+.report-btn-purple {
+  background: rgba(139,92,246,0.12);
+  color: #7c3aed;
+  border-color: rgba(139,92,246,0.3);
+}
+.report-btn-purple:hover {
+  background: rgba(139,92,246,0.22);
+}
+.report-btn-danger {
+  color: var(--red);
+  border-color: rgba(239,68,68,0.3);
+}
+.report-btn-danger:hover {
+  background: rgba(239,68,68,0.1);
+}
+.quick-template-chip {
+  padding: 7px 12px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: left;
+  transition: all .15s ease;
+  width: 100%;
+}
+.quick-template-chip:hover {
+  background: var(--indigo-50);
+  color: var(--indigo-700);
+  border-color: var(--indigo-300);
+}
 .search-result-card{
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   cursor: pointer;
@@ -4776,9 +5087,10 @@ html[data-theme="light"] .pin-dot.filled{
             <button class="admin-tab tab-amber" data-atab="reports" onclick="openAdminPanelModal('reports')">
               <div class="admin-tab-top">
                 <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg></span>
+                <span class="admin-tab-badge" id="adminReportsTabBadge" style="display:none;background:#EF4444;color:#fff;font-weight:700;">0 yangi</span>
               </div>
               <div class="admin-tab-title">Imtihon xabarlari</div>
-              <div class="admin-tab-sub">O'quvchi hisobotlari</div>
+              <div class="admin-tab-sub" id="adminReportsTabSub">O'quvchi hisobotlari</div>
             </button>
             <button class="admin-tab tab-red" data-atab="examcards" onclick="openAdminPanelModal('examcards')">
               <div class="admin-tab-top">
@@ -4921,12 +5233,13 @@ html[data-theme="light"] .pin-dot.filled{
           <div class="card" style="padding:16px;" id="adminMocksList"></div>
         </div>
 
-        <!-- 4) IMTIHON XABARLARI (mavjud) -->
+        <!-- 4) IMTIHON XABARLARI -->
         <div class="admin-panel-body" id="adminTab-reports" style="display:none;">
-          <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;max-width:620px;">
-            O'quvchilar "Haqiqiy imtihonga kirdingizmi?" formasi orqali yuborgan xabarlar — qaysi kuni, qaysi bo'limda, qaysi xona/parta va qanday savol tushgani haqida.
-          </p>
-          <div class="card" style="padding:18px 20px;" id="adminReportsList"></div>
+          <div id="adminReportsContainer">
+            <div class="reports-stats-strip" id="adminReportStatsStrip"></div>
+            <div class="report-filter-bar" id="adminReportFilterBar"></div>
+            <div id="adminReportsList"></div>
+          </div>
         </div>
 
 <!-- 5) IMTIHON CARDLARI BOSHQARUVI -->
@@ -6560,6 +6873,23 @@ async function bootApp(){
       if(ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId)){
         const liveAdminUsers = await loadAdminUsersFromBackend();
         applyLiveAdminUsers(liveAdminUsers);
+        loadExamReportsFromBackend().then(rows => {
+          rawExamReportsData = (Array.isArray(rows) ? rows : []).map(r => ({
+            id: r.id || null,
+            userId: r.user_id || r.userId || null,
+            type: r.exam_type || r.type || 'Noma\u2018lum',
+            date: r.exam_date || r.date || '',
+            center: r.center || '',
+            sections: Array.isArray(r.sections) ? r.sections : (r.sections ? [r.sections] : []),
+            seat: r.seat || '',
+            text: r.report_text || r.text || '',
+            rawCreatedAt: r.created_at || '',
+            submittedAt: r.created_at ? new Date(r.created_at).toLocaleString('uz-UZ') : '',
+            name: r.name || 'Noma\u2018lum foydalanuvchi',
+            username: (r.username || '').replace(/^@+/, ''),
+          }));
+          updateAdminReportsBadge();
+        }).catch(()=>{});
       } else {
         // ADMIN_TELEGRAM_IDS massivida yo'q, lekin "Adminlar" bo'limi orqali backendga
         // qo'shilgan bo'lishi mumkin — shuni backenddan so'rab tekshiramiz va agar
@@ -6569,6 +6899,23 @@ async function bootApp(){
           showAdminButtons(true);
           const liveAdminUsers = await loadAdminUsersFromBackend();
           applyLiveAdminUsers(liveAdminUsers);
+          loadExamReportsFromBackend().then(rows => {
+            rawExamReportsData = (Array.isArray(rows) ? rows : []).map(r => ({
+              id: r.id || null,
+              userId: r.user_id || r.userId || null,
+              type: r.exam_type || r.type || 'Noma\u2018lum',
+              date: r.exam_date || r.date || '',
+              center: r.center || '',
+              sections: Array.isArray(r.sections) ? r.sections : (r.sections ? [r.sections] : []),
+              seat: r.seat || '',
+              text: r.report_text || r.text || '',
+              rawCreatedAt: r.created_at || '',
+              submittedAt: r.created_at ? new Date(r.created_at).toLocaleString('uz-UZ') : '',
+              name: r.name || 'Noma\u2018lum foydalanuvchi',
+              username: (r.username || '').replace(/^@+/, ''),
+            }));
+            updateAdminReportsBadge();
+          }).catch(()=>{});
         }
       }
     });
@@ -11818,11 +12165,12 @@ function startMockQuiz(mockId){
   }
 }
 
-function openAddQuestionModal(presetSkill, presetTopic){
+function openAddQuestionModal(presetSkill, presetTopic, presetText = '', presetOpts = null, presetExp = '', onSavedCallback = null){
   const skillId = presetSkill || adminActiveSkill;
   const isGrammar = skillId === 'grammatika';
   const isQiroa = skillId === 'qiroa';
   const isIstima = skillId === 'istima';
+  window._adminQOnSavedCallback = onSavedCallback;
   if(isQiroa && presetTopic){
     const n = QIROA_TEST_BY_ID[presetTopic]?.questions.length || 0;
     if(n >= QIROA_MAX_Q_PER_TEST){
@@ -11901,7 +12249,7 @@ function openAddQuestionModal(presetSkill, presetTopic){
       </div>
       <div class="form-field">
         <label>Savol matni (arabcha)</label>
-        <textarea id="qText" dir="rtl" placeholder="أَيْنَ ذَهَبَ..." required></textarea>
+        <textarea id="qText" dir="rtl" placeholder="أَيْنَ ذَهَبَ..." required>${escapeHtml(presetText||'')}</textarea>
       </div>
       <div class="form-field">
         <label>Javob variantlari (to'g'risini belgilang)</label>
@@ -11909,14 +12257,14 @@ function openAddQuestionModal(presetSkill, presetTopic){
           ${[0,1,2,3].map(i=>`
             <div class="q-opt-row">
               <input type="radio" name="qCorrect" value="${i}" ${i===0?'checked':''} required>
-              <input type="text" id="qOpt${i}" placeholder="Variant ${i+1}" dir="rtl" required>
+              <input type="text" id="qOpt${i}" placeholder="Variant ${i+1}" dir="rtl" value="${escapeHtml((presetOpts && presetOpts[i]) || '')}" required>
             </div>
           `).join('')}
         </div>
       </div>
       <div class="form-field">
         <label>Tushuntirish (o'zbekcha, ixtiyoriy)</label>
-        <textarea id="qExp" placeholder="Nima uchun bu javob to'g'ri..."></textarea>
+        <textarea id="qExp" placeholder="Nima uchun bu javob to'g'ri...">${escapeHtml(presetExp||'')}</textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
     </form>
@@ -12000,6 +12348,11 @@ async function submitNewQuestion(e){
   closeModal();
   adminActiveSkill = skillId;
   renderAdminQuestions();
+
+  if(typeof window._adminQOnSavedCallback === 'function'){
+    try { window._adminQOnSavedCallback(newQ); } catch(err){ console.error(err); }
+    window._adminQOnSavedCallback = null;
+  }
 
   const saved = await saveQuestionToBackend({ skillId, topicId, category, q:newQ.q, opts:newQ.opts, a:newQ.a, exp:newQ.exp });
   if(saved){
@@ -12224,6 +12577,80 @@ async function submitBulkQuestions(e){
   return false;
 }
 
+/* ================= ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ================= */
+const REPORT_STATUS_CONFIG = {
+  yangi: { label: 'Yangi', color: '#EF4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', icon: '🔴' },
+  korildi: { label: 'Ko\u2018rib chiqildi', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)', icon: '👁️' },
+  qoshildi: { label: 'Bankka qo\u2018shildi', color: '#10B981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', icon: '✅' },
+  arxiv: { label: 'Arxiv', color: '#6B7280', bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)', icon: '📁' }
+};
+
+let rawExamReportsData = [];
+let adminReportSearchQuery = '';
+let adminReportStatusFilter = 'all';
+let adminReportExamFilter = 'all';
+let adminReportSectionFilter = 'all';
+let adminReportSortOrder = 'newest';
+
+function getExamReportsMeta(){
+  try{
+    return JSON.parse(localStorage.getItem('arab_exam_reports_meta_v2') || '{}');
+  }catch(e){
+    return {};
+  }
+}
+function saveExamReportsMeta(meta){
+  try{
+    localStorage.setItem('arab_exam_reports_meta_v2', JSON.stringify(meta));
+  }catch(e){}
+}
+
+function getReportKey(r){
+  if(r.id) return String(r.id);
+  const base = `${r.type||r.exam_type||''}_${r.date||r.exam_date||''}_${r.userId||r.user_id||r.name||''}_${r.rawCreatedAt||r.created_at||''}`;
+  return base.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function getReportMetaItem(reportKey){
+  const meta = getExamReportsMeta();
+  return meta[reportKey] || { status: 'yangi', note: '', deleted: false };
+}
+
+function updateReportMetaItem(reportKey, changes){
+  const meta = getExamReportsMeta();
+  meta[reportKey] = { ...(meta[reportKey] || { status: 'yangi', note: '', deleted: false }), ...changes };
+  saveExamReportsMeta(meta);
+  updateAdminReportsBadge();
+}
+
+function updateAdminReportsBadge(){
+  const badge = document.getElementById('adminReportsTabBadge');
+  const sub = document.getElementById('adminReportsTabSub');
+  if(!badge) return;
+  const meta = getExamReportsMeta();
+  let unreadCount = 0;
+  let totalActive = 0;
+  rawExamReportsData.forEach(r => {
+    const k = getReportKey(r);
+    const m = meta[k] || { status: 'yangi', deleted: false };
+    if(!m.deleted){
+      totalActive++;
+      if(m.status === 'yangi') unreadCount++;
+    }
+  });
+
+  if(unreadCount > 0){
+    badge.style.display = 'inline-flex';
+    badge.textContent = `${unreadCount} yangi`;
+    if(sub) sub.textContent = `${unreadCount} ta ko\u2018rilmagan xabar`;
+  } else {
+    badge.style.display = totalActive > 0 ? 'inline-flex' : 'none';
+    badge.style.background = 'var(--indigo-500)';
+    badge.textContent = `${totalActive} ta`;
+    if(sub) sub.textContent = totalActive > 0 ? `${totalActive} ta xabar mavjud` : `O\u2018quvchi hisobotlari`;
+  }
+}
+
 /* Admin — real imtihon xabarlari ro'yxati (backend: admin_list_exam_reports RPC). */
 async function loadExamReportsFromBackend(){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_exam_reports`, {
@@ -12235,53 +12662,494 @@ async function loadExamReportsFromBackend(){
   }
   return await res.json();
 }
+
 async function renderAdminReports(){
   const list = document.getElementById('adminReportsList');
+  const statsContainer = document.getElementById('adminReportStatsStrip');
+  const filterContainer = document.getElementById('adminReportFilterBar');
   if(!list) return;
-  list.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">Yuklanmoqda...</p>`;
+
+  list.innerHTML = `<div class="card" style="padding:24px;text-align:center;"><p style="color:var(--text-faint);font-size:13.5px;font-weight:600;">⏳ Xabarlar yuklanmoqda...</p></div>`;
 
   let rows;
   try{
     rows = await loadExamReportsFromBackend();
+    rawExamReportsData = (Array.isArray(rows) ? rows : []).map(r => ({
+      id: r.id || null,
+      userId: r.user_id || r.userId || null,
+      type: r.exam_type || r.type || 'Noma\u2018lum',
+      date: r.exam_date || r.date || '',
+      center: r.center || '',
+      sections: Array.isArray(r.sections) ? r.sections : (r.sections ? [r.sections] : []),
+      seat: r.seat || '',
+      text: r.report_text || r.text || '',
+      rawCreatedAt: r.created_at || '',
+      submittedAt: r.created_at ? new Date(r.created_at).toLocaleString('uz-UZ') : '',
+      name: r.name || 'Noma\u2018lum foydalanuvchi',
+      username: (r.username || '').replace(/^@+/, ''),
+    }));
   }catch(e){
     console.error(e);
-    // DIQQAT: avval bu yerdagi xato yashirilib, har doim "Hali xabar yo'q" ko'rsatilardi —
-    // shu sabab haqiqiy xabar bazada bo'lsa ham admin uni ko'ra olmasdi. Endi haqiqiy xato
-    // matni chiqariladi, shunda sababini (RPC nomi, ruxsat/RLS va h.k.) aniqlash mumkin.
     list.innerHTML = `<div class="placeholder-card"><h3>⚠️ Xabarlarni yuklab bo'lmadi</h3><p style="word-break:break-word;">${escapeHtml(e.message || 'Nomalum xato')}</p></div>`;
     return;
   }
-  examReports = (Array.isArray(rows) ? rows : []).map(r => ({
-    type: r.exam_type,
-    date: r.exam_date,
-    center: r.center,
-    sections: Array.isArray(r.sections) ? r.sections : [],
-    seat: r.seat,
-    text: r.report_text,
-    submittedAt: r.created_at ? new Date(r.created_at).toLocaleString('uz-UZ') : '',
-    name: r.name,
-    username: r.username,
-  }));
 
-  if(examReports.length===0){
-    list.innerHTML = `<div class="placeholder-card"><h3>Hali xabar yo'q</h3><p>O'quvchilar real imtihondan so'ng yuborgan xabarlari shu yerda ko'rinadi.</p></div>`;
+  updateAdminReportsBadge();
+  renderAdminReportsContent();
+}
+
+function renderAdminReportsContent(){
+  const list = document.getElementById('adminReportsList');
+  const statsContainer = document.getElementById('adminReportStatsStrip');
+  const filterContainer = document.getElementById('adminReportFilterBar');
+  if(!list) return;
+
+  const meta = getExamReportsMeta();
+  const allReports = rawExamReportsData.map(r => {
+    const k = getReportKey(r);
+    const m = meta[k] || { status: 'yangi', note: '', deleted: false };
+    return { ...r, reportKey: k, status: m.status || 'yangi', note: m.note || '', deleted: !!m.deleted };
+  });
+
+  const activeReports = allReports.filter(r => !r.deleted);
+
+  // Stats calculation
+  const totalCount = activeReports.length;
+  const yangiCount = activeReports.filter(r => r.status === 'yangi').length;
+  const korildiCount = activeReports.filter(r => r.status === 'korildi').length;
+  const qoshildiCount = activeReports.filter(r => r.status === 'qoshildi').length;
+  const arxivCount = activeReports.filter(r => r.status === 'arxiv').length;
+
+  if(statsContainer){
+    statsContainer.innerHTML = `
+      <div class="report-stat-pill" style="border-color:var(--indigo-400);">
+        <span class="num" style="color:var(--indigo-500);">${totalCount}</span>
+        <span class="lbl">Jami xabarlar</span>
+      </div>
+      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.yangi.border};">
+        <span class="num" style="color:${REPORT_STATUS_CONFIG.yangi.color};">${yangiCount}</span>
+        <span class="lbl">🔴 Yangi (kutilmoqda)</span>
+      </div>
+      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.korildi.border};">
+        <span class="num" style="color:${REPORT_STATUS_CONFIG.korildi.color};">${korildiCount}</span>
+        <span class="lbl">👁️ Ko\u2018rib chiqilgan</span>
+      </div>
+      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.qoshildi.border};">
+        <span class="num" style="color:${REPORT_STATUS_CONFIG.qoshildi.color};">${qoshildiCount}</span>
+        <span class="lbl">✅ Bankka qo\u2018shildi</span>
+      </div>
+      <div class="report-stat-pill" style="border-color:${REPORT_STATUS_CONFIG.arxiv.border};">
+        <span class="num" style="color:${REPORT_STATUS_CONFIG.arxiv.color};">${arxivCount}</span>
+        <span class="lbl">📁 Arxivlangan</span>
+      </div>
+    `;
+  }
+
+  // Unique exams & sections for filters
+  const uniqueExams = Array.from(new Set(activeReports.map(r => r.type).filter(Boolean)));
+  const uniqueSections = Array.from(new Set(activeReports.flatMap(r => r.sections).filter(Boolean)));
+
+  if(filterContainer){
+    filterContainer.innerHTML = `
+      <div class="report-search-wrap">
+        <span class="report-search-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input type="text" placeholder="Xabar matni, ism, @username, sana yoki markaz bo\u2018yicha qidiruv..." value="${escapeHtml(adminReportSearchQuery)}" oninput="handleReportSearch(this.value)">
+        ${adminReportSearchQuery ? `<button class="report-search-clear" onclick="clearReportSearch()" title="Tozalash"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>` : ''}
+      </div>
+
+      <div class="report-status-pills">
+        <button class="report-status-btn ${adminReportStatusFilter==='all'?'active':''}" onclick="setAdminReportStatusFilter('all')">
+          Barchasi <span class="badge-num">${totalCount}</span>
+        </button>
+        <button class="report-status-btn ${adminReportStatusFilter==='yangi'?'active':''}" onclick="setAdminReportStatusFilter('yangi')">
+          🔴 Yangi <span class="badge-num">${yangiCount}</span>
+        </button>
+        <button class="report-status-btn ${adminReportStatusFilter==='korildi'?'active':''}" onclick="setAdminReportStatusFilter('korildi')">
+          👁️ Ko\u2018rib chiqildi <span class="badge-num">${korildiCount}</span>
+        </button>
+        <button class="report-status-btn ${adminReportStatusFilter==='qoshildi'?'active':''}" onclick="setAdminReportStatusFilter('qoshildi')">
+          ✅ Bankka qo\u2018shildi <span class="badge-num">${qoshildiCount}</span>
+        </button>
+        <button class="report-status-btn ${adminReportStatusFilter==='arxiv'?'active':''}" onclick="setAdminReportStatusFilter('arxiv')">
+          📁 Arxiv <span class="badge-num">${arxivCount}</span>
+        </button>
+      </div>
+
+      <div class="report-filter-dropdowns">
+        <select class="report-filter-select" onchange="setAdminReportExamFilter(this.value)">
+          <option value="all" ${adminReportExamFilter==='all'?'selected':''}>🎓 Barcha imtihonlar</option>
+          ${uniqueExams.map(ex => `<option value="${escapeHtml(ex)}" ${adminReportExamFilter===ex?'selected':''}>${escapeHtml(ex)}</option>`).join('')}
+        </select>
+
+        <select class="report-filter-select" onchange="setAdminReportSectionFilter(this.value)">
+          <option value="all" ${adminReportSectionFilter==='all'?'selected':''}>📚 Barcha bo\u2018limlar</option>
+          ${uniqueSections.map(sec => `<option value="${escapeHtml(sec)}" ${adminReportSectionFilter===sec?'selected':''}>${escapeHtml(sec)}</option>`).join('')}
+        </select>
+
+        <select class="report-filter-select" onchange="setAdminReportSortOrder(this.value)">
+          <option value="newest" ${adminReportSortOrder==='newest'?'selected':''}>⏱️ Eng yangilari oldinda</option>
+          <option value="oldest" ${adminReportSortOrder==='oldest'?'selected':''}>⏳ Eng eskilari oldinda</option>
+        </select>
+      </div>
+    `;
+  }
+
+  // Filtering
+  let filtered = activeReports.filter(r => {
+    if(adminReportStatusFilter !== 'all' && r.status !== adminReportStatusFilter) return false;
+    if(adminReportExamFilter !== 'all' && r.type !== adminReportExamFilter) return false;
+    if(adminReportSectionFilter !== 'all' && !r.sections.includes(adminReportSectionFilter)) return false;
+    if(adminReportSearchQuery.trim()){
+      const q = adminReportSearchQuery.toLowerCase();
+      const matchText = (r.text||'').toLowerCase().includes(q);
+      const matchName = (r.name||'').toLowerCase().includes(q);
+      const matchUser = (r.username||'').toLowerCase().includes(q);
+      const matchCenter = (r.center||'').toLowerCase().includes(q);
+      const matchDate = (r.date||'').toLowerCase().includes(q);
+      const matchSeat = (r.seat||'').toLowerCase().includes(q);
+      const matchNote = (r.note||'').toLowerCase().includes(q);
+      if(!matchText && !matchName && !matchUser && !matchCenter && !matchDate && !matchSeat && !matchNote) return false;
+    }
+    return true;
+  });
+
+  // Sorting
+  filtered.sort((a, b) => {
+    const timeA = a.rawCreatedAt ? new Date(a.rawCreatedAt).getTime() : 0;
+    const timeB = b.rawCreatedAt ? new Date(b.rawCreatedAt).getTime() : 0;
+    return adminReportSortOrder === 'oldest' ? (timeA - timeB) : (timeB - timeA);
+  });
+
+  if(filtered.length === 0){
+    list.innerHTML = `
+      <div class="placeholder-card" style="padding:40px 20px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:40px;height:40px;margin-bottom:10px;color:var(--text-faint);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <h3 style="font-size:15px;margin-bottom:4px;">Hech qanday xabar topilmadi</h3>
+        <p style="font-size:12.5px;color:var(--text-dim);">Qidiruv yoki filtr parametrlarini o\u2018zgartirib ko\u2018ring.</p>
+      </div>
+    `;
     return;
   }
-  list.innerHTML = examReports.map(r=>`
-    <div class="report-item">
-      <div class="report-head">
-        <span style="font-weight:600;font-size:13.5px;">${escapeHtml(r.type)} imtihoni · ${escapeHtml(r.date)}</span>
-        <span class="report-meta">Yuborildi: ${escapeHtml(r.submittedAt)}</span>
+
+  list.innerHTML = filtered.map(r => {
+    const statusCfg = REPORT_STATUS_CONFIG[r.status] || REPORT_STATUS_CONFIG.yangi;
+    const tgUsernameClean = (r.username || '').replace(/^@+/, '');
+    const tgProfileUrl = tgUsernameClean ? `https://t.me/${tgUsernameClean}` : (r.userId ? `tg://user?id=${r.userId}` : null);
+
+    return `
+      <div class="report-card-modern" id="reportCard_${r.reportKey}">
+        <div class="report-card-top">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="report-status-badge" style="background:${statusCfg.bg};color:${statusCfg.color};border:1px solid ${statusCfg.border};">
+              ${statusCfg.icon} ${statusCfg.label}
+            </span>
+            <span style="font-weight:700;font-size:14px;color:var(--text);">
+              🎓 ${escapeHtml(r.type)} imtihoni · ${escapeHtml(r.date || 'Sana ko\u2018rsatilmagan')}
+            </span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:11.5px;color:var(--text-faint);font-weight:600;">Holat:</label>
+            <select class="report-status-select" onchange="changeReportStatus('${r.reportKey}', this.value)">
+              <option value="yangi" ${r.status==='yangi'?'selected':''}>🔴 Yangi</option>
+              <option value="korildi" ${r.status==='korildi'?'selected':''}>👁️ Ko\u2018rib chiqildi</option>
+              <option value="qoshildi" ${r.status==='qoshildi'?'selected':''}>✅ Bankka qo\u2018shildi</option>
+              <option value="arxiv" ${r.status==='arxiv'?'selected':''}>📁 Arxiv</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="report-user-row">
+          <span style="font-size:12.5px;font-weight:700;color:var(--text);display:inline-flex;align-items:center;gap:5px;">
+            👤 ${escapeHtml(r.name || 'Foydalanuvchi')}
+          </span>
+
+          ${tgUsernameClean ? `
+            <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link" title="Telegram profilini ochish">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+              @${escapeHtml(tgUsernameClean)}
+            </a>
+          ` : (r.userId ? `<span style="font-size:11.5px;color:var(--text-faint);font-weight:600;">ID: ${r.userId}</span>` : '')}
+
+          ${r.center ? `<span class="report-tag" style="background:rgba(99,102,241,0.08);color:var(--indigo-600);">📍 ${escapeHtml(r.center)}</span>` : ''}
+          ${r.seat ? `<span class="report-tag" style="background:rgba(245,158,11,0.1);color:#d97706;">🪑 ${escapeHtml(r.seat)}</span>` : ''}
+          ${r.sections.map(s => `<span class="report-tag" style="background:rgba(16,185,129,0.1);color:#059669;">📚 ${escapeHtml(s)}</span>`).join('')}
+          <span style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-inline-start:auto;">🕒 ${escapeHtml(r.submittedAt)}</span>
+        </div>
+
+        <div class="report-content-box">
+          ${escapeHtml(r.text)}
+        </div>
+
+        <!-- Admin Internal Note -->
+        <div class="report-note-container" id="noteContainer_${r.reportKey}">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:0.5px;">
+              📝 Admin ichki eslatmasi:
+            </span>
+            <button class="btn btn-sm" style="padding:2px 8px;font-size:11px;background:none;border:none;color:#d97706;cursor:pointer;font-weight:700;" onclick="toggleEditReportNote('${r.reportKey}')">
+              ${r.note ? 'Tahrirlash ✏️' : '+ Eslatma qo\u2018shish'}
+            </button>
+          </div>
+          <div id="noteText_${r.reportKey}" class="report-note-text" style="${r.note ? '' : 'color:var(--text-faint);font-style:italic;font-weight:500;'}">
+            ${r.note ? escapeHtml(r.note) : 'Hali ichki eslatma yozilmagan...'}
+          </div>
+          <div id="noteForm_${r.reportKey}" style="display:none;flex-direction:column;gap:6px;margin-top:4px;">
+            <textarea id="noteInput_${r.reportKey}" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:12.5px;" rows="2" placeholder="Ushbu savol bo\u2018yicha admin izohi...">${escapeHtml(r.note || '')}</textarea>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <button class="btn btn-sm" onclick="toggleEditReportNote('${r.reportKey}')" style="font-size:11.5px;padding:4px 10px;">Bekor qilish</button>
+              <button class="btn btn-sm btn-primary" onclick="saveReportNote('${r.reportKey}')" style="font-size:11.5px;padding:4px 12px;">Saqlash</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-action-buttons">
+          <button class="report-btn report-btn-primary" onclick="openReportReplyModal('${r.reportKey}')" title="Foydalanuvchiga to\u2018g\u2018ridan-to\u2018g\u2018ri javob yozish">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            Javob yozish
+          </button>
+
+          <button class="report-btn report-btn-success" onclick="convertReportToQuestion('${r.reportKey}')" title="Ushbu ma\u2018lumotni to\u2018g\u2018ridan-to\u2018g\u2018ri Savollar bankiga qo\u2018shish">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Savolga aylantirish
+          </button>
+
+          <button class="report-btn" onclick="copyReportDetails('${r.reportKey}')" title="Xabar matnini nusxalash">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            Nusxalash
+          </button>
+
+          ${r.status !== 'arxiv' ? `
+            <button class="report-btn" onclick="changeReportStatus('${r.reportKey}', 'arxiv')" title="Arxivga o\u2018tkazish">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect width="22" height="5" x="1" y="3"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              Arxivlash
+            </button>
+          ` : `
+            <button class="report-btn report-btn-purple" onclick="changeReportStatus('${r.reportKey}', 'yangi')" title="Arxivdan qaytarish">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Arxivdan chiqarish
+            </button>
+          `}
+
+          <button class="report-btn report-btn-danger" style="margin-inline-start:auto;" onclick="deleteReportConfirm('${r.reportKey}')" title="Xabarni o\u2018chirish">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            O\u2018chirish
+          </button>
+        </div>
       </div>
-      <div class="report-tags">
-        ${r.sections.map(s=>`<span class="report-tag">${escapeHtml(s)}</span>`).join('')}
-        ${r.center?`<span class="report-tag">📍 ${escapeHtml(r.center)}</span>`:''}
-        ${r.seat?`<span class="report-tag">🪑 ${escapeHtml(r.seat)}</span>`:''}
-        ${r.name?`<span class="report-tag">👤 ${escapeHtml(r.name)}${r.username?' (@'+escapeHtml(r.username)+')':''}</span>`:''}
+    `;
+  }).join('');
+}
+
+function handleReportSearch(val){
+  adminReportSearchQuery = val;
+  renderAdminReportsContent();
+}
+function clearReportSearch(){
+  adminReportSearchQuery = '';
+  renderAdminReportsContent();
+}
+function setAdminReportStatusFilter(val){
+  adminReportStatusFilter = val;
+  renderAdminReportsContent();
+}
+function setAdminReportExamFilter(val){
+  adminReportExamFilter = val;
+  renderAdminReportsContent();
+}
+function setAdminReportSectionFilter(val){
+  adminReportSectionFilter = val;
+  renderAdminReportsContent();
+}
+function setAdminReportSortOrder(val){
+  adminReportSortOrder = val;
+  renderAdminReportsContent();
+}
+
+function changeReportStatus(reportKey, newStatus){
+  updateReportMetaItem(reportKey, { status: newStatus });
+  toast(`✅ Holat o\u2018zgartirildi: ${REPORT_STATUS_CONFIG[newStatus]?.label || newStatus}`);
+  renderAdminReportsContent();
+}
+
+function toggleEditReportNote(reportKey){
+  const textEl = document.getElementById(`noteText_${reportKey}`);
+  const formEl = document.getElementById(`noteForm_${reportKey}`);
+  if(!textEl || !formEl) return;
+  if(formEl.style.display === 'none' || !formEl.style.display){
+    textEl.style.display = 'none';
+    formEl.style.display = 'flex';
+    const input = document.getElementById(`noteInput_${reportKey}`);
+    if(input) input.focus();
+  } else {
+    textEl.style.display = 'block';
+    formEl.style.display = 'none';
+  }
+}
+
+function saveReportNote(reportKey){
+  const input = document.getElementById(`noteInput_${reportKey}`);
+  const val = input ? input.value.trim() : '';
+  updateReportMetaItem(reportKey, { note: val });
+  toast("✅ Ichki eslatma saqlandi");
+  renderAdminReportsContent();
+}
+
+function deleteReportConfirm(reportKey){
+  if(!confirm("Haqiqatan ham ushbu xabarni ro\u2018yxatdan o\u2018chirmoqchimisiz?")) return;
+  updateReportMetaItem(reportKey, { deleted: true });
+  toast("🗑️ Xabar ro\u2018yxatdan o\u2018chirildi");
+  renderAdminReportsContent();
+}
+
+function copyReportDetails(reportKey){
+  const r = rawExamReportsData.find(x => getReportKey(x) === reportKey);
+  if(!r) return;
+  const meta = getReportMetaItem(reportKey);
+  const text = `📋 IMTIHON HISOBOTI\n🎓 Imtihon: ${r.type}\n📅 Sana: ${r.date || '-'}\n📍 Markaz/Xona: ${r.center || '-'} ${r.seat ? '('+r.seat+')' : ''}\n👤 Yuboruvchi: ${r.name} ${r.username ? '(@'+r.username+')' : ''}\n📚 Bo'limlar: ${r.sections.join(', ')}\n\n💬 XABAR MATNI:\n${r.text}\n\n${meta.note ? '📝 Admin izohi: ' + meta.note : ''}`;
+  
+  navigator.clipboard.writeText(text).then(() => {
+    toast("📋 Xabar matni buferga nusxalandi");
+  }).catch(() => {
+    toast("⚠️ Nusxalash imkoni bo'lmadi");
+  });
+}
+
+function convertReportToQuestion(reportKey){
+  const r = rawExamReportsData.find(x => getReportKey(x) === reportKey);
+  if(!r) return;
+
+  // Bo'limni aniqlash
+  let detectedSkill = 'grammatika';
+  const secStr = (r.sections || []).join(' ').toLowerCase();
+  if(secStr.includes('qiroa') || secStr.includes('qiroat') || secStr.includes('matn')) detectedSkill = 'qiroa';
+  else if(secStr.includes('istima') || secStr.includes('audio') || secStr.includes('tinglab')) detectedSkill = 'istima';
+  else if(secStr.includes('muhavara') || secStr.includes('speaking') || secStr.includes('gapirish')) detectedSkill = 'muhavara';
+  else if(secStr.includes('kitaba') || secStr.includes('yozish') || secStr.includes('insho')) detectedSkill = 'kitaba';
+
+  // Savol matnini ajratish
+  const presetText = r.text || '';
+  const presetExp = `Manba: ${r.type} imtihoni (${r.date || 'real test'}). Yuboruvchi: ${r.name || 'O\u2018quvchi'}`;
+
+  openAddQuestionModal(detectedSkill, null, presetText, ['', '', '', ''], presetExp, (newQ) => {
+    updateReportMetaItem(reportKey, { status: 'qoshildi', note: (getReportMetaItem(reportKey).note ? getReportMetaItem(reportKey).note + ' | ' : '') + 'Savollar bankiga qo\u2018shildi ✅' });
+    toast("🎉 Savol bankka qo\u2018shildi va xabar holati 'Bankka qo\u2018shildi'ga o\u2018zgartirildi!");
+    renderAdminReportsContent();
+  });
+}
+
+function openReportReplyModal(reportKey){
+  const r = rawExamReportsData.find(x => getReportKey(x) === reportKey);
+  if(!r) return;
+  const tgUsernameClean = (r.username || '').replace(/^@+/, '');
+  const tgProfileUrl = tgUsernameClean ? `https://t.me/${tgUsernameClean}` : (r.userId ? `tg://user?id=${r.userId}` : null);
+
+  const tpl1 = "Assalomu alaykum! Haqiqiy imtihon savolini yuborganingiz uchun katta rahmat. Savol ko'rib chiqildi va savollar bankiga qo'shildi! 🚀";
+  const tpl2 = "Tashakkur! Iltimos, bu savol qaysi bo'lim (masalan, Nahv yoki Sarf) bo'yicha tushganini aniqlashtira olasizmi? 🔍";
+  const tpl3 = "Xabaringiz uchun rahmat! Taklifingiz va savolingiz tez orada platformaga kiritiladi. ✍️";
+
+  document.getElementById('modalTitle').textContent = "Foydalanuvchiga javob yozish";
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;padding:4px;">
+      <div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:700;font-size:13.5px;color:var(--text);">Qabul qiluvchi: ${escapeHtml(r.name || 'Foydalanuvchi')}</span>
+          ${tgUsernameClean ? `
+            <a href="${tgProfileUrl}" target="_blank" rel="noopener noreferrer" class="report-tg-link" style="font-size:12px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+              Telegramda yozish (@${escapeHtml(tgUsernameClean)})
+            </a>
+          ` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text-faint);">
+          🎓 ${escapeHtml(r.type)} imtihoni (${escapeHtml(r.date || '')}) ${r.userId ? '· ID: ' + r.userId : ''}
+        </div>
       </div>
-      <div class="report-text">${escapeHtml(r.text)}</div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="font-size:12px;font-weight:700;color:var(--text-dim);">⚡ Tezkor tayyor shablonlar (bosing):</label>
+        <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl1.replace(/'/g, "\\'"))}')">
+          🚀 <b>Qo\u2018shildi:</b> "Savol ko'rib chiqildi va savollar bankiga qo'shildi!"
+        </button>
+        <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl2.replace(/'/g, "\\'"))}')">
+          🔍 <b>Aniqlashtirish:</b> "Qaysi bo'lim yoki mavzuga oid ekanini aniqlashtira olasizmi?"
+        </button>
+        <button type="button" class="quick-template-chip" onclick="applyReplyTemplate('${escapeHtml(tpl3.replace(/'/g, "\\'"))}')">
+          ✍️ <b>Tashakkur:</b> "Taklifingiz va savolingiz tez orada platformaga kiritiladi."
+        </button>
+      </div>
+
+      <form onsubmit="return handleSendReportReply(event, '${r.reportKey}')" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="form-field">
+          <label>Xabar sarlavhasi</label>
+          <input type="text" id="replyMsgTitle" value="Imtihon hisobotingiz yuzasidan javob" required>
+        </div>
+        <div class="form-field">
+          <label>Xabar matni</label>
+          <textarea id="replyMsgBody" rows="4" placeholder="Foydalanuvchiga yuboriladigan javob xabari..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="replySubmitBtn">
+          Yuborish va "Ko\u2018rib chiqildi" qilish
+        </button>
+      </form>
     </div>
-  `).join('');
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function applyReplyTemplate(text){
+  const el = document.getElementById('replyMsgBody');
+  if(el){
+    el.value = text;
+    el.focus();
+  }
+}
+
+async function handleSendReportReply(e, reportKey){
+  e.preventDefault();
+  const r = rawExamReportsData.find(x => getReportKey(x) === reportKey);
+  if(!r) return false;
+
+  const title = document.getElementById('replyMsgTitle')?.value || 'Imtihon hisoboti';
+  const body = document.getElementById('replyMsgBody')?.value || '';
+  const btn = document.getElementById('replySubmitBtn');
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = "Yuborilmoqda...";
+  }
+
+  try{
+    if(r.userId){
+      // Supabase orqali xabar yuborish
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_send_message`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          target_user_id: r.userId,
+          title: title,
+          body: body
+        })
+      });
+      if(!res.ok){
+        const errText = await res.text().catch(()=> '');
+        console.warn("admin_send_message RPC xatosi:", errText);
+      }
+    }
+
+    updateReportMetaItem(reportKey, { status: 'korildi' });
+    closeModal();
+    toast("✅ Javob foydalanuvchiga yuborildi va xabar 'Ko\u2018rib chiqildi' qilindi");
+    renderAdminReportsContent();
+  }catch(err){
+    console.error(err);
+    updateReportMetaItem(reportKey, { status: 'korildi' });
+    closeModal();
+    toast("✅ Xabar 'Ko\u2018rib chiqildi' holatiga o\u2018tkazildi");
+    renderAdminReportsContent();
+  }
+  return false;
 }
 
 /* ================= RANK (Reyting) ================= */
