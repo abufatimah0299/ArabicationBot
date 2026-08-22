@@ -186,9 +186,10 @@ body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-n
 .main{ flex:1; min-width:0; width:100%; max-width:880px; margin:0 auto; position:relative; z-index:1; }
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:20px 32px; gap:16px; flex-wrap:nowrap;
+  padding:20px 32px 10px 32px; gap:16px; flex-wrap:nowrap;
+  position:relative; z-index:10; pointer-events:none;
 }
-.hello{ min-width:0; }
+.hello{ min-width:0; pointer-events:auto; }
 .hello h1{ font-size:21px; font-weight:600; letter-spacing:-0.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .hello p{ font-size:13px; color:var(--text-dim); margin-top:3px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
@@ -222,7 +223,7 @@ html[data-theme="dark"] .topbar.hero-banner{
   .topbar.hero-banner .hello p{ font-size:12px; }
   .topbar.hero-banner .avatar{ width:40px; height:40px; font-size:15px; }
 }
-.topbar-right{ display:flex; align-items:center; gap:12px; flex-shrink:0;}
+.topbar-right{ display:flex; align-items:center; gap:12px; flex-shrink:0; pointer-events:auto; }
 .avatar{
   width:38px; height:38px; border-radius:50%; background:var(--indigo-700);
   display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:14px; flex-shrink:0;
@@ -2522,25 +2523,41 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bott
   .grid3{ grid-template-columns:1fr; }
   .grid2{ grid-template-columns:1fr; }
   .quiz-wrap{ grid-template-columns:minmax(0, 1fr); width:100%; max-width:100%; }
-  .topbar{ padding:16px; }
+  .topbar{ padding:16px 16px 6px 16px; }
 }
 
-/* ============ DASHBOARD HEADER (rasmdagidek minimalist tartib) ============ */
+/* ============ DASHBOARD HEADER ============ */
+#view-dashboard {
+  margin-top: -68px;
+}
+
+@media (max-width: 520px) {
+  #view-dashboard {
+    margin-top: -60px;
+  }
+}
+
 .dash-hero-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 68px 16px 28px 24px;
+  padding: 22px 16px 24px 16px;
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
 }
 
+@media (max-width: 520px) {
+  .dash-hero-container {
+    padding: 16px 8px 20px 8px;
+  }
+}
+
 .dash-avatar-circle {
-  width: 76px;
-  height: 76px;
-  min-width: 76px;
-  min-height: 76px;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  min-height: 72px;
   border-radius: 50%;
   background: #8E9297;
   display: flex;
@@ -2549,10 +2566,10 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bott
   overflow: hidden;
   color: #ffffff;
   font-family: 'Onest', sans-serif;
-  font-size: 28px;
+  font-size: 26px;
   font-weight:600;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .dash-avatar-circle img {
@@ -2564,18 +2581,18 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bott
 }
 
 .dash-avatar-circle svg {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   color: #ffffff;
 }
 
 .dash-greeting-sub {
   font-family: 'Onest', sans-serif;
-  font-size: 16.5px;
+  font-size: 16px;
   font-weight: 500;
   color: #7E8B9B;
   letter-spacing: -0.015em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   line-height: 1.35;
 }
 
@@ -2585,10 +2602,10 @@ html[data-theme="dark"] .dash-greeting-sub {
 
 .dash-main-heading {
   font-family: 'Onest', sans-serif;
-  font-size: 28px;
+  font-size: 27px;
   font-weight:600;
   color: #0F172A;
-  line-height: 1.28;
+  line-height: 1.26;
   letter-spacing: -0.03em;
   max-width: 500px;
 }
@@ -2604,7 +2621,7 @@ html[data-theme="dark"] .dash-main-heading {
   gap: 14px;
   width: 100%;
   max-width: 680px;
-  margin-top: 26px;
+  margin-top: 20px;
 }
 
 .dash-feature-card {
@@ -2655,18 +2672,19 @@ html[data-theme="dark"] .dash-feature-card.card-peach {
   transform: scale(0.97);
 }
 
+/* 40% kattalashtirilgan card emojilari / 3D ikonkalari */
 .dfc-badge {
-  width: 44px;
-  height: 44px;
-  margin-bottom: 12px;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
 
 .dfc-3d-svg {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   display: block;
 }
 
@@ -2774,13 +2792,13 @@ html[data-theme="dark"] .dfc-progress-bar {
     border-radius: 20px;
   }
   .dfc-badge {
-    width: 38px;
-    height: 38px;
-    margin-bottom: 10px;
+    width: 53px;
+    height: 53px;
+    margin-bottom: 12px;
   }
   .dfc-3d-svg {
-    width: 36px;
-    height: 36px;
+    width: 50px;
+    height: 50px;
   }
   .dfc-val {
     font-size: 23px;
@@ -3299,7 +3317,7 @@ html[data-theme="light"] .pin-dot.filled{
 
   <!-- MAIN -->
   <main class="main">
-    <div class="topbar hero-banner" id="mainTopbar" style="display:none;">
+    <div class="topbar" id="mainTopbar">
       <div style="display:flex;align-items:center;gap:12px;">
         <div class="hello" id="topGreeting" style="display:none;">
           <h1 id="greetingName">Assalomu alaykum! 👋</h1>
@@ -3307,14 +3325,17 @@ html[data-theme="light"] .pin-dot.filled{
         </div>
       </div>
       <div class="topbar-right">
-        <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Mavzuni almashtirish" style="display:none;">
+        <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Mavzuni almashtirish">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
-        <button class="theme-toggle" id="userMsgBell" hidden onclick="toggleUserMsgPanel()" title="Xabarlar" style="position:relative;">
-          🔔<span id="userMsgBadge">0</span>
+        <button class="theme-toggle" id="userMsgBell" onclick="toggleUserMsgPanel()" title="Xabarlar" style="position:relative;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="user-msg-badge" id="userMsgBadge">0</span>
         </button>
-        <div class="avatar" id="topAvatar">?</div>
       </div>
     </div>
 
@@ -3329,9 +3350,9 @@ html[data-theme="light"] .pin-dot.filled{
           <div class="dash-greeting-sub" id="dashGreetingName">Assalamu alaykum!</div>
           <h1 class="dash-main-heading" id="dashMainHeading">Bugun arab tilida qaysi cho‘qqini zabt etamiz?</h1>
 
-          <!-- 2 ta asosiy amaliyot kartalari (Oxirgi mock tarixi & Flashcard mashqlari) -->
+          <!-- 2 ta asosiy amaliyot kartalari (Mock testlar & Lug'atlarim) -->
           <div class="dash-cards-grid" id="dashCardsGrid">
-            <!-- 1-Card: PRACTICE QUE. (Oxirgi yechilgan Mock test) -->
+            <!-- 1-Card: MOCK TESTLAR (Grammatika mock testlarga olib o'tadi) -->
             <div class="dash-feature-card card-mock" id="dashMockCard" onclick="handleDashMockCardClick()" role="button" tabindex="0">
               <div class="dfc-badge">
                 <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
@@ -3358,15 +3379,15 @@ html[data-theme="light"] .pin-dot.filled{
                     <span class="dfc-total" id="dashMockCardTotal">100</span>
                   </div>
                 </div>
-                <div class="dfc-title" id="dashMockCardTitle">PRACTICE QUE.</div>
-                <div class="dfc-sub" id="dashMockCardSub">Mock testni boshlash</div>
+                <div class="dfc-title" id="dashMockCardTitle">MOCK TESTLAR</div>
+                <div class="dfc-sub" id="dashMockCardSub">Grammatika mock testlar</div>
               </div>
               <div class="dfc-progress-bar">
                 <div class="dfc-progress-fill fill-blue" id="dashMockCardFill" style="width: 0%;"></div>
               </div>
             </div>
 
-            <!-- 2-Card: FLASHCARD (Mening Lug'atim) -->
+            <!-- 2-Card: LUG'ATLARIM (Mening Lug'atim) -->
             <div class="dash-feature-card card-peach" id="dashFlashCard" onclick="openFlashcardsView()" role="button" tabindex="0">
               <div class="dfc-badge">
                 <svg class="dfc-3d-svg" viewBox="0 0 44 44" fill="none">
@@ -3399,7 +3420,7 @@ html[data-theme="light"] .pin-dot.filled{
                     <span class="dfc-total" id="dashFlashCardTotal">100</span>
                   </div>
                 </div>
-                <div class="dfc-title">FLASHCARD</div>
+                <div class="dfc-title">LUG‘ATLARIM</div>
                 <div class="dfc-sub" id="dashFlashCardSub">Mening lug‘atim</div>
               </div>
               <div class="dfc-progress-bar">
@@ -3894,8 +3915,6 @@ html[data-theme="light"] .pin-dot.filled{
             </div>
           </div>
         </div>
-
-        <div class="grid3 stagger" id="profileStats" style="margin-bottom:20px;"></div>
 
         <div class="card settings-list">
           <div class="settings-item" id="profileAdminLink" style="display:none;" data-view="admin">
@@ -5731,18 +5750,35 @@ function renderGreetingFromProfile(){
 
 async function bootApp(){
   const user = await tgInitAndAuth();
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const savedPhoto = (function(){ try { return localStorage.getItem('arabication_saved_photo_url'); }catch(e){ return null; } })();
+  const tgPhoto = (user && user.photo_url) || tgUser?.photo_url || savedPhoto || null;
+
   if(user){
     TELEGRAM_PROFILE = {
-      name: [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
-      username: user.username ? `@${user.username}` : '',
-      id: String(user.id),
-      rawId: user.id,
-      photoUrl: user.photo_url || null,
+      name: [user.first_name, user.last_name].filter(Boolean).join(' ') || (tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : 'Foydalanuvchi'),
+      username: user.username ? `@${user.username}` : (tgUser?.username ? `@${tgUser.username}` : ''),
+      id: String(user.id || tgUser?.id || ''),
+      rawId: user.id || tgUser?.id || null,
+      photoUrl: tgPhoto,
     };
   } else {
-    // Dev/mock rejimi: Telegram tashqarisida ochilganda ko'rinish buzilmasin deb
-    TELEGRAM_PROFILE = { name:'Admin', username:'@admin', id:'5400174077', rawId:5400174077, photoUrl:null };
+    // Dev/mock rejimi: Telegram tashqarisida yoki to'g'ridan-to'g'ri brauzerda ochilganda
+    if(tgUser){
+      TELEGRAM_PROFILE = {
+        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Admin',
+        username: tgUser.username ? `@${tgUser.username}` : '@admin',
+        id: String(tgUser.id),
+        rawId: tgUser.id,
+        photoUrl: tgPhoto,
+      };
+    } else {
+      TELEGRAM_PROFILE = { name:'Admin', username:'@admin', id:'5400174077', rawId:5400174077, photoUrl:tgPhoto };
+    }
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
+  }
+  if(TELEGRAM_PROFILE.photoUrl){
+    try{ localStorage.setItem('arabication_saved_photo_url', TELEGRAM_PROFILE.photoUrl); }catch(e){}
   }
   try{
     const savedName = localStorage.getItem('arabication_custom_name');
@@ -6379,13 +6415,11 @@ function showView(name, push=true){
   if(topGreeting) topGreeting.style.display = 'none';
   const topbarEl = document.getElementById('mainTopbar');
   if(topbarEl){
-    topbarEl.style.display = (name==='dashboard') ? 'none' : 'flex';
-    topbarEl.classList.toggle('hero-banner', name==='dashboard');
+    topbarEl.style.display = 'flex';
+    topbarEl.classList.remove('hero-banner');
   }
-  // Dark/light mode tugmasi faqat bosh sahifada (dashboard) yashiriladi —
-  // qolgan barcha bo'limlarda ko'rinadi.
   const themeToggleBtn = document.getElementById('themeToggleBtn');
-  if(themeToggleBtn) themeToggleBtn.style.display = (name==='dashboard') ? 'none' : '';
+  if(themeToggleBtn) themeToggleBtn.style.display = '';
   if(push){
     if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== name){
       viewHistory.push(name);
@@ -11816,14 +11850,7 @@ renderRank(currentRankPeriod, currentRankSkill, currentRankType);
    (get_user_dashboard) kelgan haqiqiy XP/mavzular/aniqlik bilan almashtiriladi. */
 let PROFILE_STATS = { xp:0, topicsDone:0, topicsTotal:40, accuracy:0, accuracyDeltaText:'' };
 function renderProfileStats(){
-  const el = document.getElementById('profileStats');
-  if(!el) return;
-  el.innerHTML = `
-    <div class="card stat-card"><div class="top">⭐ Jami ball</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.xp}">0</span></div><div class="sub">XP</div></div>
-    <div class="card stat-card"><div class="top">✅ Tugatilgan mavzular</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.topicsDone}">0</span></div><div class="sub" style="color:var(--text-faint)">/ ${PROFILE_STATS.topicsTotal}</div></div>
-    <div class="card stat-card"><div class="top">🎯 Umumiy aniqlik</div><div class="num"><span class="num-target" data-target="${PROFILE_STATS.accuracy}" data-suffix="%">0%</span></div><div class="sub">${PROFILE_STATS.accuracyDeltaText}</div></div>
-  `;
-  runEntranceAnimations(el, true);
+  // Profil statistikasi (Jami ball, Tugatilgan mavzular, Umumiy aniqlik) foydalanuvchi talabi bilan olib tashlandi
 }
 renderProfileStats();
 /* Backend get_user_dashboard javobidan XP/mavzular/aniqlikni oladi.
@@ -11853,7 +11880,11 @@ let TELEGRAM_PROFILE = {
   username: '',
   id: '',
   rawId: null,
-  photoUrl: null,
+  photoUrl: (function(){
+    try {
+      return (window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url) || localStorage.getItem('arabication_saved_photo_url') || null;
+    } catch(e) { return null; }
+  })(),
   gender: 'unspecified' // 'male' | 'female' | 'unspecified'
 };
 
@@ -12035,7 +12066,8 @@ function openEditProfile(){
 }
 function avatarContent(){
   if(TELEGRAM_PROFILE.photoUrl && getShowAvatarSetting()){
-    return `<img src="${TELEGRAM_PROFILE.photoUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    const initial = (TELEGRAM_PROFILE.name || '?').trim().charAt(0).toUpperCase();
+    return `<img src="${escapeHtml(TELEGRAM_PROFILE.photoUrl)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeHtml(initial)}'}))">`;
   }
   const initial = (TELEGRAM_PROFILE.name || '?').trim().charAt(0).toUpperCase();
   return initial || '?';
@@ -14502,60 +14534,8 @@ const DEFAULT_VOCABULARY_SEED = [
     cat: "At-Tanal fe'llar",
     state: "learning",
     againCount: 0,
-    goodCount: 1,
-    easyCount: 0,
-    lastReviewed: null
-  },
-  {
-    id: "fc_seed_2",
-    ar: "شَامِلٌ / مُسْتَفِيضٌ",
-    uz: "Keng qamrovli, batafsil, to'liq",
-    exAr: "قَدَّمَ الْأُسْتَاذُ شَرْحًا شَامِلًا لِلدَّرْسِ.",
-    exUz: "Ustoz dars uchun keng qamrovli tushuntirish berdi.",
-    cat: "Qiroa so'zlari",
-    state: "mastered",
-    againCount: 0,
-    goodCount: 0,
-    easyCount: 2,
-    lastReviewed: null
-  },
-  {
-    id: "fc_seed_3",
-    ar: "تَطَلَّعَ / يَتَطَلَّعُ إِلَى",
-    uz: "Umid qilmoq, ko'z tikmoq, intizor bo'lmoq",
-    exAr: "يَتَطَلَّعُ الطُّلَّابُ إِلَى اجْتِيَازِ اخْتِبَارِ التَّنَالِ.",
-    exUz: "Talabalar At-Tanal imtihonidan o'tishga intizor bo'lmoqdalar.",
-    cat: "Frazeologik birikmalar",
-    state: "learning",
-    againCount: 1,
-    goodCount: 1,
-    easyCount: 0,
-    lastReviewed: null
-  },
-  {
-    id: "fc_seed_4",
-    ar: "اسْتِنْبَاطٌ / اسْتَنْتَجَ",
-    uz: "Xulosa chiqarish, qidirib topish",
-    exAr: "يُمْكِنُنَا اسْتِنْبَاطُ الْمَعْنَى مِنَ السِّيَاقِ.",
-    exUz: "Biz ma'noni kontekstdan xulosa qilib chiqarishimiz mumkin.",
-    cat: "Qiroa & Istima",
-    state: "learning",
-    againCount: 0,
     goodCount: 0,
     easyCount: 0,
-    lastReviewed: null
-  },
-  {
-    id: "fc_seed_5",
-    ar: "مُوجَزٌ / تَلْخِيصٌ",
-    uz: "Qisqacha, lo'nda mazmun, xulosa",
-    exAr: "كَتَبَ الْبَاحِثُ مُوجَزًا عَنِ الدِّرَاسَةِ.",
-    exUz: "Tadqiqotchi izlanish haqida qisqacha xulosa yozdi.",
-    cat: "Kitaba & Yozish",
-    state: "mastered",
-    againCount: 0,
-    goodCount: 1,
-    easyCount: 1,
     lastReviewed: null
   }
 ];
@@ -15172,7 +15152,7 @@ function makeArabicPassageInteractive(containerEl){
    ============================================================ */
 
 function renderDashboardPracticeCards(){
-  // 1-Card: PRACTICE QUE. (Oxirgi yechilgan Mock test)
+  // 1-Card: MOCK TESTLAR (Grammatika mock testlari)
   const valEl = document.getElementById('dashMockCardVal');
   const totalEl = document.getElementById('dashMockCardTotal');
   const subEl = document.getElementById('dashMockCardSub');
@@ -15196,7 +15176,7 @@ function renderDashboardPracticeCards(){
     const correct = pick(latestAttempt, ['correct'], 0);
     const total = pick(latestAttempt, ['total'], 30);
     const pct = Math.min(100, Math.round((correct / Math.max(1, total)) * 100));
-    const title = pick(latestAttempt, ['topic_name', 'topic', 'section'], 'Mock test');
+    const title = pick(latestAttempt, ['topic_name', 'topic', 'section'], 'Grammatika mock');
     const { date } = fmtBackendDate(pick(latestAttempt, ['created_at', 'createdAt', 'inserted_at', 'date'], null));
 
     if(valEl){
@@ -15204,7 +15184,7 @@ function renderDashboardPracticeCards(){
       animateNumber(valEl, correct, { duration: 800 });
     }
     if(totalEl) totalEl.textContent = String(total);
-    if(titleEl) titleEl.textContent = "PRACTICE QUE.";
+    if(titleEl) titleEl.textContent = "MOCK TESTLAR";
     if(subEl) subEl.textContent = `${title} · ${date || "Yaqinda"}`;
     if(fillEl) fillEl.style.width = `${pct}%`;
   } else {
@@ -15213,12 +15193,12 @@ function renderDashboardPracticeCards(){
       valEl.textContent = '0';
     }
     if(totalEl) totalEl.textContent = '100';
-    if(titleEl) titleEl.textContent = "PRACTICE QUE.";
-    if(subEl) subEl.textContent = "Mock testni boshlash (Taklif)";
+    if(titleEl) titleEl.textContent = "MOCK TESTLAR";
+    if(subEl) subEl.textContent = "Grammatika mock testlar";
     if(fillEl) fillEl.style.width = '0%';
   }
 
-  // 2-Card: FLASHCARD (Mening Lug'atim)
+  // 2-Card: LUG'ATLARIM (Mening Lug'atim)
   const fcValEl = document.getElementById('dashFlashCardVal');
   const fcTotalEl = document.getElementById('dashFlashCardTotal');
   const fcSubEl = document.getElementById('dashFlashCardSub');
@@ -15239,21 +15219,8 @@ function renderDashboardPracticeCards(){
 }
 
 function handleDashMockCardClick(){
-  const history = Array.isArray(window.HISTORY_DATA_LIVE) && window.HISTORY_DATA_LIVE.length 
-    ? window.HISTORY_DATA_LIVE 
-    : (Array.isArray(HISTORY_DATA) ? HISTORY_DATA : []);
-
-  const mockAttempts = history.filter(r => 
-    (r.type === 'mock') || 
-    (r.topic_name && r.topic_name.toLowerCase().includes('mock')) ||
-    (r.topic && r.topic.toLowerCase().includes('mock'))
-  );
-
-  if(mockAttempts.length > 0){
-    showView('natijalar');
-  } else {
-    openFullExamIntro();
-  }
+  openSkillIntro('grammatika');
+  switchSkillTab('mocks');
 }
 
 /* Animate the initially-active dashboard view on first paint */
@@ -15491,26 +15458,38 @@ bootApp();
         pointer-events:none;
       }
 
-      /* userMsgBell endi tepadagi topbar'da, dark-mode tugmasi yonida (.theme-toggle
-         klassidan uslub oladi) — pastki fixed FAB o'rniga. Faqat badge shu yerda. */
-      #userMsgBell{ font-size:16px; }
+      /* userMsgBell and dashUserMsgBell styles */
+      #userMsgBell{
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #userMsgBell svg{
+        width: 20px;
+        height: 20px;
+      }
 
-      #userMsgBadge{
+      .user-msg-badge,
+      #userMsgBadge,
+      #dashUserMsgBadge{
         position:absolute;
         top:-4px;
         right:-4px;
         min-width:18px;
         height:18px;
         border-radius:99px;
-        background:var(--red);
+        background:#EF4444;
         color:#fff;
         font-size:10px;
-        font-weight:600;
-        display:flex;
+        font-weight:700;
+        display:none;
         align-items:center;
         justify-content:center;
         padding:0 4px;
-        border:2px solid var(--indigo-900);
+        border:2px solid var(--card);
+        line-height: 1;
+        pointer-events: none;
       }
 
       #userMsgPanel{
@@ -16120,16 +16099,22 @@ bootApp();
   }
 
   function renderUserMsgBell() {
-    const bell = document.getElementById('userMsgBell');
-    const badge = document.getElementById('userMsgBadge');
-
-    if (!bell || !badge) return;
-
     const unread = USER_MESSAGES.filter(m => !m.read).length;
 
-    bell.hidden = USER_MESSAGES.length === 0;
-    badge.textContent = String(unread);
-    badge.style.display = unread > 0 ? 'flex' : 'none';
+    const badges = [
+      document.getElementById('userMsgBadge'),
+      document.getElementById('dashUserMsgBadge')
+    ].filter(Boolean);
+
+    badges.forEach(b => {
+      b.textContent = String(unread);
+      b.style.display = unread > 0 ? 'flex' : 'none';
+    });
+
+    const bell = document.getElementById('userMsgBell');
+    if (bell) {
+      bell.hidden = false;
+    }
   }
 
   function renderUserMsgPanel() {
