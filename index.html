@@ -4589,8 +4589,8 @@ html[data-theme="light"] .pin-dot.filled{
               </button>
             </div>
             <div style="display:flex;flex-direction:column;gap:3px;margin-top:7px;">
-              <div style="font-size:13px;color:var(--text-dim);font-weight:600;" id="profileUsername">username: @arabication_admin</div>
-              <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="profileId">ID: 759362991</div>
+              <div style="font-size:13px;color:var(--text-dim);font-weight:600;" id="profileUsername">username: yuklanmoqda...</div>
+              <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;" id="profileId">ID: -</div>
             </div>
           </div>
         </div>
@@ -4978,7 +4978,7 @@ html[data-theme="light"] .pin-dot.filled{
   <form class="admin-msg-form" id="adminMsgForm">
     <div class="form-field">
       <label>Foydalanuvchi ID (yoki "all" — hammasiga)</label>
-      <input type="text" id="msgUserId" placeholder="Masalan: 5400174077 yoki all" required>
+      <input type="text" id="msgUserId" placeholder="Masalan: 123456789 yoki all" required>
     </div>
     <div class="form-field">
       <label>Sarlavha</label>
@@ -5004,7 +5004,7 @@ html[data-theme="light"] .pin-dot.filled{
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
       <div class="form-field" style="flex:1;min-width:180px;">
         <label>Telegram ID (raqam)</label>
-        <input type="text" id="newAdminId" placeholder="Masalan: 5400174077" inputmode="numeric">
+        <input type="text" id="newAdminId" placeholder="Masalan: 123456789" inputmode="numeric">
       </div>
       <button class="btn btn-primary" style="height:44px;" onclick="addNewAdmin()">Qo'shish</button>
     </div>
@@ -6429,7 +6429,7 @@ function renderGreetingFromProfile(){
   }
   const pId = document.getElementById('profileId');
   if(pId){
-    const uid = (TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '5400174077');
+    const uid = (TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '-');
     pId.textContent = `ID: ${uid}`;
   }
 
@@ -6475,7 +6475,11 @@ async function bootApp(){
         photoUrl: tgPhoto,
       };
     } else {
-      TELEGRAM_PROFILE = { name:'Admin', username:'@admin', id:'5400174077', rawId:5400174077, photoUrl:tgPhoto };
+      // XAVFSIZLIK TUZATILDI: ilgari bu yerda haqiqiy admin ID (5400174077) qattiq yozilgan bo'lib,
+      // Telegram tashqarisida (masalan oddiy brauzer yoki boshqa preview muhitida) ochilganda
+      // har qanday kishini avtomatik ravishda "Admin" sifatida kiritib qo'yardi. Endi bunday holatda
+      // hech qanday admin huquqisiz, oddiy mehmon profili beriladi.
+      TELEGRAM_PROFILE = { name:'Foydalanuvchi', username:'', id:'', rawId:null, photoUrl:tgPhoto };
     }
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
   }
@@ -12776,7 +12780,7 @@ function openEditProfile(){
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;">
         <span style="font-size:12.5px;font-weight:600;color:var(--text-dim);">Telegram ma'lumotlari</span>
-        <input type="text" value="${(TELEGRAM_PROFILE.username || 'hozircha mavjud emas')} · ID: ${(TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '7593629910')}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Onest',sans-serif;font-size:13.5px;background:var(--bg);color:var(--text-faint);">
+        <input type="text" value="${(TELEGRAM_PROFILE.username || 'hozircha mavjud emas')} · ID: ${(TELEGRAM_PROFILE.id && TELEGRAM_PROFILE.id !== '-') ? TELEGRAM_PROFILE.id : (TELEGRAM_PROFILE.rawId || '-')}" disabled style="padding:11px 13px;border:1px solid var(--border);border-radius:11px;font-family:'Onest',sans-serif;font-size:13.5px;background:var(--bg);color:var(--text-faint);">
       </label>
       <button class="btn btn-primary" style="margin-top:6px;" onclick="saveProfile()">Saqlash</button>
     </div>
@@ -17091,7 +17095,7 @@ bootApp();
             <form id="adminMsgForm">
               <div class="form-field" style="margin-bottom:12px;">
                 <label>Foydalanuvchi ID</label>
-                <input type="text" id="msgUserId" placeholder="Masalan: 5400174077 yoki all" required>
+                <input type="text" id="msgUserId" placeholder="Masalan: 123456789 yoki all" required>
               </div>
 
               <div class="form-field" style="margin-bottom:12px;">
