@@ -1812,6 +1812,24 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 
 .report-item{ padding:16px; border:1px solid var(--border); border-radius:14px; margin-bottom:10px; }
 .report-item:last-child{ margin-bottom:0; }
+.search-result-card{
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+.search-result-card:hover{
+  border-color: var(--indigo-500);
+  background: var(--card-alt, rgba(79, 70, 229, 0.03));
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+@keyframes targetItemPulse {
+  0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+}
+.target-highlight-item {
+  animation: targetItemPulse 2.5s ease-in-out infinite;
+}
 .report-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
 .report-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
 .report-tag{ font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--indigo-100); color:var(--indigo-500); }
@@ -7999,9 +8017,13 @@ function renderAdminQuestions(){
 
     list.innerHTML = results.map((res, i) => {
       let actionsHtml = '';
+      const safeTopicId = res.topicId || '';
+      const qIdx = (res.qIndex !== undefined && res.qIndex !== null) ? res.qIndex : -1;
+      const resId = res.id || '';
+
       if(res.type === 'mcq'){
         const actions = [
-          { icon: IB_ICON_VIEW, label: "Mavzu/Test savollari", run: () => viewTopicQuestions(res.skillId, res.topicId) },
+          { icon: IB_ICON_VIEW, label: "Savollar ro'yxatidagi o'rni", run: () => viewTopicQuestions(res.skillId, res.topicId, res.qIndex) },
           { icon: IB_ICON_EDIT, label: "Tahrirlash", run: () => openEditQuestionModal(res.skillId, res.topicId, res.qIndex) },
           { icon: IB_ICON_DEL, label: "O'chirish", danger: true, run: () => deleteQuestion(res.skillId, res.topicId, res.qIndex) }
         ];
@@ -8025,14 +8047,14 @@ function renderAdminQuestions(){
 
       if(res.type === 'mcq'){
         return `
-          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+          <div class="report-item search-result-card" style="position:relative;margin-bottom:12px;background:var(--card);" onclick="navigateToSearchedQuestion('${res.skillId}','${safeTopicId}',${qIdx},'${resId}')">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                 <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--${res.skillColor}-bg, var(--indigo-100));color:var(--${res.skillColor}, var(--indigo-700));">${res.skillName}</span>
                 <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
                 ${catBadge}
               </div>
-              <div class="t-actions">${actionsHtml}</div>
+              <div class="t-actions" onclick="event.stopPropagation()">${actionsHtml}</div>
             </div>
             <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:10px;line-height:1.7;">
               ${highlightSearchText(res.q, query)}
@@ -8049,13 +8071,13 @@ function renderAdminQuestions(){
         `;
       } else if(res.type === 'speaking'){
         return `
-          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+          <div class="report-item search-result-card" style="position:relative;margin-bottom:12px;background:var(--card);" onclick="openEditSpeakingQuestionModal('${resId}')">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                 <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--muhavara-bg);color:var(--muhavara);">${res.skillName}</span>
                 <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
               </div>
-              <div class="t-actions">${actionsHtml}</div>
+              <div class="t-actions" onclick="event.stopPropagation()">${actionsHtml}</div>
             </div>
             <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;line-height:1.7;">
               ${highlightSearchText(res.prompt, query)}
@@ -8064,13 +8086,13 @@ function renderAdminQuestions(){
         `;
       } else if(res.type === 'writing'){
         return `
-          <div class="report-item" style="position:relative;margin-bottom:12px;background:var(--card);">
+          <div class="report-item search-result-card" style="position:relative;margin-bottom:12px;background:var(--card);" onclick="openEditKitabaTopicModal('${resId}')">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                 <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--kitaba-bg);color:var(--kitaba);">${res.skillName}</span>
                 <span style="font-size:11.5px;font-weight:600;color:var(--text-dim);">${escapeHtml(res.contextTitle)}</span>
               </div>
-              <div class="t-actions">${actionsHtml}</div>
+              <div class="t-actions" onclick="event.stopPropagation()">${actionsHtml}</div>
             </div>
             <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;line-height:1.7;">
               ${highlightSearchText(res.topicAr, query)}
@@ -8465,11 +8487,45 @@ async function deleteTopic(id){
   toast("✅ Mavzu o'chirildi");
 }
 
-function viewTopicQuestions(skillId, topicId){
-  const items = getQuestionItems(skillId, topicId);
-  renderTopicQuestionsModal(skillId, topicId, items || []);
-  document.getElementById('modalOverlay').classList.add('show');
+function navigateToSearchedQuestion(skillId, topicId, qIndex, questionId){
+  if(skillId === 'muhavara'){
+    openEditSpeakingQuestionModal(questionId);
+    return;
+  }
+  if(skillId === 'kitaba'){
+    openEditKitabaTopicModal(questionId);
+    return;
+  }
+  viewTopicQuestions(skillId, topicId, qIndex);
 }
+
+let CURRENT_TOPIC_Q_CAT_FILTER = 'all';
+
+function viewTopicQuestions(skillId, topicId, highlightIdx = null, selectedCat = null){
+  if(selectedCat !== null && selectedCat !== undefined){
+    CURRENT_TOPIC_Q_CAT_FILTER = selectedCat;
+  } else if(highlightIdx !== null && highlightIdx !== undefined && highlightIdx >= 0) {
+    CURRENT_TOPIC_Q_CAT_FILTER = 'all';
+  }
+  const items = getQuestionItems(skillId, topicId);
+  renderTopicQuestionsModal(skillId, topicId, items || [], highlightIdx, CURRENT_TOPIC_Q_CAT_FILTER);
+  document.getElementById('modalOverlay').classList.add('show');
+  if(highlightIdx !== null && highlightIdx !== undefined && highlightIdx >= 0){
+    setTimeout(()=>{
+      const targetEl = document.getElementById(`topicQItem_${highlightIdx}`);
+      if(targetEl){
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+  }
+}
+
+function filterTopicQuestionsModalCategory(skillId, topicId, selectedCat){
+  CURRENT_TOPIC_Q_CAT_FILTER = selectedCat;
+  const items = getQuestionItems(skillId, topicId);
+  renderTopicQuestionsModal(skillId, topicId, items || [], null, selectedCat);
+}
+
 /* Savollar ro'yxatini beruvchi umumiy funksiya — edit/delete/move ham shundan foydalanadi.
    MUHIM: grammatika uchun topicId bo'lmasa (mavzusiz) — bu "faqat real imtihon" uchun
    ajratilgan alohida savollar banki (QUESTION_BANKS.grammatika.questions), amaliyot
@@ -8480,32 +8536,107 @@ function getQuestionItems(skillId, topicId){
   if(skillId==='istima') return ISTIMA_TEST_BY_ID[topicId]?.questions;
   return QUESTION_BANKS[skillId]?.questions;
 }
-function renderTopicQuestionsModal(skillId, topicId, items){
-  document.getElementById('modalTitle').textContent = `Savollar (${items.length} ta)`;
-  document.getElementById('modalBody').innerHTML = items.map((q,i)=>{
-    const isGrammar = skillId === 'grammatika';
-    const cat = isGrammar ? (GRAMMAR_CATEGORIES.find(c=>c.id===q.category) || {name: q.category || 'Nahv', ar:'النحو'}) : null;
+
+function renderTopicQuestionsModal(skillId, topicId, items, highlightIdx = null, selectedCat = 'all'){
+  const isGrammar = skillId === 'grammatika';
+
+  let availableCats = [];
+  if(isGrammar){
+    availableCats = GRAMMAR_CATEGORIES.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      ar: cat.ar,
+      count: items.filter(q => (q.category || 'nahv') === cat.id).length
+    }));
+  } else {
+    const catMap = new Map();
+    items.forEach(q => {
+      if(q.category){
+        const count = (catMap.get(q.category) || 0) + 1;
+        catMap.set(q.category, count);
+      }
+    });
+    if(catMap.size > 0){
+      catMap.forEach((count, catId) => {
+        const catObj = GRAMMAR_CATEGORIES.find(c => c.id === catId);
+        availableCats.push({
+          id: catId,
+          name: catObj ? catObj.name : catId,
+          ar: catObj ? catObj.ar : '',
+          count
+        });
+      });
+    }
+  }
+
+  const indexedItems = items.map((q, i) => ({ q, originalIndex: i }));
+  let filteredItems = indexedItems;
+  if(selectedCat && selectedCat !== 'all'){
+    filteredItems = indexedItems.filter(({ q }) => (q.category || 'nahv') === selectedCat);
+  }
+
+  if(selectedCat && selectedCat !== 'all'){
+    const currentCatObj = availableCats.find(c => c.id === selectedCat) || GRAMMAR_CATEGORIES.find(c => c.id === selectedCat);
+    const catLabel = currentCatObj ? currentCatObj.name : selectedCat;
+    document.getElementById('modalTitle').textContent = `Savollar (${filteredItems.length}/${items.length} ta · ${catLabel})`;
+  } else {
+    document.getElementById('modalTitle').textContent = `Savollar (${items.length} ta)`;
+  }
+
+  let filterBarHtml = '';
+  if(isGrammar || availableCats.length > 0){
+    filterBarHtml = `
+      <div style="margin-bottom:14px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--indigo-600);flex-shrink:0;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span style="font-size:12.5px;font-weight:700;color:var(--text);">Kategoriya filtri:</span>
+        </div>
+        <div style="flex:1;min-width:180px;max-width:280px;position:relative;">
+          <select id="modalTopicCategoryFilter" onchange="filterTopicQuestionsModalCategory('${skillId}','${topicId||''}',this.value)" style="width:100%;appearance:none;-webkit-appearance:none;box-sizing:border-box;padding:7px 30px 7px 11px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;outline:none;">
+            <option value="all" ${selectedCat==='all'?'selected':''}>Barcha kategoriyalar (${items.length} ta)</option>
+            ${availableCats.map(c => `
+              <option value="${c.id}" ${selectedCat===c.id?'selected':''}>${c.name} ${c.ar ? `(${c.ar})` : ''} — ${c.count} ta</option>
+            `).join('')}
+          </select>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-faint);"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </div>
+    `;
+  }
+
+  const itemsHtml = filteredItems.map(({ q, originalIndex })=>{
+    const isGrammarItem = skillId === 'grammatika' || q.category;
+    const cat = isGrammarItem ? (GRAMMAR_CATEGORIES.find(c=>c.id===q.category) || {name: q.category || 'Nahv', ar:'النحو'}) : null;
     const catBadge = cat ? `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--indigo-100);color:var(--indigo-700);margin-bottom:6px;">${cat.name} (${cat.ar})</span>` : '';
+    const isTarget = (originalIndex === highlightIdx);
+
     return `
-      <div class="report-item" style="position:relative;">
-        ${catBadge}
-        <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:8px;">${i+1}. ${escapeHtml(q.q)}</div>
+      <div class="report-item ${isTarget ? 'target-highlight-item' : ''}" id="topicQItem_${originalIndex}" style="position:relative; ${isTarget ? 'border:2px solid var(--indigo-600);background:rgba(99,102,241,0.08);box-shadow:0 4px 16px rgba(99,102,241,0.18);' : ''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            ${catBadge}
+            ${isTarget ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--indigo-700);color:#fff;">🎯 Qidiruvdan tanlangan savol (#${originalIndex+1})</span>` : ''}
+          </div>
+        </div>
+        <div style="font-weight:600;font-size:14px;direction:rtl;text-align:right;margin-bottom:8px;">${originalIndex+1}. ${escapeHtml(q.q)}</div>
         <div style="display:flex;flex-direction:column;gap:5px;">
           ${q.opts.map((o,oi)=>`<div style="font-size:12.5px;font-weight:600;direction:rtl;text-align:right;color:${oi===q.a?'var(--grammatika)':'var(--text-dim)'};">${oi===q.a?'✓ ':''}${escapeHtml(o)}</div>`).join('')}
         </div>
         ${q.exp?`<div style="font-size:11.5px;color:var(--text-faint);font-weight:600;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">${escapeHtml(q.exp)}</div>`:''}
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
           <div class="icon-btn-row">
-            <button type="button" class="icon-btn ib-add" title="Yuqoriga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},-1)" ${i===0?'disabled':''}>${IB_ICON_UP}</button>
-            <button type="button" class="icon-btn ib-add" title="Pastga" onclick="moveQuestion('${skillId}','${topicId||''}',${i},1)" ${i===items.length-1?'disabled':''}>${IB_ICON_DOWN}</button>
-            <button type="button" class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditQuestionModal('${skillId}','${topicId||''}',${i})">${IB_ICON_EDIT}</button>
-            <button type="button" class="icon-btn ib-del" title="O'chirish" onclick="deleteQuestion('${skillId}','${topicId||''}',${i})">${IB_ICON_DEL}</button>
+            <button type="button" class="icon-btn ib-add" title="Yuqoriga" onclick="moveQuestion('${skillId}','${topicId||''}',${originalIndex},-1)" ${originalIndex===0?'disabled':''}>${IB_ICON_UP}</button>
+            <button type="button" class="icon-btn ib-add" title="Pastga" onclick="moveQuestion('${skillId}','${topicId||''}',${originalIndex},1)" ${originalIndex===items.length-1?'disabled':''}>${IB_ICON_DOWN}</button>
+            <button type="button" class="icon-btn ib-edit" title="Tahrirlash" onclick="openEditQuestionModal('${skillId}','${topicId||''}',${originalIndex})">${IB_ICON_EDIT}</button>
+            <button type="button" class="icon-btn ib-del" title="O'chirish" onclick="deleteQuestion('${skillId}','${topicId||''}',${originalIndex})">${IB_ICON_DEL}</button>
           </div>
           ${!q.id?'<span style="font-size:11px;color:var(--text-faint);font-weight:600;">namunaviy (backendda emas)</span>':''}
         </div>
       </div>
     `;
-  }).join('') || `<div class="placeholder-card"><h3>Bo'sh</h3></div>`;
+  }).join('');
+
+  document.getElementById('modalBody').innerHTML = filterBarHtml + (itemsHtml || `<div class="placeholder-card"><h3>Bu kategoriyada savol yo'q</h3><p>Boshqa kategoriya tanlang yoki barcha savollarni ko'ring.</p></div>`);
 }
 
 function openEditQuestionModal(skillId, topicId, idx){
@@ -8548,7 +8679,7 @@ function openEditQuestionModal(skillId, topicId, idx){
         <textarea id="eqExp">${escapeHtml(q.exp||'')}</textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Saqlash</button>
-      <button type="button" class="btn btn-block" onclick="viewTopicQuestions('${skillId}','${topicId||''}')">Bekor qilish</button>
+      <button type="button" class="btn btn-block" onclick="viewTopicQuestions('${skillId}','${topicId||''}',${idx})">Bekor qilish</button>
     </form>
   `;
 }
@@ -8565,7 +8696,7 @@ async function submitEditQuestion(e, skillId, topicId, idx){
     q.category = document.getElementById('eqCategory')?.value || q.category || 'nahv';
   }
   renderAdminQuestions();
-  viewTopicQuestions(skillId, topicId);
+  viewTopicQuestions(skillId, topicId, idx);
   if(q.id){
     const ok = await updateQuestionOnBackend({id:q.id, q:q.q, opts:q.opts, a:q.a, exp:q.exp});
     toast(ok ? "✅ Savol yangilandi" : "❌ Saqlanmadi: " + window.LAST_BACKEND_ERROR, ok?2200:6000);
