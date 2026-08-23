@@ -1008,6 +1008,9 @@ textarea.write-area:focus{
   font-size:38px; font-weight:700; line-height:1.15; letter-spacing:-0.5px;
   color:var(--indigo-700); text-align:center; max-width:320px;
 }
+.result-level-letter.is-message{
+  font-size:14.5px; font-weight:600; line-height:1.45; color:var(--text-dim); margin-top:4px; max-width:290px;
+}
 .result-title{ font-size:18px; font-weight:700; margin-top:16px; color:var(--text); }
 .result-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-top:5px; max-width:320px; }
 .result-mini-stats{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; justify-content:center; }
@@ -8926,7 +8929,17 @@ function openAttemptResults(id){
     const levelWrap = document.querySelector('.result-level-wrap');
     if(levelWrap){
       levelWrap.style.display = (isSkillExam && rec?.level) ? 'flex' : 'none';
-      if(rec?.level) document.getElementById('resultLevel').textContent = rec.level;
+      if(rec?.level){
+        const lvlEl = document.getElementById('resultLevel');
+        if(lvlEl){
+          lvlEl.textContent = rec.level;
+          if(rec.level.length > 3){
+            lvlEl.classList.add('is-message');
+          } else {
+            lvlEl.classList.remove('is-message');
+          }
+        }
+      }
     }
 
     const resTimeEl = document.getElementById('resTime');
@@ -9014,7 +9027,7 @@ function openSpeakingOrWritingAttemptModal(rec, idStr){
       <div class="prompt-box" style="text-align:center;margin-bottom:16px;">
         <div class="lbl">Natija</div>
         <div style="font-size:32px;font-weight:700;margin:6px 0;color:var(--text);">${totalScoreDisplay} / ${maxScore} ball</div>
-        <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr} daraja</div>
+        <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr && cefr.length <= 3 ? cefr + ' daraja' : `<span style="font-size:12px;color:var(--text-dim);font-weight:600;">${cefr}</span>`}</div>
       </div>
     `;
 
@@ -9094,7 +9107,7 @@ function openSpeakingOrWritingAttemptModal(rec, idStr){
     <div class="prompt-box" style="text-align:center;margin-bottom:16px;">
       <div class="lbl">Natija</div>
       <div style="font-size:32px;font-weight:700;margin:6px 0;color:var(--text);">${totalScoreDisplay} / ${maxScore} ball</div>
-      <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr} daraja · (6 ta savol, har biri 0–5 ball)</div>
+      <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr && cefr.length <= 3 ? cefr + ' daraja' : `<span style="font-size:12px;color:var(--text-dim);font-weight:600;">${cefr}</span>`} · (6 ta savol, har biri 0–5 ball)</div>
     </div>
   `;
 
@@ -14340,7 +14353,7 @@ function showFullExamResults(){
       <div class="topic-row" style="align-items:center;">
         <div style="flex:1;">
           <div class="t-name" style="font-size:13px;">${meta?meta.name:id}</div>
-          <div class="t-meta">${pct}% · ${getCEFRLevel(pct)} daraja</div>
+          <div class="t-meta">${pct}% · ${getCEFRLevel(pct) && getCEFRLevel(pct).length <= 3 ? getCEFRLevel(pct) + ' daraja' : `<span style="font-size:11.5px;color:var(--text-dim);font-weight:600;">${getCEFRLevel(pct)}</span>`}</div>
         </div>
         <div style="font-weight:600;font-size:16px;flex-shrink:0;">${Math.round((r.correct||0)*10)/10}/${Math.round((r.total||0)*10)/10}</div>
       </div>`;
@@ -14387,7 +14400,7 @@ function showFullExamResults(){
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Umumiy natija</div>
       <div style="font-size:34px;font-weight:600;margin:8px 0;"><span class="num-target" data-target="${sumCorrectDisplay}" data-decimals="${sumCorrectDisplay % 1 !== 0 ? 1 : 0}">0</span> / <span class="num-target" data-target="${sumTotalDisplay}" data-decimals="${sumTotalDisplay % 1 !== 0 ? 1 : 0}">0</span> ball</div>
-      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${overallPct}" data-suffix="%">0%</span> · ${getCEFRLevel(overallPct)} daraja</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${overallPct}" data-suffix="%">0%</span> · ${getCEFRLevel(overallPct) && getCEFRLevel(overallPct).length <= 3 ? getCEFRLevel(overallPct) + ' daraja' : `<span style="font-size:12px;color:var(--text-dim);font-weight:600;">${getCEFRLevel(overallPct)}</span>`}</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">${rows}</div>
     <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="finishFullExamAndGoHome()">Bosh sahifaga qaytish</button>
@@ -16535,7 +16548,7 @@ function renderMuhavaraSummary(totalScore, maxScore){
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Natija</div>
       <div style="font-size:34px;font-weight:600;margin:8px 0;"><span class="num-target" data-target="${totalScore}">0</span> / <span class="num-target" data-target="${maxScore}">0</span> ball</div>
-      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct)} daraja · (6 ta savol, har biri 0–5 ball)</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct) && getCEFRLevel(pct).length <= 3 ? getCEFRLevel(pct) + ' daraja' : `<span style="font-size:12px;color:var(--text-dim);font-weight:600;">${getCEFRLevel(pct)}</span>`} · (6 ta savol, har biri 0–5 ball)</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
       ${currentQuiz.questions.map((q,i)=>`
@@ -16800,7 +16813,7 @@ function renderKitabaSummary(){
     <div class="prompt-box" style="text-align:center;">
       <div class="lbl">Natija</div>
       <div style="font-size:34px;font-weight:600;margin:8px 0;"><span class="num-target" data-target="${totalScoreDisplay}" data-decimals="${totalScoreDisplay % 1 !== 0 ? 1 : 0}">0</span> / <span class="num-target" data-target="${maxScore}">0</span> ball</div>
-      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct)} daraja · (3 ta topshiriq, har biri 0–10 ball)</div>
+      <div style="color:var(--text-faint);font-size:13px;"><span class="num-target" data-target="${pct}" data-suffix="%">0%</span> · ${getCEFRLevel(pct) && getCEFRLevel(pct).length <= 3 ? getCEFRLevel(pct) + ' daraja' : `<span style="font-size:12px;color:var(--text-dim);font-weight:600;">${getCEFRLevel(pct)}</span>`} · (3 ta topshiriq, har biri 0–10 ball)</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
       ${currentQuiz.questions.map(q=>`
@@ -16844,13 +16857,14 @@ function reviseWriting(){
 
 /* ---------------- Finish / results ---------------- */
 function getCEFRLevel(pct, answeredCount = 1){
-  if(answeredCount === 0 || pct === 0) return "A0 ham ko'p sizga";
+  if(answeredCount === 0 || pct === 0) return "Afsuski, siz yetarli ball to'play olmadingiz";
   if(pct>=90) return 'C2';
   if(pct>=75) return 'C1';
   if(pct>=60) return 'B2';
   if(pct>=45) return 'B1';
   if(pct>=25) return 'A2';
-  return 'A1';
+  if(pct>0) return 'A1';
+  return "Afsuski, siz yetarli ball to'play olmadingiz";
 }
 function finishQuiz(force = false){
   if(!currentQuiz || !currentQuiz.questions){ showView('attanal'); return; }
@@ -17014,7 +17028,15 @@ function finishQuiz(force = false){
     levelWrap.style.display = isSkillExam ? 'flex' : 'none';
   }
   if(isSkillExam){
-    document.getElementById('resultLevel').textContent = calculatedLevel;
+    const lvlEl = document.getElementById('resultLevel');
+    if(lvlEl){
+      lvlEl.textContent = calculatedLevel;
+      if(calculatedLevel && calculatedLevel.length > 3){
+        lvlEl.classList.add('is-message');
+      } else {
+        lvlEl.classList.remove('is-message');
+      }
+    }
   }
 
   document.getElementById('resTime').textContent = elapsedFormatted;
