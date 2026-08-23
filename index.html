@@ -4827,7 +4827,7 @@ html[data-theme="light"] .pin-dot.filled{
               </div>
             </div>
             <div class="quiz-finish-btn-wrap">
-              <button class="btn-finish-soft-red" id="quizFinishBtn" onclick="finishQuiz()">Testni yakunlash</button>
+              <button class="btn-finish-soft-red" id="quizFinishBtn" onclick="confirmExitQuiz()">Testni yakunlash</button>
             </div>
           </div>
         </div>
@@ -7654,18 +7654,58 @@ function fireConfetti(){
     setTimeout(()=> el.remove(), dur+50);
   }
 }
+/* Muhavara (so'zlashuv) yozib olish jarayonida sahifadan chiqib ketilsa (orqaga
+   tugmasi yoki "Testni yakunlash" orqali), MediaRecorder'ni to'xtatishdan oldin
+   onstop handlerini o'chirib qo'yamiz — aks holda onstop hali ham ishga tushib,
+   javobni AI'ga yuborib yuboradi va foydalanuvchi allaqachon chiqib ketgan
+   bo'lsa ham urinish yakunlanib, natija/XP berilib ketishi mumkin edi. */
+function stopQuizMediaSilently(){
+  if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){
+    muhavaraRecorder.onstop = null;
+    try{ muhavaraRecorder.stop(); }catch(e){}
+  }
+  if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
+  stopMuhavaraLevelMeter();
+}
 function goBack(){
   if(FULL_EXAM && FULL_EXAM.active){ toast("To'liq imtihonda orqaga qaytish mumkin emas", 2000); return; }
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
-  if(muhavaraStream){ muhavaraStream.getTracks().forEach(t=>t.stop()); muhavaraStream = null; }
-  if(muhavaraRecorder && muhavaraRecorder.state !== 'inactive'){ try{ muhavaraRecorder.stop(); }catch(e){} }
-  stopMuhavaraLevelMeter();
+  stopQuizMediaSilently();
   viewHistory.pop();
   while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'quiz' || viewHistory[viewHistory.length - 1] === 'results')){
     viewHistory.pop();
   }
   const prev = viewHistory[viewHistory.length-1] || 'dashboard';
   showView(prev, false);
+}
+/* "Testni yakunlash" (side-panel qizil tugma) endi testni MAJBURIY tugatib
+   natija chiqarmaydi — u ham xuddi orqaga tugmasi kabi shunchaki testdan
+   chiqib ketish hisoblanadi: bu urinish uchun XP berilmaydi, tarixga
+   yozilmaydi va natija sahifasi ko'rsatilmaydi. Faqat testni oxirigacha
+   (oxirgi savolni "Yakunlash" tugmasi bilan) yechib tugatgandagina natija
+   chiqadi va tarixga yoziladi. */
+function confirmExitQuiz(){
+  if(FULL_EXAM && FULL_EXAM.active){ toast("To'liq imtihonda testni tark etish mumkin emas", 2000); return; }
+  if(!currentQuiz){ goBack(); return; }
+  document.getElementById('modalTitle').textContent = "Testdan chiqish";
+  document.getElementById('modalBody').innerHTML = `
+    <div style="text-align:center;padding:10px 4px 6px;">
+      <div style="font-size:38px;margin-bottom:12px;">⚠️</div>
+      <div style="font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:8px;">Testni hozir tark etmoqchimisiz?</div>
+      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">Test oxirigacha yechilmaganligi sababli bu urinish uchun XP berilmaydi va tarixga yozilmaydi.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" style="flex:1;padding:12px;" onclick="document.getElementById('modalOverlay').classList.remove('show')">Davom etish</button>
+        <button class="btn btn-primary" style="flex:1;padding:12px;background:var(--red);border-color:var(--red);" onclick="document.getElementById('modalOverlay').classList.remove('show');exitQuizAbandoned()">Ha, chiqish</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function exitQuizAbandoned(){
+  clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  stopQuizMediaSilently();
+  handleQuizBack();
+  currentQuiz = null;
 }
 document.querySelectorAll('[data-view]').forEach(el=>{
   el.addEventListener('click', ()=> showView(el.dataset.view));
@@ -7999,7 +8039,18 @@ function renderSkillHub(){
 renderSkillHub();
 
 /* ---------------- Skill / Grammar Tab Switchers (Mashq qilish / Mocklar) ---------------- */
-function switchSkillTab(tab){
+/* Ba'zi joylardan (masalan Dashboarddagi "Mock testlar" kartasi, yoki testdan/
+   natijadan "Ortga" bilan qaytish) foydalanuvchi skillintro sahifasiga TO'G'RIDAN
+   TO'G'RI Mocklar tabida kirib keladi — bu holatda bu bitta yagona harakat
+   hisoblanadi, shuning uchun "Ortga" bosilganda avval "Mashq qilish" tabiga
+   qaytmasdan, to'g'ridan-to'g'ri oldingi sahifaga (masalan Dashboard) chiqib
+   ketishi kerak. Aksincha, foydalanuvchi sahifaning o'zida turib tab tugmasini
+   bosib Mocklarga o'tgan bo'lsa, "Ortga" avval Mashq qilish tabiga qaytarishi
+   kerak (bu ham alohida bitta harakatni bekor qilish hisoblanadi). Shu farqni
+   ushbu flag orqali kuzatamiz. */
+let skillIntroMocksIsEntryTab = false;
+function switchSkillTab(tab, isDirectEntry = false){
+  skillIntroMocksIsEntryTab = (tab === 'mocks') ? isDirectEntry : false;
   const tabToggle = document.getElementById('skillTabToggle');
   const mockTitle = document.getElementById('skillIntroMockTitle');
   const btnPractice = document.getElementById('skillTabPractice');
@@ -8027,7 +8078,7 @@ function switchSkillTab(tab){
 
 function handleSkillIntroBack(){
   const paneMocks = document.getElementById('skillPaneMocks');
-  if(paneMocks && paneMocks.style.display !== 'none'){
+  if(paneMocks && paneMocks.style.display !== 'none' && !skillIntroMocksIsEntryTab){
     switchSkillTab('practice');
   } else {
     goBack();
@@ -8043,7 +8094,7 @@ function handleQuizBack(){
     clearInterval(timerInterval); clearInterval(mcqTimerInterval);
     currentQuiz = null;
     openSkillIntro(sId);
-    switchSkillTab('mocks');
+    switchSkillTab('mocks', true);
     if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'skillintro'){
       viewHistory.push('skillintro');
     }
@@ -8066,7 +8117,7 @@ function handleResultsBack(){
   if(window.lastCompletedQuiz && (window.lastCompletedQuiz.type === 'mock' || window.lastCompletedQuiz.mockId)){
     const sId = window.lastCompletedQuiz.skillId || 'grammatika';
     openSkillIntro(sId);
-    switchSkillTab('mocks');
+    switchSkillTab('mocks', true);
     if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== 'skillintro'){
       viewHistory.push('skillintro');
     }
@@ -15011,7 +15062,7 @@ function renderQuestion(){
     if(currentQuiz.phase === 'evaluating'){
       body.innerHTML = `
         <div class="prompt-box" style="text-align:center;">
-          <div class="lbl">${cur.part.name} — AI tomonidan tekshirilmoqda</div>
+          <div class="lbl">Barcha qismlar AI tomonidan tekshirilmoqda</div>
           <div style="margin-top:14px;">⏳ Punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha baholanmoqda, biroz kuting...</div>
         </div>
       `;
@@ -15803,7 +15854,7 @@ async function startMuhavaraRecording(){
     muhavaraStream.getTracks().forEach(t=>t.stop());
     muhavaraStream = null;
     const blob = new Blob(muhavaraChunks, { type: muhavaraRecorder.mimeType || 'audio/webm' });
-    evaluateMuhavaraAnswer(blob);
+    storeMuhavaraAnswer(blob);
   };
   muhavaraRecorder.start();
   startTimer(currentQuiz.questions[currentQuiz.idx].part.answerSecs, ()=> stopMuhavaraRecording());
@@ -15878,38 +15929,63 @@ function blobToBase64(blob){
     reader.readAsDataURL(blob);
   });
 }
-async function evaluateMuhavaraAnswer(blob){
-  currentQuiz.phase = 'evaluating';
-  renderQuestion();
+/* Muhavara (So'zlashuv) — HAR BIR savolga ovozli javob berilgach AI'ga alohida
+   so'rov yuborilmaydi: yozib olingan audio shu savol uchun saqlab qo'yiladi va
+   navbatdagi savolga o'tiladi. Foydalanuvchi BARCHA savollarga javob berib
+   tugatgandan so'ng, hammasi birgalikda YAGONA so'rov orqali AI'ga yuboriladi
+   va baholanadi — bu tokenlarni tejaydi. */
+async function storeMuhavaraAnswer(blob){
   const q = currentQuiz.questions[currentQuiz.idx];
   try{
-    const base64 = await blobToBase64(blob);
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-speaking`, {
-      method:'POST', headers: authHeaders(),
-      body: JSON.stringify({
-        audio_base64: base64, mime_type: blob.type || 'audio/webm',
-        prompt: q.prompt, part_id: q.part.id, question_id: q.id,
-      })
-    });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok || !data || typeof data.score !== 'number'){
-      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
-      q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = data?.transcript || '';
-    } else {
-      q.score = Math.max(0, Math.min(5, data.score));
-      q.feedback = data.feedback || '';
-      q.transcript = data.transcript || '';
-    }
+    q.audioBase64 = await blobToBase64(blob);
+    q.mimeType = blob.type || 'audio/webm';
   }catch(e){
-    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
-    q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = '';
+    q.audioBase64 = '';
+    q.mimeType = blob.type || 'audio/webm';
   }
   if(currentQuiz.idx < currentQuiz.questions.length-1){
     currentQuiz.idx++;
     startMuhavaraPrep();
   } else {
-    finishMuhavaraQuiz();
+    evaluateAllMuhavaraAnswers();
   }
+}
+/* Barcha savollarga berilgan ovozli javoblar yig'ilgandan so'ng, ular BITTA
+   so'rovda backendga (Supabase Edge Function "evaluate-speaking-batch")
+   yuboriladi — u har bir javobni Groq AI'ga tekshirtirib, har biri uchun 0-5
+   ball + izoh + transkript bilan javob qaytaradi. */
+async function evaluateAllMuhavaraAnswers(){
+  currentQuiz.phase = 'evaluating';
+  renderQuestion();
+  try{
+    const answers = currentQuiz.questions.map(q => ({
+      question_id: q.id, part_id: q.part.id, prompt: q.prompt,
+      audio_base64: q.audioBase64 || '', mime_type: q.mimeType || 'audio/webm'
+    }));
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-speaking-batch`, {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({ answers })
+    });
+    const data = await res.json().catch(()=>null);
+    const results = data && Array.isArray(data.results) ? data.results : null;
+    if(!res.ok || !results){
+      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
+      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = q.transcript || ''; });
+    } else {
+      currentQuiz.questions.forEach((q, i)=>{
+        const r = results[i] || results.find(x => x.question_id === q.id) || {};
+        q.score = Math.max(0, Math.min(5, typeof r.score === 'number' ? r.score : 0));
+        q.feedback = r.feedback || '';
+        q.transcript = r.transcript || '';
+      });
+    }
+  }catch(e){
+    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
+    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = q.transcript || ''; });
+  }
+  // Endi kerak emas — audioni xotirada saqlab turishning hojati yo'q
+  currentQuiz.questions.forEach(q=>{ delete q.audioBase64; });
+  finishMuhavaraQuiz();
 }
 function finishMuhavaraQuiz(){
   clearInterval(timerInterval);
@@ -15997,9 +16073,9 @@ function renderMuhavaraPhase(){
     return;
   }
   body.innerHTML = `
-    <div class="q-sub">${num} · AI baholamoqda</div>
+    <div class="q-sub">Barcha javoblar AI baholamoqda</div>
     <div class="prompt-box" style="text-align:center;">
-      <div class="lbl">Javobingiz Groq AI'ga yuborildi</div>
+      <div class="lbl">Barcha javoblaringiz Groq AI'ga yuborildi</div>
       <div style="margin-top:14px;">⏳ Baholanmoqda, biroz kuting...</div>
     </div>
   `;
@@ -16018,7 +16094,7 @@ function submitWriting(){
     toast(`⚠️ Kamida ${unlockTarget} ta so'z bo'lganda yuborish ochiladi (hozir: ${words} ta)`, 4500);
     return;
   }
-  evaluateWritingAnswer(text);
+  storeWritingAnswer(text);
 }
 /* Vaqt tugaganda (timer 0'ga yetganda) joriy qismni tekshiradi:
    Agar minimal ruxsat etilgan so'zdan (unlockWords: 50/75/100) kam bo'lsa yoki noarabiy harflar bo'lsa,
@@ -16028,40 +16104,14 @@ function forceSubmitWriting(){
   if(!currentQuiz || currentQuiz.phase !== 'writing') return;
   const cur = currentQuiz.questions[currentQuiz.idx];
   const text = (cur.text||'').trim();
-  const words = countArabicWords(text);
-  const hasForeign = containsNonArabicLetters(text);
-  const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
-
-  if(words < unlockTarget || hasForeign){
-    clearInterval(timerInterval);
-    cur.text = text;
-    cur.score = 0;
-    cur.feedback = hasForeign
-      ? "Matnda lotin yoki kirill harflari ishlatilgani sababli AI tomonidan baholanmadi (0 ball)."
-      : `Vaqt tugadi. Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`;
-    cur.criteria = null;
-    cur.corrected = '';
-
-    if(currentQuiz.idx < currentQuiz.questions.length-1){
-      currentQuiz.idx++;
-      currentQuiz.phase = 'writing';
-      renderQuestion();
-      startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
-    } else {
-      finishKitabaExam();
-    }
-    return;
-  }
-
-  evaluateWritingAnswer(text);
+  storeWritingAnswer(text, true);
 }
-/* Kitaba javobini backendga (Supabase Edge Function "evaluate-writing") yuboradi —
-   u matnni Groq AI'ga tekshirtirib, shu QISM uchun 0-10 ball + 6 mezon (punktuatsiya,
-   imlo, lug'at, matn tuzilishi, fikrlarning aniqligi, mavzuni ochish) + izoh va
-   tuzatilgan matn bilan javob qaytaradi. Har qism baholangach, agar navbatda yana
-   qism bo'lsa avtomatik o'sha qismga o'tiladi (o'z vaqt chegarasi bilan), aks holda
-   imtihon yakunlanadi. */
-async function evaluateWritingAnswer(text){
+/* Kitaba (Yozish) — HAR BIR qism yozib bo'lingach AI'ga alohida so'rov
+   yuborilmaydi: matn faqat shu qism uchun saqlab qo'yiladi va navbatdagi
+   qismga o'tiladi. Foydalanuvchi BARCHA (3 ta) qismni yozib tugatgandan
+   so'ng, hammasi birgalikda YAGONA so'rov orqali AI'ga yuboriladi va
+   baholanadi — bu tokenlarni tejaydi. */
+function storeWritingAnswer(text, isTimeUp = false){
   clearInterval(timerInterval);
   const cur = currentQuiz.questions[currentQuiz.idx];
   cur.text = text;
@@ -16070,54 +16120,77 @@ async function evaluateWritingAnswer(text){
   const hasForeign = containsNonArabicLetters(text);
   const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
 
-  // Zero-token guard: Agar matn minimal ochilish hajmiga yetmagan bo'lsa, AI chaqirilmaydi
+  // Zero-token guard: Agar matn minimal ochilish hajmiga yetmagan bo'lsa,
+  // bu qism umuman AI'ga yuborilmaydi (keyinroq ham, yakuniy so'rovda ham) —
+  // avtomatik 0 ball beriladi.
   if(words < unlockTarget || hasForeign){
     cur.score = 0;
-    cur.feedback = hasForeign 
-      ? "Matnda lotin yoki kirill harflari ishlatilgani sababli AI tomonidan baholanmadi (0 ball)." 
-      : `Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`;
+    cur.feedback = hasForeign
+      ? "Matnda lotin yoki kirill harflari ishlatilgani sababli AI tomonidan baholanmadi (0 ball)."
+      : (isTimeUp
+          ? `Vaqt tugadi. Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`
+          : `Matn minimal hajmga (${unlockTarget} ta so'z) yetmagani uchun 0 ball berildi.`);
     cur.criteria = null;
     cur.corrected = '';
-    if(currentQuiz.idx < currentQuiz.questions.length-1){
-      currentQuiz.idx++;
-      currentQuiz.phase = 'writing';
-      renderQuestion();
-      startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
-    } else {
-      finishKitabaExam();
-    }
-    return;
+    cur.skipEvaluation = true;
+  } else {
+    cur.skipEvaluation = false;
   }
 
-  currentQuiz.phase = 'evaluating';
-  renderQuestion();
-  try{
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-writing`, {
-      method:'POST', headers: authHeaders(),
-      body: JSON.stringify({ text, prompt: cur.topic.topicAr, part_id: cur.part.id, min_words: cur.part.minWords })
-    });
-    const data = await res.json().catch(()=>null);
-    if(!res.ok || !data || typeof data.score !== 'number'){
-      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
-      cur.score = 0; cur.feedback = "Texnik sabab bilan baholanmadi."; cur.criteria = null; cur.corrected = '';
-    } else {
-      cur.score = Math.max(0, Math.min(10, data.score));
-      cur.feedback = data.feedback || '';
-      cur.criteria = data.criteria || null;
-      cur.corrected = data.corrected_text || '';
-    }
-  }catch(e){
-    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
-    cur.score = 0; cur.feedback = "Tarmoq xatosi tufayli baholanmadi."; cur.criteria = null; cur.corrected = '';
-  }
   if(currentQuiz.idx < currentQuiz.questions.length-1){
     currentQuiz.idx++;
     currentQuiz.phase = 'writing';
     renderQuestion();
     startTimer(currentQuiz.questions[currentQuiz.idx].part.seconds, ()=> forceSubmitWriting());
   } else {
-    finishKitabaExam();
+    evaluateAllWritingAnswers();
   }
+}
+/* Barcha (3 ta) Kitaba qismi yozib bo'lingach, ular BITTA so'rovda backendga
+   (Supabase Edge Function "evaluate-writing-batch") yuboriladi — u har bir
+   qism matnini Groq AI'ga tekshirtirib, har biri uchun 0-10 ball + 6 mezon
+   (punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi, mavzuni
+   ochish) + izoh va tuzatilgan matn bilan javob qaytaradi. Minimal hajmga
+   yetmagan (0 ball avtomatik berilgan) qismlar bu so'rovga umuman
+   qo'shilmaydi — token behuda sarflanmasin uchun. */
+async function evaluateAllWritingAnswers(){
+  currentQuiz.phase = 'evaluating';
+  renderQuestion();
+  const toEvaluate = currentQuiz.questions.filter(q => !q.skipEvaluation);
+  if(toEvaluate.length === 0){
+    finishKitabaExam();
+    return;
+  }
+  try{
+    const answers = toEvaluate.map(q => ({
+      part_id: q.part.id,
+      text: q.text,
+      prompt: q.topic.topicAr,
+      min_words: q.part.unlockWords || Math.round(q.part.minWords / 2)
+    }));
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-writing-batch`, {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({ answers })
+    });
+    const data = await res.json().catch(()=>null);
+    const results = data && Array.isArray(data.results) ? data.results : null;
+    if(!res.ok || !results){
+      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
+      toEvaluate.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.criteria = null; q.corrected = ''; });
+    } else {
+      toEvaluate.forEach((q, i)=>{
+        const r = results[i] || results.find(x => x.part_id === q.part.id) || {};
+        q.score = Math.max(0, Math.min(10, typeof r.score === 'number' ? r.score : 0));
+        q.feedback = r.feedback || '';
+        q.criteria = r.criteria || null;
+        q.corrected = r.corrected_text || '';
+      });
+    }
+  }catch(e){
+    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
+    toEvaluate.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.criteria = null; q.corrected = ''; });
+  }
+  finishKitabaExam();
 }
 function finishKitabaExam(){
   clearInterval(timerInterval);
@@ -17281,7 +17354,7 @@ function renderDashboardPracticeCards(){
 
 function handleDashMockCardClick(){
   openSkillIntro('grammatika');
-  switchSkillTab('mocks');
+  switchSkillTab('mocks', true);
 }
 
 /* ============================================================
