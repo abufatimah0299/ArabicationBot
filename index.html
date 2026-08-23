@@ -14406,12 +14406,31 @@ let timerInterval = null;
 function startTimer(seconds, onExpire){
   clearInterval(timerInterval);
   let remaining = seconds;
+  const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
   const el = document.getElementById('quizTimer');
-  if(!el) return;
-  el.style.color = ''; el.style.borderColor = '';
+  if(el){
+    if(isSpeaking){
+      el.innerHTML = '';
+      el.style.display = 'none';
+    } else {
+      el.style.display = '';
+      el.style.color = ''; el.style.borderColor = '';
+    }
+  }
   function render(){
     const m = Math.floor(remaining/60), s = remaining%60;
-    el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">' + String(m).padStart(2,'0')+':'+String(s).padStart(2,'0') + '</span>';
+    const formatted = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(el && !isSpeaking){
+      el.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">' + formatted + '</span>';
+    }
+    const bigTimer = document.getElementById('muhavaraBigTimer');
+    if(bigTimer){
+      bigTimer.textContent = formatted;
+    }
+    const recTimer = document.getElementById('muhavaraRecTimer');
+    if(recTimer){
+      recTimer.textContent = formatted;
+    }
   }
   render();
   timerInterval = setInterval(()=>{
@@ -15145,6 +15164,16 @@ function renderQuestion(){
   if(fontCtrl){
     const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening');
     fontCtrl.style.display = hideZoom ? 'none' : 'flex';
+  }
+  const topTimerEl = document.getElementById('quizTimer');
+  if(topTimerEl){
+    const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
+    if(isSpeaking){
+      topTimerEl.innerHTML = '';
+      topTimerEl.style.display = 'none';
+    } else {
+      topTimerEl.style.display = '';
+    }
   }
   const body = document.getElementById('quizBody');
   if(currentQuiz.type==='writing'){
@@ -16130,25 +16159,41 @@ function renderMuhavaraPhase(){
   const num = `${q.part.name} · Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}`;
 
   if(currentQuiz.phase==='prep'){
+    const prepSecs = q.part.prepSecs || 60;
+    const prepMin = Math.floor(prepSecs / 60);
+    const prepRemSec = prepSecs % 60;
+    const prepFormatted = String(prepMin).padStart(2, '0') + ':' + String(prepRemSec).padStart(2, '0');
+
     body.innerHTML = `
-      <div class="q-sub">${num} · Tayyorgarlik — javob vaqti avtomatik boshlanadi</div>
+      <div class="q-sub">${num}</div>
+      <div style="display:flex;justify-content:center;margin:16px 0 14px 0;">
+        <div id="muhavaraBigTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;">${prepFormatted}</div>
+      </div>
       <div class="prompt-box">
         <div class="lbl">Savol</div>
-        <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
+        <div style="font-family:var(--font-ar);font-size:21px;direction:rtl;text-align:right;line-height:1.7;">${q.prompt}</div>
       </div>
-      <div class="mic-hint" style="text-align:center;margin-top:16px;">Fikringizni tartiblang — tayyorgarlik vaqti tugagach yozib olish avtomatik boshlanadi.</div>
+      <div class="mic-hint" style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--text-faint);">Fikringizni tartiblang — tayyorgarlik vaqti tugagach yozib olish avtomatik boshlanadi.</div>
       <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="skipMuhavaraPrep()">✅ Tayyorman, boshlayman</button>
     `;
     return;
   }
   if(currentQuiz.phase==='recording'){
+    const ansSecs = q.part.answerSecs || 60;
+    const ansMin = Math.floor(ansSecs / 60);
+    const ansRemSec = ansSecs % 60;
+    const ansFormatted = String(ansMin).padStart(2, '0') + ':' + String(ansRemSec).padStart(2, '0');
+
     body.innerHTML = `
-      <div class="q-sub">${num} · Yozib olinmoqda</div>
+      <div class="q-sub">${num}</div>
+      <div style="display:flex;justify-content:center;margin:16px 0 14px 0;">
+        <div id="muhavaraRecTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red,#EF4444);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;">${ansFormatted}</div>
+      </div>
       <div class="prompt-box">
         <div class="lbl">Savol</div>
-        <div style="font-family:var(--font-ar);font-size:20px;direction:rtl;text-align:right;">${q.prompt}</div>
+        <div style="font-family:var(--font-ar);font-size:21px;direction:rtl;text-align:right;line-height:1.7;">${q.prompt}</div>
       </div>
-      <div class="mic-wrap">
+      <div class="mic-wrap" style="margin-top:14px;">
         <div class="mic-circle-wrap">
           <div class="mic-glow mic-glow3" id="micGlow3"></div>
           <div class="mic-glow mic-glow2" id="micGlow2"></div>
@@ -16159,8 +16204,8 @@ function renderMuhavaraPhase(){
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
           </div>
         </div>
-        <div class="mic-hint">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
-        <button class="btn btn-outline" style="margin-top:20px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
+        <div class="mic-hint" style="margin-top:12px;">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
+        <button class="btn btn-outline" style="margin-top:18px;min-width:160px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
       </div>
     `;
     return;
