@@ -845,16 +845,25 @@ html[data-theme="dark"] .istima-wf-bar.active{
 .side-card{ padding:18px; border:none; background:transparent; box-shadow:none; }
 .side-card:hover{ transform:none; box-shadow:none; border-color:transparent; }
 .side-card h4{ font-size:12.5px; font-weight:600; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;}
-.qgrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-.qgrid.qgrid-compact{ grid-template-columns:repeat(6,1fr); gap:6px; }
-.qgrid.qgrid-compact .qbtn{ font-size:11px; border-radius:7px; }
+.qgrid{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+.qgrid.qgrid-compact{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
 .qbtn{
-  aspect-ratio:1; border-radius:9px; border:1.5px solid var(--border); background:var(--card); font-weight:600; font-size:12.5px;
-  cursor:pointer; font-family:inherit; color:var(--text-dim);
+  aspect-ratio:1; border-radius:8px; border:1.5px solid var(--border); background:var(--card); font-weight:600; font-size:12px;
+  cursor:pointer; font-family:inherit; color:var(--text-dim); display:flex; align-items:center; justify-content:center;
+  transition:all .15s ease;
 }
 .qbtn.current{ border-color:var(--quiz-accent, var(--indigo-700)); background:var(--quiz-accent, var(--indigo-700)); color:#fff; }
 .qbtn.answered{ border-color:var(--green); background:var(--green-bg); color:var(--green); }
 .qbtn.expired:not(.answered){ border-color:var(--red); color:var(--red); opacity:0.75; }
+.qbtn.locked, .qbtn:disabled{
+  opacity:0.3;
+  cursor:not-allowed !important;
+  pointer-events:none;
+  background:transparent;
+  border-style:dashed;
+  border-color:var(--border);
+  color:var(--text-faint);
+}
 .legend{ margin-top:14px; display:flex; flex-direction:column; gap:7px; font-size:11.5px; font-weight:600; color:var(--text-dim);}
 .legend .row{ display:flex; align-items:center; gap:8px;}
 .legend .sw{ width:12px; height:12px; border-radius:4px; }
@@ -14988,6 +14997,31 @@ function updateMarathonHeaderStats(){
   timerEl.style.padding = '3px 8px';
 }
 
+function isQuestionAccessible(i){
+  if(!currentQuiz || !Array.isArray(currentQuiz.questions) || !currentQuiz.questions[i]) return false;
+
+  // Qiroa (O'qish): Har bir juzda avval matn o'qiladi, so'ng shu juz savollari yechiladi
+  if(currentQuiz.skillId === 'qiroa' || currentQuiz.type === 'reading-juz'){
+    if(currentQuiz.phase === 'reading') return false; // Matn o'qish paytida savollarga o'tib bo'lmaydi
+    if(!currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer]) return false;
+    const curJuz = currentQuiz.juz[currentQuiz.juzPointer];
+    return i >= curJuz.startIdx && i <= curJuz.endIdx;
+  }
+
+  // Istima (Tinglash): Har bir qismda avval audio eshitiladi, so'ng savollar yechiladi
+  if(currentQuiz.skillId === 'istima' || currentQuiz.type === 'listening-juz'){
+    if(currentQuiz.phase === 'listening') return false; // Audio tinglash paytida savollarga o'tib bo'lmaydi
+    if(!currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer]) return false;
+    const curJuz = currentQuiz.juz[currentQuiz.juzPointer];
+    return i >= curJuz.startIdx && i <= curJuz.endIdx;
+  }
+
+  // Grammatika, Mock testlar va boshqa bo'limlar:
+  // Hali navbati kelmagan savollar qulflangan bo'ladi (faqat yetib kelingan savolgacha o'tish mumkin)
+  const maxIdx = (currentQuiz.maxUnlockedIdx !== undefined) ? currentQuiz.maxUnlockedIdx : (currentQuiz.idx || 0);
+  return i <= maxIdx;
+}
+
 function buildQGrid(){
   const grid = document.getElementById('qgrid');
   const wrap = document.getElementById('qgridWrap');
@@ -15005,6 +15039,9 @@ function buildQGrid(){
   }
   if(sideEl) sideEl.style.display = '';
   if(wrap) wrap.style.display = '';
+  if(currentQuiz.maxUnlockedIdx === undefined){
+    currentQuiz.maxUnlockedIdx = currentQuiz.idx || 0;
+  }
   if(grid){
     grid.classList.toggle('qgrid-compact', currentQuiz.questions.length > 20);
     grid.innerHTML = currentQuiz.questions.map((q,i)=>`<button class="qbtn" data-i="${i}" onclick="jumpTo(${i})">${i+1}</button>`).join('');
@@ -15012,14 +15049,33 @@ function buildQGrid(){
   updateQGrid();
 }
 function updateQGrid(){
+  if(currentQuiz){
+    if(currentQuiz.maxUnlockedIdx === undefined){
+      currentQuiz.maxUnlockedIdx = currentQuiz.idx || 0;
+    } else {
+      currentQuiz.maxUnlockedIdx = Math.max(currentQuiz.maxUnlockedIdx, currentQuiz.idx || 0);
+    }
+  }
   document.querySelectorAll('.qbtn').forEach((b,i)=>{
     const q = currentQuiz?.questions?.[i];
+    const accessible = isQuestionAccessible(i);
     b.classList.toggle('current', i===currentQuiz?.idx);
     b.classList.toggle('answered', !!(q && q.picked!==null && q.picked!==undefined));
     b.classList.toggle('expired', !!(q && (q.expired || (q.timeLeft !== undefined && q.timeLeft <= 0))));
+    b.classList.toggle('locked', !accessible);
+    if(!accessible){
+      b.setAttribute('disabled', 'true');
+      b.setAttribute('aria-disabled', 'true');
+      b.title = "Hali navbati kelmagan savol";
+    } else {
+      b.removeAttribute('disabled');
+      b.removeAttribute('aria-disabled');
+      b.removeAttribute('title');
+    }
   });
 }
 function jumpTo(i){
+  if(!isQuestionAccessible(i)) return;
   clearQuestionTimer();
   currentQuiz.idx = i;
   renderQuestion();
