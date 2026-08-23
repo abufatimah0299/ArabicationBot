@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Arabication — Arab tili platformasi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +14,33 @@
     var t = localStorage.getItem('arabication-theme');
     if(t !== 'dark') document.documentElement.setAttribute('data-theme','light');
   }catch(e){}
+
+  // Telegram Mini App Fullscreen & Expand darhol ishga tushishi
+  function initTelegramFullscreen(){
+    try {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      tg.ready();
+      if (typeof tg.expand === 'function') tg.expand();
+      if (typeof tg.requestFullscreen === 'function') {
+        tg.requestFullscreen();
+      }
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+      }
+    } catch(err){}
+  }
+  initTelegramFullscreen();
+  document.addEventListener('DOMContentLoaded', initTelegramFullscreen);
+  window.addEventListener('load', initTelegramFullscreen);
+  document.addEventListener('click', function _tgFs(){
+    initTelegramFullscreen();
+    document.removeEventListener('click', _tgFs);
+  }, { once: true, passive: true });
+  document.addEventListener('touchstart', function _tgFsTouch(){
+    initTelegramFullscreen();
+    document.removeEventListener('touchstart', _tgFsTouch);
+  }, { once: true, passive: true });
 })();
 </script>
 
@@ -5832,7 +5859,14 @@ function setSuperAdminUI(isSuper){
 async function tgInitAndAuth(){
   const tg = window.Telegram?.WebApp;
   if(!tg){ showDebug("❌ Telegram.WebApp topilmadi — SDK yuklanmagan yoki brauzerda ochilgan."); return null; }
-  tg.ready(); tg.expand();
+  tg.ready();
+  if (typeof tg.expand === 'function') tg.expand();
+  if (typeof tg.requestFullscreen === 'function') {
+    try { tg.requestFullscreen(); } catch(e){}
+  }
+  if (typeof tg.disableVerticalSwipes === 'function') {
+    try { tg.disableVerticalSwipes(); } catch(e){}
+  }
   const initData = tg.initData;
   if(!initData){ showDebug("❌ initData BO'SH. Menu Button 'Web App' turida sozlanmagan bo'lishi mumkin. (tg.platform: "+tg.platform+", version: "+tg.version+")"); return null; }
   showDebug("✅ initData bor (uzunligi: "+initData.length+"). Supabase'ga so'rov yuborilmoqda...");
