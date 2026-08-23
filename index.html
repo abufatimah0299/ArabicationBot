@@ -924,9 +924,19 @@ html[data-theme="dark"] .istima-wf-bar.active{
 .mic-hint{ margin-top:6px; font-size:12.5px; color:var(--text-faint); font-weight:600;}
 textarea.write-area{
   width:100%; min-height:220px; border:1.5px solid var(--border); border-radius:13px; padding:16px;
+  background:var(--card-alt); color:var(--text);
   font-family:var(--font-ar); font-size:calc(18px * var(--exam-font-scale)); direction:rtl; text-align:right; resize:vertical; margin-top:12px;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.06);
+  transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
-textarea.write-area:focus{ outline:none; border-color:var(--indigo-600); }
+textarea.write-area::placeholder{
+  color:var(--text-faint);
+  opacity:0.75;
+}
+textarea.write-area:focus{
+  outline:none; border-color:var(--indigo-600); background:var(--card);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--indigo-600) 22%, transparent);
+}
 .wordcount{ font-size:12px; color:var(--text-faint); font-weight:600; margin-top:8px; text-align:left;}
 .prompt-box{ background:var(--bg); border:1px solid var(--border); border-radius:13px; padding:16px; margin-bottom:14px;}
 .prompt-box .lbl{ font-size:11.5px; font-weight:600; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;}
@@ -7958,7 +7968,7 @@ function toast(msg, duration = 4000, explicitType = null){
 const SKILLS = [
   {id:'grammatika', name:'Grammatika', ar:'القواعد', score:0, total:30, pct:0, color:'var(--grammatika)', bg:'var(--grammatika-bg)', icon:'📗', btn:'Testni boshlash', qCount:30, mins:30, grad:'sb-qiroa', desc:"Ushbu bo'limda arab tili grammatikasi (nahv, sarf va boshqa mavzular) bo'yicha savollarga javob berasiz. Har bir savol uchun 1 daqiqadan vaqt beriladi."},
   {id:'qiroa', name:"O'qish", ar:'القراءة', score:0, total:30, pct:0, color:'var(--qiroa)', bg:'var(--qiroa-bg)', icon:'📖', btn:'Testni boshlash', qCount:18, mins:33, grad:'sb-grammatika', desc:"Ushbu bo'limda 3 juz matn beriladi — har birini o'qib, mazmuni bo'yicha 6 tadan savolga javob berasiz. Matnni diqqat bilan o'qing, tayyor bo'lsangiz vaqtdan oldin ham savollarga o'tishingiz mumkin."},
-  {id:'istima', name:'Tinglash', ar:'الاستماع', score:0, total:13, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:13, mins:16, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
+  {id:'istima', name:'Tinglash', ar:'الاستماع', score:0, total:18, pct:0, color:'var(--istima)', bg:'var(--istima-bg)', icon:'🎧', btn:'Testni boshlash', qCount:18, mins:10, grad:'sb-istima', desc:"Ushbu bo'lim 3 qismdan iborat. Har qismda avval audio eshittiriladi (cheklangan marta), so'ng savollarga (har biriga 1 daqiqadan) javob berasiz. Audioni oxirigacha tinglashni istamasangiz, 'Savollarga o'tish' tugmasi orqali darhol savollarga o'tishingiz mumkin."},
   {id:'muhavara', name:"So'zlashuv", ar:'المحادثة', score:0, total:30, pct:0, color:'var(--muhavara)', bg:'var(--muhavara-bg)', icon:'🎙️', btn:'Mashqni boshlash', qCount:6, mins:8, grad:'sb-muhavara', desc:"Ushbu bo'limda 3 qismdan (har birida 2 tadan) jami 6 ta savolga ovozli javob berasiz. Har savoldan oldin tayyorgarlik vaqti beriladi, so'ng javobingiz yozib olinadi va sun'iy intellekt tomonidan baholanadi."},
   {id:'kitaba', name:'Yozish', ar:'الكتابة', score:0, total:30, pct:0, color:'var(--kitaba)', bg:'var(--kitaba-bg)', icon:'✍️', btn:'Topshiriqni boshlash', qCount:3, mins:65, grad:'sb-kitaba', desc:"Ushbu bo'lim 3 qismdan iborat:<br>• 1-qism (100+ so'z, 15 daqiqa)<br>• 2-qism (150+ so'z, 20 daqiqa)<br>• 3-qism (200+ so'z, 30 daqiqa)<br>Har bir qism uchun avtomatik ravishda arabcha mavzu beriladi va AI matningizni punktuatsiya, imlo, lug'at, matn tuzilishi, fikrlarning aniqligi va mavzuni ochish bo'yicha 0-10 ball bilan baholaydi."},
 ];
@@ -14701,7 +14711,7 @@ function startQuiz(skillId, customLabel, topicId){
     skillId, topicId: topicId||null, type: bank.type, passage: bank.passage||null,
     questions: questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})),
     color: skillMeta.color, bg: skillMeta.bg, label: customLabel || skillMeta.name,
-    idx:0, startedAt:Date.now(), duration: bank.type==='reading'?18*60: bank.type==='listening'?16*60:20*60,
+    idx:0, startedAt:Date.now(), duration: bank.type==='reading'?18*60: bank.type==='listening'?10*60:20*60,
   };
   const qTag = document.getElementById('quizTag');
   if(qTag){
@@ -14981,19 +14991,24 @@ function updateMarathonHeaderStats(){
 function buildQGrid(){
   const grid = document.getElementById('qgrid');
   const wrap = document.getElementById('qgridWrap');
-  if(currentQuiz && currentQuiz.isMarathon){
-    const sideEl = document.getElementById('quizSide');
+  const sideEl = document.getElementById('quizSide');
+  if(!currentQuiz || !Array.isArray(currentQuiz.questions)){
     if(sideEl) sideEl.style.display = 'none';
     return;
   }
-  const sideEl = document.getElementById('quizSide');
+  const isSpeaking = currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking';
+  const isWriting = currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing';
+  const isExcluded = currentQuiz.isMarathon || isSpeaking || isWriting || (FULL_EXAM && FULL_EXAM.active);
+  if(isExcluded){
+    if(sideEl) sideEl.style.display = 'none';
+    return;
+  }
   if(sideEl) sideEl.style.display = '';
-  if(currentQuiz.type==='writing'){ if(sideEl) sideEl.style.display='none'; return; }
-  if(FULL_EXAM && FULL_EXAM.active){ if(sideEl) sideEl.style.display='none'; return; }
-  const noGrid = ['muhavara','istima','qiroa'].includes(currentQuiz.skillId);
-  wrap.style.display = noGrid ? 'none' : '';
-  grid.classList.toggle('qgrid-compact', currentQuiz.skillId==='grammatika');
-  grid.innerHTML = currentQuiz.questions.map((q,i)=>`<button class="qbtn" data-i="${i}" onclick="jumpTo(${i})">${i+1}</button>`).join('');
+  if(wrap) wrap.style.display = '';
+  if(grid){
+    grid.classList.toggle('qgrid-compact', currentQuiz.questions.length > 20);
+    grid.innerHTML = currentQuiz.questions.map((q,i)=>`<button class="qbtn" data-i="${i}" onclick="jumpTo(${i})">${i+1}</button>`).join('');
+  }
   updateQGrid();
 }
 function updateQGrid(){
@@ -15048,7 +15063,10 @@ function renderQuestion(){
   }
   const sideCard = document.getElementById('quizSide');
   if(sideCard){
-    sideCard.style.display = (currentQuiz && (currentQuiz.isMarathon || currentQuiz.type === 'writing' || (FULL_EXAM && FULL_EXAM.active))) ? 'none' : '';
+    const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
+    const isWriting = currentQuiz && (currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing');
+    const hideSide = !currentQuiz || currentQuiz.isMarathon || isSpeaking || isWriting || (FULL_EXAM && FULL_EXAM.active) || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating';
+    sideCard.style.display = hideSide ? 'none' : '';
   }
   const fontCtrl = document.getElementById('examFontCtrl');
   if(fontCtrl){
@@ -16002,6 +16020,8 @@ function finishMuhavaraQuiz(){
   renderMuhavaraSummary(totalScore, maxScore);
 }
 function renderMuhavaraSummary(totalScore, maxScore){
+  const sideEl = document.getElementById('quizSide');
+  if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
   if(timerEl) timerEl.textContent = '';
   const pct = Math.round((totalScore/maxScore)*100);
@@ -16208,6 +16228,8 @@ function finishKitabaExam(){
   renderQuestion();
 }
 function renderKitabaSummary(){
+  const sideEl = document.getElementById('quizSide');
+  if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
   if(timerEl) timerEl.textContent = '';
   const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
