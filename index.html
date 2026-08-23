@@ -6068,8 +6068,15 @@ async function clearAllQuestionsOnBackend(){
 }
 async function clearAllQuestions(){
   const countText = document.getElementById('adminQuestionsCount')?.textContent || '';
-  if(!confirm(`⚠️ DIQQAT: Bu BARCHA bo'limlardagi (Qiroa, Istima, Grammatika, Muhavara, Kitaba...) BARCHA savollarni butunlay o'chiradi (${countText}). Mavzular ro'yxati saqlanib qoladi, lekin ichidagi barcha savollar yo'qoladi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
-  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA savollarni butunlay o'chirmoqchimisiz?")) return;
+  const ok = await showLiquidConfirm({
+    title: "Barcha savollarni o'chirish",
+    message: `DIQQAT: Bu BARCHA bo'limlardagi BARCHA savollarni butunlay o'chiradi (${countText}).`,
+    subtext: "Mavzular ro'yxati saqlanib qoladi, lekin ichidagi barcha savollar yo'qoladi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!",
+    confirmLabel: "Ha, butunlay o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
 
   const deletedCount = await clearAllQuestionsOnBackend();
   if(deletedCount !== null){
@@ -6144,8 +6151,15 @@ async function clearCurrentSectionQuestions(){
   const skillName = SKILL_META[adminActiveSkill]?.name || adminActiveSkill;
   const topicWord = grammarQiroaTopicWord(adminActiveSkill);
   const topicsWarning = topicWord ? ` va barcha ${topicWord}larni (mavzular/matnlar ro'yxatini)` : '';
-  if(!confirm(`⚠️ DIQQAT: Bu faqat "${skillName}" bo'limidagi BARCHA savollarni${topicsWarning} butunlay o'chiradi. Boshqa bo'limlarga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
-  if(!confirm(`So'nggi tasdiq: haqiqatan ham "${skillName}" bo'limidagi barcha savollarni${topicsWarning} o'chirmoqchimisiz?`)) return;
+  const ok = await showLiquidConfirm({
+    title: `"${skillName}" bo'limini tozalash`,
+    message: `DIQQAT: Bu faqat "${skillName}" bo'limidagi BARCHA savollarni${topicsWarning} butunlay o'chiradi.`,
+    subtext: "Boshqa bo'limlarga tegmaydi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
 
   toast(`⏳ "${skillName}" bo'limi tozalanmoqda...`);
 
@@ -6360,7 +6374,16 @@ async function importQuestionsFromFile(event){
     }
     const items = Array.isArray(parsed.items) ? parsed.items : [];
     if(!items.length){ toast('❌ Faylda savollar topilmadi ("items" massivi kerak)', 6000); return; }
-    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud savollar avtomatik o'tkazib yuboriladi)`)) return;
+    const ok = await showLiquidConfirm({
+      title: "Savollarni import qilish",
+      message: `Faylda "${skillName}" bo'limi uchun ${items.length} ta savol topildi.`,
+      subtext: "Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud savollar avtomatik o'tkazib yuboriladi)",
+      confirmLabel: "Yuklash",
+      cancelLabel: "Bekor qilish",
+      isDanger: false,
+      icon: "📥"
+    });
+    if(!ok) return;
 
     toast(`⏳ ${items.length} ta savol tekshirilmoqda...`);
     const existing = await loadSpeakingQuestionsFromBackend();
@@ -6396,7 +6419,16 @@ async function importQuestionsFromFile(event){
     }
     const items = Array.isArray(parsed.items) ? parsed.items : [];
     if(!items.length){ toast('❌ Faylda mavzular topilmadi ("items" massivi kerak)', 6000); return; }
-    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta mavzu topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud mavzular avtomatik o'tkazib yuboriladi)`)) return;
+    const ok = await showLiquidConfirm({
+      title: "Mavzularni import qilish",
+      message: `Faylda "${skillName}" bo'limi uchun ${items.length} ta mavzu topildi.`,
+      subtext: "Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud mavzular avtomatik o'tkazib yuboriladi)",
+      confirmLabel: "Yuklash",
+      cancelLabel: "Bekor qilish",
+      isDanger: false,
+      icon: "📥"
+    });
+    if(!ok) return;
 
     toast(`⏳ ${items.length} ta mavzu yuborilmoqda...`);
     const existing = await loadWritingTopicsFromBackend();
@@ -6427,7 +6459,16 @@ async function importQuestionsFromFile(event){
     }
     const items = Array.isArray(parsed.items) ? parsed.items : [];
     if(!items.length){ toast('❌ Faylda matnlar topilmadi ("items" massivi kerak)', 6000); return; }
-    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta matn topildi. Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil matn allaqachon mavjud bo'lsa, o'tkazib yuboriladi)`)) return;
+    const ok = await showLiquidConfirm({
+      title: "Matnlarni import qilish",
+      message: `Faylda "${skillName}" bo'limi uchun ${items.length} ta matn topildi.`,
+      subtext: "Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil matn allaqachon mavjud bo'lsa, o'tkazib yuboriladi)",
+      confirmLabel: "Yuklash",
+      cancelLabel: "Bekor qilish",
+      isDanger: false,
+      icon: "📥"
+    });
+    if(!ok) return;
 
     const existingTexts = await loadQiroaTextsFromBackend();
     const existingSet = new Set((existingTexts||[]).map(r => `${r.juz_id}::${(r.passage||'').trim()}`));
@@ -6475,7 +6516,16 @@ async function importQuestionsFromFile(event){
     }
     const items = Array.isArray(parsed.items) ? parsed.items : [];
     if(!items.length){ toast('❌ Faylda audio-testlar topilmadi ("items" massivi kerak)', 6000); return; }
-    if(!confirm(`Faylda "${skillName}" bo'limi uchun ${items.length} ta audio-test topildi. Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil audio URL allaqachon mavjud bo'lsa, o'tkazib yuboriladi)`)) return;
+    const ok = await showLiquidConfirm({
+      title: "Audio-testlarni import qilish",
+      message: `Faylda "${skillName}" bo'limi uchun ${items.length} ta audio-test topildi.`,
+      subtext: "Ularni bazaga qayta yuklaymizmi? (Bir xil juz + bir xil audio URL allaqachon mavjud bo'lsa, o'tkazib yuboriladi)",
+      confirmLabel: "Yuklash",
+      cancelLabel: "Bekor qilish",
+      isDanger: false,
+      icon: "📥"
+    });
+    if(!ok) return;
 
     const existingAudios = await loadIstimaAudioFromBackend();
     const existingSet = new Set((existingAudios||[]).map(r => `${r.juz_id}::${(r.audio_url||'').trim()}`));
@@ -6530,11 +6580,20 @@ async function importQuestionsFromFile(event){
     return;
   }
 
-  let confirmMsg = `Faylda "${skillName}" bo'limiga tegishli ${matching.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi? (Allaqachon mavjud bo'lgan savollar avtomatik o'tkazib yuboriladi, takrorlanmaydi)`;
+  let confirmSubtext = "(Allaqachon mavjud bo'lgan savollar avtomatik o'tkazib yuboriladi, takrorlanmaydi)";
   if(foreignCount > 0){
-    confirmMsg += `\n\n⚠️ Diqqat: faylda yana ${foreignCount} ta boshqa bo'limlarga tegishli savol bor — joriy bo'lim ("${skillName}") tanlanganligi sababli ular IMPORT QILINMAYDI. Ularni qo'shish uchun avval admin panelda tegishli bo'limni tanlab, shu faylni qayta import qiling.`;
+    confirmSubtext += `\n\n⚠️ Diqqat: faylda yana ${foreignCount} ta boshqa bo'limlarga tegishli savol bor — joriy bo'lim ("${skillName}") tanlanganligi sababli ular IMPORT QILINMAYDI.`;
   }
-  if(!confirm(confirmMsg)) return;
+  const ok = await showLiquidConfirm({
+    title: "Savollarni import qilish",
+    message: `Faylda "${skillName}" bo'limiga tegishli ${matching.length} ta savol topildi. Ularni bazaga qayta yuklaymizmi?`,
+    subtext: confirmSubtext,
+    confirmLabel: "Yuklash",
+    cancelLabel: "Bekor qilish",
+    isDanger: false,
+    icon: "📥"
+  });
+  if(!ok) return;
 
   const items = matching.map(row => ({
     skillId: row.skillId || row.skill_id,
@@ -8723,6 +8782,8 @@ function renderHistoryList(){
     const pct = Math.round(r.correct/r.total*100);
     const st = statusOf(pct);
     const attemptIdStr = String(r.id).replace(/'/g, "\\'");
+    const isWritingOrSpeaking = (r.skillId === 'kitaba' || r.skillId === 'muhavara' || r.type === 'writing' || r.type === 'speaking' || String(r.topic||'').toLowerCase().includes('kitab') || String(r.topic||'').toLowerCase().includes('muhav') || String(r.section||'').toLowerCase().includes('yozish') || String(r.section||'').toLowerCase().includes('so\'zlash'));
+    const scoreDisplay = isWritingOrSpeaking ? `${r.correct}/${r.total} ball` : `${r.correct}/${r.total}`;
     return `
     <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
@@ -8730,7 +8791,7 @@ function renderHistoryList(){
         <div class="t">${escapeHtml(r.topic)}</div>
         <div class="s">${r.date}, ${r.time}</div>
       </div>
-      <div class="history-score"><b>${r.correct}/${r.total}</b><div class="p">${pct}%</div></div>
+      <div class="history-score"><b>${scoreDisplay}</b><div class="p">${pct}%</div></div>
       <span class="badge-status ${st.cls}">${st.label}</span>
       <button type="button" class="btn btn-outline" onclick="openAttemptResults('${attemptIdStr}')">Xatolarni tahlil qilish</button>
     </div>`;
@@ -8806,6 +8867,23 @@ function openAttemptResults(id){
     rec = HISTORY_DATA.find(r => String(r.id).includes(idStr) || (r.topic && r.topic === idStr));
   }
 
+  // 1. Agar Kitaba (Yozish) yoki Muhavara (So'zlashuv) bo'lsa — maxsus tahlil modalini ochamiz
+  const isWritingOrSpeaking = rec && (
+    rec.skillId === 'kitaba' || rec.skillId === 'muhavara' ||
+    rec.type === 'writing' || rec.type === 'speaking' ||
+    String(rec.topic||'').toLowerCase().includes('kitab') ||
+    String(rec.topic||'').toLowerCase().includes('yozma') ||
+    String(rec.topic||'').toLowerCase().includes('muhav') ||
+    String(rec.topic||'').toLowerCase().includes('so\'zlash') ||
+    String(rec.section||'').toLowerCase().includes('yozish') ||
+    String(rec.section||'').toLowerCase().includes('so\'zlash')
+  );
+
+  if(isWritingOrSpeaking){
+    openSpeakingOrWritingAttemptModal(rec, idStr);
+    return;
+  }
+
   const savedQuestions = (rec && Array.isArray(rec.questions) && rec.questions.length > 0)
     ? rec.questions
     : (ATTEMPTS_STORE_MAP[idStr] && Array.isArray(ATTEMPTS_STORE_MAP[idStr].questions) ? ATTEMPTS_STORE_MAP[idStr].questions : null);
@@ -8813,7 +8891,7 @@ function openAttemptResults(id){
   const activeViewEl = document.querySelector('.view.active');
   const activeViewName = activeViewEl ? activeViewEl.id.replace('view-', '') : 'history';
 
-  // 1. Agar ushbu urinishda tushgan savollarning to'liq ro'yxati (va user bergan javoblari) mavjud bo'lsa:
+  // 2. Agar ushbu urinishda tushgan savollarning to'liq ro'yxati (va user bergan javoblari) mavjud bo'lsa:
   // Natijalar ekrani (view-results)ni ochib, to'liq Savollar bo'yicha tahlilni ko'rsatamiz!
   if(savedQuestions && savedQuestions.length > 0){
     const total = savedQuestions.length;
@@ -8898,7 +8976,7 @@ function openAttemptResults(id){
     return;
   }
 
-  // 2. Agar to'liq savollar ro'yxati yo'q bo'lsa (eski backend ma'lumoti) - xatolar tahlili modalini ochamiz
+  // 3. Agar to'liq savollar ro'yxati yo'q bo'lsa (eski backend ma'lumoti) - xatolar tahlili modalini ochamiz
   openMistakeModalFallback(rec, idStr);
 }
 
@@ -8907,10 +8985,173 @@ function openMistakeModal(id){
   openAttemptResults(id);
 }
 
+/* ================= Speaking (Muhavara) va Writing (Kitaba) uchun maxsus tahlil oynasi ================= */
+function openSpeakingOrWritingAttemptModal(rec, idStr){
+  const isWriting = rec && (
+    rec.skillId === 'kitaba' || rec.type === 'writing' ||
+    String(rec.topic||'').toLowerCase().includes('kitab') ||
+    String(rec.topic||'').toLowerCase().includes('yozma') ||
+    String(rec.section||'').toLowerCase().includes('yozish')
+  );
+
+  const totalScore = rec ? (rec.correct ?? 0) : 0;
+  const maxScore = rec ? (rec.total || (isWriting ? 30 : 30)) : (isWriting ? 30 : 30);
+  const pct = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+  const cefr = getCEFRLevel(pct);
+  const totalScoreDisplay = Math.round(totalScore * 10) / 10;
+
+  const savedQuestions = (rec && Array.isArray(rec.questions) && rec.questions.length > 0)
+    ? rec.questions
+    : (ATTEMPTS_STORE_MAP[idStr] && Array.isArray(ATTEMPTS_STORE_MAP[idStr].questions) ? ATTEMPTS_STORE_MAP[idStr].questions : null);
+
+  const overlay = document.getElementById('modalOverlay');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+
+  if(isWriting){
+    titleEl.textContent = `${rec?.topic || 'Yozish (Kitaba)'} — Natija va Tahlil`;
+    let contentHtml = `
+      <div class="prompt-box" style="text-align:center;margin-bottom:16px;">
+        <div class="lbl">Natija</div>
+        <div style="font-size:32px;font-weight:700;margin:6px 0;color:var(--text);">${totalScoreDisplay} / ${maxScore} ball</div>
+        <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr} daraja</div>
+      </div>
+    `;
+
+    if(savedQuestions && savedQuestions.length > 0){
+      contentHtml += `
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">
+          ${savedQuestions.map((q, idx) => `
+            <div class="card" style="padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="t-name" style="font-size:13px;font-weight:700;color:var(--indigo-700);">${q.part?.name || `${idx + 1}-topshiriq`}</div>
+                <div style="font-weight:700;font-size:15px;color:var(--text);">${q.score ?? 0}/10 ball</div>
+              </div>
+              <div dir="rtl" style="font-family:var(--font-ar);font-size:15.5px;line-height:1.7;color:var(--text);font-weight:600;background:var(--card-alt);padding:8px 12px;border-radius:10px;">
+                ${escapeHtml(q.topic?.topicAr || q.topicAr || '')}
+              </div>
+              ${q.text ? `
+                <div style="margin-top:4px;">
+                  <div style="font-size:12px;font-weight:700;color:var(--text-faint);margin-bottom:4px;">Sizning yozgan matningiz:</div>
+                  <div dir="rtl" style="font-family:var(--font-ar);font-size:14.5px;line-height:1.75;padding:10px 12px;border-radius:10px;background:var(--card-alt);border:1px solid var(--border);color:var(--text);">
+                    ${escapeHtml(q.text)}
+                  </div>
+                </div>
+              ` : ''}
+              ${q.criteria ? `
+                <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;padding:8px 10px;background:var(--card-alt);border-radius:10px;font-size:12px;font-weight:600;">
+                  ${Object.entries(q.criteria).map(([k, v]) => `
+                    <div style="display:flex;justify-content:space-between;">
+                      <span style="color:var(--text-dim);">${escapeHtml(k)}:</span>
+                      <span style="color:var(--text);">${escapeHtml(String(v))}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+              ${q.feedback ? `
+                <div style="font-size:12.5px;color:var(--text-dim);background:var(--card-alt);padding:8px 12px;border-radius:10px;line-height:1.5;">
+                  <b style="color:var(--indigo-700);">💡 AI izohi:</b> ${escapeHtml(q.feedback)}
+                </div>
+              ` : ''}
+              ${q.corrected ? `
+                <div style="margin-top:4px;">
+                  <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">Tavsiya etilgan to'g'ri matn:</div>
+                  <div dir="rtl" style="font-family:var(--font-ar);font-size:14px;line-height:1.75;padding:8px 12px;border-radius:10px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.25);color:var(--text);">
+                    ${escapeHtml(q.corrected)}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      contentHtml += `
+        <div class="placeholder-card" style="padding:22px 16px;text-align:center;">
+          <div style="font-size:36px;margin-bottom:10px;">✍️</div>
+          <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.55;">
+            Ushbu urinishda <b>3 ta yozma topshiriq</b> bo'yicha jami <b>${totalScoreDisplay} / ${maxScore} ball</b> to'plangan.
+          </p>
+        </div>
+      `;
+    }
+
+    contentHtml += `
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-primary" style="flex:1;" onclick="closeModal();startKitabaExam()">Qayta topshirish</button>
+        <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeModal()">Yopish</button>
+      </div>
+    `;
+
+    bodyEl.innerHTML = contentHtml;
+    overlay.classList.add('show');
+    return;
+  }
+
+  // Speaking (Muhavara)
+  titleEl.textContent = `${rec?.topic || 'So\'zlashuv (Muhavara)'} — Natija va Tahlil`;
+  let contentHtml = `
+    <div class="prompt-box" style="text-align:center;margin-bottom:16px;">
+      <div class="lbl">Natija</div>
+      <div style="font-size:32px;font-weight:700;margin:6px 0;color:var(--text);">${totalScoreDisplay} / ${maxScore} ball</div>
+      <div style="color:var(--text-faint);font-size:13px;font-weight:600;">${pct}% · ${cefr} daraja</div>
+    </div>
+  `;
+
+  if(savedQuestions && savedQuestions.length > 0){
+    contentHtml += `
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">
+        ${savedQuestions.map((q, idx) => `
+          <div class="card" style="padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="t-name" style="font-size:13px;font-weight:700;color:var(--indigo-700);">${q.part?.name || 'So\'zlashuv'} · ${idx + 1}-savol</div>
+              <div style="font-weight:700;font-size:15px;color:var(--text);">${q.score ?? 0}/5 ball</div>
+            </div>
+            <div dir="rtl" style="font-family:var(--font-ar);font-size:15.5px;line-height:1.7;color:var(--text);font-weight:600;background:var(--card-alt);padding:8px 12px;border-radius:10px;">
+              ${escapeHtml(q.prompt || '')}
+            </div>
+            ${q.transcript ? `
+              <div style="font-size:13px;color:var(--text);background:var(--card-alt);padding:8px 12px;border-radius:10px;border:1px solid var(--border);line-height:1.5;">
+                <b style="color:var(--indigo-700);">🎙 Sizning javobingiz:</b> "${escapeHtml(q.transcript)}"
+              </div>
+            ` : ''}
+            ${q.feedback ? `
+              <div style="font-size:12.5px;color:var(--text-dim);background:var(--card-alt);padding:8px 12px;border-radius:10px;line-height:1.5;">
+                <b style="color:var(--indigo-700);">💡 AI izohi:</b> ${escapeHtml(q.feedback)}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    contentHtml += `
+      <div class="placeholder-card" style="padding:22px 16px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:10px;">🎤</div>
+        <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.55;">
+          Ushbu urinishda <b>6 ta og'zaki savol</b> bo'yicha jami <b>${totalScoreDisplay} / ${maxScore} ball</b> to'plangan.
+        </p>
+      </div>
+    `;
+  }
+
+  contentHtml += `
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button type="button" class="btn btn-primary" style="flex:1;" onclick="closeModal();openMicCheck()">Qayta topshirish</button>
+      <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeModal()">Yopish</button>
+    </div>
+  `;
+
+  bodyEl.innerHTML = contentHtml;
+  overlay.classList.add('show');
+}
+
 function openMistakeModalFallback(rec, idStr){
   const topicName = rec ? (rec.topic || rec.topic_name || rec.section || 'Test') : 'Test';
-  const wrongCount = rec ? Math.max(0, (rec.total || 0) - (rec.correct || 0)) : 0;
-  const isPerfect = rec && (rec.correct >= rec.total) && (rec.total > 0);
+  const totalCount = rec ? (rec.total || 0) : 0;
+  const correctCount = rec ? (rec.correct || 0) : 0;
+  const wrongCount = Math.max(0, totalCount - correctCount);
+  const isPerfect = totalCount > 0 && correctCount >= totalCount;
 
   // 1. Agar barcha savollarga to'g'ri javob berilgan bo'lsa
   if(isPerfect){
@@ -8920,7 +9161,7 @@ function openMistakeModalFallback(rec, idStr){
         <div style="font-size:44px;margin-bottom:12px;">🎉</div>
         <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:6px;">Xatolik yo'q!</h3>
         <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 18px 0;line-height:1.5;">
-          Siz ushbu testdagi barcha <b>${rec.total} ta</b> savolga to'liq to'g'ri javob berdingiz (100% natija).
+          Siz ushbu testdagi barcha <b>${totalCount} ta</b> savolga to'liq to'g'ri javob berdingiz (100% natija).
         </p>
         <button type="button" class="btn btn-primary" onclick="closeModal()">Yopish</button>
       </div>
@@ -8998,11 +9239,11 @@ function openMistakeModalFallback(rec, idStr){
     <div class="placeholder-card" style="padding:26px 18px;text-align:center;">
       <div style="font-size:38px;margin-bottom:12px;">📊</div>
       <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">
-        Natija: ${rec ? `${rec.correct}/${rec.total}` : ''} (${wrongCount > 0 ? `${wrongCount} ta xato` : '0 ta xato'})
+        Natija: ${correctCount}/${totalCount} (${wrongCount > 0 ? `${wrongCount} ta xato` : '0 ta xato'})
       </h3>
       <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px 0;line-height:1.5;">
         ${wrongCount > 0
-          ? `Ushbu urinishda <b>${wrongCount} ta</b> savolga xato javob berilgan.`
+          ? `Ushbu urinishda <b>${totalCount} ta</b> savoldan <b>${wrongCount} tasiga</b> xato javob berilgan.`
           : `Ushbu testda barcha savollarga to'g'ri javob berilgan.`}
       </p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -9474,8 +9715,15 @@ async function resetAllUsersXpOnBackend(){
 }
 async function resetAllUsersXp(){
   const n = ADMIN_USERS.length;
-  if(!confirm(`⚠️ DIQQAT: Bu BARCHA foydalanuvchilarning (${n} ta) XP'sini butunlay 0'ga qaytaradi. Reyting ro'yxati ham nolga tushadi. (Daraja — A1–C2 — bunga ta'sir qilmaydi, u alohida CEFR imtihon natijasi.) Bu amalni ORQAGA QAYTARIB BO'LMAYDI!\n\nDavom etasizmi?`)) return;
-  if(!confirm("So'nggi tasdiq: haqiqatan ham BARCHA foydalanuvchilarning XP'sini nolga tushirmoqchimisiz?")) return;
+  const ok = await showLiquidConfirm({
+    title: "Barcha foydalanuvchilar XP'sini 0 ga tushirish",
+    message: `DIQQAT: Bu BARCHA foydalanuvchilarning (${n} ta) XP'sini butunlay 0 ga qaytaradi.`,
+    subtext: "Reyting ro'yxati ham nolga tushadi. Bu amalni ORQAGA QAYTARIB BO'LMAYDI!",
+    confirmLabel: "Ha, 0 ga tushirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   const result = await resetAllUsersXpOnBackend();
   if(result === null){ toast("⚠️ Xatolik: XP tozalanmadi"); return; }
   toast(`✅ ${n} ta foydalanuvchining XP'si 0'ga tushirildi`);
@@ -9498,26 +9746,71 @@ async function resetAllUsersXp(){
    (yuqorisida sayt domeni yozilgan) ko'rsatadi — ilova dizayniga mos kelmaydi.
    Shu sabab mavjud #modalOverlay/#modalTitle/#modalBody tizimidan foydalanib,
    xuddi shunday ishlaydigan, lekin ilova ichida chiqadigan versiya yasaymiz. */
-function showConfirmModal({title, message, confirmLabel = 'Ha', cancelLabel = "Bekor qilish", onConfirm}){
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').innerHTML = `
-    <div style="text-align:center;padding:10px 4px 6px;">
-      <div style="font-size:38px;margin-bottom:12px;">⚠️</div>
-      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;white-space:pre-line;">${escapeHtml(message)}</p>
-      <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-outline" style="flex:1;padding:12px;" id="confirmModalCancelBtn">${escapeHtml(cancelLabel)}</button>
-        <button type="button" class="btn btn-primary" style="flex:1;padding:12px;background:var(--red);border-color:var(--red);" id="confirmModalOkBtn">${escapeHtml(confirmLabel)}</button>
+function showLiquidConfirm({
+  title = "Tasdiqlash",
+  message = "Harakatni tasdiqlaysizmi?",
+  subtext = "",
+  icon = "⚠️",
+  confirmLabel = "Ha, tasdiqlayman",
+  cancelLabel = "Bekor qilish",
+  isDanger = true
+}){
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modalOverlay');
+    const titleEl = document.getElementById('modalTitle');
+    const bodyEl = document.getElementById('modalBody');
+    if(!overlay || !titleEl || !bodyEl){
+      resolve(true);
+      return;
+    }
+    titleEl.textContent = title;
+    bodyEl.innerHTML = `
+      <div style="text-align:center;padding:10px 4px 6px;">
+        <div style="font-size:38px;margin-bottom:12px;">${icon}</div>
+        <div style="font-size:15.5px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.45;">${escapeHtml(message)}</div>
+        ${subtext ? `<p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;white-space:pre-line;">${escapeHtml(subtext)}</p>` : '<div style="margin-bottom:16px;"></div>'}
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-outline" style="flex:1;padding:12px;" id="liquidCancelBtn">${escapeHtml(cancelLabel)}</button>
+          <button type="button" class="btn btn-primary" style="flex:1;padding:12px;${isDanger ? 'background:var(--red);border-color:var(--red);' : ''}" id="liquidConfirmBtn">${escapeHtml(confirmLabel)}</button>
+        </div>
       </div>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('show');
-  document.getElementById('confirmModalCancelBtn').onclick = () => {
-    document.getElementById('modalOverlay').classList.remove('show');
-  };
-  document.getElementById('confirmModalOkBtn').onclick = () => {
-    document.getElementById('modalOverlay').classList.remove('show');
-    onConfirm();
-  };
+    `;
+    overlay.classList.add('show');
+
+    const cancelBtn = document.getElementById('liquidCancelBtn');
+    const confirmBtn = document.getElementById('liquidConfirmBtn');
+
+    function cleanup(){
+      overlay.classList.remove('show');
+      if(cancelBtn) cancelBtn.onclick = null;
+      if(confirmBtn) confirmBtn.onclick = null;
+    }
+
+    if(cancelBtn){
+      cancelBtn.onclick = () => {
+        cleanup();
+        resolve(false);
+      };
+    }
+    if(confirmBtn){
+      confirmBtn.onclick = () => {
+        cleanup();
+        resolve(true);
+      };
+    }
+  });
+}
+
+function showConfirmModal({title, message, confirmLabel = 'Ha', cancelLabel = "Bekor qilish", onConfirm}){
+  showLiquidConfirm({
+    title,
+    message,
+    confirmLabel,
+    cancelLabel,
+    isDanger: true
+  }).then(ok => {
+    if(ok && typeof onConfirm === 'function') onConfirm();
+  });
 }
 async function clearAllExamHistoryOnBackend(){
   if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
@@ -10491,9 +10784,17 @@ async function deleteTopic(id){
   const t = GRAMMAR_TOPICS.find(x=>x.id===id);
   if(!t) return;
   const n = GRAMMAR_TOPIC_BANKS[id]?.length || 0;
-  if(!confirm(n ? `Bu mavzuda ${n} ta savol bor. Mavzu va uning barcha savollarini o'chirmoqchimisiz?` : "Bu mavzuni rostdan ham o'chirmoqchimisiz?")) return;
-  const ok = await deleteGrammarTopicOnBackend(id);
-  if(!ok){
+  const ok = await showLiquidConfirm({
+    title: "Mavzuni o'chirish",
+    message: n ? `Bu mavzuda ${n} ta savol bor. Mavzu va uning barcha savollarini o'chirmoqchimisiz?` : "Bu mavzuni rostdan ham o'chirmoqchimisiz?",
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
+  const deleted = await deleteGrammarTopicOnBackend(id);
+  if(!deleted){
     toast("❌ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
     return;
   }
@@ -10726,13 +11027,21 @@ async function deleteQuestion(skillId, topicId, idx){
   const items = getQuestionItems(skillId, topicId);
   const q = items?.[idx];
   if(!q) return;
-  if(!confirm("Bu savolni rostdan ham o'chirmoqchimisiz?")) return;
+  const ok = await showLiquidConfirm({
+    title: "Savolni o'chirish",
+    message: "Ushbu savolni rostdan ham o'chirmoqchimisiz?",
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   items.splice(idx,1);
   renderAdminQuestions();
   viewTopicQuestions(skillId, topicId);
   if(q.id){
-    const ok = await deleteQuestionOnBackend(q.id);
-    toast(ok ? "✅ Savol o'chirildi" : "❌ O'chirilmadi: " + window.LAST_BACKEND_ERROR, ok?2200:6000);
+    const delOk = await deleteQuestionOnBackend(q.id);
+    toast(delOk ? "✅ Savol o'chirildi" : "❌ O'chirilmadi: " + window.LAST_BACKEND_ERROR, delOk?2200:6000);
   } else {
     toast("⚠️ Bu namunaviy savol — o'chirish faqat shu seansda amal qildi (backendda saqlanmagan)");
   }
@@ -10828,7 +11137,15 @@ async function deleteQiroaTest(testId){
   const test = QIROA_TEST_BY_ID[testId];
   if(!test) return;
   const n = test.questions.length;
-  if(!confirm(`Bu testni (matn${n?` + ${n} ta savol`:''}) butunlay o'chirmoqchimisiz? Bu amalni orqaga qaytarib bo'lmaydi.`)) return;
+  const ok = await showLiquidConfirm({
+    title: "Testni o'chirish",
+    message: `Bu testni (matn${n?` + ${n} ta savol`:''}) butunlay o'chirmoqchimisiz?`,
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   const result = await deleteQiroaTextOnBackend(testId);
   if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
   await refreshQiroaFromBackend();
@@ -10972,7 +11289,15 @@ async function submitEditSpeakingQuestion(e, id){
   return false;
 }
 async function deleteSpeakingQuestion(id){
-  if(!confirm("Bu savolni butunlay o'chirmoqchimisiz?")) return;
+  const ok = await showLiquidConfirm({
+    title: "Savolni o'chirish",
+    message: "Bu savolni butunlay o'chirmoqchimisiz?",
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   const result = await deleteSpeakingQuestionOnBackend(id);
   if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
   await refreshSpeakingFromBackend();
@@ -11055,7 +11380,15 @@ async function submitEditKitabaTopic(e, id){
   return false;
 }
 async function deleteKitabaTopic(id){
-  if(!confirm("Bu mavzuni butunlay o'chirmoqchimisiz?")) return;
+  const ok = await showLiquidConfirm({
+    title: "Mavzuni o'chirish",
+    message: "Bu mavzuni butunlay o'chirmoqchimisiz?",
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   const result = await deleteWritingTopicOnBackend(id);
   if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
   await refreshKitabaFromBackend();
@@ -11310,7 +11643,15 @@ async function deleteIstimaTest(testId){
   const test = ISTIMA_TEST_BY_ID[testId];
   if(!test) return;
   const n = test.questions.length;
-  if(!confirm(`Bu testni (audio${n?` + ${n} ta savol`:''}) butunlay o'chirmoqchimisiz? Bu amalni orqaga qaytarib bo'lmaydi.`)) return;
+  const ok = await showLiquidConfirm({
+    title: "Testni o'chirish",
+    message: `Bu testni (audio${n?` + ${n} ta savol`:''}) butunlay o'chirmoqchimisiz?`,
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   const result = await deleteIstimaAudioOnBackend(testId);
   if(result === null){ toast("⚠️ O'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000); return; }
   await refreshIstimaFromBackend();
@@ -11876,7 +12217,15 @@ function submitEditMock(e, mockId){
 async function deleteMock(mockId){
   const mock = MOCKS_DATA.find(m => m.id === mockId);
   if(!mock) return;
-  if(!confirm(`"${mock.title}" mock testini butunlay o'chirmoqchimisiz?`)) return;
+  const ok = await showLiquidConfirm({
+    title: "Mock testni o'chirish",
+    message: `"${mock.title}" mock testini butunlay o'chirmoqchimisiz?`,
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   MOCKS_DATA = MOCKS_DATA.filter(m => m.id !== mockId);
   saveMocksData();
   await deleteMockFromBackend(mockId);
@@ -12054,10 +12403,18 @@ function submitEditMockQuestion(e, mockId, qIdx){
   return false;
 }
 
-function deleteMockQuestion(mockId, qIdx){
+async function deleteMockQuestion(mockId, qIdx){
   const mock = MOCKS_DATA.find(m => m.id === mockId);
   if(!mock || !mock.questions || !mock.questions[qIdx]) return;
-  if(!confirm(`${qIdx + 1}-savolni o'chirmoqchimisiz?`)) return;
+  const ok = await showLiquidConfirm({
+    title: "Savolni o'chirish",
+    message: `${qIdx + 1}-savolni o'chirmoqchimisiz?`,
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   mock.questions.splice(qIdx, 1);
   saveMocksData(mockId);
   toast("🗑 Savol o'chirildi");
@@ -13158,8 +13515,16 @@ function saveReportNote(reportKey){
   renderAdminReportsContent();
 }
 
-function deleteReportConfirm(reportKey){
-  if(!confirm("Haqiqatan ham ushbu xabarni ro\u2018yxatdan o\u2018chirmoqchimisiz?")) return;
+async function deleteReportConfirm(reportKey){
+  const ok = await showLiquidConfirm({
+    title: "Xabarni o'chirish",
+    message: "Haqiqatan ham ushbu xabarni ro\u2018yxatdan o\u2018chirmoqchimisiz?",
+    subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+    confirmLabel: "Ha, o'chirilsin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
   updateReportMetaItem(reportKey, { deleted: true });
   toast("Xabar ro\u2018yxatdan o\u2018chirildi");
   renderAdminReportsContent();
@@ -15162,13 +15527,14 @@ function renderQuestion(){
   }
   const fontCtrl = document.getElementById('examFontCtrl');
   if(fontCtrl){
-    const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening');
+    const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening' || currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing' || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating');
     fontCtrl.style.display = hideZoom ? 'none' : 'flex';
   }
   const topTimerEl = document.getElementById('quizTimer');
   if(topTimerEl){
     const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
-    if(isSpeaking){
+    const isWritingDone = currentQuiz && (currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing') && (currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating');
+    if(isSpeaking || isWritingDone){
       topTimerEl.innerHTML = '';
       topTimerEl.style.display = 'none';
     } else {
@@ -16125,7 +16491,9 @@ function renderMuhavaraSummary(totalScore, maxScore){
   const sideEl = document.getElementById('quizSide');
   if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
-  if(timerEl) timerEl.textContent = '';
+  if(timerEl){ timerEl.innerHTML = ''; timerEl.style.display = 'none'; }
+  const fontCtrl = document.getElementById('examFontCtrl');
+  if(fontCtrl) fontCtrl.style.display = 'none';
   const pct = Math.round((totalScore/maxScore)*100);
   const body = document.getElementById('quizBody');
   body.innerHTML = `
@@ -16349,7 +16717,9 @@ function renderKitabaSummary(){
   const sideEl = document.getElementById('quizSide');
   if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
-  if(timerEl) timerEl.textContent = '';
+  if(timerEl){ timerEl.innerHTML = ''; timerEl.style.display = 'none'; }
+  const fontCtrl = document.getElementById('examFontCtrl');
+  if(fontCtrl) fontCtrl.style.display = 'none';
   const totalScore = currentQuiz.questions.reduce((s,q)=> s+(q.score||0), 0);
   const maxScore = currentQuiz.questions.length * 10;
   const pct = Math.round((totalScore/maxScore)*100);
@@ -17681,7 +18051,7 @@ function resumeMarathonFromHub(){
   startGrammarMarathon(false);
 }
 
-function confirmRestartMarathon(){
+async function confirmRestartMarathon(){
   const questions = getGrammarMarathonQuestions();
   if(!questions || !questions.length){
     toast("⚠️ Grammatika bo'limida hali savollar mavjud emas.");
@@ -17690,7 +18060,16 @@ function confirmRestartMarathon(){
   const state = getMarathonState();
   const answered = Object.keys(state.answers || {}).length;
   if(answered > 0){
-    if(confirm("Marafonni 0 dan qayta boshlashni xohlaysizmi? Oldingi javoblaringiz tozalanadi va 1-savoldan boshlanadi.")){
+    const ok = await showLiquidConfirm({
+      title: "Qayta boshlash",
+      message: "Marafonni 0 dan qayta boshlashni xohlaysizmi?",
+      subtext: "Oldingi javoblaringiz tozalanadi va 1-savoldan boshlanadi.",
+      confirmLabel: "Ha, qayta boshlash",
+      cancelLabel: "Bekor qilish",
+      isDanger: false,
+      icon: "🔄"
+    });
+    if(ok){
       startGrammarMarathon(true);
     }
   } else {
@@ -19008,7 +19387,15 @@ bootApp();
       toast('O\u2018zingizni adminlikdan olib tashlay olmaysiz');
       return;
     }
-    if (!confirm('Bu foydalanuvchini adminlikdan butunlay olib tashlaysizmi?')) return;
+    const ok = await showLiquidConfirm({
+      title: "Adminni olib tashlash",
+      message: "Bu foydalanuvchini adminlikdan butunlay olib tashlaysizmi?",
+      subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+      confirmLabel: "Ha, olib tashlansin",
+      cancelLabel: "Bekor qilish",
+      isDanger: true
+    });
+    if (!ok) return;
     try {
       await rpc('admin_remove_admin', { p_telegram_id: Number(telegramId) });
       toast('\u2705 Adminlikdan olib tashlandi');
@@ -19425,13 +19812,11 @@ bootApp();
         body: JSON.stringify({ card_id: id, telegram_link: card.telegram_link })
       });
       const data = await res.json();
-      alert('STATUS: ' + res.status + '\n\nJAVOB: ' + JSON.stringify(data, null, 2));
       if (!res.ok) { toast('❌ ' + (data.error || 'Xato'), 4000); return; }
       toast('✅ Yangilandi');
       await renderCommunityAdmin();
       await loadAppConfig();
     } catch (e) {
-      alert('CATCH XATOSI: ' + e.message);
       toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
     }
   };
@@ -19472,7 +19857,15 @@ bootApp();
   };
 
   window.deleteCommunityCardAdmin = async function (id) {
-    if (!confirm('Ushbu kartani butunlay o\'chirmoqchimisiz?')) return;
+    const ok = await showLiquidConfirm({
+      title: "Kartani o'chirish",
+      message: "Ushbu kartani butunlay o'chirmoqchimisiz?",
+      subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+      confirmLabel: "Ha, o'chirilsin",
+      cancelLabel: "Bekor qilish",
+      isDanger: true
+    });
+    if (!ok) return;
     try {
       await rpc('admin_delete_community_card', { p_id: id });
       toast('✅ O\'chirildi');
