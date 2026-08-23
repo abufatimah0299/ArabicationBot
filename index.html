@@ -8077,6 +8077,16 @@ function switchSkillTab(tab, isDirectEntry = false){
   const panePractice = document.getElementById('skillPanePractice');
   const paneMocks = document.getElementById('skillPaneMocks');
 
+  const hasNoMocks = pendingSkillId === 'muhavara' || pendingSkillId === 'kitaba';
+
+  if(hasNoMocks){
+    if(tabToggle) tabToggle.style.display = 'none';
+    if(mockTitle) mockTitle.style.display = 'none';
+    if(paneMocks) paneMocks.style.display = 'none';
+    if(panePractice) panePractice.style.display = 'block';
+    return;
+  }
+
   if(tab === 'mocks'){
     if(tabToggle) tabToggle.style.display = 'none';
     if(mockTitle) mockTitle.style.display = 'block';
@@ -11682,7 +11692,7 @@ function nextMockNumberForSkill(skillId){
 function renderAdminMockSkillFilters(){
   const mockSkills = [
     { value: 'all', label: 'Barchasi' },
-    ...SKILLS.map(s => ({ value: s.id, label: s.name }))
+    ...SKILLS.filter(s => s.id !== 'muhavara' && s.id !== 'kitaba').map(s => ({ value: s.id, label: s.name }))
   ];
   initCustomDropdown('adminMockSkillDropdown', {
     label: 'Mahorat',
@@ -11771,7 +11781,7 @@ function openAddMockModal(presetSkill){
       <div class="form-field">
         <label>Mahoratni tanlang</label>
         <select id="mockSkillSelect" onchange="updateMockAutoNumber(this.value)">
-          ${SKILLS.map(s => `<option value="${s.id}" ${s.id === skill ? 'selected' : ''}>${s.name}</option>`).join('')}
+          ${SKILLS.filter(s => s.id !== 'muhavara' && s.id !== 'kitaba').map(s => `<option value="${s.id}" ${s.id === skill ? 'selected' : ''}>${s.name}</option>`).join('')}
         </select>
       </div>
       <div class="form-field">
@@ -14929,6 +14939,7 @@ function startIstimaJuz(){
   clearInterval(timerInterval); clearQuestionTimer();
   const tEl = document.getElementById('quizTimer');
   if(tEl){ tEl.innerHTML = '<span class="timer-icon">⏱</span><span class="timer-digits">—:—</span>'; tEl.style.color=''; tEl.style.borderColor=''; }
+  buildQGrid();
   renderQuestion();
   updateQGrid();
 }
@@ -15032,7 +15043,10 @@ function buildQGrid(){
   }
   const isSpeaking = currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking';
   const isWriting = currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing';
-  const isExcluded = currentQuiz.isMarathon || isSpeaking || isWriting || (FULL_EXAM && FULL_EXAM.active);
+  const isIstimaBeforeJuz2 = (currentQuiz.skillId === 'istima' || currentQuiz.type === 'listening-juz') && (
+    !currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer] || currentQuiz.juz[currentQuiz.juzPointer].partNum < 2
+  );
+  const isExcluded = currentQuiz.isMarathon || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active);
   if(isExcluded){
     if(sideEl) sideEl.style.display = 'none';
     return;
@@ -15121,7 +15135,10 @@ function renderQuestion(){
   if(sideCard){
     const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
     const isWriting = currentQuiz && (currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing');
-    const hideSide = !currentQuiz || currentQuiz.isMarathon || isSpeaking || isWriting || (FULL_EXAM && FULL_EXAM.active) || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating';
+    const isIstimaBeforeJuz2 = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.type === 'listening-juz') && (
+      !currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer] || currentQuiz.juz[currentQuiz.juzPointer].partNum < 2
+    );
+    const hideSide = !currentQuiz || currentQuiz.isMarathon || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active) || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating';
     sideCard.style.display = hideSide ? 'none' : '';
   }
   const fontCtrl = document.getElementById('examFontCtrl');
