@@ -1009,7 +1009,7 @@ textarea.write-area:focus{
   color:var(--indigo-700); text-align:center; max-width:320px;
 }
 .result-level-letter.is-message{
-  font-size:14.5px; font-weight:600; line-height:1.45; color:var(--text-dim); margin-top:4px; max-width:290px;
+  font-size:13.5px; font-weight:600; line-height:1.5; color:var(--text-dim); margin-top:4px; max-width:320px; text-align:center;
 }
 .result-title{ font-size:18px; font-weight:700; margin-top:16px; color:var(--text); }
 .result-sub{ font-size:13px; color:var(--text-dim); font-weight:600; margin-top:5px; max-width:320px; }
@@ -8927,11 +8927,14 @@ function openAttemptResults(id){
     const isMock = !!(rec?.mockId || rec?.type === 'mock');
     const isSkillExam = !isMock && !rec?.topicId;
     const levelWrap = document.querySelector('.result-level-wrap');
+    const levelTagEl = document.querySelector('.result-level-tag');
     if(levelWrap){
-      levelWrap.style.display = (isSkillExam && rec?.level) ? 'flex' : 'none';
-      if(rec?.level){
+      levelWrap.style.display = (isSkillExam && rec?.level && pct >= 25) ? 'flex' : 'none';
+      if(rec?.level && pct >= 25){
+        if(levelTagEl) levelTagEl.style.display = '';
         const lvlEl = document.getElementById('resultLevel');
         if(lvlEl){
+          lvlEl.style.display = '';
           lvlEl.textContent = rec.level;
           if(rec.level.length > 3){
             lvlEl.classList.add('is-message');
@@ -8964,18 +8967,25 @@ function openAttemptResults(id){
 
     const titleEl = document.getElementById('resultTitle');
     const subEl = document.getElementById('resultSub');
-    if(pct === 100){
-      titleEl.textContent = 'Ajoyibsiz! 🎉';
-      subEl.textContent = "Siz barcha savollarga to'g'ri javob berdingiz.";
-    } else if(pct >= 80){
-      titleEl.textContent = "Zo'r natija! 👏";
-      subEl.textContent = `Siz ${total} tadan ${correct} tasiga to'g'ri javob berdingiz.`;
-    } else if(pct >= 50){
-      titleEl.textContent = 'Yaxshi harakat! 💪';
-      subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+    if(pct < 25){
+      if(levelTagEl) levelTagEl.style.display = 'none';
+      titleEl.textContent = 'Daraja aniqlanmadi';
+      subEl.textContent = "Ko'proq mashq qiling, keyingi safar albatta chiqadi!";
     } else {
-      titleEl.textContent = 'Davom eting! 📚';
-      subEl.textContent = "Mavzuni qayta ko'rib chiqish tavsiya etiladi.";
+      if(levelTagEl) levelTagEl.style.display = '';
+      if(pct === 100){
+        titleEl.textContent = 'Ajoyibsiz! 🎉';
+        subEl.textContent = "Siz barcha savollarga to'g'ri javob berdingiz.";
+      } else if(pct >= 80){
+        titleEl.textContent = "Zo'r natija! 👏";
+        subEl.textContent = `Siz ${total} tadan ${correct} tasiga to'g'ri javob berdingiz.`;
+      } else if(pct >= 50){
+        titleEl.textContent = 'Yaxshi harakat! 💪';
+        subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+      } else {
+        titleEl.textContent = 'Yaxshi harakat! 💪';
+        subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+      }
     }
 
     const analyzeBtn = document.getElementById('analyzeBtn');
@@ -16857,14 +16867,13 @@ function reviseWriting(){
 
 /* ---------------- Finish / results ---------------- */
 function getCEFRLevel(pct, answeredCount = 1){
-  if(answeredCount === 0 || pct === 0) return "Afsuski, siz yetarli ball to'play olmadingiz";
+  if(answeredCount === 0 || pct < 25) return "Daraja aniqlanmadi — ko'proq mashq qiling, keyingi safar albatta chiqadi!";
   if(pct>=90) return 'C2';
   if(pct>=75) return 'C1';
   if(pct>=60) return 'B2';
   if(pct>=45) return 'B1';
   if(pct>=25) return 'A2';
-  if(pct>0) return 'A1';
-  return "Afsuski, siz yetarli ball to'play olmadingiz";
+  return "Daraja aniqlanmadi — ko'proq mashq qiling, keyingi safar albatta chiqadi!";
 }
 function finishQuiz(force = false){
   if(!currentQuiz || !currentQuiz.questions){ showView('attanal'); return; }
@@ -17025,11 +17034,12 @@ function finishQuiz(force = false){
   // Daraja faqat Mahorat imtihonlarida ko'rsatiladi (Mock testlar va alohida mavzularda ko'rsatilmaydi)
   const levelWrap = document.querySelector('.result-level-wrap');
   if(levelWrap){
-    levelWrap.style.display = isSkillExam ? 'flex' : 'none';
+    levelWrap.style.display = (isSkillExam && pct >= 25) ? 'flex' : 'none';
   }
-  if(isSkillExam){
+  if(isSkillExam && pct >= 25){
     const lvlEl = document.getElementById('resultLevel');
     if(lvlEl){
+      lvlEl.style.display = '';
       lvlEl.textContent = calculatedLevel;
       if(calculatedLevel && calculatedLevel.length > 3){
         lvlEl.classList.add('is-message');
@@ -17058,18 +17068,34 @@ function finishQuiz(force = false){
 
   const titleEl = document.getElementById('resultTitle');
   const subEl = document.getElementById('resultSub');
-  if(pct===100){
-    titleEl.textContent = 'Ajoyibsiz! 🎉';
-    subEl.textContent = "Siz barcha savollarga to'g'ri javob berdingiz.";
-  } else if(pct>=80){
-    titleEl.textContent = "Zo'r natija! 👏";
-    subEl.textContent = `Siz ${total} tadan ${correct} tasiga to'g'ri javob berdingiz.`;
-  } else if(pct>=50){
-    titleEl.textContent = 'Yaxshi harakat! 💪';
-    subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+  const levelTagEl = document.querySelector('.result-level-tag');
+  if(pct < 25){
+    if(levelTagEl) levelTagEl.style.display = 'none';
+    if(isSkillExam){
+      const lvlEl = document.getElementById('resultLevel');
+      if(lvlEl) lvlEl.style.display = 'none';
+    }
+    titleEl.textContent = 'Daraja aniqlanmadi';
+    subEl.textContent = "Ko'proq mashq qiling, keyingi safar albatta chiqadi!";
   } else {
-    titleEl.textContent = 'Davom eting! 📚';
-    subEl.textContent = "Mavzuni qayta ko'rib chiqish tavsiya etiladi.";
+    if(levelTagEl) levelTagEl.style.display = '';
+    if(isSkillExam){
+      const lvlEl = document.getElementById('resultLevel');
+      if(lvlEl) lvlEl.style.display = '';
+    }
+    if(pct===100){
+      titleEl.textContent = 'Ajoyibsiz! 🎉';
+      subEl.textContent = "Siz barcha savollarga to'g'ri javob berdingiz.";
+    } else if(pct>=80){
+      titleEl.textContent = "Zo'r natija! 👏";
+      subEl.textContent = `Siz ${total} tadan ${correct} tasiga to'g'ri javob berdingiz.`;
+    } else if(pct>=50){
+      titleEl.textContent = 'Yaxshi harakat! 💪';
+      subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+    } else {
+      titleEl.textContent = 'Yaxshi harakat! 💪';
+      subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
+    }
   }
 
   const analyzeBtn = document.getElementById('analyzeBtn');
