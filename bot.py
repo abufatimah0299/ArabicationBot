@@ -1,34 +1,16 @@
 """
 Arabication — Telegram bot uchun /start skripti
 -------------------------------------------------
-Bu skript /start bosilganda foydalanuvchiga salomlashuv matnini va
-Mini App'ni ochadigan tugmani yuboradi.
-
-O'RNATISH (bir marta):
-    pip install python-telegram-bot==21.4
-
-SOZLASH:
-    1) Pastdagi BOT_TOKEN ni @BotFather dan olingan tokeningizga almashtiring.
-    2) WEBAPP_URL ni platformangiz joylashgan HTTPS manzilga almashtiring
-       (masalan, https://arabication.uz kabi — Telegram Mini App faqat
-       HTTPS manzillar bilan ishlaydi, GitHub Pages/Vercel/Netlify mos keladi).
-    3. Terminalda: python bot.py
-
-Eslatma: Bu kod doim ishlab turishi kerak bo'lsa (foydalanuvchilar /start
-bosganda javob olishi uchun), uni bir serverda (masalan Render.com,
-Railway.app yoki VPS) doimiy ishlaydigan qilib joylashtirish kerak.
-Kompyuteringizni o'chirsangiz, bot ham to'xtaydi.
 """
 
 import os
+import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 logging.basicConfig(level=logging.INFO)
 
-# Tokenni GitHub'dagi kodga yozib qo'ymang! Hosting xizmatida (Render/Railway)
-# "Environment Variables" bo'limiga BOT_TOKEN va WEBAPP_URL nomlari bilan qo'shasiz.
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 WEBAPP_URL = os.environ["WEBAPP_URL"]
 
@@ -57,6 +39,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def main() -> None:
+    # Python 3.14 dagi asyncio event loop xatoligini oldini olish
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     print("Bot ishga tushdi...")
