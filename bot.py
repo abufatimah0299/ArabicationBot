@@ -1,11 +1,7 @@
-"""
-Arabication — Telegram bot uchun /start skripti
--------------------------------------------------
-"""
-
 import os
 import asyncio
 import logging
+from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -38,19 +34,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-def main() -> None:
-    # Python 3.14 dagi asyncio event loop xatoligini oldini olish
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+# Render port talab qilgani uchun soxta veb-sahifa
+async def health_check(request):
+    return web.Response(text="Bot ishlayapti!")
 
+
+async def run_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = web.Application()
+    server.router.add_get("/", health_check)
+    runner = web.AppRunner(server)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+
+async def main() -> None:
+    # 1. Port ochish (Render Web Service bepul ishlashi uchun)
+    await run_dummy_server()
+
+    # 2. Botni ishga tushirish
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    print("Bot ishga tushdi...")
-    app.run_polling()
+    
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    print("Bot muvaffaqiyatli ishga tushdi...")
+
+    # Doimiy fonda ushlab turish
+    await asyncio.Event().wait()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
