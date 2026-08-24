@@ -6214,14 +6214,17 @@ async function loadLeaderboardFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=id,telegram_id,name,gender,photo_url,total_xp,rank,daily_xp,weekly_xp,monthly_xp&order=rank.asc.nullslast&limit=100`, { headers: authHeaders() });
-    if(!res.ok) return [];
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() });
+    if(!res.ok){
+      console.warn('[loadLeaderboardFromBackend] error:', res.status);
+      return [];
+    }
     const data = await res.json();
     if(Array.isArray(data) && data.length > 0){
       SmartCache.set('leaderboard', data);
     }
     return data;
-  }catch(e){ console.error(e); return []; }
+  }catch(e){ console.error('[loadLeaderboardFromBackend]', e); return []; }
 }
 /* Reyting ro'yxatini backenddan qayta yuklab, ekranni yangi ma'lumot bilan qayta
    chizadi. applyLiveLeaderboard() ichida view-rank ochiq bo'lsa renderRank() ni
