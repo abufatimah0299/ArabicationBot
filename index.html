@@ -245,12 +245,13 @@ body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-n
 }
 
 /* ---------- Topbar ---------- */
-.main{ flex:1; min-width:0; width:100%; max-width:880px; margin:0 auto; position:relative; z-index:1; }
+.main{ flex:1; min-width:0; width:100%; max-width:580px; margin:0 auto; position:relative; z-index:1; box-sizing:border-box; }
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:calc(18px + var(--app-safe-top, 0px)) calc(28px + var(--app-safe-right, 0px)) 10px calc(28px + var(--app-safe-left, 0px));
+  padding:calc(18px + var(--app-safe-top, 0px)) calc(16px + var(--app-safe-right, 0px)) 10px calc(16px + var(--app-safe-left, 0px));
   gap:16px; flex-wrap:nowrap;
   position:relative; z-index:10; pointer-events:none;
+  width:100%; max-width:100%; box-sizing:border-box;
 }
 .hello{ min-width:0; pointer-events:auto; }
 .hello h1{ font-size:21px; font-weight:600; letter-spacing:-0.3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -594,7 +595,7 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .btn-block{ width:100%; }
 
 /* ---------- Quiz view ---------- */
-.quiz-wrap{ display:grid; grid-template-columns:minmax(0, 1fr) 260px; gap:18px; align-items:start; width:100%; max-width:100%; min-width:0; }
+.quiz-wrap{ display:grid; grid-template-columns:minmax(0, 1fr); gap:18px; align-items:start; width:100%; max-width:100%; min-width:0; }
 .quiz-wrap > .card{ width:100%; max-width:100%; min-width:0; box-sizing:border-box; }
 .quiz-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; gap:10px; flex-wrap:nowrap; }
 @media (max-width:480px){
@@ -3065,7 +3066,8 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + var(--app-safe-bottom, 0
   align-items: flex-start;
   padding: 22px 16px 24px 16px;
   width: 100%;
-  max-width: 680px;
+  max-width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
 }
 
@@ -3142,7 +3144,8 @@ html[data-theme="dark"] .dash-main-heading {
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   width: 100%;
-  max-width: 860px;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-top: 20px;
 }
 
@@ -3357,7 +3360,8 @@ html[data-theme="dark"] .dfc-progress-bar {
 /* ============ MARAFON HORIZONTAL SECTION & CARD ============ */
 .dash-section-wrap {
   width: 100%;
-  max-width: 860px;
+  max-width: 100%;
+  box-sizing: border-box;
   margin-top: 22px;
 }
 
@@ -8393,6 +8397,47 @@ function getSkillSvgMeta(item){
     bg: 'var(--indigo-100)'
   };
 }
+
+function formatHistoryDisplayTitle(r){
+  if(!r) return '';
+  const isFullExam = (r.skillId === 'attanal' || r.section === 'Imtihon' || String(r.topic||'').toLowerCase().includes('at-tanal') || String(r.topic||'').toLowerCase().includes("to'liq"));
+  const isMock = !!(
+    r.type === 'mock' ||
+    r.mockId ||
+    String(r.topic || '').toLowerCase().includes('mock') ||
+    String(r.topicName || '').toLowerCase().includes('mock') ||
+    String(r.topic_name || '').toLowerCase().includes('mock') ||
+    String(r.label || '').toLowerCase().includes('mock')
+  );
+
+  if(isFullExam){
+    return isMock ? "To'liq At-Tanal imtihoni (Mock)" : "To'liq At-Tanal imtihoni";
+  }
+
+  const sid = (r.skillId || r.skill_id || '').toLowerCase();
+  const sec = (r.section || '').toLowerCase();
+  const top = (r.topic || r.topicName || r.topic_name || '').toLowerCase();
+
+  let baseName = '';
+  if(sid === 'kitaba' || sec.includes('yozish') || sec.includes('kitaba') || top.includes('kitaba') || top.includes('yozish') || top.includes('writing')){
+    baseName = 'Yozish';
+  } else if(sid === 'muhavara' || sec.includes("so'zlashuv") || sec.includes('muhavara') || top.includes('muhavara') || top.includes("so'zlashuv") || top.includes('speaking')){
+    baseName = "So'zlashuv";
+  } else if(sid === 'qiroa' || sec.includes("o'qish") || sec.includes('qiroa') || top.includes('qiroa') || top.includes("o'qish")){
+    baseName = "O'qish";
+  } else if(sid === 'istima' || sec.includes('tinglash') || sec.includes('istima') || top.includes('istima') || top.includes('tinglash')){
+    baseName = 'Tinglash';
+  } else if(sid === 'grammatika' || sec.includes('grammatika') || top.includes('grammatika')){
+    baseName = 'Grammatika';
+  } else {
+    baseName = r.section || r.topic || 'Imtihon';
+  }
+
+  if(isMock){
+    return `${baseName} (Mock)`;
+  }
+  return baseName;
+}
 function ringSvg(pct, color){
   const r=46, c=2*Math.PI*r;
   const off = c - (pct/100)*c;
@@ -9100,7 +9145,7 @@ function renderHistoryList(){
     <div class="card history-item fade-in-enter">
       <div class="history-icon" style="background:${meta.bg};color:${meta.color};">${meta.svg}</div>
       <div class="history-main">
-        <div class="t">${escapeHtml(r.topic)}</div>
+        <div class="t">${escapeHtml(formatHistoryDisplayTitle(r))}</div>
         <div class="s">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${scoreDisplay}</b><div class="p">${pct}%</div></div>
@@ -16819,13 +16864,14 @@ function finishMuhavaraQuiz(){
   const timeStr = now.toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' });
   const sMeta = SKILL_META['muhavara'] || {section:'So\'zlashuv', icon:'🎙', color:'var(--muhavara)', bg:'var(--muhavara-bg)'};
 
+  const isMock = !!(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock'));
   const attemptSnapshot = {
     id: attemptId,
     skillId: 'muhavara',
     topicId: null,
-    topic: currentQuiz.label || 'So\'zlashuv (Muhavara)',
-    label: currentQuiz.label || 'So\'zlashuv',
-    type: 'speaking',
+    topic: isMock ? "So'zlashuv (Mock)" : (currentQuiz.label || "So'zlashuv"),
+    label: isMock ? "So'zlashuv (Mock)" : (currentQuiz.label || "So'zlashuv"),
+    type: isMock ? 'mock' : 'speaking',
     date: dateStr,
     time: timeStr,
     dateGroup: '7kun',
@@ -17081,13 +17127,14 @@ function finishKitabaExam(){
   const timeStr = now.toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' });
   const sMeta = SKILL_META['kitaba'] || {section:'Yozish', icon:'✍️', color:'var(--kitaba)', bg:'var(--kitaba-bg)'};
 
+  const isMock = !!(currentQuiz && (currentQuiz.mockId || currentQuiz.type === 'mock'));
   const attemptSnapshot = {
     id: attemptId,
     skillId: 'kitaba',
     topicId: null,
-    topic: currentQuiz.label || 'Yozish (Kitaba)',
-    label: currentQuiz.label || 'Yozish',
-    type: 'writing',
+    topic: isMock ? "Yozish (Mock)" : (currentQuiz.label || "Yozish"),
+    label: isMock ? "Yozish (Mock)" : (currentQuiz.label || "Yozish"),
+    type: isMock ? 'mock' : 'writing',
     date: dateStr,
     time: timeStr,
     dateGroup: '7kun',
