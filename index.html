@@ -15,6 +15,25 @@
     if(t !== 'dark') document.documentElement.setAttribute('data-theme','light');
   }catch(e){}
 
+  // Telegram Mini App Safe Area & Fullscreen Inset boshqaruvi
+  function applyTelegramSafeAreas(){
+    try {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (!tg) return;
+      var topInset = (tg.contentSafeAreaInset && tg.contentSafeAreaInset.top) || (tg.safeAreaInset && tg.safeAreaInset.top) || 0;
+      var bottomInset = (tg.contentSafeAreaInset && tg.contentSafeAreaInset.bottom) || (tg.safeAreaInset && tg.safeAreaInset.bottom) || 0;
+      var leftInset = (tg.contentSafeAreaInset && tg.contentSafeAreaInset.left) || (tg.safeAreaInset && tg.safeAreaInset.left) || 0;
+      var rightInset = (tg.contentSafeAreaInset && tg.contentSafeAreaInset.right) || (tg.safeAreaInset && tg.safeAreaInset.right) || 0;
+
+      var root = document.documentElement;
+      if (topInset > 0) root.style.setProperty('--tg-safe-top', topInset + 'px');
+      if (bottomInset > 0) root.style.setProperty('--tg-safe-bottom', bottomInset + 'px');
+      if (leftInset > 0) root.style.setProperty('--tg-safe-left', leftInset + 'px');
+      if (rightInset > 0) root.style.setProperty('--tg-safe-right', rightInset + 'px');
+    } catch(e){}
+  }
+  window.applyTelegramSafeAreas = applyTelegramSafeAreas;
+
   // Telegram Mini App Fullscreen & Expand darhol ishga tushishi
   function initTelegramFullscreen(){
     try {
@@ -23,10 +42,16 @@
       tg.ready();
       if (typeof tg.expand === 'function') tg.expand();
       if (typeof tg.requestFullscreen === 'function') {
-        tg.requestFullscreen();
+        try { tg.requestFullscreen(); } catch(e){}
       }
       if (typeof tg.disableVerticalSwipes === 'function') {
-        tg.disableVerticalSwipes();
+        try { tg.disableVerticalSwipes(); } catch(e){}
+      }
+      applyTelegramSafeAreas();
+      if (tg.onEvent) {
+        tg.onEvent('safeAreaChanged', applyTelegramSafeAreas);
+        tg.onEvent('contentSafeAreaChanged', applyTelegramSafeAreas);
+        tg.onEvent('viewportChanged', applyTelegramSafeAreas);
       }
     } catch(err){}
   }
@@ -141,7 +166,17 @@ button, a, [role="button"], [onclick], .btn, .navlink, .option, .mock-card, .set
   user-select:none;
   -webkit-user-select:none;
 }
-:root{ --ease:cubic-bezier(.22,.9,.32,1); }
+:root{
+  --tg-safe-top:0px;
+  --tg-safe-bottom:0px;
+  --tg-safe-left:0px;
+  --tg-safe-right:0px;
+  --app-safe-top:max(var(--tg-safe-top, 0px), env(safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px));
+  --app-safe-bottom:max(var(--tg-safe-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px));
+  --app-safe-left:max(var(--tg-safe-left, 0px), env(safe-area-inset-left, 0px), var(--tg-content-safe-area-inset-left, 0px));
+  --app-safe-right:max(var(--tg-safe-right, 0px), env(safe-area-inset-right, 0px), var(--tg-content-safe-area-inset-right, 0px));
+  --ease:cubic-bezier(.22,.9,.32,1);
+}
 /* Sahifa uzun bo'lganda o'ng tomonda joy egallaydigan standart scrollbar
    ko'rinmas qilinadi (lekin skroll qilish imkoniyati saqlanadi) — Chrome/
    Safari/Telegram WebView va Firefox uchun alohida qatorlar kerak. */
@@ -213,7 +248,8 @@ body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-n
 .main{ flex:1; min-width:0; width:100%; max-width:880px; margin:0 auto; position:relative; z-index:1; }
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:20px 32px 10px 32px; gap:16px; flex-wrap:nowrap;
+  padding:calc(16px + var(--app-safe-top, 0px)) calc(28px + var(--app-safe-right, 0px)) 10px calc(28px + var(--app-safe-left, 0px));
+  gap:16px; flex-wrap:nowrap;
   position:relative; z-index:10; pointer-events:none;
 }
 .hello{ min-width:0; pointer-events:auto; }
@@ -2848,7 +2884,7 @@ html[data-theme="light"] .toast-item{
 .view.active{ display:block; animation:fadein .25s ease; }
 @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
 
-.back-row{ display:flex; align-items:center; gap:8px; margin-bottom:16px; cursor:pointer; color:var(--text-dim); font-weight:600; font-size:13.5px; width:fit-content;}
+.back-row{ display:flex; align-items:center; gap:8px; margin-bottom:16px; cursor:pointer; color:var(--text-dim); font-weight:600; font-size:13.5px; width:fit-content; padding:6px 12px 6px 0; border-radius:8px; -webkit-tap-highlight-color:transparent;}
 .back-row:hover{ color:var(--indigo-700); }
 .back-row svg{ width:16px; height:16px; }
 
@@ -2863,7 +2899,7 @@ html[data-theme="light"] .toast-item{
   left:50%;
   transform:translateX(-50%);
   width:min(580px, calc(100vw - 24px));
-  bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  bottom:calc(12px + var(--app-safe-bottom, 0px));
   z-index:45;
   background:rgba(20,35,28,0.85);
   backdrop-filter:blur(24px);
@@ -2911,7 +2947,7 @@ html[data-theme="light"] .bottom-nav{
   55%{ transform:translateY(-24px) scale(1.16); }
   100%{ transform:translateY(-20px) scale(1.12); }
 }
-.content{ padding:0 16px calc(116px + env(safe-area-inset-bottom, 0px)) 16px; }
+.content{ padding:0 calc(16px + var(--app-safe-right, 0px)) calc(116px + var(--app-safe-bottom, 0px)) calc(16px + var(--app-safe-left, 0px)); }
 /* Imtihon bo'limidagi cardga (At-Tanal va h.k.) kirilgach — pastki menyu
    butunlay yopilib, sahifa "full" bo'lib qolishi uchun. .bottom-nav'ning
    o'zida "display:flex !important" bor, shu sabab uni yengish uchun bu yerda
@@ -2919,7 +2955,7 @@ html[data-theme="light"] .bottom-nav{
    ishlatiladi. body'ga 'no-bottom-nav' klassi qo'shilganda content'ning
    pastki bo'sh joyi ham qisqaradi (aks holda bo'sh joy ortiqcha qolib ketardi). */
 .bottom-nav.nav-hidden{ display:none !important; }
-body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
+body.no-bottom-nav .content{ padding-bottom:calc(24px + var(--app-safe-bottom, 0px)); }
 
 @media (max-width:980px){
   .grid5{ grid-template-columns:repeat(2,1fr); }
@@ -2927,7 +2963,7 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + env(safe-area-inset-bott
   .grid3{ grid-template-columns:1fr; }
   .grid2{ grid-template-columns:1fr; }
   .quiz-wrap{ grid-template-columns:minmax(0, 1fr); width:100%; max-width:100%; }
-  .topbar{ padding:16px 16px 6px 16px; }
+  .topbar{ padding:calc(14px + var(--app-safe-top, 0px)) calc(16px + var(--app-safe-right, 0px)) 6px calc(16px + var(--app-safe-left, 0px)); }
 }
 
 /* ============ DASHBOARD HEADER ============ */
@@ -5867,6 +5903,7 @@ async function tgInitAndAuth(){
   if (typeof tg.disableVerticalSwipes === 'function') {
     try { tg.disableVerticalSwipes(); } catch(e){}
   }
+  if(typeof window.applyTelegramSafeAreas === 'function') window.applyTelegramSafeAreas();
   const initData = tg.initData;
   if(!initData){ showDebug("❌ initData BO'SH. Menu Button 'Web App' turida sozlanmagan bo'lishi mumkin. (tg.platform: "+tg.platform+", version: "+tg.version+")"); return null; }
   showDebug("✅ initData bor (uzunligi: "+initData.length+"). Supabase'ga so'rov yuborilmoqda...");
@@ -7598,6 +7635,75 @@ function isAttanalLocked(){
   return !!(st.locked || st.visible === false);
 }
 
+function updateTelegramBackButton(viewName){
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (!tg || !tg.BackButton) return;
+    if (!viewName || viewName === 'dashboard') {
+      tg.BackButton.hide();
+    } else {
+      tg.BackButton.show();
+    }
+  } catch(e){}
+}
+
+function handleTelegramNativeBack(){
+  try {
+    // 1. Agar biror modal ochiq bo'lsa, modalni yopamiz
+    const activeModal = document.querySelector('.modal-overlay.show, .overlay.show, .as-overlay.show, .onboarding-overlay.show');
+    if (activeModal) {
+      if (typeof closeModal === 'function') closeModal();
+      else activeModal.classList.remove('show');
+      return;
+    }
+    // 2. Agar bildirishnomalar paneli ochiq bo'lsa, uni yopamiz
+    const userMsgPanel = document.getElementById('userMsgPanel');
+    if (userMsgPanel && userMsgPanel.style.display !== 'none' && userMsgPanel.classList.contains('show')) {
+      userMsgPanel.classList.remove('show');
+      return;
+    }
+    // 3. To'liq imtihon faol bo'lsa
+    if (typeof FULL_EXAM !== 'undefined' && FULL_EXAM && FULL_EXAM.active) {
+      toast("To'liq imtihonda orqaga qaytish mumkin emas", 2000);
+      return;
+    }
+    // 4. Joriy faol ko'rinish
+    const curView = viewHistory[viewHistory.length - 1] || 'dashboard';
+    if (curView === 'dashboard') {
+      return;
+    }
+    if (curView === 'quiz') {
+      if (typeof handleQuizBack === 'function') handleQuizBack();
+      else goBack();
+      return;
+    }
+    if (curView === 'skillintro') {
+      if (typeof handleSkillIntroBack === 'function') handleSkillIntroBack();
+      else goBack();
+      return;
+    }
+    if (curView === 'results') {
+      if (typeof handleResultsBack === 'function') handleResultsBack();
+      else goBack();
+      return;
+    }
+    if (curView === 'fullexamintro' || curView === 'miccheck') {
+      showView('attanal');
+      return;
+    }
+    goBack();
+  } catch(e){
+    goBack();
+  }
+}
+
+// Telegram BackButton click hodisasini ulash
+try {
+  if (window.Telegram?.WebApp?.BackButton) {
+    window.Telegram.WebApp.BackButton.onClick(handleTelegramNativeBack);
+  }
+} catch(e){}
+
 function showView(name, push=true){
   if(FULL_EXAM && FULL_EXAM.active && !['quiz','miccheck'].includes(name)){
     toast("To'liq imtihon davom etmoqda — avval uni yakunlang", 2000);
@@ -7639,6 +7745,7 @@ function showView(name, push=true){
       viewHistory.push(name);
     }
   }
+  updateTelegramBackButton(name);
   document.getElementById('content').scrollTo?.(0,0);
   window.scrollTo(0,0);
   closeSidebar();
@@ -18708,10 +18815,10 @@ bootApp();
 
       #userMsgPanel{
         position:fixed;
-        top:70px;
-        right:20px;
-        width:min(380px, calc(100vw - 40px));
-        max-height:min(450px, calc(100vh - 100px));
+        top:calc(64px + var(--app-safe-top, 0px));
+        right:calc(16px + var(--app-safe-right, 0px));
+        width:min(380px, calc(100vw - 32px));
+        max-height:min(450px, calc(100vh - 120px - var(--app-safe-top, 0px)));
         overflow-y:auto;
         z-index:9999;
         border-radius:20px;
