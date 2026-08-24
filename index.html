@@ -1546,6 +1546,53 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .cd-option-multi .cdm-box svg{ width:12px; height:12px; opacity:0; transition:.12s var(--ease); }
 .cd-option-multi.active .cdm-box svg{ opacity:1; }
 .cd-value.placeholder{ color:var(--text-faint); font-weight:600; }
+/* ---- Native In-App Date Picker & Calendar ---- */
+.native-date-picker-wrap{ position:relative; width:100%; }
+.native-date-trigger{
+  display:flex; align-items:center; justify-content:space-between; width:100%; box-sizing:border-box;
+  padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); background:var(--card);
+  color:var(--text); font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+  transition:border-color .2s var(--ease), background .2s var(--ease); text-align:start;
+}
+.native-date-trigger:hover, .native-date-trigger:focus{ border-color:var(--indigo-500); }
+.native-date-text{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.native-date-icon{ display:flex; align-items:center; justify-content:center; color:var(--indigo-600); flex-shrink:0; }
+.native-calendar-popup{
+  position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:90;
+  background:var(--card); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+  border:1.5px solid var(--border); border-radius:18px;
+  box-shadow:0 14px 36px -8px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.12);
+  padding:14px; display:none; animation:asUp .18s var(--ease);
+}
+.native-calendar-popup.show{ display:block; }
+.ncp-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ncp-title{ font-size:14px; font-weight:700; color:var(--text); }
+.ncp-nav-btn{
+  width:32px; height:32px; border-radius:10px; border:1px solid var(--border); background:var(--card-alt);
+  color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all .15s var(--ease); font-family:inherit;
+}
+.ncp-nav-btn:hover{ background:var(--indigo-100); color:var(--indigo-700); border-color:var(--indigo-500); }
+.ncp-weekdays{ display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; text-align:center; font-size:11px; font-weight:700; color:var(--text-faint); margin-bottom:8px; }
+.ncp-days{ display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+.ncp-day{
+  aspect-ratio:1; border-radius:10px; border:none; background:transparent; font-family:inherit;
+  font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .12s var(--ease);
+}
+.ncp-day:hover{ background:var(--card-alt); }
+.ncp-day.other-month{ opacity:0.25; cursor:default; pointer-events:none; }
+.ncp-day.today{ border:1.5px solid var(--indigo-500); color:var(--indigo-600); }
+.ncp-day.selected{
+  background:var(--indigo-600) !important; color:#fff !important; font-weight:700;
+  box-shadow:0 2px 8px rgba(18,167,104,0.35);
+}
+.ncp-footer{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--border); }
+.ncp-today-btn{
+  font-size:12px; font-weight:600; color:var(--indigo-700); background:transparent; border:none;
+  cursor:pointer; padding:4px 8px; border-radius:6px; font-family:inherit; transition:background .15s var(--ease);
+}
+.ncp-today-btn:hover{ background:var(--indigo-100); }
 /* ---- Imtihon xabari formasi: mahoratga qarab dinamik yoziladigan qismlar ---- */
 .rep-section-blocks{ display:flex; flex-direction:column; gap:12px; }
 .rep-section-block{ border:1.5px solid var(--border); border-radius:14px; padding:12px 14px; background:var(--card-alt); }
@@ -4895,7 +4942,7 @@ html[data-theme="light"] .pin-dot.filled{
             </span>
             <div class="exam-card-body">
               <div class="exam-card-title ar">التنال العربي</div>
-              <div class="exam-card-sub">5 mahorat · A1–C2</div>
+              <div class="exam-card-sub">5 mahorat · A2–C2</div>
               <span class="exam-card-pill">30 ball shkalasi</span>
             </div>
             <svg class="exam-card-arrow" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
@@ -8099,10 +8146,12 @@ document.addEventListener('click', (e)=>{
     const wrapEl = trigger.closest('.cd-wrap');
     const panel = wrapEl ? document.getElementById(wrapEl.id + '__panel') : null;
     document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p !== panel) p.classList.remove('show'); });
+    document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
     if(panel) panel.classList.toggle('show');
     return;
   }
   document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
+  document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
 });
 
 /* mobile sidebar (agar mavjud bo'lsa) */
@@ -9693,6 +9742,153 @@ let examRepType = 'at-Tanal';
 let examRepRegion = '';
 let examSectionTexts = {};      // {Qiroa:'...', Istima:'...', Grammatika:'...', Muhavara:'...'}
 let examKitabaParts = {1:'',2:'',3:''};
+let examRepDate = '';
+let nativeCalendarYear = new Date().getFullYear();
+let nativeCalendarMonth = new Date().getMonth();
+
+const UZ_MONTH_NAMES = [
+  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+  'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'
+];
+const UZ_WEEKDAYS = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
+
+function formatUzbekDateDisplay(isoDateStr){
+  if(!isoDateStr) return 'Sanani tanlang';
+  const parts = isoDateStr.split('-');
+  if(parts.length !== 3) return isoDateStr;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  return `${d}-${UZ_MONTH_NAMES[m] || ''}, ${y}`;
+}
+
+function renderNativeDatePicker(selectedIso){
+  const wrap = document.getElementById('repDatePickerWrap');
+  if(!wrap) return;
+  if(!selectedIso){
+    const today = new Date();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    selectedIso = `${today.getFullYear()}-${mm}-${dd}`;
+  }
+  examRepDate = selectedIso;
+  const parts = selectedIso.split('-');
+  const selY = parseInt(parts[0], 10);
+  const selM = parseInt(parts[1], 10) - 1;
+  const selD = parseInt(parts[2], 10);
+
+  const viewY = nativeCalendarYear;
+  const viewM = nativeCalendarMonth;
+  const firstDayOfWeek = (new Date(viewY, viewM, 1).getDay() + 6) % 7; // Monday = 0
+  const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+  const daysInPrevMonth = new Date(viewY, viewM, 0).getDate();
+
+  const today = new Date();
+  const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+
+  let daysHtml = '';
+  for(let i = firstDayOfWeek - 1; i >= 0; i--){
+    const d = daysInPrevMonth - i;
+    daysHtml += `<button type="button" class="ncp-day other-month" disabled tabindex="-1">${d}</button>`;
+  }
+  for(let d = 1; d <= daysInMonth; d++){
+    const isSelected = (viewY === selY && viewM === selM && d === selD);
+    const isToday = (viewY === todayY && viewM === todayM && d === todayD);
+    const dIso = `${viewY}-${String(viewM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    let cls = 'ncp-day';
+    if(isSelected) cls += ' selected';
+    else if(isToday) cls += ' today';
+    daysHtml += `<button type="button" class="${cls}" data-date="${dIso}">${d}</button>`;
+  }
+
+  wrap.innerHTML = `
+    <input type="hidden" id="repDate" value="${selectedIso}">
+    <button type="button" class="native-date-trigger" id="repDateTrigger">
+      <span class="native-date-text">${formatUzbekDateDisplay(selectedIso)}</span>
+      <span class="native-date-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+          <line x1="16" x2="16" y1="2" y2="6"/>
+          <line x1="8" x2="8" y1="2" y2="6"/>
+          <line x1="3" x2="21" y1="10" y2="10"/>
+        </svg>
+      </span>
+    </button>
+    <div class="native-calendar-popup" id="repCalendarPopup">
+      <div class="ncp-header">
+        <button type="button" class="ncp-nav-btn" id="ncpPrevMonth">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="ncp-title">${UZ_MONTH_NAMES[viewM]} ${viewY}</div>
+        <button type="button" class="ncp-nav-btn" id="ncpNextMonth">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="ncp-weekdays">
+        ${UZ_WEEKDAYS.map(w => `<span>${w}</span>`).join('')}
+      </div>
+      <div class="ncp-days">
+        ${daysHtml}
+      </div>
+      <div class="ncp-footer">
+        <button type="button" class="ncp-today-btn" id="ncpTodayBtn">Bugun</button>
+        <button type="button" class="ncp-today-btn" style="color:var(--text-faint);" id="ncpCloseBtn">Yopish</button>
+      </div>
+    </div>
+  `;
+
+  const trigger = document.getElementById('repDateTrigger');
+  const popup = document.getElementById('repCalendarPopup');
+  if(trigger && popup){
+    trigger.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
+      popup.classList.toggle('show');
+    });
+    popup.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const dayBtn = e.target.closest('.ncp-day[data-date]');
+      if(dayBtn){
+        const chosen = dayBtn.dataset.date;
+        renderNativeDatePicker(chosen);
+        return;
+      }
+      if(e.target.id === 'ncpPrevMonth' || e.target.closest('#ncpPrevMonth')){
+        nativeCalendarMonth--;
+        if(nativeCalendarMonth < 0){
+          nativeCalendarMonth = 11;
+          nativeCalendarYear--;
+        }
+        renderNativeDatePicker(examRepDate);
+        const p = document.getElementById('repCalendarPopup');
+        if(p) p.classList.add('show');
+        return;
+      }
+      if(e.target.id === 'ncpNextMonth' || e.target.closest('#ncpNextMonth')){
+        nativeCalendarMonth++;
+        if(nativeCalendarMonth > 11){
+          nativeCalendarMonth = 0;
+          nativeCalendarYear++;
+        }
+        renderNativeDatePicker(examRepDate);
+        const p = document.getElementById('repCalendarPopup');
+        if(p) p.classList.add('show');
+        return;
+      }
+      if(e.target.id === 'ncpTodayBtn'){
+        const td = new Date();
+        nativeCalendarYear = td.getFullYear();
+        nativeCalendarMonth = td.getMonth();
+        const iso = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
+        renderNativeDatePicker(iso);
+        return;
+      }
+      if(e.target.id === 'ncpCloseBtn'){
+        popup.classList.remove('show');
+      }
+    });
+  }
+}
 
 function openExamReportModal(){
   examChipSelection = [];
@@ -9700,6 +9896,12 @@ function openExamReportModal(){
   examRepRegion = '';
   examSectionTexts = {};
   examKitabaParts = {1:'',2:'',3:''};
+  nativeCalendarYear = new Date().getFullYear();
+  nativeCalendarMonth = new Date().getMonth();
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  examRepDate = todayIso;
+
   document.getElementById('modalTitle').textContent = "Haqiqiy imtihonga kirdingizmi?";
   document.getElementById('modalBody').innerHTML = `
     <p class="form-hint" style="margin:0 0 18px 0;line-height:1.55;font-size:13px;">Ma'lumotlaringiz faqat administratorlarga ko'rinadi va boshqa o'quvchilarga tayyorgarlik uchun yordam beradi.</p>
@@ -9712,7 +9914,7 @@ function openExamReportModal(){
       </div>
       <div class="form-field">
         <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Imtihon sanasi</label>
-        <input type="date" id="repDate" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13.5px;">
+        <div class="native-date-picker-wrap" id="repDatePickerWrap"></div>
       </div>
       <div class="form-field">
         <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">Viloyat (ixtiyoriy)</label>
@@ -9730,6 +9932,7 @@ function openExamReportModal(){
       <button class="btn btn-primary btn-block" style="margin-top:6px;padding:14px;border-radius:14px;font-size:14.5px;" onclick="submitExamReport()">Yuborish</button>
     </div>
   `;
+  renderNativeDatePicker(todayIso);
   initCustomDropdown('repRegionDropdown', {
     label:'Viloyat',
     options:[{value:'', label:"Tanlanmagan"}, ...UZ_REGIONS.map(r=>({value:r, label:r}))],
