@@ -1569,15 +1569,67 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .rank-info-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
 
 /* ---------- History ---------- */
-.history-item{ padding:16px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-.history-icon{ width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.history-main{ flex:1; min-width:170px; }
-.history-main .t{ font-size:13.5px; font-weight:600; }
-.history-main .t.ar{ font-family:var(--font-ar-bold); font-size:16px; font-weight:600; }
+.history-item{
+  padding:13px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:nowrap;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.history-icon{
+  width:38px; height:38px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.history-icon svg{ width:19px; height:19px; }
+.history-main{ flex:1; min-width:0; }
+.history-main .t{ font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.history-main .t.ar{ font-family:var(--font-ar-bold); font-size:15.5px; font-weight:600; }
 .history-main .s{ font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:2px; }
-.history-score{ text-align:center; min-width:74px; }
-.history-score b{ font-size:15px; font-weight:600; }
+.history-score{ text-align:right; flex-shrink:0; }
+.history-score b{ font-size:13.5px; font-weight:600; color:var(--text); white-space:nowrap; }
 .history-score .p{ font-size:11px; color:var(--text-faint); font-weight:600; }
+.history-btn-analyze{
+  margin-left:4px;
+  flex-shrink:0;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:5px 12px;
+  font-size:12px;
+  font-weight:600;
+  font-family:inherit;
+  color:var(--indigo-700);
+  background:var(--indigo-100);
+  border:1px solid transparent;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .18s var(--ease);
+  white-space:nowrap;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.history-btn-analyze:hover{
+  background:var(--indigo-600);
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 3px 10px -2px rgba(18,167,104,0.3);
+}
+.history-btn-analyze svg{
+  width:12px; height:12px;
+  stroke-width:2.2;
+}
+@media (max-width:480px){
+  .history-item{ padding:11px 12px; gap:9px; }
+  .history-icon{ width:34px; height:34px; border-radius:10px; }
+  .history-icon svg{ width:17px; height:17px; }
+  .history-main .t{ font-size:12.5px; }
+  .history-main .s{ font-size:11px; }
+  .history-score b{ font-size:12.5px; }
+  .history-btn-analyze{ padding:4px 8px; font-size:11px; }
+  .history-btn-analyze svg{ width:10px; height:10px; }
+}
 .badge-status{ font-size:11px; font-weight:600; padding:5px 11px; border-radius:999px; white-space:nowrap; }
 .badge-elite{ background:var(--green-bg); color:var(--green); }
 .badge-good{ background:var(--amber-bg); color:var(--amber); }
@@ -2905,56 +2957,60 @@ html[data-theme="light"] .toast-item{
   position:fixed;
   left:50%;
   transform:translateX(-50%);
-  width:min(580px, calc(100vw - 24px));
-  bottom:calc(12px + var(--app-safe-bottom, 0px));
+  width:min(550px, calc(100vw - 20px));
+  bottom:calc(10px + var(--app-safe-bottom, 0px));
   z-index:45;
-  background:rgba(20,35,28,0.85);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:28px;
-  padding:10px 4px 8px 4px;
-  box-shadow:0 12px 36px -8px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.25);
+  background:linear-gradient(135deg, rgba(16, 32, 24, 0.78) 0%, rgba(10, 20, 15, 0.88) 100%);
+  backdrop-filter:blur(28px) saturate(190%);
+  -webkit-backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid rgba(255,255,255,0.12);
+  border-top:1px solid rgba(255,255,255,0.22);
+  border-radius:24px;
+  padding:5px 4px 4px 4px;
+  box-shadow:0 14px 34px -8px rgba(0,0,0,0.55), 0 3px 10px rgba(0,0,0,0.25), inset 0 1px 1px 0 rgba(255,255,255,0.2), inset 0 -1px 2px 0 rgba(0,0,0,0.3);
 }
 html[data-theme="light"] .bottom-nav{
-  background:rgba(255,255,255,0.88);
-  border:1px solid rgba(22,100,68,0.12);
-  box-shadow:0 12px 34px -8px rgba(22,100,68,0.14), 0 2px 8px rgba(22,100,68,0.04);
+  background:linear-gradient(135deg, rgba(255, 255, 255, 0.84) 0%, rgba(243, 249, 246, 0.92) 100%);
+  backdrop-filter:blur(28px) saturate(190%);
+  -webkit-backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid rgba(22, 100, 68, 0.14);
+  border-top:1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:0 12px 30px -8px rgba(22, 100, 68, 0.15), 0 3px 10px rgba(22, 100, 68, 0.05), inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 2px 0 rgba(22, 100, 68, 0.04);
 }
 .bn-btn{
   flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:2px; padding:2px 2px;
+  gap:1px; padding:1px 2px;
   background:none; border:none; font-family:inherit; color:var(--text-faint); cursor:pointer;
-  font-size:11px; font-weight:600; border-radius:12px; position:relative; overflow:visible;
+  font-size:10.5px; font-weight:600; border-radius:12px; position:relative; overflow:visible;
 }
 .bn-btn span{
   transition:color .25s var(--ease), font-weight .2s var(--ease);
   white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:100%;
-  line-height:1.1; margin-top:0px;
+  line-height:1; margin-top:-1px;
 }
 .bn-icon{
-  width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   color:var(--text-faint); flex-shrink:0;
   transition:transform .35s var(--ease), background .3s var(--ease), box-shadow .35s var(--ease), color .3s var(--ease);
 }
-.bn-btn svg{ width:21px; height:21px; flex-shrink:0; }
+.bn-btn svg{ width:19px; height:19px; flex-shrink:0; }
 .bn-btn:active .bn-icon{ transform:scale(.92); }
-.bn-btn.active:active .bn-icon{ transform:translateY(-20px) scale(1.05); }
+.bn-btn.active:active .bn-icon{ transform:translateY(-16px) scale(1.04); }
 .bn-btn.active{ color:var(--indigo-500); }
 .bn-btn.active span{ color:var(--indigo-500); font-weight:600; }
 .bn-btn.active .bn-icon{
-  transform:translateY(-20px) scale(1.12);
+  transform:translateY(-16px) scale(1.08);
   background:linear-gradient(155deg, var(--indigo-500), var(--indigo-700));
   color:#fff;
-  box-shadow:0 0 0 6px var(--card-alt), 0 10px 22px -6px rgba(18,167,104,0.45);
-  animation:bnPop .45s var(--ease);
+  box-shadow:0 0 0 5px var(--card-alt), 0 8px 20px -4px rgba(18,167,104,0.45), inset 0 1px 1px rgba(255,255,255,0.4);
+  animation:bnPop .42s var(--ease);
 }
 @keyframes bnPop{
-  0%{ transform:translateY(-8px) scale(.88); }
-  55%{ transform:translateY(-24px) scale(1.16); }
-  100%{ transform:translateY(-20px) scale(1.12); }
+  0%{ transform:translateY(-6px) scale(.88); }
+  55%{ transform:translateY(-19px) scale(1.12); }
+  100%{ transform:translateY(-16px) scale(1.08); }
 }
-.content{ padding:0 calc(16px + var(--app-safe-right, 0px)) calc(116px + var(--app-safe-bottom, 0px)) calc(16px + var(--app-safe-left, 0px)); }
+.content{ padding:0 calc(16px + var(--app-safe-right, 0px)) calc(100px + var(--app-safe-bottom, 0px)) calc(16px + var(--app-safe-left, 0px)); }
 /* Imtihon bo'limidagi cardga (At-Tanal va h.k.) kirilgach — pastki menyu
    butunlay yopilib, sahifa "full" bo'lib qolishi uchun. .bottom-nav'ning
    o'zida "display:flex !important" bor, shu sabab uni yengish uchun bu yerda
@@ -5129,14 +5185,14 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
           </div>
-          <div class="settings-item" onclick="openPasscodeSettingsModal()" style="cursor:pointer;">
+          <div class="settings-item" onclick="openPasscodeSettingsModal()" style="display:none;">
             <div class="si-icon" style="background:rgba(245,193,72,0.16);color:#D97706;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <div class="si-text"><div class="t">Ilova PIN kodi (6 xonali)</div><div class="s" id="passcodeSettingSub">O'rnatilmagan</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
-          <div class="settings-item" onclick="clearMyExamHistory()" style="cursor:pointer;">
+          <div class="settings-item" onclick="clearMyExamHistory()" style="display:none;">
             <div class="si-icon" style="background:rgba(220,38,38,0.12);color:#DC2626;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
             </div>
@@ -8286,7 +8342,57 @@ const SKILL_ICONS = {
   grammatika:'<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
   muhavara:'<path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M9 22h6"/>',
   kitaba:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  attanal:'<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  imtihon:'<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>'
 };
+
+function getSkillSvgMeta(item){
+  if(!item) return { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.attanal}</svg>`, color:'var(--indigo-600)', bg:'var(--indigo-100)' };
+  const sid = (item.skillId || item.skill_id || item.skill || '').toLowerCase();
+  const sec = (item.section || '').toLowerCase();
+  const top = (item.topic || item.topicName || item.topic_name || '').toLowerCase();
+
+  if(sid === 'qiroa' || sec.includes("o'qish") || sec.includes('qiroa') || top.includes('qiroa') || top.includes("o'qish")){
+    return {
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.qiroa}</svg>`,
+      color: 'var(--qiroa)',
+      bg: 'var(--qiroa-bg)'
+    };
+  }
+  if(sid === 'istima' || sec.includes('tinglash') || sec.includes('istima') || top.includes('istima') || top.includes('tinglash')){
+    return {
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.istima}</svg>`,
+      color: 'var(--istima)',
+      bg: 'var(--istima-bg)'
+    };
+  }
+  if(sid === 'grammatika' || sec.includes('grammatika') || sec.includes('qoidalar') || top.includes('grammatika') || top.includes('nahv') || top.includes('sarf') || top.includes('imlo') || top.includes('xatolar')){
+    return {
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.grammatika}</svg>`,
+      color: 'var(--grammatika)',
+      bg: 'var(--grammatika-bg)'
+    };
+  }
+  if(sid === 'muhavara' || sec.includes("so'zlashuv") || sec.includes('muhavara') || top.includes('muhavara') || top.includes("so'zlashuv") || top.includes('speaking')){
+    return {
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.muhavara}</svg>`,
+      color: 'var(--muhavara)',
+      bg: 'var(--muhavara-bg)'
+    };
+  }
+  if(sid === 'kitaba' || sec.includes('yozish') || sec.includes('kitaba') || top.includes('kitaba') || top.includes('yozish') || top.includes('writing')){
+    return {
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.kitaba}</svg>`,
+      color: 'var(--kitaba)',
+      bg: 'var(--kitaba-bg)'
+    };
+  }
+  return {
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SKILL_ICONS.attanal}</svg>`,
+    color: 'var(--indigo-600)',
+    bg: 'var(--indigo-100)'
+  };
+}
 function ringSvg(pct, color){
   const r=46, c=2*Math.PI*r;
   const off = c - (pct/100)*c;
@@ -8762,22 +8868,24 @@ function renderGrammarHistory(){
   if(empty) empty.style.display = list.length? 'none':'block';
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
-    const st = statusOf(pct);
     const gt = GRAMMAR_TOPICS.find(t=>t.id===r.topicId);
     const mainLine = gt
       ? `<div class="t ar">${gt.ar}</div>`
       : `<div class="t">${escapeHtml(r.topic)}</div>`;
     const attemptIdStr = String(r.id).replace(/'/g, "\\'");
+    const meta = getSkillSvgMeta(r);
     return `
     <div class="card history-item fade-in-enter">
-      <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
+      <div class="history-icon" style="background:${meta.bg};color:${meta.color};">${meta.svg}</div>
       <div class="history-main">
         ${mainLine}
         <div class="s" style="margin-top:3px;">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${r.correct}/${r.total}</b><div class="p">${pct}%</div></div>
-      <span class="badge-status ${st.cls}">${st.label}</span>
-      <button type="button" class="btn btn-outline" onclick="openAttemptResults('${attemptIdStr}')">Xatolarni tahlil qilish</button>
+      <button type="button" class="history-btn-analyze" onclick="openAttemptResults('${attemptIdStr}')">
+        <span>Tahlil</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
     </div>`;
   }).join('');
 }
@@ -8984,20 +9092,22 @@ function renderHistoryList(){
   document.getElementById('historyEmpty').style.display = list.length? 'none':'block';
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
-    const st = statusOf(pct);
     const attemptIdStr = String(r.id).replace(/'/g, "\\'");
     const isWritingOrSpeaking = (r.skillId === 'kitaba' || r.skillId === 'muhavara' || r.type === 'writing' || r.type === 'speaking' || String(r.topic||'').toLowerCase().includes('kitab') || String(r.topic||'').toLowerCase().includes('muhav') || String(r.section||'').toLowerCase().includes('yozish') || String(r.section||'').toLowerCase().includes('so\'zlash'));
     const scoreDisplay = isWritingOrSpeaking ? `${r.correct}/${r.total} ball` : `${r.correct}/${r.total}`;
+    const meta = getSkillSvgMeta(r);
     return `
     <div class="card history-item fade-in-enter">
-      <div class="history-icon" style="background:${r.bg};">${r.icon}</div>
+      <div class="history-icon" style="background:${meta.bg};color:${meta.color};">${meta.svg}</div>
       <div class="history-main">
         <div class="t">${escapeHtml(r.topic)}</div>
         <div class="s">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${scoreDisplay}</b><div class="p">${pct}%</div></div>
-      <span class="badge-status ${st.cls}">${st.label}</span>
-      <button type="button" class="btn btn-outline" onclick="openAttemptResults('${attemptIdStr}')">Xatolarni tahlil qilish</button>
+      <button type="button" class="history-btn-analyze" onclick="openAttemptResults('${attemptIdStr}')">
+        <span>Tahlil</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
     </div>`;
   }).join('');
 }
