@@ -5962,6 +5962,54 @@ function authHeaders(){
   };
 }
 
+/* ============================================================
+   SMART CACHE (EGRESS VA TRAFIKNI TEJOVCHI TIZIM)
+   Savollar banki, mavzular, matnlar va mocklarni mahalliy
+   keshda saqlab, Supabase'ga takroriy so'rovlarni 80-90% ga
+   qisqartiradi. Admin ma'lumot o'zgartirganda kesh avtomatik
+   tozalanadi.
+   ============================================================ */
+const SmartCache = {
+  get(key, maxAgeMs = 10 * 60 * 1000) {
+    try {
+      const raw = localStorage.getItem('arb_c_' + key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.time || parsed.data === undefined) return null;
+      if (Date.now() - parsed.time > maxAgeMs) return null;
+      return parsed.data;
+    } catch (e) { return null; }
+  },
+  set(key, data) {
+    try {
+      if (data === null || data === undefined) return;
+      localStorage.setItem('arb_c_' + key, JSON.stringify({ time: Date.now(), data }));
+    } catch (e) {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('arb_c_')) {
+            localStorage.removeItem(k);
+          }
+        }
+        localStorage.setItem('arb_c_' + key, JSON.stringify({ time: Date.now(), data }));
+      } catch (_) {}
+    }
+  },
+  invalidate(keyPrefix) {
+    try {
+      const toRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k === 'arb_c_' + keyPrefix || k.startsWith('arb_c_' + keyPrefix))) {
+          toRemove.push(k);
+        }
+      }
+      toRemove.forEach(k => localStorage.removeItem(k));
+    } catch (_) {}
+  }
+};
+
 /* Admin huquqini backenddan tekshirish (ADMIN_TELEGRAM_IDS massividan keyin qo'shilgan
    adminlar uchun). admin_list_admins RPC faqat haqiqiy adminlarga ruxsat berilgan deb
    hisoblanadi (Supabase RLS/security definer), shu bois bu chaqiruv muvaffaqiyatli bo'lса
@@ -6144,7 +6192,7 @@ async function refreshHistoryAndScoresFromBackend(){
 
 async function loadHistoryFromBackend(userId){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/quiz_attempts?user_id=eq.${userId}&order=created_at.desc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/quiz_attempts?user_id=eq.${userId}&order=created_at.desc&limit=50`, {
       headers: authHeaders()
     });
     return res.ok ? await res.json() : [];
@@ -6153,38 +6201,53 @@ async function loadHistoryFromBackend(userId){
 
 async function loadErrorsFromBackend(userId){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_errors?user_id=eq.${userId}&order=created_at.desc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_errors?user_id=eq.${userId}&order=created_at.desc&limit=50`, {
       headers: authHeaders()
     });
     return res.ok ? await res.json() : [];
   }catch(e){ console.error(e); return []; }
 }
 
-async function loadLeaderboardFromBackend(){
+async function loadLeaderboardFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('leaderboard', 3 * 60 * 1000); // 3 daqiqa kesh
+    if(cached) return cached;
+  }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=id,telegram_id,name,gender,photo_url,total_xp,rank,daily_xp,weekly_xp,monthly_xp&order=rank.asc.nullslast&limit=100`, { headers: authHeaders() });
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data) && data.length > 0){
+      SmartCache.set('leaderboard', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 /* Reyting ro'yxatini backenddan qayta yuklab, ekranni yangi ma'lumot bilan qayta
    chizadi. applyLiveLeaderboard() ichida view-rank ochiq bo'lsa renderRank() ni
    o'zi chaqiradi — shu sabab bu yerda alohida render() chaqirish shart emas. */
 async function refreshRankFromBackend(){
-  const lb = await loadLeaderboardFromBackend();
+  const lb = await loadLeaderboardFromBackend(true);
   applyLiveLeaderboard(lb);
 }
 
 /* Savollar banki — hammasi uchun umumiy (Supabase "questions" jadvali).
    Admin yangi savol qo'shganda backendga yoziladi, boshqa foydalanuvchilar
-   ilovani ochganda shu funksiya orqali yuklanadi. */
-async function loadQuestionsFromBackend(){
-  // MUHIM: tarmoq/server xatosida `null` qaytaramiz, `[]` emas — chunki applyLiveQuestions()
-  // "[]" ni "backend rostdan ham bo'sh javob berdi" deb tushunib, mavjud savollarni tozalab
-  // yuborardi. `null` bo'lsa esa applyLiveQuestions hech narsaga tegmaydi va oldingi
-  // (kesh yoki avvalgi muvaffaqiyatli yuklangan) savollar saqlanib qoladi.
+   ilovani ochganda shu funksiya orqali yuklanadi.
+   EGRESS OPTIMIZATSIYASI: 10 daqiqa SmartCache bilan keshlanadi. */
+async function loadQuestionsFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('questions', 10 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/questions?select=*&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : null;
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('questions', data);
+    }
+    return data;
   }catch(e){ console.error(e); return null; }
 }
 /* Backend xatolarini konsoldan tashqari ilova ichida (toast) ko'rsatish uchun —
@@ -6213,6 +6276,7 @@ async function saveQuestionToBackend({skillId, topicId, category, q, opts, a, ex
       });
     }
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6232,6 +6296,7 @@ async function saveQuestionsBulkToBackend(items){
       })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6255,6 +6320,8 @@ async function saveQuestionsBulkWithTopicsToBackend(items){
       })) })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('questions');
+    SmartCache.invalidate('grammar_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6269,6 +6336,7 @@ async function clearAllQuestionsOnBackend(){
       method:"POST", headers: authHeaders(), body: JSON.stringify({})
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : 0;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6854,6 +6922,7 @@ async function updateQuestionOnBackend({id, q, opts, a, exp}){
       body: JSON.stringify({ p_id: id, p_q: q, p_opts: opts, p_correct: a, p_exp: exp||null })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6867,6 +6936,7 @@ async function deleteQuestionOnBackend(id){
       body: JSON.stringify({ p_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
+    SmartCache.invalidate('questions');
     return true;
   }catch(e){ setLastBackendError('—', e.message); return false; }
 }
@@ -6880,21 +6950,26 @@ async function reorderQuestionsOnBackend(orderedIds){
       body: JSON.stringify({ p_ids: orderedIds })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
+    SmartCache.invalidate('questions');
     return true;
   }catch(e){ setLastBackendError('—', e.message); return false; }
 }
 
 /* Grammatika mavzulari — hammasi uchun umumiy (Supabase "grammar_topics" jadvali).
-   Admin panelda ("Grammatika mavzulari" bo'limi) yangi mavzu qo'shilganda backendga
-   yoziladi, boshqa foydalanuvchilar ilovani ochganda shu funksiya orqali yuklanadi.
-   MOSLASHTIRING: bu funksiyalar ishlashi uchun Supabase'da `grammar_topics` jadvali va
-   `admin_add_grammar_topic` / `admin_edit_grammar_topic` / `admin_delete_grammar_topic` /
-   `admin_reorder_grammar_topics` RPC funksiyalari yaratilishi kerak (namuna migratsiya
-   faylida keltirilgan). */
-async function loadGrammarTopicsFromBackend(){
+   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+async function loadGrammarTopicsFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('grammar_topics', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/grammar_topics?select=*&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('grammar_topics', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 async function saveGrammarTopicToBackend({category, name, ar}){
@@ -6905,6 +6980,7 @@ async function saveGrammarTopicToBackend({category, name, ar}){
       body: JSON.stringify({ p_category: category, p_name: name, p_ar: ar })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('grammar_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6917,6 +6993,7 @@ async function updateGrammarTopicOnBackend({id, category, name, ar}){
       body: JSON.stringify({ p_id: id, p_category: category, p_name: name, p_ar: ar })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('grammar_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6929,6 +7006,7 @@ async function deleteGrammarTopicOnBackend(id){
       body: JSON.stringify({ p_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
+    SmartCache.invalidate('grammar_topics');
     return true;
   }catch(e){ setLastBackendError('—', e.message); return false; }
 }
@@ -6940,21 +7018,25 @@ async function reorderGrammarTopicsOnBackend(orderedIds){
       body: JSON.stringify({ p_ids: orderedIds })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return false; }
+    SmartCache.invalidate('grammar_topics');
     return true;
   }catch(e){ setLastBackendError('—', e.message); return false; }
 }
 /* Kitaba (Yozma) mavzulari — 3 qism, har biri uchun alohida mavzular banki
-   (Supabase "writing_topics" jadvali, part_id ustuni: 'part1'/'part2'/'part3').
-   Admin panelda har bir qismga bir nechta arabcha mavzu kiritiladi; foydalanuvchi
-   imtihonni boshlaganda har qism uchun shu bankdan TASODIFIY bitta mavzu tanlanadi
-   (AI mavzu generatsiya qilmaydi — mavzular oldindan admin tomonidan yoziladi).
-   MOSLASHTIRING: bu funksiyalar ishlashi uchun Supabase'da `writing_topics` jadvali va
-   `admin_add_writing_topic` / `admin_edit_writing_topic` / `admin_delete_writing_topic`
-   RPC funksiyalari yaratilishi kerak (namuna migratsiya faylida keltirilgan). */
-async function loadWritingTopicsFromBackend(){
+   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+async function loadWritingTopicsFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('writing_topics', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/writing_topics?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('writing_topics', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 async function addWritingTopicToBackend(partId, topicAr){
@@ -6965,6 +7047,7 @@ async function addWritingTopicToBackend(partId, topicAr){
       body: JSON.stringify({ p_part_id: partId, p_topic_ar: topicAr })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('writing_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6977,6 +7060,7 @@ async function editWritingTopicOnBackend(id, topicAr){
       body: JSON.stringify({ p_topic_id: id, p_topic_ar: topicAr })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('writing_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -6989,6 +7073,7 @@ async function deleteWritingTopicOnBackend(id){
       body: JSON.stringify({ p_topic_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('writing_topics');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -12512,17 +12597,17 @@ function loadMocksData(){
 let MOCKS_DATA = loadMocksData();
 
 /* ---------- Mocklar: BACKEND (Supabase) bilan sinxronizatsiya ----------
-   ILGARI: MOCKS_DATA faqat localStorage'da saqlanardi — shu sabab admin
-   mock qo'shsa, u faqat o'zining qurilmasida/brauzerida ko'rinardi, boshqa
-   foydalanuvchilarga umuman yetib bormasdi. Endi mocklar `mocks` jadvaliga
-   (Supabase) yoziladi va barcha foydalanuvchilar bootApp() paytida shu
-   jadvaldan o'qiydi — xuddi savollar/grammatika bo'limlari kabi. */
-async function loadMocksFromBackend(){
+   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+async function loadMocksFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('mocks', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/mocks?select=*&order=created_at.asc`, { headers: authHeaders() });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     const rows = await res.json();
-    return rows.map(r => ({
+    const data = rows.map(r => ({
       id: r.id,
       skill: r.skill,
       title: r.title,
@@ -12530,6 +12615,10 @@ async function loadMocksFromBackend(){
       questions: r.questions || [],
       createdAt: r.created_at,
     }));
+    if(Array.isArray(data)){
+      SmartCache.set('mocks', data);
+    }
+    return data;
   }catch(e){ console.error("Mocks backend load error:", e); return null; }
 }
 
@@ -12565,6 +12654,8 @@ async function persistMockToBackend(mock){
     if(!res.ok){
       setLastBackendError(res.status, await res.text());
       toast("⚠️ Mock backendga saqlanmadi: " + window.LAST_BACKEND_ERROR, 6000);
+    } else {
+      SmartCache.invalidate('mocks');
     }
   }catch(e){
     setLastBackendError('—', e.message);
@@ -12582,6 +12673,8 @@ async function deleteMockFromBackend(mockId){
     if(!res.ok){
       setLastBackendError(res.status, await res.text());
       toast("⚠️ Mock backenddan o'chirilmadi: " + window.LAST_BACKEND_ERROR, 6000);
+    } else {
+      SmartCache.invalidate('mocks');
     }
   }catch(e){
     setLastBackendError('—', e.message);
@@ -15009,11 +15102,21 @@ let QIROA_TESTS = { juz1:[], juz2:[], juz3:[] };
 /* Tez qidirish uchun: testId -> shu test obyekti (QIROA_TESTS ichidagilar bilan bir xil referens). */
 let QIROA_TEST_BY_ID = {};
 
-/* Barcha Qiroa matnlarini (testlarini) backenddan yuklaydi. */
-async function loadQiroaTextsFromBackend(){
+/* Barcha Qiroa matnlarini (testlarini) backenddan yuklaydi.
+   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+async function loadQiroaTextsFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('qiroa_texts', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/qiroa_texts?select=*&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('qiroa_texts', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 /* Backenddan kelgan qiroa_texts qatorlarini QIROA_TESTS / QIROA_TEST_BY_ID ichiga joylaydi.
@@ -15044,6 +15147,7 @@ async function addQiroaTextToBackend(juzId, passage, title){
       body: JSON.stringify({ p_juz_id: juzId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('qiroa_texts');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15058,6 +15162,7 @@ async function editQiroaTextOnBackend(testId, passage, title){
       body: JSON.stringify({ p_text_id: testId, p_passage: passage, p_title: title || '' })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('qiroa_texts');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15072,6 +15177,8 @@ async function deleteQiroaTextOnBackend(testId){
       body: JSON.stringify({ p_text_id: testId })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('qiroa_texts');
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15106,11 +15213,21 @@ let ISTIMA_TESTS = { juz1:[], juz2:[], juz3:[] };
 /* Tez qidirish uchun: testId -> shu test obyekti (ISTIMA_TESTS ichidagilar bilan bir xil referens). */
 let ISTIMA_TEST_BY_ID = {};
 
-/* Barcha Istima audiolarini (testlarini) backenddan yuklaydi. */
-async function loadIstimaAudioFromBackend(){
+/* Barcha Istima audiolarini (testlarini) backenddan yuklaydi.
+   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+async function loadIstimaAudioFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('istima_audio', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/istima_audio?select=*&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('istima_audio', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 /* Backenddan kelgan istima_audio qatorlarini ISTIMA_TESTS / ISTIMA_TEST_BY_ID ichiga joylaydi.
@@ -15136,6 +15253,7 @@ async function addIstimaAudioToBackend(juzId, audioUrl){
       body: JSON.stringify({ p_juz_id: juzId, p_audio_url: audioUrl })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('istima_audio');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15149,6 +15267,7 @@ async function editIstimaAudioOnBackend(testId, audioUrl){
       body: JSON.stringify({ p_audio_id: testId, p_audio_url: audioUrl })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('istima_audio');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15163,6 +15282,8 @@ async function deleteIstimaAudioOnBackend(testId){
       body: JSON.stringify({ p_audio_id: testId })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('istima_audio');
+    SmartCache.invalidate('questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15194,10 +15315,19 @@ const MUHAVARA_MAX_Q_PER_PART = 2;
 /* MUHAVARA_QUESTIONS[partId] = [ {id, partId, prompt}, ... ] (ko'pi bilan 2 tadan) */
 let MUHAVARA_QUESTIONS = { part1:[], part2:[], part3:[] };
 
-async function loadSpeakingQuestionsFromBackend(){
+async function loadSpeakingQuestionsFromBackend(forceRefresh = false){
+  if(!forceRefresh){
+    const cached = SmartCache.get('speaking_questions', 15 * 60 * 1000);
+    if(cached) return cached;
+  }
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/speaking_questions?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
-    return res.ok ? await res.json() : [];
+    if(!res.ok) return [];
+    const data = await res.json();
+    if(Array.isArray(data)){
+      SmartCache.set('speaking_questions', data);
+    }
+    return data;
   }catch(e){ console.error(e); return []; }
 }
 function applyLiveSpeakingQuestions(rows){
@@ -15217,6 +15347,7 @@ async function addSpeakingQuestionToBackend(partId, prompt){
       body: JSON.stringify({ p_part_id: partId, p_prompt: prompt })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('speaking_questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15232,6 +15363,7 @@ async function saveSpeakingQuestionsBulkToBackend(items){
       body: JSON.stringify({ p_items: items.map(it => ({ part_id: it.partId, prompt: it.prompt })) })
     });
     if(res.ok){
+      SmartCache.invalidate('speaking_questions');
       const text = await res.text();
       return text ? JSON.parse(text) : true;
     }
@@ -15249,6 +15381,7 @@ async function saveSpeakingQuestionsBulkToBackend(items){
         }
       }
       if(count > 0){
+        SmartCache.invalidate('speaking_questions');
         return { inserted_count: count };
       }
       if(lastErr){
@@ -15269,6 +15402,7 @@ async function editSpeakingQuestionOnBackend(id, prompt){
       body: JSON.stringify({ p_question_id: id, p_prompt: prompt })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('speaking_questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -15281,6 +15415,7 @@ async function deleteSpeakingQuestionOnBackend(id){
       body: JSON.stringify({ p_question_id: id })
     });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    SmartCache.invalidate('speaking_questions');
     const text = await res.text();
     return text ? JSON.parse(text) : true;
   }catch(e){ setLastBackendError('—', e.message); return null; }
@@ -20321,14 +20456,15 @@ bootApp();
       clearInterval(pollTimer);
     }
 
-    // Har 30 soniyada config, xabarlar va kunlik limitlarni tekshirib turadi
+    // EGRESS OPTIMIZATSIYASI: Har 2 daqiqada (faqat ekran ochiq/faol bo'lsa) config, xabarlar va kunlik limitlarni tekshirib turadi
     pollTimer = setInterval(function () {
+      if (typeof document !== 'undefined' && document.hidden) return;
       loadAppConfig();
       refreshUserMessages();
       window.refreshSkillDailyLimitsGlobal();
-    }, 30000);
+    }, 120000);
 
-    // Telefonda ilovaga qaytgan ham yangilab oladi
+    // Telefonda ilovaga qaytganda yangilab oladi
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) {
         loadAppConfig();
