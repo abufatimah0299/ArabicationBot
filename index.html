@@ -6279,7 +6279,7 @@ async function loadQuestionsFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/questions?select=*&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/questions?select=id,skill_id,topic_id,category,q,opts,correct_index,exp&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return null;
     const data = await res.json();
     if(Array.isArray(data)){
@@ -7001,7 +7001,7 @@ async function loadGrammarTopicsFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/grammar_topics?select=*&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/grammar_topics?select=id,category,name,ar&order=order_index.asc.nullslast,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return [];
     const data = await res.json();
     if(Array.isArray(data)){
@@ -7068,7 +7068,7 @@ async function loadWritingTopicsFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/writing_topics?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/writing_topics?select=id,part_id,topic_ar&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return [];
     const data = await res.json();
     if(Array.isArray(data)){
@@ -12637,7 +12637,7 @@ async function loadMocksFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/mocks?select=*&order=created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/mocks?select=id,skill,title,duration_mins,questions,created_at&order=created_at.asc`, { headers: authHeaders() });
     if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
     const rows = await res.json();
     const data = rows.map(r => ({
@@ -15143,7 +15143,7 @@ async function loadQiroaTextsFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/qiroa_texts?select=*&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/qiroa_texts?select=id,juz_id,passage,title&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return [];
     const data = await res.json();
     if(Array.isArray(data)){
@@ -15254,7 +15254,7 @@ async function loadIstimaAudioFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/istima_audio?select=*&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/istima_audio?select=id,juz_id,audio_url&order=juz_id.asc,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return [];
     const data = await res.json();
     if(Array.isArray(data)){
@@ -15354,7 +15354,7 @@ async function loadSpeakingQuestionsFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/speaking_questions?select=*&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/speaking_questions?select=id,part_id,prompt&order=part_id.asc,created_at.asc`, { headers: authHeaders() });
     if(!res.ok) return [];
     const data = await res.json();
     if(Array.isArray(data)){
