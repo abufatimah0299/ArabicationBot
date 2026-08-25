@@ -41,10 +41,10 @@
       if (!tg) return;
       tg.ready();
       if (typeof tg.expand === 'function') tg.expand();
-      if (typeof tg.requestFullscreen === 'function') {
+      if (tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && typeof tg.requestFullscreen === 'function') {
         try { tg.requestFullscreen(); } catch(e){}
       }
-      if (typeof tg.disableVerticalSwipes === 'function') {
+      if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7') && typeof tg.disableVerticalSwipes === 'function') {
         try { tg.disableVerticalSwipes(); } catch(e){}
       }
       applyTelegramSafeAreas();
@@ -5963,20 +5963,27 @@ function authHeaders(){
 }
 
 /* ============================================================
-   SMART CACHE (EGRESS VA TRAFIKNI TEJOVCHI TIZIM)
-   Savollar banki, mavzular, matnlar va mocklarni mahalliy
-   keshda saqlab, Supabase'ga takroriy so'rovlarni 80-90% ga
-   qisqartiradi. Admin ma'lumot o'zgartirganda kesh avtomatik
-   tozalanadi.
+   SMART CACHE (EGRESS VA TRAFIKNI TEJOVCHI VERSIYA TIZIMI)
+   questions, writing_topics, qiroa_texts, istima_audio, mocks va
+   barcha umumiy sozlamalarni localStorage'ga doimiy saqlaydi.
+   Keyingi safar ilovaga kirganda bazaga so'rov yubormasdan
+   to'g'ridan-to'g'ri localStorage'dan o'qiydi (0 ms, 0 Egress).
+   Faqat admin yangi ma'lumot qo'shganda / tahrirlaganda / o'chirganda
+   yoki versiya o'zgargandagina bazadan qayta yuklaydi.
    ============================================================ */
+const APP_CONTENT_VERSION_KEY = 'arb_content_ver';
+const DEFAULT_CONTENT_VERSION = 1;
+
 const SmartCache = {
-  get(key, maxAgeMs = 10 * 60 * 1000) {
+  get(key, maxAgeMs = null) {
     try {
       const raw = localStorage.getItem('arb_c_' + key);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (!parsed || !parsed.time || parsed.data === undefined) return null;
-      if (Date.now() - parsed.time > maxAgeMs) return null;
+      if (!parsed || parsed.data === undefined) return null;
+      if (maxAgeMs && parsed.time && (Date.now() - parsed.time > maxAgeMs)) {
+        return null;
+      }
       return parsed.data;
     } catch (e) { return null; }
   },
@@ -5986,9 +5993,9 @@ const SmartCache = {
       localStorage.setItem('arb_c_' + key, JSON.stringify({ time: Date.now(), data }));
     } catch (e) {
       try {
-        for (let i = 0; i < localStorage.length; i++) {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
           const k = localStorage.key(i);
-          if (k && k.startsWith('arb_c_')) {
+          if (k && k.startsWith('arb_c_') && k !== 'arb_c_' + key) {
             localStorage.removeItem(k);
           }
         }
@@ -6006,9 +6013,34 @@ const SmartCache = {
         }
       }
       toRemove.forEach(k => localStorage.removeItem(k));
+      // Versiyani oshirib qo'yamiz
+      const currentVer = parseInt(localStorage.getItem(APP_CONTENT_VERSION_KEY) || '1', 10);
+      localStorage.setItem(APP_CONTENT_VERSION_KEY, String(currentVer + 1));
+    } catch (_) {}
+  },
+  clearAllStatic() {
+    try {
+      const keys = ['questions', 'grammar_topics', 'writing_topics', 'qiroa_texts', 'istima_audio', 'speaking_questions', 'mocks', 'app_config', 'leaderboard'];
+      keys.forEach(k => this.invalidate(k));
     } catch (_) {}
   }
 };
+
+/* Content versiyasini backend bilan solishtirish. Agar admin backendda yangi ma'lumot
+   kiritgan bo'lsa va versiya o'zgargan bo'lsa, lokal keshlar avtomatik tozalanib yangilanadi. */
+async function syncContentVersionCheck(remoteVersion) {
+  if (!remoteVersion) return;
+  const localVer = localStorage.getItem(APP_CONTENT_VERSION_KEY);
+  if (!localVer) {
+    localStorage.setItem(APP_CONTENT_VERSION_KEY, String(remoteVersion));
+    return;
+  }
+  if (String(localVer) !== String(remoteVersion)) {
+    console.log(`[SmartCache] Yangi ma'lumotlar versiyasi topildi: ${localVer} -> ${remoteVersion}. Kesh tozalanmoqda.`);
+    SmartCache.clearAllStatic();
+    localStorage.setItem(APP_CONTENT_VERSION_KEY, String(remoteVersion));
+  }
+}
 
 /* Admin huquqini backenddan tekshirish (ADMIN_TELEGRAM_IDS massividan keyin qo'shilgan
    adminlar uchun). admin_list_admins RPC faqat haqiqiy adminlarga ruxsat berilgan deb
@@ -6078,10 +6110,10 @@ async function tgInitAndAuth(){
   if(!tg){ showDebug("❌ Telegram.WebApp topilmadi — SDK yuklanmagan yoki brauzerda ochilgan."); return null; }
   tg.ready();
   if (typeof tg.expand === 'function') tg.expand();
-  if (typeof tg.requestFullscreen === 'function') {
+  if (tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && typeof tg.requestFullscreen === 'function') {
     try { tg.requestFullscreen(); } catch(e){}
   }
-  if (typeof tg.disableVerticalSwipes === 'function') {
+  if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7') && typeof tg.disableVerticalSwipes === 'function') {
     try { tg.disableVerticalSwipes(); } catch(e){}
   }
   if(typeof window.applyTelegramSafeAreas === 'function') window.applyTelegramSafeAreas();
@@ -6103,7 +6135,10 @@ async function tgInitAndAuth(){
     SESSION_TOKEN = token;
     showDebug("✅ Auth muvaffaqiyatli: "+(user?.first_name||'?'));
     return user;
-  }catch(e){ showDebug("❌ So'rov xatosi: "+e.message+" (SUPABASE_URL to'g'ri kiritilganini tekshiring)"); return null; }
+  }catch(e){
+    console.warn("Auth so'rovi bajarilmadi:", e && e.message);
+    return null;
+  }
 }
 
 /* Debug panel olib tashlandi — xatoliklar faqat brauzer konsoliga (F12) yoziladi */
@@ -6240,7 +6275,7 @@ async function refreshRankFromBackend(){
    EGRESS OPTIMIZATSIYASI: 10 daqiqa SmartCache bilan keshlanadi. */
 async function loadQuestionsFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('questions', 10 * 60 * 1000);
+    const cached = SmartCache.get('questions');
     if(cached) return cached;
   }
   try{
@@ -6962,7 +6997,7 @@ async function reorderQuestionsOnBackend(orderedIds){
    EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
 async function loadGrammarTopicsFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('grammar_topics', 15 * 60 * 1000);
+    const cached = SmartCache.get('grammar_topics');
     if(cached) return cached;
   }
   try{
@@ -7029,7 +7064,7 @@ async function reorderGrammarTopicsOnBackend(orderedIds){
    EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
 async function loadWritingTopicsFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('writing_topics', 15 * 60 * 1000);
+    const cached = SmartCache.get('writing_topics');
     if(cached) return cached;
   }
   try{
@@ -7250,37 +7285,35 @@ async function bootApp(){
       applyLiveHistory();
       applyLiveErrors();
     });
+  }
 
-    await safeBootStep('Reyting', async ()=>{
-      const lb = await loadLeaderboardFromBackend();
-      applyLiveLeaderboard(lb);
-    });
+  // Umumiy (barcha foydalanuvchilar va mehmonlar uchun) kontentlar:
+  await safeBootStep('Reyting', async ()=>{
+    const lb = await loadLeaderboardFromBackend();
+    applyLiveLeaderboard(lb);
+  });
 
-    await safeBootStep('Grammatika mavzulari', async ()=>{
-      const liveTopics = await loadGrammarTopicsFromBackend();
-      applyLiveGrammarTopics(liveTopics);
-    });
+  await safeBootStep('Grammatika mavzulari', async ()=>{
+    const liveTopics = await loadGrammarTopicsFromBackend();
+    applyLiveGrammarTopics(liveTopics);
+  });
 
-    // MUHIM: savollarning o'zi (barcha bo'limlar uchun — grammatika, qiroa, istima va h.k.)
-    // shu yerda, mustaqil qadam sifatida yuklanadi. Ilgari bu faqat refreshQiroaFromBackend()/
-    // refreshIstimaFromBackend() ichida "yashiringan" edi — agar o'sha funksiyalar o'z ichidagi
-    // Qiroa matni yoki Istima audiosini yuklashda xatoga uchrasa, pastdagi applyLiveQuestions()
-    // qatoriga navbat kelmay, GRAMMATIKA (va boshqa bo'limlar) savollari ham sababsiz bo'sh
-    // qolib qolardi. Endi bu ikkalasidan mustaqil.
-    await safeBootStep('Savollar banki', async ()=>{
-      const liveQuestions = await loadQuestionsFromBackend();
-      applyLiveQuestions(liveQuestions);
-    });
+  await safeBootStep('Savollar banki', async ()=>{
+    const liveQuestions = await loadQuestionsFromBackend();
+    applyLiveQuestions(liveQuestions);
+  });
 
-    await safeBootStep('Mock testlar', async ()=>{
-      const liveMocks = await loadMocksFromBackend();
-      if(liveMocks) applyLiveMocks(liveMocks);
-    });
+  await safeBootStep('Mock testlar', async ()=>{
+    const liveMocks = await loadMocksFromBackend();
+    if(liveMocks) applyLiveMocks(liveMocks);
+  });
 
-    await safeBootStep('Qiroa', refreshQiroaFromBackend);
-    await safeBootStep('Istima', refreshIstimaFromBackend);
-    await safeBootStep('Muhavara', refreshSpeakingFromBackend);
-    await safeBootStep('Kitaba', refreshKitabaFromBackend);
+  await safeBootStep('Qiroa', refreshQiroaFromBackend);
+  await safeBootStep('Istima', refreshIstimaFromBackend);
+  await safeBootStep('Muhavara', refreshSpeakingFromBackend);
+  await safeBootStep('Kitaba', refreshKitabaFromBackend);
+
+  if(TELEGRAM_PROFILE.rawId){
     await safeBootStep('Lug\'atim (Flashcard)', syncVocabularyFromBackend);
 
     await safeBootStep('Admin huquqi', async ()=>{
@@ -7305,9 +7338,6 @@ async function bootApp(){
           updateAdminReportsBadge();
         }).catch(()=>{});
       } else {
-        // ADMIN_TELEGRAM_IDS massivida yo'q, lekin "Adminlar" bo'limi orqali backendga
-        // qo'shilgan bo'lishi mumkin — shuni backenddan so'rab tekshiramiz va agar
-        // rostdan ham admin bo'lsa, tugmalarni shu yerda ko'rsatamiz.
         const isBackendAdmin = await checkBackendAdminAccess(TELEGRAM_PROFILE.rawId);
         if(isBackendAdmin){
           showAdminButtons(true);
@@ -12603,7 +12633,7 @@ let MOCKS_DATA = loadMocksData();
    EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
 async function loadMocksFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('mocks', 15 * 60 * 1000);
+    const cached = SmartCache.get('mocks');
     if(cached) return cached;
   }
   try{
@@ -15106,10 +15136,10 @@ let QIROA_TESTS = { juz1:[], juz2:[], juz3:[] };
 let QIROA_TEST_BY_ID = {};
 
 /* Barcha Qiroa matnlarini (testlarini) backenddan yuklaydi.
-   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+   EGRESS OPTIMIZATSIYASI: Doimiy SmartCache bilan keshlanadi. */
 async function loadQiroaTextsFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('qiroa_texts', 15 * 60 * 1000);
+    const cached = SmartCache.get('qiroa_texts');
     if(cached) return cached;
   }
   try{
@@ -15217,10 +15247,10 @@ let ISTIMA_TESTS = { juz1:[], juz2:[], juz3:[] };
 let ISTIMA_TEST_BY_ID = {};
 
 /* Barcha Istima audiolarini (testlarini) backenddan yuklaydi.
-   EGRESS OPTIMIZATSIYASI: 15 daqiqa SmartCache bilan keshlanadi. */
+   EGRESS OPTIMIZATSIYASI: Doimiy SmartCache bilan keshlanadi. */
 async function loadIstimaAudioFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('istima_audio', 15 * 60 * 1000);
+    const cached = SmartCache.get('istima_audio');
     if(cached) return cached;
   }
   try{
@@ -15320,7 +15350,7 @@ let MUHAVARA_QUESTIONS = { part1:[], part2:[], part3:[] };
 
 async function loadSpeakingQuestionsFromBackend(forceRefresh = false){
   if(!forceRefresh){
-    const cached = SmartCache.get('speaking_questions', 15 * 60 * 1000);
+    const cached = SmartCache.get('speaking_questions');
     if(cached) return cached;
   }
   try{
@@ -19531,10 +19561,14 @@ bootApp();
           exam_cards: cfg.exam_cards || {},
           grammar_order: cfg.grammar_order || [],
           community_cards: cfg.community_cards || [],
-          history_purged_at: cfg.history_purged_at || null
+          history_purged_at: cfg.history_purged_at || null,
+          content_version: cfg.content_version || null
         };
 
         localSet('arab_app_config_cache', APP_CONFIG);
+        if (typeof syncContentVersionCheck === 'function' && cfg.content_version) {
+          syncContentVersionCheck(cfg.content_version);
+        }
         // Admin "hammasini tozalash"ni bosgan bo'lsa, shu qurilmadagi eski
         // lokal Tarix keshini (agar hali tozalanmagan bo'lsa) shu yerda tozalaymiz.
         try{ purgeLocalHistoryIfStale(); }catch(e){}
@@ -19555,11 +19589,6 @@ bootApp();
         };
       }
     }
-
-    // Qiroa matnlari/savollari — admin panel har safar shu funksiya chaqirilganda
-    // (ochilganda, 30 soniyada bir, va ilova qayta faollashganda) yangilanib tursin.
-    try { await refreshQiroaFromBackend(); } catch(e) { console.warn('Qiroa matnlari yuklanmadi:', e); }
-    try { await refreshKitabaFromBackend(); } catch(e) { console.warn('Kitaba mavzulari yuklanmadi:', e); }
 
     applyExamCardState();
     applyGrammarOrder();
@@ -20459,20 +20488,35 @@ bootApp();
       clearInterval(pollTimer);
     }
 
-    // EGRESS OPTIMIZATSIYASI: Har 2 daqiqada (faqat ekran ochiq/faol bo'lsa) config, xabarlar va kunlik limitlarni tekshirib turadi
-    pollTimer = setInterval(function () {
-      if (typeof document !== 'undefined' && document.hidden) return;
+    // EGRESS OPTIMIZATSIYASI: Har 5 daqiqada (faqat ekran ochiq/faol bo'lsa) config, xabarlar va kunlik limitlarni
+    // tekshirib turadi. Avval 2 daqiqa edi — pg_stat_statements tahlili shu 3 ta chaqiruv umumiy so'rovlarning
+    // ~41%ini tashkil qilishini ko'rsatdi, shu sabab interval uzaytirildi (2026-08).
+    var POLL_INTERVAL_MS = 300000; // 5 daqiqa. Kerak bo'lsa 600000 (10 daqiqa) ga ham oshirish mumkin.
+    // Yuqorida ilova ochilganda loadAppConfig/refreshUserMessages/refreshSkillDailyLimitsGlobal
+    // allaqachon bir marta chaqirildi — shuni hisobga olib debounce hisoblagichini shu daqiqadan boshlaymiz.
+    var lastPollAt = Date.now();
+
+    function runPollNow() {
+      lastPollAt = Date.now();
       loadAppConfig();
       refreshUserMessages();
       window.refreshSkillDailyLimitsGlobal();
-    }, 120000);
+    }
 
-    // Telefonda ilovaga qaytganda yangilab oladi
+    pollTimer = setInterval(function () {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      runPollNow();
+    }, POLL_INTERVAL_MS);
+
+    // Telefonda ilovaga qaytganda yangilab oladi.
+    // EGRESS OPTIMIZATSIYASI: agar oxirgi so'rovdan 60 soniyadan kam vaqt o'tgan bo'lsa (foydalanuvchi
+    // tez-tez tab almashtirsa), qayta so'rov yubormaymiz — shu 60 soniyalik "debounce" ortiqcha
+    // takroriy chaqiruvlarning oldini oladi.
+    var VISIBILITY_DEBOUNCE_MS = 60000; // 60 soniya
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) {
-        loadAppConfig();
-        refreshUserMessages();
-        window.refreshSkillDailyLimitsGlobal();
+        if (Date.now() - lastPollAt < VISIBILITY_DEBOUNCE_MS) return;
+        runPollNow();
       }
     });
   }
