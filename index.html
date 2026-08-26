@@ -15024,7 +15024,7 @@ function toggleAvatarVisibility(){
   const next = getShowAvatarSetting() ? 'off' : 'on';
   try{ localStorage.setItem(avatarSettingKey(), next); }catch(e){}
   if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
-    fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+    fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
       method: "PATCH",
       headers: authHeaders(),
       body: JSON.stringify({ show_avatar: next === 'on' })
