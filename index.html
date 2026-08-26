@@ -14995,30 +14995,15 @@ async function saveProfile(){
      obyektidan emas. Shu sabab ismni backenddagi users jadvaliga ham yozamiz. */
   if(nameChanged && TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
     try{
-      // "Prefer: return=representation" qo'shildi — shu bo'lmasa PostgREST/RLS
-      // qatorni yangilamay qo'ysa ham (0 qator) status baribir 200/204 qaytishi
-      // mumkin edi, shu sabab avvalgi kodda "muvaffaqiyatli" deb ko'rsatilardi,
-      // aslida bazada hech narsa o'zgarmagan bo'lardi. Endi qaytgan qatorni
-      // tekshirib, haqiqatan yozilganini tasdiqlaymiz.
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
-        method: "PATCH",
-        headers: { ...authHeaders(), "Prefer": "return=representation" },
-        body: JSON.stringify({ display_name: newName })
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_display_name`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_display_name: newName })
       });
-      let updatedRows = null;
-      let bodyText = '';
-      try{ bodyText = await res.text(); updatedRows = JSON.parse(bodyText); }catch(e){}
-      const rowConfirmed = Array.isArray(updatedRows) && updatedRows.length > 0 && updatedRows[0].display_name === newName;
       if(!res.ok){
-        console.error('[saveProfile] Ism bazaga yozilmadi (HTTP xato):', res.status, bodyText);
-        toast('❌ Ism reytingda yangilanmadi (server xatosi)', 4500);
-      } else if(!rowConfirmed){
-        // Status 2xx, lekin qator haqiqatan yangilanmadi — sababi RLS policy
-        // "id"ni joriy foydalanuvchi bilan mos kelmayapti deb hisoblab qatorni
-        // qaytarmagan, yoki users jadvalida bunday id topilmagan. Aynan shu —
-        // ismni edit qilganda reytingda o'zgarmasligining sababi.
-        console.error('[saveProfile] Qator yangilanmadi (RLS/ID mos kelmadi):', bodyText, 'rawId=', TELEGRAM_PROFILE.rawId);
-        toast('❌ Ism reytingda yangilanmadi (ruxsat/RLS muammosi)', 5000);
+        const errText = await res.text();
+        console.error('[saveProfile] Ism bazaga yozilmadi:', errText);
+        toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
       } else {
         toast('Profil yangilandi ✅');
         try{
@@ -15029,7 +15014,7 @@ async function saveProfile(){
       }
     }catch(e){
       console.error('[saveProfile] RPC xatosi:', e);
-      toast('❌ Ism reytingda yangilanmadi (tarmoq xatosi)', 4000);
+      toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
     }
   } else {
     toast('Profil yangilandi ✅');
@@ -15070,32 +15055,27 @@ function toggleAvatarVisibility(){
   try{ localStorage.setItem(avatarSettingKey(), next); }catch(e){}
   applyAvatarSetting();
   if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
-    fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
-      method: "PATCH",
-      headers: { ...authHeaders(), "Prefer": "return=representation" },
-      body: JSON.stringify({ show_avatar: next === 'on' })
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/update_show_avatar`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_show_avatar: next === 'on' })
     }).then(async (res)=>{
-      /* "Prefer: return=representation" qo'shildi — shu bo'lmasa PostgREST/RLS
-         qatorni 0 ta yangilagan bo'lsa ham status 200/204 qaytishi mumkin edi,
-         shu sabab "ishladi" deb ko'rsatilardi, aslida BOSHQA foydalanuvchilar
-         uchun (ular faqat backenddagi leaderboard_view'ga qaraydi) hech narsa
-         o'zgarmagan bo'lardi — ya'ni "hide" faqat sizning qurilmangizdagi
-         localStorage'da qolib, boshqalarga ta'sir qilmasdi. */
-      let bodyText = '', updatedRows = null;
-      try{ bodyText = await res.text(); updatedRows = JSON.parse(bodyText); }catch(e){}
-      const rowConfirmed = Array.isArray(updatedRows) && updatedRows.length > 0 && updatedRows[0].show_avatar === (next === 'on');
+      /* DIQQAT: avvalgi versiyada bu yerdagi xato butunlay yashirilardi (.catch(()=>{})),
+         shu sabab agar bazaga yozish muvaffaqiyatsiz bo'lsa (RLS, ustun mavjud emasligi va
+         h.k.) siz bundan bexabar qolardingiz — sizga har doim "ishladi"dek ko'rinardi,
+         chunki reytingda O'ZINGIZ uchun localStorage'dagi qiymat ishlatiladi, backend emas.
+         Boshqa foydalanuvchilar esa faqat backenddagi (leaderboard_view) qiymatga qaraydi —
+         demak yozish muvaffaqiyatsiz bo'lsa, ular hech qachon yangilanishni ko'rmaydi. */
       if(!res.ok){
-        console.error('[toggleAvatarVisibility] Bazaga yozilmadi (HTTP xato):', res.status, bodyText);
-        toast('❌ Sozlama boshqalarga ta\'sir qilmadi (server xatosi)', 4500);
-      } else if(!rowConfirmed){
-        console.error('[toggleAvatarVisibility] Qator yangilanmadi (RLS/ID mos kelmadi):', bodyText, 'rawId=', TELEGRAM_PROFILE.rawId);
-        toast('❌ Sozlama boshqalarga ta\'sir qilmadi (ruxsat/RLS muammosi)', 5000);
+        const errText = await res.text();
+        console.error('[toggleAvatarVisibility] Bazaga yozilmadi:', errText);
+        toast('⚠️ Sozlama saqlandi, lekin boshqalarga ko\'rinishi kechikishi mumkin', 4000);
       } else {
         toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
       }
     }).catch((e)=>{
       console.error('[toggleAvatarVisibility] RPC xatosi:', e);
-      toast('❌ Sozlama boshqalarga ta\'sir qilmadi (tarmoq xatosi)', 4000);
+      toast('⚠️ Sozlama saqlandi, lekin boshqalarga ko\'rinishi kechikishi mumkin', 4000);
     });
   } else {
     toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
