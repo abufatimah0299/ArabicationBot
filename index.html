@@ -14977,8 +14977,9 @@ function avatarContent(){
   const initial = (TELEGRAM_PROFILE.name || '?').trim().charAt(0).toUpperCase();
   return initial || '?';
 }
-function saveProfile(){
+async function saveProfile(){
   const newName = document.getElementById('editNameInput').value.trim();
+  const nameChanged = newName && newName !== TELEGRAM_PROFILE.name;
   if(newName){
     TELEGRAM_PROFILE.name = newName;
     try{ localStorage.setItem('arabication_custom_name', newName); }catch(e){}
@@ -14988,7 +14989,36 @@ function saveProfile(){
 
   renderGreetingFromProfile();
   closeModal();
-  toast('Profil yangilandi ✅');
+
+  /* MUHIM: ism faqat localStorage'da qolsa, reyting (leaderboard_view) buni
+     hech qachon ko'rmaydi — chunki reyting backenddan o'qiladi, TELEGRAM_PROFILE
+     obyektidan emas. Shu sabab ismni backenddagi users jadvaliga ham yozamiz. */
+  if(nameChanged && TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: newName })
+      });
+      if(!res.ok){
+        const errText = await res.text();
+        console.error('[saveProfile] Ism bazaga yozilmadi:', errText);
+        toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
+      } else {
+        toast('Profil yangilandi ✅');
+        try{
+          if(document.getElementById('view-rank')?.classList.contains('active')){
+            refreshRankFromBackend();
+          }
+        }catch(e){}
+      }
+    }catch(e){
+      console.error('[saveProfile] RPC xatosi:', e);
+      toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
+    }
+  } else {
+    toast('Profil yangilandi ✅');
+  }
 }
 
 /* ---------------- Profil rasmini reytingda ko'rsatish / yashirish sozlamasi ----------------
@@ -15023,15 +15053,33 @@ function applyAvatarSetting(){
 function toggleAvatarVisibility(){
   const next = getShowAvatarSetting() ? 'off' : 'on';
   try{ localStorage.setItem(avatarSettingKey(), next); }catch(e){}
+  applyAvatarSetting();
   if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
-    fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
+    fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
       method: "PATCH",
       headers: authHeaders(),
       body: JSON.stringify({ show_avatar: next === 'on' })
-    }).catch(()=>{});
+    }).then(async (res)=>{
+      /* DIQQAT: avvalgi versiyada bu yerdagi xato butunlay yashirilardi (.catch(()=>{})),
+         shu sabab agar bazaga yozish muvaffaqiyatsiz bo'lsa (RLS, ustun mavjud emasligi va
+         h.k.) siz bundan bexabar qolardingiz — sizga har doim "ishladi"dek ko'rinardi,
+         chunki reytingda O'ZINGIZ uchun localStorage'dagi qiymat ishlatiladi, backend emas.
+         Boshqa foydalanuvchilar esa faqat backenddagi (leaderboard_view) qiymatga qaraydi —
+         demak yozish muvaffaqiyatsiz bo'lsa, ular hech qachon yangilanishni ko'rmaydi. */
+      if(!res.ok){
+        const errText = await res.text();
+        console.error('[toggleAvatarVisibility] Bazaga yozilmadi:', errText);
+        toast('⚠️ Sozlama saqlandi, lekin boshqalarga ko\'rinishi kechikishi mumkin', 4000);
+      } else {
+        toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
+      }
+    }).catch((e)=>{
+      console.error('[toggleAvatarVisibility] RPC xatosi:', e);
+      toast('⚠️ Sozlama saqlandi, lekin boshqalarga ko\'rinishi kechikishi mumkin', 4000);
+    });
+  } else {
+    toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
   }
-  applyAvatarSetting();
-  toast(next==='on' ? 'Profil rasmi ko\'rsatiladi' : 'Profil rasmi endi ko\'rsatilmaydi');
 }
 
 /* ---------------- Question banks ---------------- */
