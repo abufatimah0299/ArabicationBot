@@ -14944,8 +14944,11 @@ function openEditProfile(){
   `;
   document.getElementById('modalOverlay').classList.add('show');
 }
+/* profil rasmi: dashboard, header va profil sahifasida DOIM ko'rinadi (agar mavjud
+   bo'lsa) — "rasmni yashirish" sozlamasi faqat reyting(leaderboard)dagi ko'rinishga
+   ta'sir qiladi, bu yerga emas. */
 function avatarContent(){
-  if(TELEGRAM_PROFILE.photoUrl && getShowAvatarSetting()){
+  if(TELEGRAM_PROFILE.photoUrl){
     const initial = (TELEGRAM_PROFILE.name || '?').trim().charAt(0).toUpperCase();
     return `<img src="${escapeHtml(TELEGRAM_PROFILE.photoUrl)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeHtml(initial)}'}))">`;
   }
@@ -14966,10 +14969,10 @@ function saveProfile(){
   toast('Profil yangilandi ✅');
 }
 
-/* ---------------- Profil rasmini ko'rsatish / yashirish sozlamasi ----------------
-   localStorage'da saqlanadi (mavzu tanlovi kabi) — yoqilgan bo'lsa (default holat)
-   Telegram profil rasmi header, profil sahifasi va reyting(sizning qatoringiz)da
-   ko'rinadi; o'chirilsa hamma joyda ism harfidan iborat doiraga almashadi. */
+/* ---------------- Profil rasmini reytingda ko'rsatish / yashirish sozlamasi ----------------
+   localStorage'da saqlanadi (mavzu tanlovi kabi) — bu sozlama FAQAT reyting (leaderboard/
+   podium)dagi "Siz" qatoringizga ta'sir qiladi. Dashboard, header va profil sahifasidagi
+   rasm bu sozlamadan qat'i nazar doim ko'rinadi (agar Telegram rasmi mavjud bo'lsa). */
 function getShowAvatarSetting(){
   let v = null;
   try{ v = localStorage.getItem('arabication-show-avatar'); }catch(e){}
@@ -14980,14 +14983,8 @@ function applyAvatarSetting(){
   const sw = document.getElementById('avatarSettingSwitch');
   const sub = document.getElementById('avatarSettingSub');
   if(sw) sw.checked = on;
-  if(sub) sub.textContent = on ? "Telegram profil rasmingiz ko'rinadi" : "Profil rasmingiz o'rniga harf ko'rsatiladi";
+  if(sub) sub.textContent = on ? "Reytingda profil rasmingiz ko'rinadi" : "Reytingda rasmingiz o'rniga harf ko'rsatiladi";
   try{
-    const dashAvatar = document.getElementById('dashUserAvatar');
-    if(dashAvatar) dashAvatar.innerHTML = avatarContent();
-    const topAvatar = document.getElementById('topAvatar');
-    if(topAvatar) topAvatar.innerHTML = avatarContent();
-    const pa = document.getElementById('profileAvatar');
-    if(pa) pa.innerHTML = avatarContent();
     if(document.getElementById('view-rank')?.classList.contains('active')){
       renderRank(currentRankPeriod, currentRankSkill, currentRankType);
     }
