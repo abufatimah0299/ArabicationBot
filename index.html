@@ -14503,7 +14503,7 @@ function sortedRank(period, skill){
     const rawPhoto = pick(r, ['photo_url','avatar_url','photo'], null);
     return {
       id: rid,
-      name: pick(r, ['name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+      name: pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
       photo: showAvatar ? rawPhoto : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
@@ -14995,10 +14995,10 @@ async function saveProfile(){
      obyektidan emas. Shu sabab ismni backenddagi users jadvaliga ham yozamiz. */
   if(nameChanged && TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
     try{
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
         method: "PATCH",
         headers: authHeaders(),
-        body: JSON.stringify({ name: newName })
+        body: JSON.stringify({ display_name: newName })
       });
       if(!res.ok){
         const errText = await res.text();
@@ -15055,7 +15055,7 @@ function toggleAvatarVisibility(){
   try{ localStorage.setItem(avatarSettingKey(), next); }catch(e){}
   applyAvatarSetting();
   if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
-    fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
+    fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${TELEGRAM_PROFILE.rawId}`, {
       method: "PATCH",
       headers: authHeaders(),
       body: JSON.stringify({ show_avatar: next === 'on' })
