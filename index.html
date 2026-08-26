@@ -1937,14 +1937,18 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
   border:1px solid var(--border);
-  border-radius:22px; padding:20px 12px; text-align:center;
+  border-radius:22px; padding:20px 10px; text-align:center;
   box-shadow:var(--shadow); transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+  min-width:0; width:100%; box-sizing:border-box;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  min-height:132px;
 }
 .podium-item:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
 .podium-item.first{
   padding-top:28px; border:2px solid #E3A83F;
   background:linear-gradient(180deg, rgba(227,168,63,0.14) 0%, var(--card) 100%);
   box-shadow:0 12px 30px -10px rgba(227,168,63,0.25);
+  min-height:156px;
 }
 .podium-item.second{
   border:1.5px solid #94A3B8;
@@ -1955,11 +1959,11 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   background:linear-gradient(180deg, rgba(205,127,50,0.10) 0%, var(--card) 100%);
 }
 .podium-medal{ font-size:30px; }
-.podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:16px; overflow:hidden; border:2px solid rgba(255,255,255,0.2); }
+.podium-avatar{ width:52px; height:52px; border-radius:50%; margin:8px auto; display:flex; align-items:center; justify-content:center; font-weight:600; color:#fff; font-size:16px; overflow:hidden; border:2px solid rgba(255,255,255,0.2); flex-shrink:0; }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; border-color:#E3A83F; box-shadow:0 0 16px rgba(227,168,63,0.4); }
 .podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
-.podium-name{ font-size:12.5px; font-weight:600; margin-top:4px; }
-.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; }
+.podium-name{ font-size:12.5px; font-weight:600; margin-top:4px; width:100%; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:14px; transition:background-color .2s var(--ease), transform .15s var(--ease); }
 .lb-row:hover{ background:var(--indigo-100); }
