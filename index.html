@@ -7290,6 +7290,18 @@ async function bootApp(){
       if(dash && dash.gender){
         TELEGRAM_PROFILE.gender = dash.gender;
       }
+      // Rasmni yashirish sozlamasini backenddagi haqiqiy qiymat (users.show_avatar) bilan
+      // sinxronlaymiz va endi TELEGRAM_PROFILE.rawId ma'lum bo'lgani uchun shu foydalanuvchiga
+      // xos (namespaced) kalitga qayta yozamiz — shu qurilmada boshqa akkauntdan qolgan eski
+      // qiymat bu foydalanuvchiga ta'sir qilmasligi uchun.
+      try{
+        const dashShowAvatar = pick(dash || {}, ['show_avatar','show_photo','avatar_visible'], null);
+        if(dashShowAvatar !== null){
+          const onOff = (dashShowAvatar === false || dashShowAvatar === 'off' || dashShowAvatar === 'false') ? 'off' : 'on';
+          localStorage.setItem(avatarSettingKey(), onOff);
+        }
+      }catch(e){}
+      applyAvatarSetting();
       renderGreetingFromProfile();
       const sub = document.getElementById('greetingSub');
       if(sub && dash) sub.textContent = `Bugungi maqsadingizga ${dash.daily_pct ?? 0}% yetdingiz.`;
@@ -14747,6 +14759,13 @@ function checkOnboardingRegistration(dash){
 
   if(TELEGRAM_PROFILE.rawId){
     onboarded = !!(dash && (dash.onboarding_completed === true || dash.onboarding_completed === 't' || dash.onboarding_completed === 1));
+    // Agar backend javobi (dash) hali kelmagan/muvaffaqiyatsiz bo'lsa yoki bu maydonni
+    // qaytarmasa, shu qurilmada avval onboarding tugallanganligini localStorage'dan
+    // tekshiramiz — aks holda vaqtinchalik tarmoq/backend xatosi tufayli onboarding
+    // har safar ilova ochilganda qayta-qayta chiqib qolardi.
+    if(!onboarded){
+      try{ onboarded = localStorage.getItem('arabication_onboarded_v1_' + TELEGRAM_PROFILE.rawId) === 'true'; }catch(e){}
+    }
   } else {
     try{ onboarded = localStorage.getItem('arabication_onboarded_v1') === 'true'; }catch(e){}
   }
@@ -14857,6 +14876,9 @@ async function completeOnboarding(){
   // lekin haqiqiy manba (source of truth) endi bazadagi users yozuvi.
   try{
     localStorage.setItem('arabication_onboarded_v1', 'true');
+    if(TELEGRAM_PROFILE.rawId){
+      localStorage.setItem('arabication_onboarded_v1_' + TELEGRAM_PROFILE.rawId, 'true');
+    }
     localStorage.setItem('arabication_custom_name', finalName);
     localStorage.setItem('arabication_user_gender', finalGender);
   }catch(e){}
@@ -14973,9 +14995,17 @@ function saveProfile(){
    localStorage'da saqlanadi (mavzu tanlovi kabi) — bu sozlama FAQAT reyting (leaderboard/
    podium)dagi "Siz" qatoringizga ta'sir qiladi. Dashboard, header va profil sahifasidagi
    rasm bu sozlamadan qat'i nazar doim ko'rinadi (agar Telegram rasmi mavjud bo'lsa). */
+/* Sozlama endi har bir foydalanuvchining o'z Telegram ID'siga bog'langan kalitda
+   saqlanadi (masalan 'arabication-show-avatar-123456'), umumiy/global kalitda emas.
+   Shu tufayli bitta qurilma/brauzerda boshqa Telegram akkaunt bilan kirilsa ham,
+   oldingi foydalanuvchining "rasmni yashirish" holati yangi foydalanuvchiga
+   o'tib ketmaydi — bu sozlama faqat o'sha aniq foydalanuvchining o'ziga tegishli. */
+function avatarSettingKey(){
+  return TELEGRAM_PROFILE.rawId ? ('arabication-show-avatar-' + TELEGRAM_PROFILE.rawId) : 'arabication-show-avatar';
+}
 function getShowAvatarSetting(){
   let v = null;
-  try{ v = localStorage.getItem('arabication-show-avatar'); }catch(e){}
+  try{ v = localStorage.getItem(avatarSettingKey()); }catch(e){}
   return v !== 'off'; // default: yoqilgan
 }
 function applyAvatarSetting(){
@@ -14992,7 +15022,7 @@ function applyAvatarSetting(){
 }
 function toggleAvatarVisibility(){
   const next = getShowAvatarSetting() ? 'off' : 'on';
-  try{ localStorage.setItem('arabication-show-avatar', next); }catch(e){}
+  try{ localStorage.setItem(avatarSettingKey(), next); }catch(e){}
   if(TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
     fetch(`${SUPABASE_URL}/rest/v1/users?telegram_id=eq.${TELEGRAM_PROFILE.rawId}`, {
       method: "PATCH",
