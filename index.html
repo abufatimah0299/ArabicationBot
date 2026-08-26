@@ -7273,12 +7273,24 @@ async function bootApp(){
     }
   }
 
+  // Onboarding holatini endi localStorage'dan emas, shu yerda bir marta yuklanadigan
+  // dashboard javobidan (get_user_dashboard RPC, onboarding_completed/display_name/gender
+  // maydonlari) olamiz — shu sababli qo'shimcha Supabase so'rovi (egress) qo'shilmaydi.
+  let __dashForOnboarding = null;
   if(TELEGRAM_PROFILE.rawId){
     await safeBootStep('Dashboard', async ()=>{
       const dash = await loadDashboardFromBackend(TELEGRAM_PROFILE.rawId);
+      __dashForOnboarding = dash;
       applyBackendSkillScores(dash);
       applyProfileStats(dash);
       applyProfileHeader(dash);
+      if(dash && dash.display_name && dash.display_name.trim()){
+        TELEGRAM_PROFILE.name = dash.display_name.trim();
+      }
+      if(dash && dash.gender){
+        TELEGRAM_PROFILE.gender = dash.gender;
+      }
+      renderGreetingFromProfile();
       const sub = document.getElementById('greetingSub');
       if(sub && dash) sub.textContent = `Bugungi maqsadingizga ${dash.daily_pct ?? 0}% yetdingiz.`;
     });
@@ -7370,7 +7382,7 @@ async function bootApp(){
   }
   window.APP_READY = true;
   renderDashboardPracticeCards();
-  checkOnboardingRegistration();
+  checkOnboardingRegistration(__dashForOnboarding);
 }
 
 /* ---------------- Theme (dark / light) ---------------- */
@@ -14725,19 +14737,33 @@ function handleObNameInput(input){
   input.style.fontFamily = hasArabicText(input.value) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
 }
 
-function checkOnboardingRegistration(){
+/* Onboarding holati endi qurilma localStorage'iga emas, foydalanuvchining bazadagi
+   yozuviga (users.onboarding_completed, get_user_dashboard RPC orqali) bog'langan.
+   `dash` — bootApp() allaqachon yuklab bo'lgan dashboard javobi (qo'shimcha so'rov yo'q).
+   Faqat Telegram tashqarisidagi mehmon/dev holat (rawId yo'q) uchun eski localStorage
+   yo'li qoladi, chunki u holatda bazadagi haqiqiy foydalanuvchi yozuvi umuman bo'lmaydi. */
+function checkOnboardingRegistration(dash){
   let onboarded = false;
-  try{ onboarded = localStorage.getItem('arabication_onboarded_v1') === 'true'; }catch(e){}
-  
-  // Custom name va gender tiklash
+
+  if(TELEGRAM_PROFILE.rawId){
+    onboarded = !!(dash && (dash.onboarding_completed === true || dash.onboarding_completed === 't' || dash.onboarding_completed === 1));
+  } else {
+    try{ onboarded = localStorage.getItem('arabication_onboarded_v1') === 'true'; }catch(e){}
+  }
+
+  // Custom name va gender uchun mahalliy zaxira (dash'da yo'q bo'lsa yoki mehmon rejimida)
   try{
-    const savedName = localStorage.getItem('arabication_custom_name');
-    if(savedName && savedName.trim()){
-      TELEGRAM_PROFILE.name = savedName.trim();
+    if(!(dash && dash.display_name && dash.display_name.trim())){
+      const savedName = localStorage.getItem('arabication_custom_name');
+      if(savedName && savedName.trim()){
+        TELEGRAM_PROFILE.name = savedName.trim();
+      }
     }
-    const savedGender = localStorage.getItem('arabication_user_gender');
-    if(savedGender){
-      TELEGRAM_PROFILE.gender = savedGender;
+    if(!(dash && dash.gender)){
+      const savedGender = localStorage.getItem('arabication_user_gender');
+      if(savedGender){
+        TELEGRAM_PROFILE.gender = savedGender;
+      }
     }
   }catch(e){}
 
@@ -14822,10 +14848,13 @@ function selectObGender(gender){
   });
 }
 
-function completeOnboarding(){
+async function completeOnboarding(){
   const finalName = ONBOARDING_TEMP_NAME || 'Foydalanuvchi';
   const finalGender = ONBOARDING_SELECTED_GENDER || 'unspecified';
 
+  // Mahalliy keshga ham yozib qo'yamiz: keyingi ochilishda dashboard javobi
+  // kelmagunicha ekran darhol to'g'ri ism/jinsni ko'rsatadi (0 ms flash-fix),
+  // lekin haqiqiy manba (source of truth) endi bazadagi users yozuvi.
   try{
     localStorage.setItem('arabication_onboarded_v1', 'true');
     localStorage.setItem('arabication_custom_name', finalName);
@@ -14841,6 +14870,29 @@ function completeOnboarding(){
   if(overlay) overlay.style.display = 'none';
 
   toast(`Xush kelibsiz, ${finalName}! 🎉`, 4000);
+
+  // Bazaga bitta yengil yozuv: bu shu foydalanuvchi Telegram ID'siga (rawId) bog'lanadi,
+  // shuning uchun boshqa qurilmadan kirsa ham onboarding qayta chiqmaydi.
+  // Mehmon/dev rejimida (rawId yo'q) bu qadam o'tkazib yuboriladi.
+  if(TELEGRAM_PROFILE.rawId){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/complete_onboarding`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          p_user_id: TELEGRAM_PROFILE.rawId,
+          p_name: finalName,
+          p_gender: finalGender
+        })
+      });
+      if(!res.ok){
+        const errText = await res.text();
+        console.error("Onboarding bazaga yozilmadi:", errText);
+      }
+    }catch(e){
+      console.error('[completeOnboarding] RPC xatosi:', e);
+    }
+  }
 }
 
 function setEditProfileGender(gender){
