@@ -14980,19 +14980,23 @@ function avatarContent(){
 async function saveProfile(){
   const newName = document.getElementById('editNameInput').value.trim();
   const nameChanged = newName && newName !== TELEGRAM_PROFILE.name;
+  const newGender = EDIT_TEMP_GENDER || 'unspecified';
+  const genderChanged = newGender !== (TELEGRAM_PROFILE.gender || 'unspecified');
   if(newName){
     TELEGRAM_PROFILE.name = newName;
     try{ localStorage.setItem('arabication_custom_name', newName); }catch(e){}
   }
-  TELEGRAM_PROFILE.gender = EDIT_TEMP_GENDER || 'unspecified';
-  try{ localStorage.setItem('arabication_user_gender', TELEGRAM_PROFILE.gender); }catch(e){}
+  TELEGRAM_PROFILE.gender = newGender;
+  try{ localStorage.setItem('arabication_user_gender', newGender); }catch(e){}
 
   renderGreetingFromProfile();
   closeModal();
 
-  /* MUHIM: ism faqat localStorage'da qolsa, reyting (leaderboard_view) buni
-     hech qachon ko'rmaydi — chunki reyting backenddan o'qiladi, TELEGRAM_PROFILE
-     obyektidan emas. Shu sabab ismni backenddagi users jadvaliga ham yozamiz. */
+  /* MUHIM: ism/jins faqat localStorage'da qolsa, reyting (leaderboard_view) va boshqa
+     joylar buni hech qachon ko'rmaydi — chunki ular backenddan o'qiydi, TELEGRAM_PROFILE
+     obyektidan emas. Shu sabab ikkalasini ham backenddagi users jadvaliga yozamiz
+     (RLS'ni chetlab o'tadigan RPC orqali — qarang update_display_name / update_gender). */
+  let backendOk = true;
   if(nameChanged && TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
     try{
       const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_display_name`, {
@@ -15001,25 +15005,39 @@ async function saveProfile(){
         body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_display_name: newName })
       });
       if(!res.ok){
-        const errText = await res.text();
-        console.error('[saveProfile] Ism bazaga yozilmadi:', errText);
-        toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
-      } else {
-        toast('Profil yangilandi ✅');
-        try{
-          if(document.getElementById('view-rank')?.classList.contains('active')){
-            refreshRankFromBackend();
-          }
-        }catch(e){}
+        backendOk = false;
+        console.error('[saveProfile] Ism bazaga yozilmadi:', await res.text());
       }
-    }catch(e){
-      console.error('[saveProfile] RPC xatosi:', e);
-      toast('⚠️ Ism saqlandi, lekin reytingda yangilanishi kechikishi mumkin', 3500);
-    }
+    }catch(e){ backendOk = false; console.error('[saveProfile] RPC xatosi (ism):', e); }
+  }
+  if(genderChanged && TELEGRAM_PROFILE.rawId && SESSION_TOKEN){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/update_gender`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_gender: newGender })
+      });
+      if(!res.ok){
+        backendOk = false;
+        console.error('[saveProfile] Jins bazaga yozilmadi:', await res.text());
+      }
+    }catch(e){ backendOk = false; console.error('[saveProfile] RPC xatosi (jins):', e); }
+  }
+
+  if(!backendOk){
+    toast('⚠️ Saqlandi, lekin reyting/boshqa joylarda yangilanishi kechikishi mumkin', 3500);
   } else {
     toast('Profil yangilandi ✅');
+    if((nameChanged || genderChanged)){
+      try{
+        if(document.getElementById('view-rank')?.classList.contains('active')){
+          refreshRankFromBackend();
+        }
+      }catch(e){}
+    }
   }
 }
+
 
 /* ---------------- Profil rasmini reytingda ko'rsatish / yashirish sozlamasi ----------------
    localStorage'da saqlanadi (mavzu tanlovi kabi) — bu sozlama FAQAT reyting (leaderboard/
