@@ -5287,6 +5287,7 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="rank-top-col">
               <div class="num" id="rankXpNum">—</div>
               <div class="lbl">Yig'ilgan XP</div>
+              <div class="lbl" id="rankXpCountLbl" style="margin-top:2px;opacity:0.8;"></div>
             </div>
             <div class="rank-top-col">
               <div class="num" id="rankGapNum">—</div>
@@ -6247,18 +6248,44 @@ async function loadErrorsFromBackend(userId){
   }catch(e){ console.error(e); return []; }
 }
 
+/* 2-BOSQICH: rank bo'limida XP qancha test/urinishdan yig'ilganini ko'rsatish uchun,
+   leaderboard_view'ga qo'shimcha ravishda leaderboard_attempt_counts (yoki shunga
+   o'xshash) view/jadvaldan har bir foydalanuvchining mahorat bo'yicha test/urinish
+   sonini ham olib, asosiy qatorga birlashtiramiz. Bu view hali backendda yo'q bo'lsa,
+   fetch shunchaki bo'sh/404 qaytaradi va hisoblagichlar 0 sifatida qoladi — sahifa
+   buzilmaydi (pastdagi SQL taklifiga qarang). */
+async function loadAttemptCountsFromBackend(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_attempt_counts?select=*`, { headers: authHeaders() });
+    if(!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }catch(e){ console.error('[loadAttemptCountsFromBackend]', e); return []; }
+}
 async function loadLeaderboardFromBackend(forceRefresh = false){
   if(!forceRefresh){
     const cached = SmartCache.get('leaderboard', 3 * 60 * 1000); // 3 daqiqa kesh
     if(cached) return cached;
   }
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() });
+    const [res, counts] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() }),
+      loadAttemptCountsFromBackend()
+    ]);
     if(!res.ok){
       console.warn('[loadLeaderboardFromBackend] error:', res.status);
       return [];
     }
     const data = await res.json();
+    // Har bir foydalanuvchining test/urinish sonini id bo'yicha asosiy qatorga qo'shamiz.
+    if(Array.isArray(data) && counts.length){
+      const countsById = new Map(counts.map(c => [String(pick(c, ['user_id','telegram_id','id'], '')), c]));
+      for(const row of data){
+        const rid = String(pick(row, ['user_id','telegram_id','id'], ''));
+        const extra = countsById.get(rid);
+        if(extra) Object.assign(row, extra);
+      }
+    }
     if(Array.isArray(data) && data.length > 0){
       SmartCache.set('leaderboard', data);
     }
@@ -14493,6 +14520,50 @@ function rankXpFor(r, skill, period){
   const sum = skillScoreKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
   return sum;
 }
+/* ---- XP qancha URINISH/TEST orqali yig'ilgani (2-bosqich talabi) ----
+   XP raqami yonida "necha ta test yechilgan" (grammatika/qiroa/istima) yoki
+   "necha marta urinilgan" (muhavara/kitaba — speaking/writing) ko'rsatiladi.
+   Backendda quiz_attempts jadvalida FAQAT yakunlangan (demak XP bergan)
+   urinishlar saqlanadi (chala qolganlari umuman yozilmaydi — kod ichidagi
+   eski izohga qarang), shu sabab bu hisoblagich = shu jadvaldagi qatorlar soni,
+   va u avtomatik ravishda faqat XP bergan urinishlarni anglatadi.
+   Ustun nomlari hali backendda (leaderboard_view'da) mavjud bo'lmasligi mumkin —
+   shu sabab rankXpKeys bilan bir xil pattern: bir nechta mumkin bo'lgan ustun
+   nomi sinaladi, topilmasa 0 qaytadi (raqam ko'rsatilmaydi, lekin sahifa
+   buzilmaydi). Backendda tegishli ustunlar qo'shilishi bilan avtomatik ishga
+   tushadi — pastdagi SQN taklifiga qarang. */
+function rankCountKeys(skill, period){
+  if(skill === 'hammasi'){
+    if(period === 'hafta') return ['attempts_count_week','attempts_week','count_week'];
+    if(period === 'oy') return ['attempts_count_month','attempts_month','count_month'];
+    return ['attempts_count_total','attempts_count','total_attempts'];
+  }
+  const keys = [];
+  if(period === 'hafta') keys.push(`${skill}_count_week`, `${skill}_attempts_week`);
+  else if(period === 'oy') keys.push(`${skill}_count_month`, `${skill}_attempts_month`);
+  keys.push(`${skill}_count`, `${skill}_attempts`, `count_${skill}`);
+  return keys;
+}
+/* Muhavara (speaking) va kitaba (writing) uchun "marta urinildi", qolganlarida
+   "ta test yechildi". "Hammasi" tanlanganda ikkalasini ham qamrab oladigan
+   umumiy "urinish" so'zi ishlatiladi. */
+function rankCountUnit(skill){
+  if(skill === 'muhavara' || skill === 'kitaba') return 'marta urinildi';
+  if(skill === 'hammasi') return 'ta urinish';
+  return 'ta test yechildi';
+}
+function rankCountFor(r, skill, period){
+  const keys = rankCountKeys(skill, period);
+  const val = Number(pick(r, keys, 0)) || 0;
+  if(val > 0 || skill !== 'hammasi') return val;
+  const skillCountKeys = ['grammatika_count','qiroa_count','istima_count','muhavara_count','kitaba_count'];
+  return skillCountKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
+}
+function rankCountLabel(r, skill, period){
+  const n = rankCountFor(r, skill, period);
+  if(!n) return '';
+  return `${n} ${rankCountUnit(skill)}`;
+}
 function sortedRank(period, skill){
   const myId = TELEGRAM_PROFILE.rawId;
   const list = RANK_RAW_ROWS.map(r=>{
@@ -14508,6 +14579,7 @@ function sortedRank(period, skill){
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
       xp: rankXpFor(r, skill, period),
+      count: rankCountFor(r, skill, period),
       me: isMe,
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
@@ -14597,23 +14669,27 @@ function renderLeaderboard(period, skill, type){
     listEl.innerHTML = `<div class="loading-inline">Bu filtr uchun ma'lumot yo'q</div>`;
     return;
   }
-  listEl.innerHTML = data.map((u,i)=>`
+  listEl.innerHTML = data.map((u,i)=>{
+    const countTxt = u.count > 0 ? ` · ${u.count} ${rankCountUnit(skill)}` : '';
+    return `
     <div class="lb-row ${u.me?'me':''} fade-in-enter">
       <div class="lb-rank">${u.rank}</div>
       <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i%RANK_COLORS.length])}</div>
       <div class="lb-info">
         <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
-        <div class="l">${escapeHtml(u.level)} daraja</div>
+        <div class="l">${escapeHtml(u.level)} daraja${countTxt}</div>
       </div>
       <div class="lb-xp"><span class="num-target" data-target="${u.xp}">0</span><span style="font-size:10.5px;color:var(--text-faint);font-weight:600;"> XP</span></div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   runEntranceAnimations(listEl, true);
 }
 function renderRankTop(period, skill, type){
   if(type === 'cefr'){
     document.getElementById('rankNum').textContent = '—';
     document.getElementById('rankXpNum').textContent = '—';
+    document.getElementById('rankXpCountLbl').textContent = '';
     document.getElementById('rankGapNum').textContent = '—';
     document.getElementById('rankGapText').innerHTML = "CEFR reytingi tez orada qo'shiladi";
     document.getElementById('rankGapBar').style.width = '0%';
@@ -14622,6 +14698,7 @@ function renderRankTop(period, skill, type){
   if(!rankLoaded){
     document.getElementById('rankNum').innerHTML = '<span class="skel" style="width:28px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
     document.getElementById('rankXpNum').innerHTML = '<span class="skel" style="width:36px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
+    document.getElementById('rankXpCountLbl').textContent = '';
     document.getElementById('rankGapNum').innerHTML = '<span class="skel" style="width:32px;height:22px;display:inline-block;border-radius:6px;background:rgba(255,255,255,0.35);"></span>';
     document.getElementById('rankGapText').innerHTML = '<span class="skel skel-line" style="width:55%;height:12px;display:inline-block;background:rgba(255,255,255,0.35);"></span>';
     document.getElementById('rankGapBar').style.width = '0%';
@@ -14632,6 +14709,7 @@ function renderRankTop(period, skill, type){
   if(!me){
     document.getElementById('rankNum').textContent = '—';
     document.getElementById('rankXpNum').textContent = '—';
+    document.getElementById('rankXpCountLbl').textContent = '';
     document.getElementById('rankGapNum').textContent = '—';
     document.getElementById('rankGapText').innerHTML = 'Hali XP to\'plamagansiz';
     document.getElementById('rankGapBar').style.width = '0%';
@@ -14640,6 +14718,7 @@ function renderRankTop(period, skill, type){
   const above = data[data.indexOf(me)-1];
   animateNumber('rankNum', me.rank, { prefix: '#', duration: 750 });
   animateNumber('rankXpNum', me.xp, { duration: 900 });
+  document.getElementById('rankXpCountLbl').textContent = me.count > 0 ? `${me.count} ${rankCountUnit(skill)}` : '';
   const gapBar = document.getElementById('rankGapBar');
   if(above){
     const gap = above.xp - me.xp;
