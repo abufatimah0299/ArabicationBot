@@ -6175,14 +6175,15 @@ async function loadDashboardFromBackend(userId){
   }catch(e){ console.error(e); return null; }
 }
 
-async function submitQuizResultToBackend({skillId, topicId, topicName, correct, total}){
+async function submitQuizResultToBackend({skillId, topicId, topicName, correct, total, isMock}){
   if(!SESSION_TOKEN) return null;
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_quiz_result`, {
       method:"POST", headers: authHeaders(),
       body: JSON.stringify({
         p_user_id: TELEGRAM_PROFILE.rawId, p_skill_id: skillId, p_topic_id: topicId||null,
-        p_topic_name: topicName||null, p_correct: correct, p_total: total
+        p_topic_name: topicName||null, p_correct: correct, p_total: total,
+        p_is_mock: !!isMock
       })
     });
     if(!res.ok){
@@ -8620,10 +8621,18 @@ function getSkillSvgMeta(item){
   };
 }
 
-function formatHistoryDisplayTitle(r){
-  if(!r) return '';
-  const isFullExam = (r.skillId === 'attanal' || r.section === 'Imtihon' || String(r.topic||'').toLowerCase().includes('at-tanal') || String(r.topic||'').toLowerCase().includes("to'liq"));
-  const isMock = !!(
+/* Tarix qatori (backend/local snapshot) haqiqatan ham MOCK test urinishimi
+   yoki yo'qmi — shu YAGONA joyda tekshiriladi. Boshqa hech qayerda (masalan
+   Dashboarddagi "MOCK TESTLAR" kartasida) bu tekshiruvni alohida/qisqartirilgan
+   holda qayta yozmang — aks holda ikkalasi orasida farq paydo bo'lib, ba'zi
+   haqiqiy mock urinishlar "mock emas" deb noto'g'ri aniqlanadi.
+   Avvalo backenddagi ISHONCHLI is_mock ustuniga qaraladi (2-bosqichdan keyin
+   yozilgan urinishlar uchun aniq). Bu ustun mavjud bo'lmagan ESKI yozuvlar
+   uchun esa matn asosidagi taxmin zaxira sifatida ishlatiladi. */
+function isMockHistoryRow(r){
+  if(!r) return false;
+  if(r.is_mock === true || r.is_mock === 'true' || r.is_mock === 1) return true;
+  return !!(
     r.type === 'mock' ||
     r.mockId ||
     String(r.topic || '').toLowerCase().includes('mock') ||
@@ -8631,6 +8640,11 @@ function formatHistoryDisplayTitle(r){
     String(r.topic_name || '').toLowerCase().includes('mock') ||
     String(r.label || '').toLowerCase().includes('mock')
   );
+}
+function formatHistoryDisplayTitle(r){
+  if(!r) return '';
+  const isFullExam = (r.skillId === 'attanal' || r.section === 'Imtihon' || String(r.topic||'').toLowerCase().includes('at-tanal') || String(r.topic||'').toLowerCase().includes("to'liq"));
+  const isMock = isMockHistoryRow(r);
 
   if(isFullExam){
     return isMock ? "To'liq At-Tanal imtihoni (Mock)" : "To'liq At-Tanal imtihoni";
@@ -17969,7 +17983,11 @@ function finishQuiz(force = false){
       skillId: currentQuiz.skillId,
       topicId: currentQuiz.topicId,
       topicName: currentQuiz.label,
-      correct, total
+      correct, total,
+      // MUHIM: shu bayroq backendga (quiz_attempts.is_mock) yoziladi — Dashboard
+      // "MOCK TESTLAR" kartasi endi mock nomida "mock" so'zi bor-yo'qligiga
+      // qarab taxmin qilmasdan, aynan shu ustunga qarab ishonchli aniqlaydi.
+      isMock: !!(currentQuiz.mockId || currentQuiz.type === 'mock')
     });
   }
 
@@ -18859,14 +18877,14 @@ function renderDashboardPracticeCards(){
     ? window.HISTORY_DATA_LIVE 
     : (Array.isArray(HISTORY_DATA) ? HISTORY_DATA : []);
 
-  const mockAttempts = history.filter(r => 
-    (r.type === 'mock') || 
-    (r.topic_name && r.topic_name.toLowerCase().includes('mock')) ||
-    (r.topic && r.topic.toLowerCase().includes('mock')) ||
-    (r.section && r.section.toLowerCase().includes('mock'))
-  );
-
-  const latestAttempt = mockAttempts.length > 0 ? mockAttempts[0] : (history.length > 0 ? history[0] : null);
+  // MUHIM: faqat HAQIQIY mock urinishlari (isMockHistoryRow orqali, boshqa
+  // mahoratlar bilan bir xil to'liq tekshiruv). Ilgari bu yerda mock
+  // topilmasa, oxirgi UMUMIY tarix qatoriga (istalgan mahorat) tushib
+  // qolinardi — natijada karta boshqa mahoratning natijasini "mock" sifatida
+  // ko'rsatib yuborardi. Endi mock topilmasa, "hali yechilmagan" holati
+  // ko'rsatiladi (pastdagi else shoxobchasi).
+  const mockAttempts = history.filter(isMockHistoryRow);
+  const latestAttempt = mockAttempts.length > 0 ? mockAttempts[0] : null;
 
   if(latestAttempt){
     const correct = pick(latestAttempt, ['correct'], 0);
