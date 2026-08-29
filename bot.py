@@ -156,6 +156,7 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         if target == "ALL":
             users = await fetch_users_from_supabase()
             sent, failed = 0, 0
+            failed_users = []
             for u in users:
                 try:
                     await context.bot.copy_message(
@@ -166,8 +167,27 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     sent += 1
                 except (Forbidden, BadRequest):
                     failed += 1
+                    failed_users.append(u)
                 await asyncio.sleep(0.05)  # Telegram flood-limitiga tushmaslik uchun
+
             await message.reply_text(f"✅ Yuborildi: {sent} ta\n⚠️ Yetib bormadi: {failed} ta (bot bloklangan bo'lishi mumkin)")
+
+            if failed_users:
+                lines = []
+                for u in failed_users:
+                    name = u.get("first_name") or "Noma'lum"
+                    username = u.get("username")
+                    tag = f" (@{username})" if username else ""
+                    lines.append(f"• {name}{tag} — ID: {u['id']}")
+                # Telegram xabar uzunligi cheklovi (4096) sabab, ro'yxatni bo'laklarga bo'lib yuboramiz
+                chunk = "🚫 Botni bloklagan/yetib bormagan foydalanuvchilar:\n\n"
+                for line in lines:
+                    if len(chunk) + len(line) > 3800:
+                        await message.reply_text(chunk)
+                        chunk = ""
+                    chunk += line + "\n"
+                if chunk.strip():
+                    await message.reply_text(chunk)
         else:
             try:
                 await context.bot.copy_message(
@@ -177,7 +197,9 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 )
                 await message.reply_text("✅ Xabar yuborildi.")
             except (Forbidden, BadRequest):
-                await message.reply_text("⚠️ Yuborib bo'lmadi — foydalanuvchi botni bloklagan bo'lishi mumkin.")
+                await message.reply_text(
+                    f"⚠️ Yuborib bo'lmadi — ID: {target} bo'lgan foydalanuvchi botni bloklagan bo'lishi mumkin."
+                )
 
         reply_target.pop(sender_id, None)
 
