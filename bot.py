@@ -40,6 +40,11 @@ reply_target: dict[int, str] = {}
 # adminga yuborilgan xabar message_id -> shu xabarni yozgan foydalanuvchi ID.
 # Shu orqali admin oddiy "Reply" (chapga surib javob berish) qilganda kimga ekanini bilamiz.
 forwarded_message_map: dict[int, int] = {}
+
+# admin yuborgan (yoki broadcast qilgan) xabar message_id -> [(chat_id, sent_message_id), ...]
+# Admin shu xabarni EDIT qilsa, ro'yxatdagi barcha nusxalarni ham yangilaymiz.
+sent_message_map: dict[int, list[tuple[str, int]]] = {}
+
 MAX_MAP_SIZE = 5000
 
 
@@ -171,11 +176,12 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             failed_users = []
             for u in users:
                 try:
-                    await context.bot.copy_message(
+                    copied = await context.bot.copy_message(
                         chat_id=int(u["id"]),
                         from_chat_id=message.chat_id,
                         message_id=message.message_id,
                     )
+                    sent_message_map.setdefault(message.message_id, []).append((str(u["id"]), copied.message_id))
                     sent += 1
                 except (Forbidden, BadRequest):
                     failed += 1
@@ -202,16 +208,22 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     await message.reply_text(chunk)
         else:
             try:
-                await context.bot.copy_message(
+                copied = await context.bot.copy_message(
                     chat_id=int(target),
                     from_chat_id=message.chat_id,
                     message_id=message.message_id,
                 )
-                await message.reply_text("✅ Xabar yuborildi.")
+                sent_message_map.setdefault(message.message_id, []).append((target, copied.message_id))
+                await message.reply_text("✅ Xabar yuborildi. (Xatoni tuzatish uchun shu xabarni EDIT qilsangiz, u yerdagi xabar ham yangilanadi)")
             except (Forbidden, BadRequest):
                 await message.reply_text(
                     f"⚠️ Yuborib bo'lmadi — ID: {target} bo'lgan foydalanuvchi botni bloklagan bo'lishi mumkin."
                 )
+
+        # Xotira cheksiz o'smasligi uchun eng eskilarini tozalab turamiz.
+        if len(sent_message_map) > MAX_MAP_SIZE:
+            for old_key in list(sent_message_map.keys())[: len(sent_message_map) - MAX_MAP_SIZE]:
+                sent_message_map.pop(old_key, None)
 
         reply_target.pop(sender_id, None)
 
@@ -246,6 +258,46 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             logger.warning(f"Adminga yuborishda xato: {e}")
 
 
+# --------------------------- admin xabarni tahrirlaganda ---------------------------
+async def handle_admin_edit(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    edited = update.edited_message
+    if edited is None or not is_admin(edited.from_user.id):
+        return
+
+    destinations = sent_message_map.get(edited.message_id)
+    if not destinations:
+        return  # bu xabar hech kimga yuborilmagan (yoki bot qayta ishga tushgani sabab unutilgan)
+
+    updated, failed = 0, 0
+    for chat_id_str, sent_msg_id in destinations:
+        try:
+            if edited.text is not None:
+                await context.bot.edit_message_text(
+                    chat_id=int(chat_id_str),
+                    message_id=sent_msg_id,
+                    text=edited.text,
+                    entities=edited.entities,
+                )
+            elif edited.caption is not None:
+                await context.bot.edit_message_caption(
+                    chat_id=int(chat_id_str),
+                    message_id=sent_msg_id,
+                    caption=edited.caption,
+                    caption_entities=edited.caption_entities,
+                )
+            else:
+                continue
+            updated += 1
+        except Exception as e:
+            logger.warning(f"Xabarni tahrirlashda xato ({chat_id_str}): {e}")
+            failed += 1
+
+    note = f"✏️ Tahrirlandi: {updated} ta xabarda"
+    if failed:
+        note += f"\n⚠️ Yangilab bo'lmadi: {failed} ta"
+    await edited.reply_text(note)
+
+
 # --------------------------- Render uchun soxta veb-server ---------------------------
 async def health_check(request):
     return web.Response(text="Bot ishlayapti!")
@@ -270,6 +322,7 @@ async def main() -> None:
     app.add_handler(CommandHandler("cancel", cancel))
     app.add_handler(CallbackQueryHandler(admin_callback, pattern=r"^(user_|broadcast_all)"))
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, relay_message))
+    app.add_handler(MessageHandler(filters.UpdateType.EDITED_MESSAGE, handle_admin_edit))
 
     await app.initialize()
     await app.start()
