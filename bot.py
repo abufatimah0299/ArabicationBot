@@ -37,6 +37,11 @@ BUTTON_TEXT = "🚀 Platformani ochish"
 # admin_id -> "ALL" yoki nishon foydalanuvchi ID (str). Kim kimga yozayotganini vaqtincha eslab turadi.
 reply_target: dict[int, str] = {}
 
+# adminga yuborilgan xabar message_id -> shu xabarni yozgan foydalanuvchi ID.
+# Shu orqali admin oddiy "Reply" (chapga surib javob berish) qilganda kimga ekanini bilamiz.
+forwarded_message_map: dict[int, int] = {}
+MAX_MAP_SIZE = 5000
+
 
 # --------------------------- foydalanuvchilar bazasi (Supabase) ---------------------------
 async def fetch_users_from_supabase() -> list[dict]:
@@ -150,6 +155,13 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if is_admin(sender_id):
         # Admin xabar yozyapti — bu xabar kimgadir yo'naltirilishi kutilyaptimi?
         target = reply_target.get(sender_id)
+
+        # Agar admin tugma orqali "rejim"ga kirmagan bo'lsa, lekin forward qilingan
+        # xabarga oddiy "Reply" qilgan bo'lsa — o'sha xabarni yuborgan userni topamiz.
+        reply_to = message.reply_to_message
+        if not target and reply_to and reply_to.message_id in forwarded_message_map:
+            target = str(forwarded_message_map[reply_to.message_id])
+
         if not target:
             return  # admin oddiy shunchaki yozgan, hech kimga yo'naltirmaymiz
 
@@ -212,8 +224,8 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             f"🆔 ID: {user.id}"
         )
         try:
-            await context.bot.send_message(chat_id=ADMIN_ID, text=header)
-            await context.bot.copy_message(
+            header_msg = await context.bot.send_message(chat_id=ADMIN_ID, text=header)
+            copied = await context.bot.copy_message(
                 chat_id=ADMIN_ID,
                 from_chat_id=message.chat_id,
                 message_id=message.message_id,
@@ -221,6 +233,15 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     [[InlineKeyboardButton("↩️ Javob berish", callback_data=f"user_{user.id}")]]
                 ),
             )
+            # Ikkala xabarni (sarlavha va nusxa) shu userga bog'lab qo'yamiz —
+            # admin qaysi biriga "Reply" qilsa ham to'g'ri userga tushadi.
+            forwarded_message_map[header_msg.message_id] = user.id
+            forwarded_message_map[copied.message_id] = user.id
+
+            # Xotira cheksiz o'smasligi uchun eng eskilarini tozalab turamiz.
+            if len(forwarded_message_map) > MAX_MAP_SIZE:
+                for old_key in list(forwarded_message_map.keys())[: len(forwarded_message_map) - MAX_MAP_SIZE]:
+                    forwarded_message_map.pop(old_key, None)
         except Exception as e:
             logger.warning(f"Adminga yuborishda xato: {e}")
 
