@@ -37,9 +37,10 @@ BUTTON_TEXT = "🚀 Platformani ochish"
 # admin_id -> "ALL" yoki nishon foydalanuvchi ID (str). Kim kimga yozayotganini vaqtincha eslab turadi.
 reply_target: dict[int, str] = {}
 
-# adminga yuborilgan xabar message_id -> shu xabarni yozgan foydalanuvchi ID.
-# Shu orqali admin oddiy "Reply" (chapga surib javob berish) qilganda kimga ekanini bilamiz.
-forwarded_message_map: dict[int, int] = {}
+# adminga yuborilgan xabar message_id -> (shu xabarni yozgan foydalanuvchi ID, uning o'z chatidagi original xabar ID).
+# Shu orqali admin oddiy "Reply" qilganda kimga ekanini bilamiz, va javobni ham
+# userning o'sha original xabariga "reply" qilib yuboramiz — xuddi oddiy chatdagidek.
+forwarded_message_map: dict[int, tuple[int, int]] = {}
 
 # admin yuborgan (yoki broadcast qilgan) xabar message_id -> [(chat_id, sent_message_id), ...]
 # Admin shu xabarni EDIT qilsa, ro'yxatdagi barcha nusxalarni ham yangilaymiz.
@@ -160,12 +161,14 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if is_admin(sender_id):
         # Admin xabar yozyapti — bu xabar kimgadir yo'naltirilishi kutilyaptimi?
         target = reply_target.get(sender_id)
+        original_msg_id = None  # userning o'z chatidagi qaysi xabariga "reply" qilib yuborish kerak
 
         # Agar admin tugma orqali "rejim"ga kirmagan bo'lsa, lekin forward qilingan
         # xabarga oddiy "Reply" qilgan bo'lsa — o'sha xabarni yuborgan userni topamiz.
         reply_to = message.reply_to_message
         if not target and reply_to and reply_to.message_id in forwarded_message_map:
-            target = str(forwarded_message_map[reply_to.message_id])
+            target_user_id, original_msg_id = forwarded_message_map[reply_to.message_id]
+            target = str(target_user_id)
 
         if not target:
             return  # admin oddiy shunchaki yozgan, hech kimga yo'naltirmaymiz
@@ -212,6 +215,8 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     chat_id=int(target),
                     from_chat_id=message.chat_id,
                     message_id=message.message_id,
+                    reply_to_message_id=original_msg_id,
+                    allow_sending_without_reply=True,
                 )
                 sent_message_map.setdefault(message.message_id, []).append((target, copied.message_id))
             except (Forbidden, BadRequest):
@@ -251,8 +256,8 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     from_chat_id=message.chat_id,
                     message_id=message.message_id,
                 )
-                forwarded_message_map[header_msg.message_id] = user.id
-                forwarded_message_map[copied.message_id] = user.id
+                forwarded_message_map[header_msg.message_id] = (user.id, message.message_id)
+                forwarded_message_map[copied.message_id] = (user.id, message.message_id)
             except Exception as e2:
                 logger.warning(f"Adminga yuborishda xato: {e2}")
             return
@@ -265,8 +270,8 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             )
             # Forward qilingan xabar va tugmali xabar — ikkalasini ham shu userga bog'lab qo'yamiz,
             # admin qaysi biriga "Reply" qilsa ham to'g'ri userga tushadi.
-            forwarded_message_map[forwarded.message_id] = user.id
-            forwarded_message_map[info_msg.message_id] = user.id
+            forwarded_message_map[forwarded.message_id] = (user.id, message.message_id)
+            forwarded_message_map[info_msg.message_id] = (user.id, message.message_id)
 
             if len(forwarded_message_map) > MAX_MAP_SIZE:
                 for old_key in list(forwarded_message_map.keys())[: len(forwarded_message_map) - MAX_MAP_SIZE]:
