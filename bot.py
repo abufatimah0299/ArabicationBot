@@ -262,22 +262,11 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 logger.warning(f"Adminga yuborishda xato: {e2}")
             return
 
-        try:
-            info_msg = await context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f"🆔 ID: {user.id}",
-                reply_to_message_id=forwarded.message_id,
-            )
-            # Forward qilingan xabar va tugmali xabar — ikkalasini ham shu userga bog'lab qo'yamiz,
-            # admin qaysi biriga "Reply" qilsa ham to'g'ri userga tushadi.
-            forwarded_message_map[forwarded.message_id] = (user.id, message.message_id)
-            forwarded_message_map[info_msg.message_id] = (user.id, message.message_id)
+        forwarded_message_map[forwarded.message_id] = (user.id, message.message_id)
 
-            if len(forwarded_message_map) > MAX_MAP_SIZE:
-                for old_key in list(forwarded_message_map.keys())[: len(forwarded_message_map) - MAX_MAP_SIZE]:
-                    forwarded_message_map.pop(old_key, None)
-        except Exception as e:
-            logger.warning(f"Adminga yuborishda xato: {e}")
+        if len(forwarded_message_map) > MAX_MAP_SIZE:
+            for old_key in list(forwarded_message_map.keys())[: len(forwarded_message_map) - MAX_MAP_SIZE]:
+                forwarded_message_map.pop(old_key, None)
 
 
 # --------------------------- admin xabarni tahrirlaganda ---------------------------
