@@ -214,7 +214,6 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     message_id=message.message_id,
                 )
                 sent_message_map.setdefault(message.message_id, []).append((target, copied.message_id))
-                await message.reply_text("✅ Xabar yuborildi. (Xatoni tuzatish uchun shu xabarni EDIT qilsangiz, u yerdagi xabar ham yangilanadi)")
             except (Forbidden, BadRequest):
                 await message.reply_text(
                     f"⚠️ Yuborib bo'lmadi — ID: {target} bo'lgan foydalanuvchi botni bloklagan bo'lishi mumkin."
@@ -228,29 +227,47 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         reply_target.pop(sender_id, None)
 
     else:
-        # Oddiy foydalanuvchidan xabar keldi — adminga yo'naltiramiz
+        # Oddiy foydalanuvchidan xabar keldi — adminga TABIIY "Forwarded from" ko'rinishida yuboramiz
         user = update.effective_user
-        header = (
-            "✉️ Yangi xabar\n"
-            f"👤 {user.first_name or ''} (@{user.username or 'username yoq'})\n"
-            f"🆔 ID: {user.id}"
-        )
         try:
-            header_msg = await context.bot.send_message(chat_id=ADMIN_ID, text=header)
-            copied = await context.bot.copy_message(
+            forwarded = await context.bot.forward_message(
                 chat_id=ADMIN_ID,
                 from_chat_id=message.chat_id,
                 message_id=message.message_id,
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("↩️ Javob berish", callback_data=f"user_{user.id}")]]
-                ),
             )
-            # Ikkala xabarni (sarlavha va nusxa) shu userga bog'lab qo'yamiz —
-            # admin qaysi biriga "Reply" qilsa ham to'g'ri userga tushadi.
-            forwarded_message_map[header_msg.message_id] = user.id
-            forwarded_message_map[copied.message_id] = user.id
+        except (Forbidden, BadRequest) as e:
+            # Ba'zi userlar maxfiylik sozlamasida forward'ni cheklab qo'yishi mumkin —
+            # bunday holda eski usul (nusxa + qo'lda sarlavha) bilan davom etamiz.
+            logger.warning(f"forward_message ishlamadi, copy_message'ga o'tildi: {e}")
+            header = (
+                "✉️ Yangi xabar\n"
+                f"👤 {user.first_name or ''} (@{user.username or 'username yoq'})\n"
+                f"🆔 ID: {user.id}"
+            )
+            try:
+                header_msg = await context.bot.send_message(chat_id=ADMIN_ID, text=header)
+                copied = await context.bot.copy_message(
+                    chat_id=ADMIN_ID,
+                    from_chat_id=message.chat_id,
+                    message_id=message.message_id,
+                )
+                forwarded_message_map[header_msg.message_id] = user.id
+                forwarded_message_map[copied.message_id] = user.id
+            except Exception as e2:
+                logger.warning(f"Adminga yuborishda xato: {e2}")
+            return
 
-            # Xotira cheksiz o'smasligi uchun eng eskilarini tozalab turamiz.
+        try:
+            info_msg = await context.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"🆔 ID: {user.id}",
+                reply_to_message_id=forwarded.message_id,
+            )
+            # Forward qilingan xabar va tugmali xabar — ikkalasini ham shu userga bog'lab qo'yamiz,
+            # admin qaysi biriga "Reply" qilsa ham to'g'ri userga tushadi.
+            forwarded_message_map[forwarded.message_id] = user.id
+            forwarded_message_map[info_msg.message_id] = user.id
+
             if len(forwarded_message_map) > MAX_MAP_SIZE:
                 for old_key in list(forwarded_message_map.keys())[: len(forwarded_message_map) - MAX_MAP_SIZE]:
                     forwarded_message_map.pop(old_key, None)
