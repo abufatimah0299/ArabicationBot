@@ -490,6 +490,11 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
   box-shadow:var(--shadow);
 }
 .sb-kitaba:hover{ box-shadow:var(--shadow-lg); }
+.sb-duel{
+  background:linear-gradient(135deg, #F0A93A 0%, #C2501A 100%);
+  box-shadow:var(--shadow);
+}
+.sb-duel:hover{ box-shadow:var(--shadow-lg); }
 .skill-banner:active{ transform:scale(.99); }
 .skill-banner::before{
   display:none;
@@ -1721,6 +1726,145 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .modal-close:hover{ background:var(--indigo-100); color:var(--indigo-700); transform:scale(1.05); }
 .modal-close:active{ transform:scale(.92); }
 .modal-body{ padding:18px 22px 24px; }
+
+/* ---------- Duel Invite (full-screen) ---------- */
+.duel-invite-overlay{
+  display:none; position:fixed; inset:0; z-index:400;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 75% 55% at 100% 0%, rgba(244, 234, 172, 0.55) 0%, rgba(250, 244, 206, 0.28) 30%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 70% 55% at 0% 100%, rgba(154, 246, 189, 0.55) 0%, rgba(200, 251, 221, 0.28) 35%, rgba(255, 255, 255, 0) 70%);
+  padding-top:calc(var(--app-safe-top) + 20px);
+  padding-bottom:calc(var(--app-safe-bottom) + 22px);
+  padding-left:calc(var(--app-safe-left) + 20px);
+  padding-right:calc(var(--app-safe-right) + 20px);
+  flex-direction:column;
+}
+.duel-invite-overlay.show{ display:flex; animation:fadein .2s ease; }
+.duel-invite-close-x{
+  align-self:flex-end;
+  width:34px; height:34px; border-radius:10px; border:none; background:var(--card-alt);
+  color:var(--text-dim); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; margin-bottom:8px; flex-shrink:0; font-size:15px;
+}
+.duel-invite-close-x:active{ transform:scale(.92); }
+.duel-invite-body{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:0; }
+.duel-invite-vs-row{ display:flex; align-items:flex-start; justify-content:center; gap:22px; margin-bottom:6px; }
+.duel-invite-side{ display:flex; flex-direction:column; align-items:center; gap:10px; width:112px; }
+.duel-invite-avatar{
+  width:88px; height:88px; border-radius:50%; overflow:hidden;
+  background:var(--card-alt); border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.duel-invite-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.duel-invite-avatar-fallback{ font-size:30px; font-weight:700; color:var(--text-dim); }
+.duel-invite-vs-label{ font-size:13px; font-weight:700; color:var(--text-faint); align-self:center; margin-top:32px; }
+.duel-invite-opp-wrap{ position:relative; width:88px; height:88px; }
+.duel-invite-opp-avatar{
+  position:relative; z-index:2; width:88px; height:88px; border-radius:50%;
+  border:2px dashed var(--border); background:var(--card-alt);
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; font-weight:700; color:var(--text-faint);
+}
+.duel-invite-ping{
+  position:absolute; inset:0; border-radius:50%;
+  border:2px solid var(--indigo-600); opacity:0;
+  animation:duelPing 2.2s cubic-bezier(.2,.6,.4,1) infinite;
+  pointer-events:none;
+}
+.duel-invite-ping:nth-child(2){ animation-delay:.7s; }
+.duel-invite-ping:nth-child(3){ animation-delay:1.4s; }
+@keyframes duelPing{
+  0%{ transform:scale(1); opacity:.55; }
+  100%{ transform:scale(1.9); opacity:0; }
+}
+.duel-invite-name{ font-size:14px; font-weight:600; color:var(--text); max-width:112px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.duel-invite-name.ar{ font-family:var(--font-ar-bold); font-size:18px; }
+.duel-invite-status{ font-size:18px; font-weight:700; color:var(--text); margin-top:22px; display:flex; align-items:center; justify-content:center; gap:2px; }
+.duel-invite-status .dots span{ animation:duelDots 1.4s infinite; opacity:0; }
+.duel-invite-status .dots span:nth-child(1){ animation-delay:0s; }
+.duel-invite-status .dots span:nth-child(2){ animation-delay:.2s; }
+.duel-invite-status .dots span:nth-child(3){ animation-delay:.4s; }
+@keyframes duelDots{ 0%,80%,100%{opacity:0;} 40%{opacity:1;} }
+.duel-invite-sub{ font-size:13.5px; color:var(--text-dim); margin-top:10px; max-width:280px; line-height:1.5; }
+.duel-invite-actions{ width:100%; max-width:380px; display:flex; flex-direction:column; gap:6px; margin:26px auto 0; flex-shrink:0; }
+.duel-invite-share-btn{
+  width:100%; padding:15px; border-radius:16px; border:none; cursor:pointer;
+  background:var(--green); color:#06331F; font-weight:700; font-size:15px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:var(--shadow);
+}
+.duel-invite-share-btn:active{ transform:scale(.98); }
+.duel-invite-share-btn svg{ width:17px; height:17px; flex-shrink:0; }
+.duel-invite-text-btn{
+  width:100%; padding:14px; border-radius:14px; border:none; background:transparent;
+  cursor:pointer; font-weight:700; font-size:14.5px; color:var(--text); margin-top:6px;
+}
+.duel-invite-text-btn.faint{ color:var(--text-faint); font-weight:600; }
+.duel-invite-text-btn:active{ opacity:.7; }
+
+/* ---------- Duel Skill Select (full-screen, 5 cards) ---------- */
+.duel-skill-overlay{
+  display:none; position:fixed; inset:0; z-index:400;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 75% 55% at 100% 0%, rgba(244, 234, 172, 0.55) 0%, rgba(250, 244, 206, 0.28) 30%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 70% 55% at 0% 100%, rgba(154, 246, 189, 0.55) 0%, rgba(200, 251, 221, 0.28) 35%, rgba(255, 255, 255, 0) 70%);
+  padding-top:calc(var(--app-safe-top) + 20px);
+  padding-bottom:calc(var(--app-safe-bottom) + 22px);
+  padding-left:calc(var(--app-safe-left) + 20px);
+  padding-right:calc(var(--app-safe-right) + 20px);
+  flex-direction:column;
+}
+.duel-skill-overlay.show{ display:flex; animation:fadein .2s ease; }
+.duel-skill-header{ margin-bottom:18px; flex-shrink:0; }
+.duel-skill-title{ font-size:20px; font-weight:700; color:var(--text); }
+.duel-skill-sub{ font-size:13px; color:var(--text-dim); margin-top:5px; }
+.duel-skill-body{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; scrollbar-width:none; -ms-overflow-style:none; }
+.duel-skill-body::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+.duel-skill-mix-card{
+  position:relative; overflow:hidden; border-radius:22px; padding:22px;
+  display:flex; align-items:center; gap:16px; cursor:pointer; color:#fff; flex-shrink:0;
+  background:linear-gradient(135deg, #F0A93A 0%, #C2501A 100%);
+  box-shadow:var(--shadow); transition:transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+}
+.duel-skill-mix-card:hover{ transform:translateY(-3px); filter:brightness(1.04); }
+.duel-skill-mix-card:active{ transform:scale(.98); }
+.duel-skill-mix-card::before{
+  content:""; position:absolute; top:-55px; inset-inline-end:-30px; width:190px; height:190px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+}
+.duel-skill-mix-icon{
+  width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; position:relative; z-index:1; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.3);
+}
+.duel-skill-mix-icon svg{ width:26px; height:26px; }
+.duel-skill-mix-main{ flex:1; min-width:0; position:relative; z-index:1; }
+.duel-skill-mix-name{ font-size:17.5px; font-weight:700; letter-spacing:-0.2px; }
+.duel-skill-mix-desc{ font-size:12.5px; color:rgba(255,255,255,0.88); font-weight:600; margin-top:5px; }
+.duel-skill-mix-chev{ width:18px; height:18px; flex-shrink:0; position:relative; z-index:1; opacity:.9; }
+
+.duel-skill-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.duel-skill-card{
+  position:relative; overflow:hidden; border-radius:20px; padding:18px 16px;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:10px;
+  cursor:pointer; color:#fff; min-height:118px;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+}
+.duel-skill-card:hover{ transform:translateY(-3px); filter:brightness(1.04); }
+.duel-skill-card:active{ transform:scale(.98); }
+.duel-skill-card::before{
+  content:""; position:absolute; top:-40px; inset-inline-end:-25px; width:140px; height:140px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
+}
+.duel-skill-icon{
+  width:42px; height:42px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+  position:relative; z-index:1; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.3);
+}
+.duel-skill-icon svg{ width:20px; height:20px; }
+.duel-skill-name{ font-family:var(--font-ar-bold); font-size:17px; font-weight:600; position:relative; z-index:1; }
+.duel-skill-desc{ font-size:11px; color:rgba(255,255,255,0.82); font-weight:600; position:relative; z-index:1; }
 
 /* ---------- Onboarding Modal ---------- */
 .onboarding-overlay{
@@ -5149,6 +5293,46 @@ html[data-theme="light"] .pin-dot.filled{
         </div>
       </div>
 
+      <!-- ============ DUEL (asinxron bellashuv) ============ -->
+      <div class="view" id="view-duel">
+        <div class="view-title">Duellar</div>
+        <div class="skill-banner-list stagger" style="margin-bottom:18px;">
+          <button class="skill-banner sb-duel" onclick="openDuelSkillSelect()">
+            <div class="skill-banner-left">
+              <div class="skill-banner-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+              </div>
+              <div>
+                <div class="skill-banner-title">Do'stni duelga chaqirish</div>
+                <div class="skill-banner-meta">
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>10 ta savol</span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Grammatika</span>
+                </div>
+              </div>
+            </div>
+            <div class="skill-banner-arrow-btn" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 4 4-4 4"/></svg>
+            </div>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="duelList"></div>
+        <div class="card placeholder-card" id="duelEmpty" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+          <h3>Hali duellaringiz yo'q</h3>
+          <p>Do'stingizni Grammatika bo'yicha duelga chaqiring — havolani Telegram orqali ulashing va kim ko'proq to'g'ri javob berishini bilib oling.</p>
+        </div>
+      </div>
+
+      <!-- ============ DUEL NATIJASI ============ -->
+      <div class="view" id="view-duelresult">
+        <div class="back-row" onclick="showView('duel')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Duellar</span>
+        </div>
+        <div class="view-title">Duel natijasi</div>
+        <div id="duelResultBody"></div>
+      </div>
+
       <!-- ============ PROFIL ============ -->
       <div class="view" id="view-profil">
         <div class="view-title">Profil</div>
@@ -5184,6 +5368,13 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="si-text"><div class="t">Hamjamiyat</div><div class="s">Bizning kanallar va guruhlar</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
+          <div class="settings-item" data-view="dostlarim">
+            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="si-text"><div class="t">Do'stlarim</div><div class="s">Duel o'ynagan do'stlaringiz ro'yxati</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
           <div class="settings-item" data-view="sozlamalar">
             <div class="si-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -5191,6 +5382,21 @@ html[data-theme="light"] .pin-dot.filled{
             <div class="si-text"><div class="t">Sozlamalar</div><div class="s">Bildirishnoma va profil sozlamalari</div></div>
             <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
+        </div>
+      </div>
+
+      <!-- ============ DO'STLARIM ============ -->
+      <div class="view" id="view-dostlarim">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div class="view-title">Do'stlarim</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="friendsList"></div>
+        <div class="card placeholder-card" id="friendsEmpty" style="display:none;">
+          <h3>Hali do'stlaringiz yo'q</h3>
+          <p>Do'stingizni duelga chaqiring — u qabul qilib o'ynagach, shu yerda do'stlaringiz ro'yxatida paydo bo'ladi.</p>
+          <button type="button" class="btn btn-primary" style="margin-top:14px;" onclick="showView('duel')">Duelga o'tish</button>
         </div>
       </div>
 
@@ -5626,6 +5832,10 @@ html[data-theme="light"] .pin-dot.filled{
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
     <span>Testlar</span>
   </button>
+  <button class="bn-btn" data-view="duel" id="bnDuelBtn">
+    <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg></span>
+    <span>Duel</span>
+  </button>
   <button class="bn-btn" data-view="rank" id="bnRankBtn">
     <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>
     <span>Reyting</span>
@@ -5709,6 +5919,59 @@ html[data-theme="light"] .pin-dot.filled{
 </div>
 
 <!-- ============ ONBOARDING / REGISTRATION MODAL ============ -->
+<div class="duel-invite-overlay" id="duelInviteOverlay">
+  <button type="button" class="duel-invite-close-x" onclick="closeDuelInviteScreen()" aria-label="Yopish">✕</button>
+  <div class="duel-invite-body">
+    <div class="duel-invite-vs-row">
+      <div class="duel-invite-side">
+        <div class="duel-invite-avatar" id="duelInviteMyAvatar"></div>
+        <div class="duel-invite-name" id="duelInviteMyName"></div>
+      </div>
+      <div class="duel-invite-vs-label">VS</div>
+      <div class="duel-invite-side">
+        <div class="duel-invite-opp-wrap">
+          <span class="duel-invite-ping"></span>
+          <span class="duel-invite-ping"></span>
+          <span class="duel-invite-ping"></span>
+          <div class="duel-invite-opp-avatar">?</div>
+        </div>
+        <div class="duel-invite-name">Raqib</div>
+      </div>
+    </div>
+    <div class="duel-invite-status">Do'st kutilmoqda<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="duel-invite-sub">Do'stingiz havolani ochib, hoziroq qo'shilishi kerak</div>
+  </div>
+  <div class="duel-invite-actions">
+    <button type="button" class="duel-invite-share-btn" id="duelInviteShareBtn" onclick="shareDuelLink(currentDuelInviteToken)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      <span>Havolani do'stga yuborish</span>
+    </button>
+    <button type="button" class="duel-invite-text-btn" onclick="cancelDuelInviteScreen()">Bekor qilish</button>
+    <button type="button" class="duel-invite-text-btn faint" onclick="closeDuelInviteScreen()">Yopish</button>
+  </div>
+</div>
+
+<div class="duel-skill-overlay" id="duelSkillSelectOverlay">
+  <button type="button" class="duel-invite-close-x" onclick="closeDuelSkillSelect()" aria-label="Yopish">✕</button>
+  <div class="duel-skill-header">
+    <div class="duel-skill-title">Duel uchun bo'lim tanlang</div>
+    <div class="duel-skill-sub">Do'stingiz bilan qaysi mavzudan bellashmoqchisiz?</div>
+  </div>
+  <div class="duel-skill-body">
+    <div class="duel-skill-mix-card" onclick="chooseDuelSkill('aralash')">
+      <div class="duel-skill-mix-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
+      <div class="duel-skill-mix-main">
+        <div class="duel-skill-mix-name">Aralash savollar</div>
+        <div class="duel-skill-mix-desc">Nahv 5 · Sarf 3 · Imlo 1 · Xato 1</div>
+      </div>
+      <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+    <div class="duel-skill-grid" id="duelSkillGrid"></div>
+  </div>
+</div>
+
 <div class="onboarding-overlay" id="onboardingOverlay" style="display:none;">
   <div class="onboarding-card" id="onboardingCard">
     <!-- Stepper bar -->
@@ -5937,6 +6200,10 @@ html[data-theme="light"] .pin-dot.filled{
 const SUPABASE_URL = "https://riqtbtcsllyriyavbamt.supabase.co";       // <-- shu yerga o'z Project URL'ingizni qo'ying
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpcXRidGNzbGx5cml5YXZiYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NDc3NzUsImV4cCI6MjEwMjIyMzc3NX0.GFhKmzx2uq9uZ8fg-cxWtuI39e0wlsIUypwxU_vWCtQ";                      // <-- shu yerga o'z anon key'ingizni qo'ying
 const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
+// Duel havolalari uchun: BotFather'da bergan bot username (@ belgisiz) va shu botga
+// bog'langan Web App'ning "short name"i (t.me/<bot>/<short_name>?startapp=... havolasi uchun).
+const BOT_USERNAME = 'arabication_bot';        // <-- shu yerga o'z bot username'ingizni qo'ying
+const WEBAPP_SHORT_NAME = 'app';               // <-- shu yerga BotFather'dagi web app short name'ini qo'ying
 
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
@@ -7292,6 +7559,7 @@ async function bootApp(){
   }catch(e){}
   renderGreetingFromProfile();
   applyProfileHeader(null);
+  try{ checkPendingDuelInvite(); }catch(e){ console.error('[checkPendingDuelInvite]', e); }
 
   async function safeBootStep(label, fn){
     try{ await fn(); }
@@ -7897,7 +8165,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','dostlarim'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -7906,7 +8174,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -7924,6 +8192,7 @@ const VIEW_CARD_MAP = {
   dashboard: 'navbtn_dashboard',
   imtihon: 'navbtn_imtihon',
   grammar: 'navbtn_grammar',
+  duel: 'navbtn_duel',
   rank: 'navbtn_rank',
   profil: 'navbtn_profil'
 };
@@ -8095,6 +8364,8 @@ function showView(name, push=true){
   if(name==='admin') renderAdminPanel();
   if(name==='hamjamiyat') renderCommunityView();
   if(name==='grammar') switchGrammarTab('practice');
+  if(name==='duel') renderDuelHub();
+  if(name==='dostlarim') renderFriendsHub();
   if(name==='skillintro') switchSkillTab('practice');
   if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
   if(name==='dashboard') renderDashboardPracticeCards();
@@ -16163,6 +16434,421 @@ function retryWhenDataReady(retryFn){
 }
 
 /* ---------------- Start quiz ---------------- */
+/* ==================== DUEL (asinxron bellashuv) ====================
+   HOZIRCHA: backend yo'q, shu sabab quyidagi apiXxx() funksiyalar vaqtincha
+   localStorage'da ishlaydi (faqat shu qurilmada ko'rinadi, ikkinchi tomon
+   buni real ko'ra olmaydi). Backend (Supabase RPC: create_duel / join_duel /
+   submit_duel_result / get_my_duels) ulanganda, FAQAT shu apiXxx()
+   funksiyalar ichini fetch/RPC chaqiruviga almashtirish kifoya — qolgan
+   UI/render kodi (renderDuelHub, renderDuelCard, startDuelQuiz,
+   renderDuelResultScreen) o'zgarishsiz qoladi. */
+const DUEL_MOCK_KEY = 'arab_duels_mock_v1';
+const DUEL_QUESTION_COUNT = 10;
+
+function _duelLoadAll(){
+  try{ return JSON.parse(localStorage.getItem(DUEL_MOCK_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function _duelSaveAll(list){
+  try{ localStorage.setItem(DUEL_MOCK_KEY, JSON.stringify(list)); }catch(e){}
+}
+function _duelMyId(){ return String((typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.id) || 'me'); }
+function _duelMyName(){ return (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.name) || 'Siz'; }
+/* "Aralash savollar" duelida qat'iy nisbat: Nahv 5, Sarf 3, Imlo 1, Xato 1 (jami 10 ta) */
+const DUEL_MIX_RATIO = { nahv:5, sarf:3, imlo:1, xatolar:1 };
+
+function _duelBuildSnapshot(skillId, count, category){
+  const fullBank = (QUESTION_BANKS[skillId] && QUESTION_BANKS[skillId].questions) || [];
+  const toQ = q => ({ id: q.id, q: q.q, opts: q.opts, a: q.a, exp: q.exp || '', category: q.category || '' });
+
+  if(!category || category === 'aralash'){
+    let mixed = [];
+    Object.keys(DUEL_MIX_RATIO).forEach(cat=>{
+      const need = DUEL_MIX_RATIO[cat];
+      const catBank = shuffleArray(fullBank.filter(q => q.category === cat));
+      mixed = mixed.concat(catBank.slice(0, need));
+    });
+    /* Agar biror kategoriyada yetarli savol topilmasa, qolgan o'rinlarni
+       ishlatilmagan savollardan to'ldiramiz (jami sonni saqlab qolish uchun) */
+    if(mixed.length < count){
+      const usedIds = new Set(mixed.map(q=>q.id));
+      const filler = shuffleArray(fullBank.filter(q=>!usedIds.has(q.id)));
+      mixed = mixed.concat(filler.slice(0, count - mixed.length));
+    }
+    return shuffleArray(mixed).slice(0, count).map(toQ);
+  }
+
+  const bank = fullBank.filter(q => q.category === category);
+  return shuffleArray(bank).slice(0, count).map(toQ);
+}
+
+/* TODO: BACKEND — Supabase RPC create_duel(challenger_id, opponent_id=NULL, skill_id, category, count) bilan almashtiriladi */
+async function apiCreateDuel(skillId, count, category){
+  const all = _duelLoadAll();
+  const duel = {
+    id: 'd_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    token: Math.random().toString(36).slice(2,10),
+    skillId, count, category: category || 'aralash',
+    questions: _duelBuildSnapshot(skillId, count, category),
+    challenger: { id: _duelMyId(), name: _duelMyName() },
+    opponent: null,
+    challengerResult: null,
+    opponentResult: null,
+    status: 'pending',
+    createdAt: Date.now(),
+  };
+  all.unshift(duel);
+  _duelSaveAll(all);
+  return duel;
+}
+/* TODO: BACKEND — token orqali duelni backenddan olib kelish (get_duel_by_token RPC) */
+function apiGetDuelByToken(token){
+  return _duelLoadAll().find(d=>d.token===token) || null;
+}
+/* TODO: BACKEND — Supabase RPC join_duel(token, user_id) bilan almashtiriladi */
+function apiJoinDuel(token){
+  const all = _duelLoadAll();
+  const d = all.find(x=>x.token===token);
+  if(!d) return null;
+  if(!d.opponent && d.challenger.id !== _duelMyId()){
+    d.opponent = { id: _duelMyId(), name: _duelMyName() };
+    _duelSaveAll(all);
+  }
+  return d;
+}
+/* TODO: BACKEND — Supabase RPC get_my_duels(user_id) bilan almashtiriladi */
+function apiGetMyDuels(){
+  const me = _duelMyId();
+  return _duelLoadAll().filter(d => d.challenger.id===me || (d.opponent && d.opponent.id===me));
+}
+/* TODO: BACKEND — Supabase RPC submit_duel_result(duel_id, user_id, score, total, time_sec) bilan almashtiriladi */
+function apiSubmitDuelResult(duelId, res){
+  const all = _duelLoadAll();
+  const d = all.find(x=>x.id===duelId);
+  if(!d) return null;
+  const me = _duelMyId();
+  const payload = { score: res.score, total: res.total, timeSec: res.timeSec, completedAt: Date.now() };
+  if(d.challenger.id === me) d.challengerResult = payload;
+  else if(d.opponent && d.opponent.id === me) d.opponentResult = payload;
+  if(d.challengerResult && d.opponentResult) d.status = 'completed';
+  _duelSaveAll(all);
+  return d;
+}
+
+/* TODO: BACKEND — haqiqiy "do'stlar" ro'yxati backendda alohida jadval (masalan
+   get_my_friends RPC) orqali kelishi mumkin. Hozircha do'stlar — siz duel
+   o'ynagan (yoki hali javob kutayotgan) raqiblardan avtomatik yig'iladi. */
+function apiGetFriends(){
+  const me = _duelMyId();
+  const duels = apiGetMyDuels().filter(d => d.opponent);
+  const map = new Map();
+  duels.forEach(d=>{
+    const iAmChallenger = d.challenger.id === me;
+    const friend = iAmChallenger ? d.opponent : d.challenger;
+    if(!friend) return;
+    if(!map.has(friend.id)){
+      map.set(friend.id, { id:friend.id, name:friend.name, wins:0, losses:0, draws:0, total:0, lastAt:d.createdAt });
+    }
+    const entry = map.get(friend.id);
+    entry.total++;
+    if(d.createdAt > entry.lastAt) entry.lastAt = d.createdAt;
+    if(d.status === 'completed'){
+      const myR = iAmChallenger ? d.challengerResult : d.opponentResult;
+      const oppR = iAmChallenger ? d.opponentResult : d.challengerResult;
+      if(myR && oppR){
+        if(myR.score === oppR.score){
+          if(myR.timeSec === oppR.timeSec) entry.draws++;
+          else if(myR.timeSec < oppR.timeSec) entry.wins++;
+          else entry.losses++;
+        } else if(myR.score > oppR.score) entry.wins++;
+        else entry.losses++;
+      }
+    }
+  });
+  return Array.from(map.values()).sort((a,b)=> b.lastAt - a.lastAt);
+}
+
+function renderFriendsHub(){
+  const listEl = document.getElementById('friendsList');
+  const emptyEl = document.getElementById('friendsEmpty');
+  if(!listEl) return;
+  const friends = apiGetFriends();
+  if(!friends.length){
+    listEl.innerHTML = '';
+    if(emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display = 'none';
+  listEl.innerHTML = friends.map(renderFriendCard).join('');
+}
+
+function renderFriendCard(f){
+  const initial = escapeHtml((f.name || '?').trim().charAt(0).toUpperCase());
+  const statsParts = [`${f.wins} g'alaba`, `${f.losses} mag'lubiyat`];
+  if(f.draws) statsParts.push(`${f.draws} durrang`);
+  const nameSafe = escapeHtml(f.name || "Do'st");
+  return `
+    <div class="card history-item">
+      <div class="avatar" style="width:44px;height:44px;font-size:16px;flex-shrink:0;">${initial}</div>
+      <div class="history-main">
+        <div class="t">${nameSafe}</div>
+        <div class="s" style="margin-top:3px;color:var(--text-faint);font-weight:600;font-size:12px;">${statsParts.join(' · ')}</div>
+      </div>
+      <button type="button" class="history-btn-analyze" onclick="openDuelSkillSelect()"><span>Duelga chaqirish</span></button>
+    </div>`;
+}
+
+function renderDuelHub(){
+  const listEl = document.getElementById('duelList');
+  const emptyEl = document.getElementById('duelEmpty');
+  if(!listEl) return;
+  const me = _duelMyId();
+  const duels = apiGetMyDuels().sort((a,b)=> b.createdAt - a.createdAt);
+  if(!duels.length){
+    listEl.innerHTML = '';
+    if(emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display = 'none';
+  listEl.innerHTML = duels.map(d=>renderDuelCard(d, me)).join('');
+}
+
+function renderDuelCard(d, me){
+  const iAmChallenger = d.challenger.id === me;
+  const oppName = d.opponent ? (iAmChallenger ? d.opponent.name : d.challenger.name) : null;
+  const myResult = iAmChallenger ? d.challengerResult : d.opponentResult;
+  const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
+  const skillMeta = SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
+  const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
+  const catLabel = catMeta ? catMeta.name : 'Aralash savollar';
+
+  let statusHtml, actionHtml;
+  if(!d.opponent){
+    statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ Raqib kutilmoqda</span>`;
+    actionHtml = `<button type="button" class="history-btn-analyze" onclick="reopenDuelInvite('${d.id}')"><span>Ulashish</span></button>`;
+  } else if(d.status === 'completed'){
+    let verdict;
+    if(myResult.score === oppResult.score){
+      verdict = myResult.timeSec === oppResult.timeSec ? '🤝 Durrang' : (myResult.timeSec < oppResult.timeSec ? '🏆 Siz g\'olib' : `🏆 ${escapeHtml(oppName)} g'olib`);
+    } else {
+      verdict = myResult.score > oppResult.score ? '🏆 Siz g\'olib' : `🏆 ${escapeHtml(oppName)} g'olib`;
+    }
+    statusHtml = `<span style="font-weight:700;font-size:12.5px;">${verdict}</span>`;
+    actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b><div class="p">${escapeHtml(oppName)}: ${oppResult.score}/${oppResult.total}</div></div>`;
+  } else if(!myResult){
+    statusHtml = `<span style="color:var(--indigo-700);font-weight:700;font-size:12.5px;">🎯 Sizning navbatingiz</span>`;
+    actionHtml = `<button type="button" class="history-btn-analyze" onclick="startDuelQuiz('${d.id}')"><span>Boshlash</span></button>`;
+  } else {
+    statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ ${escapeHtml(oppName)} javobini kutmoqda</span>`;
+    actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b></div>`;
+  }
+
+  return `
+    <div class="card history-item">
+      <div class="history-icon" style="background:${skillMeta.bg};color:${skillMeta.color};">⚔️</div>
+      <div class="history-main">
+        <div class="t">${d.opponent ? escapeHtml(oppName) : "Do'stni kuting"}</div>
+        <div class="s" style="margin-top:2px;color:var(--text-faint);font-weight:600;font-size:11px;">${escapeHtml(catLabel)}</div>
+        <div class="s" style="margin-top:3px;">${statusHtml}</div>
+      </div>
+      ${actionHtml}
+    </div>`;
+}
+
+function shareDuelLink(token){
+  const url = `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}?startapp=duel_${token}`;
+  const text = `⚔️ Sizni Grammatika bo'yicha duelga chaqiraman! Qabul qiling — kim ko'proq to'g'ri javob berishini bilib olamiz.`;
+  const tg = window.Telegram?.WebApp;
+  if(tg && typeof tg.openTelegramLink === 'function'){
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
+  } else if(navigator.share){
+    navigator.share({ title:'Duel', text, url }).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(`${text}\n${url}`);
+    toast('Havola nusxalandi 📋');
+  }
+}
+
+async function startNewDuel(category){
+  const d = await apiCreateDuel('grammatika', DUEL_QUESTION_COUNT, category || 'aralash');
+  renderDuelHub();
+  openDuelInviteScreen(d);
+}
+
+/* Duel uchun bo'lim tanlash oynasi: yuqorida "Aralash savollar" (katta card),
+   pastda GRAMMAR_CATEGORIES asosida 2x2 grid (umumiy Grammatika bo'limidagi
+   cardlar bilan bir xil rang/ikonka — gcat-* CSS klasslari qayta ishlatiladi). */
+function renderDuelSkillGrid(){
+  const wrap = document.getElementById('duelSkillGrid');
+  if(!wrap) return;
+  wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => `
+    <div class="duel-skill-card gcat-${cat.id}" onclick="chooseDuelSkill('${cat.id}')">
+      <div class="duel-skill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg></div>
+      <div class="duel-skill-name">${cat.ar}</div>
+      <div class="duel-skill-desc">${cat.name}</div>
+    </div>
+  `).join('');
+}
+
+function openDuelSkillSelect(){
+  renderDuelSkillGrid();
+  const overlay = document.getElementById('duelSkillSelectOverlay');
+  if(overlay) overlay.classList.add('show');
+}
+
+function closeDuelSkillSelect(){
+  const overlay = document.getElementById('duelSkillSelectOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
+
+async function chooseDuelSkill(category){
+  closeDuelSkillSelect();
+  await startNewDuel(category);
+}
+
+/* TODO: BACKEND — Supabase RPC delete_duel(duel_id, user_id) bilan almashtiriladi
+   (faqat hali raqibi qo'shilmagan, o'zi yaratgan duelni bekor qilish uchun) */
+function apiDeleteDuel(duelId){
+  const all = _duelLoadAll();
+  _duelSaveAll(all.filter(d => d.id !== duelId));
+}
+
+let currentDuelInviteToken = null;
+let currentDuelInviteId = null;
+
+/* Do'stni duelga chaqirgandan so'ng ko'rsatiladigan to'liq ekranli "kutish" oynasi:
+   o'z rasmi vs "?" (raqib) — raqib joyida sonar/puls effekti bilan. */
+function openDuelInviteScreen(d){
+  currentDuelInviteToken = d.token;
+  currentDuelInviteId = d.id;
+  const avatarEl = document.getElementById('duelInviteMyAvatar');
+  const nameEl = document.getElementById('duelInviteMyName');
+  const photoUrl = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
+  const name = _duelMyName();
+  if(avatarEl){
+    avatarEl.innerHTML = photoUrl
+      ? `<img src="${photoUrl}" alt="">`
+      : `<span class="duel-invite-avatar-fallback">${escapeHtml((name||'?').trim().charAt(0).toUpperCase())}</span>`;
+  }
+  if(nameEl){
+    nameEl.textContent = name;
+    nameEl.classList.toggle('ar', /[\u0600-\u06FF]/.test(name));
+  }
+  const overlay = document.getElementById('duelInviteOverlay');
+  if(overlay) overlay.classList.add('show');
+}
+
+function closeDuelInviteScreen(){
+  const overlay = document.getElementById('duelInviteOverlay');
+  if(overlay) overlay.classList.remove('show');
+  currentDuelInviteToken = null;
+  currentDuelInviteId = null;
+}
+
+function cancelDuelInviteScreen(){
+  if(currentDuelInviteId){
+    apiDeleteDuel(currentDuelInviteId);
+    renderDuelHub();
+  }
+  closeDuelInviteScreen();
+  toast("Duel bekor qilindi");
+}
+
+function reopenDuelInvite(duelId){
+  const d = apiGetMyDuels().find(x=>x.id===duelId);
+  if(!d){ toast('Duel topilmadi'); return; }
+  openDuelInviteScreen(d);
+}
+
+function startDuelQuiz(duelId){
+  const d = apiGetMyDuels().find(x=>x.id===duelId);
+  if(!d){ toast('Duel topilmadi'); return; }
+  if(!d.questions || !d.questions.length){ toast('Duel savollari topilmadi'); return; }
+  const skillMeta = SKILLS.find(s=>s.id===d.skillId) || SKILLS.find(s=>s.id==='grammatika');
+  currentQuiz = {
+    skillId: d.skillId, topicId: null, type: 'mcq', passage: null,
+    questions: d.questions.map(q=>({...q, picked:null, timeLeft:60, expired:false})),
+    color: skillMeta.color, bg: skillMeta.bg, label: `⚔️ Duel — ${skillMeta.name}`,
+    idx:0, startedAt: Date.now(), duration: 20*60,
+    isDuel: true, duelId: d.id,
+  };
+  const qTag = document.getElementById('quizTag');
+  if(qTag){ qTag.textContent = currentQuiz.label; qTag.style.background = skillMeta.bg; qTag.style.color = skillMeta.color; }
+  buildQGrid();
+  renderQuestion();
+  showView('quiz');
+}
+
+function handleDuelFinish(){
+  clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  const total = currentQuiz.questions.length;
+  const correct = currentQuiz.questions.filter(q=>q.picked===q.a).length;
+  const elapsedSeconds = Math.round((Date.now() - (currentQuiz.startedAt || Date.now())) / 1000);
+  const updated = apiSubmitDuelResult(currentQuiz.duelId, { score: correct, total, timeSec: elapsedSeconds });
+  renderDuelResultScreen(updated);
+  showView('duelresult');
+}
+
+function renderDuelResultScreen(d){
+  const wrap = document.getElementById('duelResultBody');
+  if(!wrap || !d) return;
+  const me = _duelMyId();
+  const iAmChallenger = d.challenger.id === me;
+  const myR = iAmChallenger ? d.challengerResult : d.opponentResult;
+  const oppR = iAmChallenger ? d.opponentResult : d.challengerResult;
+  const oppName = iAmChallenger ? (d.opponent ? d.opponent.name : '—') : d.challenger.name;
+  const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  let statusLine;
+  if(d.status === 'completed'){
+    if(myR.score === oppR.score){
+      statusLine = myR.timeSec === oppR.timeSec ? "🤝 Durrang!" : (myR.timeSec < oppR.timeSec ? "🏆 Siz g'olibsiz! (tezroq vaqt)" : `😔 ${escapeHtml(oppName)} g'olib chiqdi (tezroq vaqt)`);
+    } else {
+      statusLine = myR.score > oppR.score ? "🏆 Siz g'olibsiz!" : `😔 ${escapeHtml(oppName)} g'olib chiqdi`;
+    }
+  } else {
+    statusLine = `⏳ Natijangiz saqlandi — ${escapeHtml(oppName)} hali javob bermadi.`;
+  }
+  wrap.innerHTML = `
+    <div class="card" style="padding:24px;text-align:center;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px;">${statusLine}</div>
+      <div style="display:flex;justify-content:center;gap:22px;align-items:center;">
+        <div><div style="font-size:12px;color:var(--text-faint);font-weight:600;">Siz</div><div style="font-size:24px;font-weight:700;">${myR.score}/${myR.total}</div><div style="font-size:11.5px;color:var(--text-faint);">${fmt(myR.timeSec)}</div></div>
+        <div style="font-size:18px;color:var(--text-faint);">vs</div>
+        <div><div style="font-size:12px;color:var(--text-faint);font-weight:600;">${escapeHtml(oppName || 'Raqib')}</div><div style="font-size:24px;font-weight:700;">${oppR ? oppR.score+'/'+oppR.total : '—'}</div><div style="font-size:11.5px;color:var(--text-faint);">${oppR ? fmt(oppR.timeSec) : ''}</div></div>
+      </div>
+      <button type="button" class="btn btn-primary" style="width:100%;margin-top:22px;" onclick="showView('duel')">Duellarga qaytish</button>
+    </div>`;
+}
+
+/* Havola orqali duelga qo'shilish: Telegram start_param 'duel_<token>' bo'lsa,
+   tasdiqlash oynasini ko'rsatamiz. checkPendingDuelInvite() ilova ishga
+   tushgach (auth tugagach) chaqiriladi. */
+function checkPendingDuelInvite(){
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+  if(!startParam.startsWith('duel_')) return;
+  const token = startParam.slice(5);
+  const d = apiGetDuelByToken(token);
+  if(!d){ toast("⚠️ Bu duel havolasi topilmadi yoki eskirgan"); return; }
+  if(d.challenger.id === _duelMyId()){ showView('duel'); return; } // o'zi yuborgan havola
+  document.getElementById('modalTitle').textContent = 'Duelga taklif';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="text-align:center;padding:10px 4px 6px;">
+      <div style="font-size:38px;margin-bottom:12px;">⚔️</div>
+      <div style="font-size:15.5px;font-weight:700;margin-bottom:8px;">${escapeHtml(d.challenger.name)} sizni Grammatika bo'yicha duelga chaqirdi!</div>
+      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">${d.count} ta savol, vaqt cheklovi yo'q. Qabul qilib, hoziroq yechishingiz mumkin.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" style="flex:1;padding:12px;" onclick="closeModal();showView('duel')">Keyinroq</button>
+        <button class="btn btn-primary" style="flex:1;padding:12px;" onclick="closeModal();acceptDuelInvite('${token}')">Qabul qilish</button>
+      </div>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function acceptDuelInvite(token){
+  const d = apiJoinDuel(token);
+  if(!d){ toast('Xatolik yuz berdi'); return; }
+  startDuelQuiz(d.id);
+}
+
 function startQuiz(skillId, customLabel, topicId){
   if(isAttanalLocked()){ toast("🔒 Bu bo'lim hozircha qulflangan"); return; }
   if(!checkSkillDailyLimit(skillId)) return;
@@ -17970,6 +18656,10 @@ function finishQuiz(force = false){
       return;
     }
   }
+
+  // Duel — oddiy imtihon oqimidan butunlay ajratilgan: XP/tarix/reyting'ga
+  // yozilmaydi, faqat ikkala tomonning duel natijasi solishtiriladi.
+  if(currentQuiz.isDuel){ handleDuelFinish(); return; }
 
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   window.lastCompletedQuiz = { ...currentQuiz };
