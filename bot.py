@@ -1,7 +1,7 @@
 import os
-import json
 import asyncio
 import logging
+import aiohttp
 from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.error import Forbidden, BadRequest
@@ -20,8 +20,11 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 WEBAPP_URL = os.environ["WEBAPP_URL"]
 ADMIN_ID = int(os.environ["ADMIN_ID"])  # sizning shaxsiy Telegram ID'ingiz (masalan @userinfobot orqali bilib oling)
+SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]  # service_role key tavsiya etiladi (bu faqat serverda, xavfsiz)
 
-USERS_FILE = "users.json"
+# /admin ro'yxatida bittada ko'rsatiladigan maksimal user soni (Telegram tugma cheklovi tufayli)
+MAX_LISTED_USERS = 50
 
 WELCOME_TEXT = (
     "Assalomu alaykum, {name}!\n\n"
@@ -35,30 +38,25 @@ BUTTON_TEXT = "🚀 Platformani ochish"
 reply_target: dict[int, str] = {}
 
 
-# --------------------------- foydalanuvchilar bazasi (JSON fayl) ---------------------------
-def load_users() -> dict:
-    if not os.path.exists(USERS_FILE):
-        return {}
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def save_users(users: dict) -> None:
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=2)
-
-
-def register_user(user) -> None:
-    users = load_users()
-    users[str(user.id)] = {
-        "id": user.id,
-        "first_name": user.first_name or "",
-        "username": user.username or "",
+# --------------------------- foydalanuvchilar bazasi (Supabase) ---------------------------
+async def fetch_users_from_supabase() -> list[dict]:
+    """Supabase'dagi public.users jadvalidan barcha foydalanuvchilarni o'qiydi."""
+    url = f"{SUPABASE_URL}/rest/v1/users?select=id,first_name,username&order=created_at.desc"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
     }
-    save_users(users)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers) as resp:
+                if resp.status != 200:
+                    body = await resp.text()
+                    logger.warning(f"Supabase'dan userlarni olishda xato ({resp.status}): {body}")
+                    return []
+                return await resp.json()
+    except Exception as e:
+        logger.warning(f"Supabase'ga ulanishda xato: {e}")
+        return []
 
 
 def is_admin(user_id: int) -> bool:
@@ -68,7 +66,7 @@ def is_admin(user_id: int) -> bool:
 # --------------------------- /start ---------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    register_user(user)
+    # Foydalanuvchilar allaqachon WebApp orqali Supabase'ga yoziladi, bot alohida yozmaydi.
     name = user.first_name or "do'stim"
 
     keyboard = InlineKeyboardMarkup(
@@ -82,20 +80,31 @@ async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not is_admin(update.effective_user.id):
         return  # admin bo'lmagan odamga hech narsa qaytarmaymiz
 
-    users = load_users()
+    users = await fetch_users_from_supabase()
     if not users:
-        await update.message.reply_text("Hozircha ro'yxatdan o'tgan foydalanuvchi yo'q.")
+        await update.message.reply_text(
+            "Foydalanuvchilar topilmadi (yoki Supabase'ga ulanishda xato). "
+            "SUPABASE_URL / SUPABASE_KEY to'g'ri sozlanganini tekshiring."
+        )
         return
 
+    shown = users[:MAX_LISTED_USERS]
     buttons = []
-    for uid, u in users.items():
-        label = f"👤 {u['first_name']}" + (f" (@{u['username']})" if u["username"] else "")
+    for u in shown:
+        uid = u["id"]
+        name = u.get("first_name") or "Noma'lum"
+        username = u.get("username")
+        label = f"👤 {name}" + (f" (@{username})" if username else "")
         buttons.append([InlineKeyboardButton(label, callback_data=f"user_{uid}")])
 
     buttons.insert(0, [InlineKeyboardButton("📢 Hammaga xabar (ALL)", callback_data="broadcast_all")])
 
+    note = ""
+    if len(users) > MAX_LISTED_USERS:
+        note = f"\n\n(Faqat oxirgi {MAX_LISTED_USERS} tasi ko'rsatildi, jami {len(users)} ta bor)"
+
     await update.message.reply_text(
-        f"Ro'yxatdagi foydalanuvchilar: {len(users)} ta\n\nKimga xabar yubormoqchisiz?",
+        f"Ro'yxatdagi foydalanuvchilar: {len(users)} ta{note}\n\nKimga xabar yubormoqchisiz?",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
 
@@ -117,12 +126,9 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
     elif data.startswith("user_"):
         uid = data.split("_", 1)[1]
-        users = load_users()
-        u = users.get(uid)
-        name = u["first_name"] if u else uid
         reply_target[query.from_user.id] = uid
         await query.edit_message_text(
-            f"✍️ Endi {name} ga yubormoqchi bo'lgan xabaringizni yozing.\n"
+            f"✍️ Endi ID: {uid} ga yubormoqchi bo'lgan xabaringizni yozing.\n"
             "Bekor qilish uchun /cancel yuboring."
         )
 
@@ -147,19 +153,20 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         if not target:
             return  # admin oddiy shunchaki yozgan, hech kimga yo'naltirmaymiz
 
-        users = load_users()
         if target == "ALL":
+            users = await fetch_users_from_supabase()
             sent, failed = 0, 0
-            for uid in list(users.keys()):
+            for u in users:
                 try:
                     await context.bot.copy_message(
-                        chat_id=int(uid),
+                        chat_id=int(u["id"]),
                         from_chat_id=message.chat_id,
                         message_id=message.message_id,
                     )
                     sent += 1
                 except (Forbidden, BadRequest):
                     failed += 1
+                await asyncio.sleep(0.05)  # Telegram flood-limitiga tushmaslik uchun
             await message.reply_text(f"✅ Yuborildi: {sent} ta\n⚠️ Yetib bormadi: {failed} ta (bot bloklangan bo'lishi mumkin)")
         else:
             try:
@@ -176,7 +183,6 @@ async def relay_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     else:
         # Oddiy foydalanuvchidan xabar keldi — adminga yo'naltiramiz
-        register_user(update.effective_user)
         user = update.effective_user
         header = (
             "✉️ Yangi xabar\n"
