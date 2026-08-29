@@ -15966,6 +15966,90 @@ function shuffleArray(arr){
   }
   return a;
 }
+
+/* ==================== SAVOL/TEST ROTATSIYASI ====================
+   Muammo: har safar mustaqil random.choice/shuffle+slice qilinganda, avval chiqqan
+   savol/test tasodifan yana chiqib qolishi mumkin edi (statistik jihatdan normal,
+   lekin foydalanuvchi buni "xato" deb qabul qiladi).
+
+   Yechim — har bir tanlash nuqtasi uchun "kim ko'rsatilgan / kim hali ko'rsatilmagan"
+   holatini localStorage'da saqlaymiz:
+
+   - CORRECTNESS rejimi (masalan A/B/C kabi mustaqil MCQ savollar banki): foydalanuvchi
+     TO'G'RI javob bergan savol — qolgan barcha (hali tushmagan) savollar aylanib
+     chiqmaguncha qayta tushmaydi. XATO javob berilgan savol esa darhol yana tushishi
+     mumkin (rotatsiyadan chiqarilmaydi / bor bo'lsa olib tashlanadi).
+     -> rotationPickN/rotationPick1 bilan tanlanadi, keyin natija chiqqach
+        rotationMarkResult(poolKey, savol, toGri_mi) chaqiriladi.
+
+   - SEEN rejimi (masalan qiroa/istima testi, kitaba mavzusi, muhavara savoli — bularda
+     "to'g'ri/xato" tushunchasi yo'q yoki bitta birlik bir nechta kichik savoldan
+     iborat): tanlangan birlik ko'rsatilishi bilanoq "ko'rilgan" deb belgilanadi va
+     qolgan barcha birliklar tugamaguncha qayta tanlanmaydi.
+     -> rotationPickN/rotationPick1 bilan tanlab, darhol rotationMarkSeen(poolKey, ...)
+        chaqiriladi.
+
+   Har ikkala rejimda ham: agar hali "ko'rilmagan/xato" elementlar soni kerakli
+   miqdordan kam bo'lsa, demak bitta aylanish tugagan — rotatsiya avtomatik reset
+   bo'ladi (hammasi qayta faollashadi) va tanlash shu yangi to'liq to'plamdan davom
+   etadi. Shu tarzda: bitta test/urinish ICHIDA hech qachon bir xil element ikki marta
+   tanlanmaydi, va KETMA-KET urinishlar orasida ham butun bank aylanib chiqmasdan
+   turib bironta element ikkinchi marta tushmaydi. */
+const ROTATION_LS_KEY = 'attanal_rotation_v1';
+function _rotationLoadAll(){
+  try{
+    const raw = localStorage.getItem(ROTATION_LS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function _rotationSaveAll(all){
+  try{ localStorage.setItem(ROTATION_LS_KEY, JSON.stringify(all)); }catch(e){}
+}
+function _rotationQId(q){
+  // Barqaror identifikator: id bo'lsa shundan, bo'lmasa matn/audio/passage bo'yicha.
+  if(!q) return '';
+  if(q.id !== undefined && q.id !== null && q.id !== '') return 'id:'+String(q.id);
+  const fallback = q.q || q.audioUrl || q.passage || q.topic || JSON.stringify(q).slice(0,160);
+  return 'txt:'+String(fallback).slice(0,160);
+}
+/* poolKey — shu tanlash nuqtasining noyob kaliti (masalan 'grammar_exam_nahv',
+   'istima_juz2'). fullPool — shu turdagi barcha mavjud elementlar. n — nechta kerak.
+   Natija — TAKRORLANMAYDIGAN, iloji boricha "hali ko'rilmagan/xato" elementlardan
+   iborat massiv (n tagacha, yoki fullPool.length dan oshmaydi). */
+function rotationPickN(poolKey, fullPool, n){
+  if(!Array.isArray(fullPool) || fullPool.length === 0 || n <= 0) return [];
+  const all = _rotationLoadAll();
+  const retired = new Set(all[poolKey] || []);
+  let eligible = fullPool.filter(q => !retired.has(_rotationQId(q)));
+  const need = Math.min(n, fullPool.length);
+  if(eligible.length < need){
+    // Bitta aylanish tugadi — rotatsiya reset, hammasi qayta faollashadi.
+    eligible = fullPool.slice();
+  }
+  return shuffleArray(eligible).slice(0, need);
+}
+function rotationPick1(poolKey, fullPool){
+  const picked = rotationPickN(poolKey, fullPool, 1);
+  return picked.length ? picked[0] : null;
+}
+/* SEEN rejimi: tanlangan birlik(lar)ni darhol "ko'rilgan" (retired) deb belgilaydi. */
+function rotationMarkSeen(poolKey, items){
+  const all = _rotationLoadAll();
+  const retired = new Set(all[poolKey] || []);
+  (Array.isArray(items) ? items : [items]).forEach(q=>{ if(q) retired.add(_rotationQId(q)); });
+  all[poolKey] = Array.from(retired);
+  _rotationSaveAll(all);
+}
+/* CORRECTNESS rejimi: to'g'ri javob -> rotatsiyadan chiqariladi (retired),
+   xato javob -> darhol qayta faollashtiriladi (retired'dan olib tashlanadi). */
+function rotationMarkResult(poolKey, question, isCorrect){
+  const all = _rotationLoadAll();
+  const retired = new Set(all[poolKey] || []);
+  const qid = _rotationQId(question);
+  if(isCorrect) retired.add(qid); else retired.delete(qid);
+  all[poolKey] = Array.from(retired);
+  _rotationSaveAll(all);
+}
 function buildGrammarExamQuestions(){
   const byCategory = {
     nahv: [],
@@ -16002,8 +16086,10 @@ function buildGrammarExamQuestions(){
   Object.keys(GRAMMAR_EXAM_DISTRIBUTION).forEach(cat=>{
     const need = GRAMMAR_EXAM_DISTRIBUTION[cat];
     const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===cat) || { name: cat };
-    const pool = shuffleArray(byCategory[cat] || []);
-    const picked = pool.slice(0, need);
+    // Rotatsiya: to'g'ri javob berilgan savol qolganlar tugamaguncha qayta tushmaydi
+    // (natija rotationMarkResult orqali finishQuiz'da yoziladi), xato javob berilgani
+    // esa darhol qayta faollashadi.
+    const picked = rotationPickN('grammar_exam_'+cat, byCategory[cat] || [], need);
     
     result = result.concat(picked);
     details.push(`${catMeta.name}: ${picked.length}/${need}`);
@@ -16128,7 +16214,10 @@ function startQiroaQuiz(customLabel){
     .map(meta => {
       const tests = (QIROA_TESTS[meta.id]||[]).filter(t => t.questions.length > 0);
       if(!tests.length) return null;
-      const picked = tests[Math.floor(Math.random()*tests.length)];
+      // Rotatsiya: shu juzdagi testlar hammasi ko'rsatilib chiqmaguncha bitta test
+      // ikkinchi marta tanlanmaydi.
+      const picked = rotationPick1('qiroa_'+meta.id, tests);
+      rotationMarkSeen('qiroa_'+meta.id, picked);
       return { ...meta, passage: picked.passage || '', title: picked.title || '', questions: picked.questions.map(q=>({...q, picked:null, timeLeft: q.timeLeft !== undefined ? q.timeLeft : 60, expired: false})) };
     })
     .filter(Boolean);
@@ -16196,22 +16285,28 @@ function advanceAfterQiroaJuz(){
 function startIstimaQuiz(customLabel){
   // 1-qism uchun bankdan 6 ta test (har birida 1 audio + 1 savol) tanlaymiz
   const juz1Pool = (ISTIMA_TESTS['juz1'] || []).filter(t => t.questions && t.questions.length >= 1);
-  const shuffledJuz1 = shuffleArray([...juz1Pool]);
+  // Rotatsiya: bank yetarlicha katta bo'lsa (>=6 ta test), hammasi ko'rsatilib
+  // chiqmaguncha bitta audio-savol ikkinchi marta tanlanmaydi. Bank 6 tadan kichik
+  // bo'lsagina (haqiqatan takrorlashning ILOJI yo'q), eskicha to'ldirish ishlatiladi.
   let pickedJuz1 = [];
-  if(shuffledJuz1.length >= 6){
-    pickedJuz1 = shuffledJuz1.slice(0, 6);
-  } else if(shuffledJuz1.length > 0){
+  if(juz1Pool.length >= 6){
+    pickedJuz1 = rotationPickN('istima_juz1', juz1Pool, 6);
+    rotationMarkSeen('istima_juz1', pickedJuz1);
+  } else if(juz1Pool.length > 0){
+    const shuffledJuz1 = shuffleArray(juz1Pool);
     for(let i = 0; i < 6; i++){
       pickedJuz1.push(shuffledJuz1[i % shuffledJuz1.length]);
     }
   }
 
-  // 2-qism va 3-qism uchun bittadan to'liq test tanlaymiz
+  // 2-qism va 3-qism uchun bittadan to'liq test tanlaymiz (rotatsiya bilan)
   const juz2Pool = (ISTIMA_TESTS['juz2'] || []).filter(t => t.questions && t.questions.length >= 1);
-  const pickedJuz2 = juz2Pool.length ? juz2Pool[Math.floor(Math.random() * juz2Pool.length)] : null;
+  const pickedJuz2 = rotationPick1('istima_juz2', juz2Pool);
+  if(pickedJuz2) rotationMarkSeen('istima_juz2', pickedJuz2);
 
   const juz3Pool = (ISTIMA_TESTS['juz3'] || []).filter(t => t.questions && t.questions.length >= 1);
-  const pickedJuz3 = juz3Pool.length ? juz3Pool[Math.floor(Math.random() * juz3Pool.length)] : null;
+  const pickedJuz3 = rotationPick1('istima_juz3', juz3Pool);
+  if(pickedJuz3) rotationMarkSeen('istima_juz3', pickedJuz3);
 
   if(pickedJuz1.length === 0 && !pickedJuz2 && !pickedJuz3){
     if(retryWhenDataReady(()=> startIstimaQuiz(customLabel))) return;
@@ -16343,7 +16438,10 @@ function startKitabaExam(){
       toast(`⚠️ Kitaba ${part.name} uchun hali mavzu qo'shilmagan. Admin panelda qo'shing.`);
       return;
     }
-    const topic = bank[Math.floor(Math.random()*bank.length)];
+    // Rotatsiya: shu qism uchun hamma mavzular ko'rsatilib chiqmaguncha bitta mavzu
+    // ikkinchi marta tanlanmaydi.
+    const topic = rotationPick1('kitaba_'+part.id, bank);
+    rotationMarkSeen('kitaba_'+part.id, topic);
     parts.push({ part, topic, text:'', score:null, feedback:null, criteria:null, corrected:'' });
   }
   currentQuiz = {
@@ -17275,8 +17373,11 @@ function startMuhavaraQuiz(customLabel){
   // (bank o'zi cheklanmagan — admin xohlagancha savol qo'shishi mumkin).
   const flat = [];
   MUHAVARA_PARTS.forEach(part=>{
-    const pool = shuffleArray(MUHAVARA_QUESTIONS[part.id] || []);
-    pool.slice(0, MUHAVARA_MAX_Q_PER_PART).forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
+    // Rotatsiya: shu qism uchun hamma savollar ko'rsatilib chiqmaguncha bitta savol
+    // ikkinchi marta tanlanmaydi.
+    const picked = rotationPickN('muhavara_'+part.id, MUHAVARA_QUESTIONS[part.id] || [], MUHAVARA_MAX_Q_PER_PART);
+    rotationMarkSeen('muhavara_'+part.id, picked);
+    picked.forEach(q=> flat.push({ ...q, part, score:null, feedback:null, transcript:null }));
   });
   if(flat.length === 0){
     if(retryWhenDataReady(()=> startMuhavaraQuiz(customLabel))) return;
@@ -17877,6 +17978,16 @@ function finishQuiz(force = false){
   const wrong = total - correct;
   const pct = Math.round((correct/total)*100);
   const xp = correct; // har bir to'g'ri javob uchun 1 XP
+
+  // Rotatsiya: "Grammatika mahorati" (real At-Tanal imtihoni, mavzusiz, marafon emas)
+  // uchun har bir savolning natijasini yozib qo'yamiz — to'g'ri javob berilgan savol
+  // qolgan savollar aylanib chiqmaguncha qayta tushmaydi, xato javob berilgani esa
+  // darhol qayta faollashadi.
+  if(currentQuiz.skillId === 'grammatika' && !currentQuiz.topicId && !currentQuiz.isMarathon){
+    currentQuiz.questions.forEach(q=>{
+      rotationMarkResult('grammar_exam_'+(q.category||'nahv'), q, q.picked===q.a);
+    });
+  }
 
   // Xato qilingan savollarni to'liq tahlil uchun ajratib olamiz
   const mistakeItems = (currentQuiz.questions || []).map((q, idx) => {
