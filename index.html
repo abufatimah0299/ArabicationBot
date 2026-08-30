@@ -16897,6 +16897,8 @@ async function renderDuelHub(){
   if(!listEl) return;
   const me = _duelMyId();
   const duels = (await apiGetMyDuels()).sort((a,b)=> b.createdAt - a.createdAt);
+  _duelHistoryCache = {};
+  duels.forEach(d=>{ _duelHistoryCache[d.id] = d; });
   if(!duels.length){
     listEl.innerHTML = '';
     if(emptyEl) emptyEl.style.display = '';
@@ -16904,6 +16906,17 @@ async function renderDuelHub(){
   }
   if(emptyEl) emptyEl.style.display = 'none';
   listEl.innerHTML = duels.map(d=>renderDuelCard(d, me)).join('');
+}
+
+/* Tarix ro'yxatidagi duel obyektlarini id bo'yicha keshlab turadi — karta
+   bosilganda qayta backendga so'rov yubormasdan, natija ekranini darhol
+   ochish uchun ishlatiladi. */
+let _duelHistoryCache = {};
+function openDuelResultCard(duelId){
+  const d = _duelHistoryCache[duelId];
+  if(!d) return;
+  showView('duelresult');
+  renderDuelResultScreen(d);
 }
 
 function renderDuelCard(d, me){
@@ -16916,7 +16929,7 @@ function renderDuelCard(d, me){
   const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
   const catLabel = catMeta ? catMeta.name : 'Aralash savollar';
 
-  let statusHtml, actionHtml, cardStateClass = '';
+  let statusHtml, actionHtml, cardStateClass = '', cardClickAttr = '';
   if(!d.opponent){
     statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ Raqib kutilmoqda</span>`;
     actionHtml = `<button type="button" class="history-btn-analyze" onclick="reopenDuelInvite('${d.id}')"><span>Ulashish</span></button>`;
@@ -16933,12 +16946,14 @@ function renderDuelCard(d, me){
     }
     statusHtml = `<span style="font-weight:700;font-size:12.5px;">${verdict}</span>`;
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b><div class="p">${escapeHtml(oppName)}: ${oppResult.score}/${oppResult.total}</div></div>`;
+    cardClickAttr = ` onclick="openDuelResultCard('${d.id}')" style="cursor:pointer;"`;
   } else if(!myResult){
     statusHtml = `<span style="color:var(--indigo-700);font-weight:700;font-size:12.5px;">🎯 Sizning navbatingiz</span>`;
     actionHtml = `<button type="button" class="history-btn-analyze" onclick="startDuelQuiz('${d.id}')"><span>Boshlash</span></button>`;
   } else {
     statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ ${escapeHtml(oppName)} javobini kutmoqda</span>`;
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b></div>`;
+    cardClickAttr = ` onclick="openDuelResultCard('${d.id}')" style="cursor:pointer;"`;
   }
 
   // Raqib qo'shilganda uning profil rasmi (yoki bosh harfi) ko'rsatiladi;
@@ -16950,7 +16965,7 @@ function renderDuelCard(d, me){
     : `<div class="history-icon" style="background:${skillMeta.bg};color:${skillMeta.color};">⚔️</div>`;
 
   return `
-    <div class="card history-item ${cardStateClass}">
+    <div class="card history-item ${cardStateClass}"${cardClickAttr}>
       ${avatarHtml}
       <div class="history-main">
         <div class="t">${d.opponent ? escapeHtml(oppName) : "Do'stni kuting"}</div>
