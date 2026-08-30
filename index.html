@@ -6197,8 +6197,9 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 // Duel havolalari uchun: BotFather'da bergan bot username (@ belgisiz) va shu botga
 // bog'langan Web App'ning "short name"i (t.me/<bot>/<short_name>?startapp=... havolasi uchun).
-const BOT_USERNAME = 'arabication_bot';        // <-- shu yerga o'z bot username'ingizni qo'ying
-const WEBAPP_SHORT_NAME = 'app';               // <-- shu yerga BotFather'dagi web app short name'ini qo'ying
+const BOT_USERNAME = 'arabicationbot';         // BotFather'dagi haqiqiy bot username
+const WEBAPP_SHORT_NAME = '';                  // Bo'sh qoldiring: bot "Configure Mini App" (menyu tugmasi) orqali ulangan bo'lsa, short_name kerak emas.
+                                                // Faqat /newapp orqali BotFather'da alohida nomlangan (va /myapps'da chiqadigan) ilova yaratgan bo'lsangiz, shu yerga o'sha short name'ni yozing.
 
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
@@ -16711,7 +16712,13 @@ function renderDuelCard(d, me){
 }
 
 function shareDuelLink(token){
-  const url = `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}?startapp=duel_${token}`;
+  // Agar WEBAPP_SHORT_NAME bo'sh bo'lsa — bot "Configure Mini App" (menyu tugmasi)
+  // orqali ulangan, va havola short_name'siz t.me/<bot>?startapp=... shaklida bo'lishi kerak.
+  // Agar WEBAPP_SHORT_NAME to'ldirilgan bo'lsa (BotFather /newapp orqali yaratilgan
+  // nomlangan ilova) — t.me/<bot>/<short_name>?startapp=... shaklidan foydalaniladi.
+  const url = WEBAPP_SHORT_NAME
+    ? `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}?startapp=duel_${token}`
+    : `https://t.me/${BOT_USERNAME}?startapp=duel_${token}`;
   const text = `⚔️ Sizni Grammatika bo'yicha duelga chaqiraman! Qabul qiling — kim ko'proq to'g'ri javob berishini bilib olamiz.`;
   const tg = window.Telegram?.WebApp;
   if(tg && typeof tg.openTelegramLink === 'function'){
