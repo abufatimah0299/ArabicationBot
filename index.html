@@ -1980,6 +1980,9 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .dr-bar-fill.dr-orange{ background:#FF6E00; }
 .dr-page.dr-dark .dr-bar-fill.dr-orange{ background:#FF7A00; }
 .dr-back-btn{ width:100%; margin-top:22px; }
+.dr-btn-row{ display:flex; gap:10px; margin-top:22px; }
+.dr-btn-row .dr-back-btn{ flex:1; margin-top:0; }
+.dr-analyze-btn{ flex:1; margin-top:0; }
 
 @keyframes drSlideInLeft{ from{ transform:translateX(-20px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
 @keyframes drSlideInLeftSmall{ from{ transform:translateX(-15px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
@@ -16828,6 +16831,18 @@ async function apiGetDuelOpponentAnswer(duelId, questionIndex){
     return row || null;
   }catch(e){ console.error('[apiGetDuelOpponentAnswer]', e); return null; }
 }
+/* Supabase RPC get_duel_answers(p_duel_id) — ikkala tomonning duel
+   yakunlangandan keyingi to'liq javoblar ro'yxatini (har bir savol
+   indeksi bo'yicha challenger_picked / opponent_picked) bitta so'rovda
+   qaytaradi. Faqat submit_duel_answer orqali saqlangan (ya'ni yangi
+   sxema bo'yicha o'ynalgan) duellarda ma'lumot bo'ladi — eski duellarda
+   bo'sh massiv qaytadi va tahlil ko'rsatilmaydi. */
+async function apiGetDuelAnswers(duelId){
+  try{
+    const rows = await duelRpc('get_duel_answers', { p_duel_id: duelId });
+    return Array.isArray(rows) ? rows : [];
+  }catch(e){ console.error('[apiGetDuelAnswers]', e); return []; }
+}
 
 /* Do'stlar ro'yxati alohida jadvalsiz — siz duel o'ynagan (yoki hali javob
    kutayotgan) raqiblardan get_my_duels natijasi asosida hisoblanadi. */
@@ -17566,6 +17581,7 @@ function renderDuelResultScreen(d){
   _duelStopResultPolling();
   const wrap = document.getElementById('duelResultBody');
   if(!wrap || !d) return;
+  _duelCurrentResult = d;
   const me = _duelMyId();
   const iAmChallenger = d.challenger.id === me;
   const myR = iAmChallenger ? d.challengerResult : d.opponentResult;
@@ -17675,7 +17691,10 @@ function renderDuelResultScreen(d){
               <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${timePct.opp}"></div></div>
             </div>
           </div>
-          <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
+          <div class="dr-btn-row">
+            <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
+            <button type="button" class="btn btn-primary dr-analyze-btn" onclick="openDuelAnalysis()">Tahlil</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -17687,6 +17706,167 @@ function renderDuelResultScreen(d){
     meshEl.innerHTML = drBuildMesh(type, isDark, w);
   }
   drPlayBars(wrap);
+}
+
+/* ---------- Duel: "Tahlil" — savollar bo'yicha ikkala tomon javoblarini
+   solishtirish. Faqat submit_duel_answer orqali saqlangan (yangi sxema)
+   savollarda ma'lumot bo'ladi; eski duellarda (get_duel_answers bo'sh yoki
+   savol uchun yozuv topilmasa) o'sha savol katakchasi bosilmaydigan holatda
+   ("tahlil mavjud emas") ko'rsatiladi. ---------- */
+let _duelCurrentResult = null;
+let _duelAnalysisCtx = null;
+
+async function openDuelAnalysis(){
+  const d = _duelCurrentResult;
+  if(!d) return;
+  document.getElementById('modalTitle').textContent = "Savollar bo'yicha tahlil";
+  document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:34px 0;color:var(--text-dim);font-size:13.5px;">Yuklanmoqda...</div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+
+  const me = _duelMyId();
+  const iAmChallenger = d.challenger.id === me;
+  const myId = iAmChallenger ? d.challenger.id : d.opponent.id;
+  const oppId = iAmChallenger ? d.opponent.id : d.challenger.id;
+  const myName = _duelMyName();
+  const oppName = (iAmChallenger ? d.opponent : d.challenger) ? (iAmChallenger ? d.opponent.name : d.challenger.name) : 'Raqib';
+
+  const rows = await apiGetDuelAnswers(d.id);
+  const ansMap = {};
+  rows.forEach(r=>{
+    const idx = r.question_index;
+    if(!ansMap[idx]) ansMap[idx] = { minePresent:false, mine:null, oppPresent:false, opp:null };
+    if(String(r.user_id) === String(myId)){ ansMap[idx].minePresent = true; ansMap[idx].mine = r.picked; }
+    else if(String(r.user_id) === String(oppId)){ ansMap[idx].oppPresent = true; ansMap[idx].opp = r.picked; }
+  });
+
+  _duelAnalysisCtx = { d, ansMap, myName, oppName };
+  renderDuelAnalysisGrid();
+}
+
+function renderDuelAnalysisGrid(){
+  const ctx = _duelAnalysisCtx;
+  if(!ctx) return;
+  const { d, ansMap } = ctx;
+  const questions = Array.isArray(d.questions) ? d.questions : [];
+  const anyData = Object.keys(ansMap).length > 0;
+
+  const cellsHtml = questions.map((q,i)=>{
+    const entry = ansMap[i];
+    const hasData = !!(entry && entry.minePresent);
+    if(!hasData){
+      return `
+        <div class="review-card" data-idx="${i}">
+          <div class="review-icon unanswered" style="opacity:.55;">${reviewIconSVG.wrong}</div>
+          <div class="review-label">Savol ${i+1}</div>
+        </div>`;
+    }
+    const isUnanswered = entry.mine === null || entry.mine === undefined;
+    const correct = !isUnanswered && (entry.mine === q.a);
+    const iconClass = isUnanswered ? 'unanswered' : (correct ? 'correct' : 'wrong');
+    return `
+      <div class="review-card clickable" data-idx="${i}" onclick="duelShowAnswerDetail(${i})">
+        <div class="review-icon ${iconClass}">${correct?reviewIconSVG.correct:reviewIconSVG.wrong}</div>
+        <div class="review-label">Savol ${i+1}</div>
+      </div>`;
+  }).join('');
+
+  const hint = anyData
+    ? "Tahlilini ko'rish uchun savol ustiga bosing"
+    : "Bu duel uchun batafsil tahlil mavjud emas (eski duel)";
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="review-hint" style="margin:0;">${hint}</div>
+      <div class="review-grid">${cellsHtml}</div>
+      <button type="button" class="btn btn-primary btn-block" onclick="document.getElementById('modalOverlay').classList.remove('show')">Yopish</button>
+    </div>`;
+}
+
+function duelShowAnswerDetail(i){
+  const ctx = _duelAnalysisCtx;
+  if(!ctx) return;
+  const { d, ansMap, myName, oppName } = ctx;
+  const q = d.questions[i];
+  const entry = ansMap[i];
+  if(!q || !entry || !entry.minePresent) return;
+
+  const myPicked = entry.mine;
+  const oppPicked = entry.oppPresent ? entry.opp : undefined;
+  const optText = (opts, idx) => (opts && idx !== null && idx !== undefined && opts[idx] !== undefined) ? escapeHtml(opts[idx]) : "Javob berilmagan";
+
+  const rowHtml = (label, pickedIdx, present) => {
+    if(!present){
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);color:var(--text-faint);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">–</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">${label}:</span>
+            <span style="font-size:13px;">Ma'lumot yo'q</span>
+          </div>
+        </div>`;
+    }
+    const isNull = pickedIdx === null || pickedIdx === undefined;
+    const isCorrect = !isNull && pickedIdx === q.a;
+    const bg = isNull ? 'var(--card-alt)' : (isCorrect ? 'var(--green-bg)' : 'var(--red-bg)');
+    const border = isNull ? 'var(--border)' : (isCorrect ? 'rgba(18,167,104,0.3)' : 'rgba(214,69,69,0.3)');
+    const color = isNull ? 'var(--text-dim)' : (isCorrect ? 'var(--green)' : 'var(--red)');
+    const mark = isNull ? '–' : (isCorrect ? '✓' : '✕');
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:${bg};border:1px solid ${border};color:${color};">
+        <span style="font-size:16px;font-weight:800;line-height:1;">${mark}</span>
+        <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+          <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">${label}:</span>
+          <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${isNull ? "Javob berilmagan" : optText(q.opts, pickedIdx)}</span>
+        </div>
+      </div>`;
+  };
+
+  const prevIdx = (() => { for(let k=i-1;k>=0;k--){ if(ansMap[k] && ansMap[k].minePresent) return k; } return undefined; })();
+  const nextIdx = (() => { for(let k=i+1;k<d.questions.length;k++){ if(ansMap[k] && ansMap[k].minePresent) return k; } return undefined; })();
+
+  document.getElementById('modalTitle').textContent = `${i+1}-savol tahlili`;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="background:var(--bg);padding:16px;border-radius:14px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <span style="font-size:11.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Savol</span>
+          ${q.category ? `<span style="font-size:11px;font-weight:600;color:var(--indigo-700);">${escapeHtml(q.category)}</span>` : ''}
+        </div>
+        <div style="font-family:var(--font-ar);font-size:20px;line-height:1.7;direction:rtl;text-align:right;color:var(--text);font-weight:600;">
+          ${escapeHtml(q.q)}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        ${rowHtml(myName, myPicked, entry.minePresent)}
+        ${rowHtml(oppName, oppPicked, entry.oppPresent)}
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--green-bg);border:1px solid rgba(18,167,104,0.3);color:var(--green);">
+          <span style="font-size:16px;font-weight:800;line-height:1;">✓</span>
+          <div style="font-size:13.5px;font-weight:600;line-height:1.4;flex:1;">
+            <span style="font-size:12px;opacity:0.85;display:block;margin-bottom:2px;">To'g'ri javob:</span>
+            <span style="font-family:var(--font-ar);font-size:16px;font-weight:600;direction:rtl;display:block;">${optText(q.opts, q.a)}</span>
+          </div>
+        </div>
+      </div>
+
+      ${q.exp ? `
+        <div style="background:var(--card-alt);padding:14px 16px;border-radius:14px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--indigo-700);margin-bottom:6px;">
+            <span>💡</span> Tushuntirish / Izoh:
+          </div>
+          <div style="font-size:13.5px;line-height:1.6;color:var(--text);font-weight:500;">
+            ${escapeHtml(q.exp)}
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button type="button" class="btn btn-outline" style="flex:1;" ${prevIdx !== undefined ? `onclick="duelShowAnswerDetail(${prevIdx})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>⬅ Oldingi</button>
+        <button type="button" class="btn btn-outline" style="flex:1;" ${nextIdx !== undefined ? `onclick="duelShowAnswerDetail(${nextIdx})"` : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Keyingi ➡</button>
+      </div>
+      <button type="button" class="btn btn-outline btn-block" onclick="renderDuelAnalysisGrid()">⬅ Savollar ro'yxatiga qaytish</button>
+    </div>
+  `;
 }
 
 /* Ikki qiymatni diverging (markazdan ikki tomonga) progress-bar sifatida
