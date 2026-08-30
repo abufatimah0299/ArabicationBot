@@ -1911,69 +1911,102 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .duel-skill-name{ font-family:var(--font-ar-bold); font-size:16px; font-weight:600; position:relative; z-index:1; line-height:1.25; }
 .duel-skill-desc{ font-size:11px; color:rgba(255,255,255,0.82); font-weight:600; position:relative; z-index:1; margin-top:2px; }
 
-/* ---------- Duel natijasi (Victory / Defeat) ekrani ---------- */
-.duel-result-hero{
-  position:relative; overflow:hidden; border-radius:var(--radius-lg);
-  padding:30px 22px 26px; margin-bottom:14px; isolation:isolate;
+/* ==================== Duel natijasi (Victory / Defeat) ekrani ====================
+   Tayyor dizayn (mesh-uchburchak fon, animatsiyali kubok SVG, konfetti) —
+   barcha klasslar to'qnashuvning oldini olish uchun "dr-" prefiksi bilan. */
+.dr-page{ position:relative; width:100%; overflow:hidden; border-radius:var(--radius-lg); background:#fff; }
+.dr-page.dr-dark{ background:#111622; }
+.dr-mesh-wrap{ position:absolute; top:0; left:0; right:0; width:100%; height:340px; overflow:hidden; pointer-events:none; z-index:0; }
+.dr-content{ position:relative; z-index:10; width:100%; }
+.dr-top-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:8px; padding:24px 20px 6px; }
+.dr-left-col{ flex:1; max-width:190px; display:flex; flex-direction:column; justify-content:space-between; }
+.dr-title{ font-size:28px; line-height:1; font-weight:900; letter-spacing:-.02em; margin:38px 0 0; white-space:nowrap; }
+.dr-title.dr-victory{ color:#FF6E00; }
+.dr-page.dr-dark .dr-title.dr-victory{ color:#FF851A; }
+.dr-title.dr-defeat{ color:#5E6573; }
+.dr-page.dr-dark .dr-title.dr-defeat{ color:#94A3B8; }
+.dr-subtitle{ color:#2D3139; font-size:15.5px; font-weight:700; margin-top:4px; }
+.dr-page.dr-dark .dr-subtitle{ color:#F1F5F9; }
+.dr-reward{ margin-top:6px; font-size:12.5px; font-weight:500; color:#8C93A0; }
+.dr-page.dr-dark .dr-reward{ color:#94A3B8; }
+.dr-defeat-tip{ margin-top:6px; font-size:12.5px; font-weight:600; color:#FF6600; background:none; border:none; padding:0; cursor:pointer; font-family:inherit; }
+.dr-page.dr-dark .dr-defeat-tip{ color:#FF851A; }
+.dr-action-btn-wrap{ padding-top:40px; padding-bottom:4px; }
+.dr-action-btn{
+  display:inline-flex; align-items:center; justify-content:center; padding:0 16px; height:32px;
+  border-radius:8px; color:#fff; font-weight:700; font-size:13.5px; border:none;
+  border-top:1px solid rgba(255,255,255,0.3); cursor:pointer; font-family:inherit;
+  transition:transform .1s ease;
 }
-.duel-result-hero.win{
-  background:
-    linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%),
-    linear-gradient(135deg, #fff6df, #ffe9b8 60%, #ffdf9e);
+.dr-action-btn:active{ transform:scale(.95); }
+.dr-action-btn.dr-victory{ background:linear-gradient(to bottom,#56D41E,#42B80E); box-shadow:0 4px 12px rgba(82,196,26,.35); }
+.dr-action-btn.dr-defeat{ background:linear-gradient(to bottom,#FF7A00,#F25C00); box-shadow:0 4px 12px rgba(255,106,0,.35); }
+.dr-trophy-col{ flex:1; display:flex; justify-content:center; align-items:flex-end; margin-bottom:-14px; }
+.dr-bottom-section{ position:relative; z-index:10; padding:14px 20px 22px; }
+.dr-section-title{ color:#1F242F; font-size:16px; font-weight:800; letter-spacing:-.01em; margin:36px 0 12px; }
+.dr-page.dr-dark .dr-section-title{ color:#F8FAFC; }
+.dr-players-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.dr-player{ display:flex; align-items:center; gap:8px; min-width:0; }
+.dr-player.dr-right{ flex-direction:row-reverse; text-align:right; }
+.dr-avatar{
+  width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:15px; background:#fff; border:2px solid; flex-shrink:0; overflow:hidden;
 }
-.duel-result-hero.lose{
-  background:
-    linear-gradient(160deg, rgba(255,255,255,.5), rgba(255,255,255,0) 45%),
-    linear-gradient(135deg, #f4f5f7, #e7e9ec 60%, #dde0e5);
-}
-.duel-result-hero::before{
-  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
-  background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='44'%20height='44'%3E%3Cpath%20d='M0 44 L22 0 L44 44 Z'%20fill='%23000000'%20fill-opacity='0.045'/%3E%3C/svg%3E");
-  background-size:44px 44px;
-}
-.duel-result-hero-inner{ position:relative; z-index:1; max-width:62%; }
-.duel-result-title{ font-size:27px; font-weight:800; letter-spacing:.5px; line-height:1.1; margin-bottom:8px; }
-.duel-result-hero.win .duel-result-title{ color:#DB7A0C; }
-.duel-result-hero.lose .duel-result-title{ color:#5B6472; }
-.duel-result-sub{ font-size:14.5px; font-weight:700; color:var(--text); margin-bottom:6px; }
-html[data-theme="light"] .duel-result-sub{ color:#2B3440; }
-.duel-result-caption{ font-size:12px; font-weight:600; color:#8A93A0; display:inline-flex; align-items:center; gap:2px; }
-.duel-result-caption.link{ cursor:pointer; }
-.duel-result-caption svg{ width:12px; height:12px; }
-.duel-result-action-btn{
-  margin-top:16px; border:none; border-radius:11px; padding:10px 22px; font-size:13px; font-weight:700;
-  color:#fff; cursor:pointer; position:relative; z-index:1;
-}
-.duel-result-hero.win .duel-result-action-btn{ background:var(--green); }
-.duel-result-hero.lose .duel-result-action-btn{ background:var(--muhavara); }
-.duel-result-trophy{ position:absolute; right:8px; bottom:0; width:132px; height:132px; z-index:0; opacity:.96; }
-@media (max-width:380px){ .duel-result-trophy{ width:104px; height:104px; } }
+.dr-page.dr-dark .dr-avatar{ background:#1A2234; }
+.dr-avatar img{ width:100%; height:100%; object-fit:cover; }
+.dr-avatar.dr-p1{ border-color:#009E60; color:#009E60; }
+.dr-page.dr-dark .dr-avatar.dr-p1{ border-color:#00BA71; color:#00BA71; }
+.dr-avatar.dr-p2{ border-color:#FF6E00; color:#FF6E00; }
+.dr-page.dr-dark .dr-avatar.dr-p2{ border-color:#FF7A00; color:#FF7A00; }
+.dr-player-name{ color:#2D3748; font-size:13.5px; font-weight:700; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dr-page.dr-dark .dr-player-name{ color:#E2E8F0; }
+.dr-metric{ margin-bottom:18px; }
+.dr-metric:last-child{ margin-bottom:0; }
+.dr-metric-numbers{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
+.dr-num-p1{ color:#009E60; font-size:20px; font-weight:800; line-height:1; }
+.dr-page.dr-dark .dr-num-p1{ color:#00BA71; }
+.dr-num-p2{ color:#FF6E00; font-size:20px; font-weight:800; line-height:1; }
+.dr-page.dr-dark .dr-num-p2{ color:#FF7A00; }
+.dr-metric-label{ color:#8C93A0; font-size:12.5px; font-weight:600; }
+.dr-page.dr-dark .dr-metric-label{ color:#94A3B8; }
+.dr-bars{ display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center; }
+.dr-bar-track{ width:100%; height:11px; background:#F1F5F9; border-radius:999px; overflow:hidden; display:flex; }
+.dr-page.dr-dark .dr-bar-track{ background:#1E2738; }
+.dr-bar-track.dr-left{ justify-content:flex-end; }
+.dr-bar-track.dr-right{ justify-content:flex-start; }
+.dr-bar-fill{ height:100%; border-radius:999px; width:0; transition:width .7s ease-out; }
+.dr-bar-fill.dr-green{ background:#009E60; }
+.dr-page.dr-dark .dr-bar-fill.dr-green{ background:#00BA71; }
+.dr-bar-fill.dr-orange{ background:#FF6E00; }
+.dr-page.dr-dark .dr-bar-fill.dr-orange{ background:#FF7A00; }
+.dr-back-btn{ width:100%; margin-top:22px; }
 
-.duel-cmp-card{ padding:20px 18px 22px; }
-.duel-cmp-title{ font-size:14.5px; font-weight:800; color:var(--text); margin-bottom:16px; }
-.duel-cmp-avatars{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
-.duel-cmp-side{ display:flex; align-items:center; gap:8px; min-width:0; }
-.duel-cmp-side.right{ flex-direction:row-reverse; text-align:right; }
-.duel-cmp-avatar{
-  width:34px; height:34px; border-radius:50%; overflow:hidden; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;
-  background:var(--card-alt); border:2px solid var(--green); color:var(--text);
-}
-.duel-cmp-side.right .duel-cmp-avatar{ border-color:var(--muhavara); }
-.duel-cmp-avatar img{ width:100%; height:100%; object-fit:cover; }
-.duel-cmp-name{ font-size:12.5px; font-weight:700; color:var(--text-dim); max-width:96px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.duel-cmp-row{ margin-bottom:16px; }
-.duel-cmp-row:last-child{ margin-bottom:0; }
-.duel-cmp-numbers{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
-.duel-cmp-num{ font-size:19px; font-weight:800; color:var(--green); }
-.duel-cmp-num.right{ color:var(--muhavara); }
-.duel-cmp-label{ font-size:11.5px; font-weight:700; color:var(--text-faint); }
-.duel-cmp-track{ display:flex; align-items:center; gap:3px; height:8px; }
-.duel-cmp-track-half{ flex:1; height:100%; border-radius:99px; background:var(--card-alt); overflow:hidden; display:flex; }
-.duel-cmp-track-half.left{ justify-content:flex-end; }
-.duel-cmp-fill{ height:100%; border-radius:99px; transition:width .5s var(--ease); }
-.duel-cmp-fill.mine{ background:var(--green); }
-.duel-cmp-fill.opp{ background:var(--muhavara); }
+@keyframes drSlideInLeft{ from{ transform:translateX(-20px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+@keyframes drSlideInLeftSmall{ from{ transform:translateX(-15px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+@keyframes drFadeInUp{ from{ transform:translateX(-10px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+@keyframes drPopIn{ from{ transform:scale(.9); opacity:0; } to{ transform:scale(1); opacity:1; } }
+@keyframes drTrophyIn{ 0%{ transform:scale(.8) translateY(15px); opacity:0; } 60%{ transform:scale(1.04) translateY(-2px); opacity:1; } 100%{ transform:scale(1) translateY(0); opacity:1; } }
+@keyframes drSparklePulse1{ 0%,100%{ transform:scale(.8) rotate(0deg); opacity:.7; } 50%{ transform:scale(1.25) rotate(15deg); opacity:1; } }
+@keyframes drSparklePulse2{ 0%,100%{ transform:scale(1) rotate(0deg); opacity:.5; } 50%{ transform:scale(1.35) rotate(-20deg); opacity:.95; } }
+@keyframes drSparklePulse3{ 0%,100%{ transform:scale(.9); opacity:.6; } 50%{ transform:scale(1.3); opacity:1; } }
+@keyframes drSparklePulse4{ 0%,100%{ transform:scale(.8) rotate(0deg); opacity:.4; } 50%{ transform:scale(1.2) rotate(45deg); opacity:.8; } }
+@keyframes drPetalFloat1{ 0%,100%{ transform:translate(0,0) rotate(0deg); opacity:.35; } 50%{ transform:translate(-3px,8px) rotate(15deg); opacity:.65; } }
+@keyframes drPetalFloat2{ 0%,100%{ transform:translate(0,0) rotate(25deg); opacity:.3; } 50%{ transform:translate(4px,10px) rotate(40deg); opacity:.6; } }
+@keyframes drPetalFloat3{ 0%,100%{ transform:translate(0,0) rotate(-10deg); opacity:.25; } 50%{ transform:translate(0,6px) rotate(10deg); opacity:.5; } }
+@keyframes drPetalPulse{ 0%,100%{ transform:scale(.9); opacity:.4; } 50%{ transform:scale(1.1); opacity:.7; } }
+.dr-anim-title{ animation:drSlideInLeft .4s ease-out both; }
+.dr-anim-subtitle{ animation:drSlideInLeftSmall .4s ease-out .1s both; }
+.dr-anim-tip{ animation:drFadeInUp .4s ease-out .15s both; }
+.dr-anim-btn{ animation:drPopIn .4s ease-out .2s both; }
+.dr-trophy-inner{ animation:drTrophyIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+.dr-sparkle-1{ animation:drSparklePulse1 2.2s ease-in-out infinite; }
+.dr-sparkle-2{ animation:drSparklePulse2 1.8s ease-in-out .6s infinite; }
+.dr-sparkle-3{ animation:drSparklePulse3 2.5s ease-in-out 1.1s infinite; }
+.dr-sparkle-4{ animation:drSparklePulse4 2s ease-in-out .3s infinite; }
+.dr-petal-1{ animation:drPetalFloat1 4.2s ease-in-out infinite; }
+.dr-petal-2{ animation:drPetalFloat2 3.8s ease-in-out .5s infinite; }
+.dr-petal-3{ animation:drPetalFloat3 3.2s ease-in-out 1.2s infinite; }
+.dr-petal-4{ animation:drPetalPulse 3s ease-in-out .8s infinite; }
 
 /* ---------- Onboarding Modal ---------- */
 .onboarding-overlay{
@@ -7848,6 +7881,14 @@ function applyTheme(theme){
   const sub = document.getElementById('themeSettingSub');
   if(sw) sw.checked = (theme==='light');
   if(sub) sub.textContent = theme==='light' ? "Yorug' mavzu" : "Qorong'i mavzu";
+  const drPage = document.getElementById('drPage');
+  if(drPage){
+    const isDark = theme !== 'light';
+    const type = drPage.querySelector('.dr-title.dr-victory') ? 'victory' : 'defeat';
+    drPage.classList.toggle('dr-dark', isDark);
+    const meshEl = document.getElementById('drMesh');
+    if(meshEl){ meshEl.innerHTML = drBuildMesh(type, isDark, Math.max(drPage.clientWidth||0, 320)); }
+  }
 }
 function toggleTheme(){
   const current = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
@@ -16850,14 +16891,12 @@ function renderFriendCard(f){
     </div>`;
 }
 
-let DUEL_HUB_CACHE = [];
 async function renderDuelHub(){
   const listEl = document.getElementById('duelList');
   const emptyEl = document.getElementById('duelEmpty');
   if(!listEl) return;
   const me = _duelMyId();
   const duels = (await apiGetMyDuels()).sort((a,b)=> b.createdAt - a.createdAt);
-  DUEL_HUB_CACHE = duels;
   if(!duels.length){
     listEl.innerHTML = '';
     if(emptyEl) emptyEl.style.display = '';
@@ -16865,16 +16904,6 @@ async function renderDuelHub(){
   }
   if(emptyEl) emptyEl.style.display = 'none';
   listEl.innerHTML = duels.map(d=>renderDuelCard(d, me)).join('');
-}
-
-/* Duel tarixidagi karta ustiga bosilganda — xuddi imtihon tarixidagi "Tahlil"
-   tugmasi kabi — o'sha duelning natija oynasini (g'alaba/mag'lubiyat yoki
-   kutish paneli) ochib beradi. */
-function openDuelResultFromHistory(duelId){
-  const d = DUEL_HUB_CACHE.find(x => String(x.id) === String(duelId));
-  if(!d) return;
-  showView('duelresult');
-  renderDuelResultScreen(d);
 }
 
 function renderDuelCard(d, me){
@@ -16920,14 +16949,8 @@ function renderDuelCard(d, me){
         : `<div class="avatar" style="width:38px;height:38px;font-size:14px;">${escapeHtml((oppName||'?').trim().charAt(0).toUpperCase())}</div>`)
     : `<div class="history-icon" style="background:${skillMeta.bg};color:${skillMeta.color};">⚔️</div>`;
 
-  // Karta faqat men javob bergan (natijam mavjud) duellarda bosiladigan bo'ladi —
-  // o'sha holda bosilganda natija/kutish oynasi ochiladi (imtihon tarixidagi
-  // "Tahlil" tugmasi bilan bir xil mantiq).
-  const isClickable = !!(d.opponent && myResult);
-  const clickAttr = isClickable ? ` onclick="openDuelResultFromHistory('${d.id}')" style="cursor:pointer;"` : '';
-
   return `
-    <div class="card history-item ${cardStateClass}"${clickAttr}>
+    <div class="card history-item ${cardStateClass}">
       ${avatarHtml}
       <div class="history-main">
         <div class="t">${d.opponent ? escapeHtml(oppName) : "Do'stni kuting"}</div>
@@ -17286,54 +17309,242 @@ function _duelStopResultPolling(){
   if(duelResultPollTimer){ clearInterval(duelResultPollTimer); duelResultPollTimer = null; }
 }
 
-const DUEL_TROPHY_SVG_WIN = `<svg class="duel-result-trophy" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="42" y="97" width="36" height="8" rx="2" fill="#C97A0F"/>
-  <rect x="50" y="89" width="20" height="10" fill="#E0921A"/>
-  <rect x="55" y="73" width="10" height="18" fill="#F5A623"/>
-  <path d="M40 34h40l-4 30a16 16 0 0 1-32 0l-4-30z" fill="#FFC94A"/>
-  <path d="M40 38c-10 0-16 8-16 16s8 14 16 14" stroke="#F5A623" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <path d="M80 38c10 0 16 8 16 16s-8 14-16 14" stroke="#F5A623" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <path d="M60 42l3.5 7.2 7.9 1.1-5.7 5.6 1.3 7.9-7-3.7-7 3.7 1.3-7.9-5.7-5.6 7.9-1.1z" fill="#fff" fill-opacity=".85"/>
-  <path d="M22 26l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFD873"/>
-  <path d="M96 20l1.6 3.8 3.8 1.6-3.8 1.6-1.6 3.8-1.6-3.8-3.8-1.6 3.8-1.6z" fill="#FFD873"/>
-</svg>`;
-const DUEL_TROPHY_SVG_LOSE = `<svg class="duel-result-trophy" viewBox="0 0 140 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="70" cy="104" rx="26" ry="5" fill="#AEB4BC" opacity=".45"/>
-  <g transform="translate(70 78) rotate(26) translate(-60 -50)">
-    <rect x="42" y="96" width="36" height="8" rx="2" fill="#AEB4BC"/>
-    <rect x="50" y="88" width="20" height="10" fill="#BCC2CA"/>
-    <rect x="55" y="72" width="10" height="18" fill="#C7CCD3"/>
-    <path d="M40 34h40l-4 30a16 16 0 0 1-32 0l-4-30z" fill="#D5D9DE"/>
-    <path d="M40 38c-10 0-16 8-16 16s8 14 16 14" stroke="#C7CCD3" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M80 38c10 0 16 8 16 16s-8 14-16 14" stroke="#C7CCD3" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M52 40l6 12-8 4 10 14" stroke="#9BA2AC" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-  <path d="M30 40l14 10M108 34l-12 12M22 66l12 4" stroke="#C7CCD3" stroke-width="3" stroke-linecap="round"/>
-</svg>`;
+const DR_VICTORY_TROPHY = `
+<div style="position:relative;width:145px;height:150px;display:flex;align-items:flex-end;justify-content:center;">
+  <div class="dr-sparkle-1" style="position:absolute;top:6px;left:2px;color:#FBBF24;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+  </div>
+  <div class="dr-sparkle-2" style="position:absolute;top:58px;left:-6px;color:#F59E0B;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+  </div>
+  <div class="dr-sparkle-3" style="position:absolute;top:14px;right:0;color:#FBBF24;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+  </div>
+  <div class="dr-sparkle-4" style="position:absolute;bottom:44px;right:-2px;color:#FCD34D;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+  </div>
+  <div class="dr-trophy-inner">
+  <svg width="138" height="145" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="drGoldCupGrad" x1="20" y1="20" x2="95" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFF275"/><stop offset="25%" stop-color="#FFD000"/>
+        <stop offset="60%" stop-color="#FFAE00"/><stop offset="90%" stop-color="#FF8800"/>
+        <stop offset="100%" stop-color="#E66A00"/>
+      </linearGradient>
+      <linearGradient id="drCupRimGrad" x1="25" y1="18" x2="90" y2="28" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFF9C4"/><stop offset="50%" stop-color="#FFE082"/><stop offset="100%" stop-color="#FFA000"/>
+      </linearGradient>
+      <linearGradient id="drHandleLeftGrad" x1="5" y1="22" x2="35" y2="52" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFF9A6"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF8F00"/>
+      </linearGradient>
+      <linearGradient id="drHandleRightGrad" x1="110" y1="22" x2="80" y2="52" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFF9A6"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF8F00"/>
+      </linearGradient>
+      <linearGradient id="drPedestalGrad" x1="40" y1="88" x2="75" y2="108" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFC107"/><stop offset="40%" stop-color="#FF9800"/><stop offset="100%" stop-color="#E65100"/>
+      </linearGradient>
+      <linearGradient id="drStarGrad" x1="57.5" y1="36" x2="57.5" y2="60" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFFFFF"/><stop offset="50%" stop-color="#FFF176"/><stop offset="100%" stop-color="#FFA000"/>
+      </linearGradient>
+      <radialGradient id="drGroundShadow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FF8F00" stop-opacity="0.4"/>
+        <stop offset="60%" stop-color="#FFB300" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#FFD54F" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="57.5" cy="114" rx="36" ry="6" fill="url(#drGroundShadow)"/>
+    <path d="M 33 26 C 14 26 8 38 12 50 C 15 59 26 59 36 53" stroke="url(#drHandleLeftGrad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M 82 26 C 101 26 107 38 103 50 C 100 59 89 59 79 53" stroke="url(#drHandleRightGrad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M 30 20 H 85 C 85 45 78 68 57.5 73 C 37 68 30 45 30 20 Z" fill="url(#drGoldCupGrad)"/>
+    <ellipse cx="57.5" cy="20" rx="27.5" ry="6" fill="url(#drCupRimGrad)"/>
+    <ellipse cx="57.5" cy="20" rx="25" ry="4.5" fill="#FAAD14" opacity="0.6"/>
+    <path d="M 37 24 C 36 38 40 56 50 66 C 45 61 41 45 42 25 Z" fill="#FFFBE6" opacity="0.6"/>
+    <path d="M 57.5 35 L 61.2 44.5 L 71 45.2 L 63.4 51.5 L 65.8 61 L 57.5 55.8 L 49.2 61 L 51.6 51.5 L 44 45.2 L 53.8 44.5 Z" fill="url(#drStarGrad)" stroke="#FFE58F" stroke-width="0.8"/>
+    <path d="M 52 72 H 63 V 86 C 63 87 61 88 57.5 88 C 54 88 52 87 52 86 Z" fill="#D48806"/>
+    <ellipse cx="57.5" cy="74" rx="7" ry="2" fill="#FFE58F"/>
+    <ellipse cx="57.5" cy="85" rx="10" ry="2.5" fill="#FFC53D"/>
+    <path d="M 43 88 L 72 88 L 76 107 C 76 108.5 74 109 57.5 109 C 41 109 39 108.5 39 107 Z" fill="url(#drPedestalGrad)"/>
+    <ellipse cx="57.5" cy="88" rx="14.5" ry="2.2" fill="#D48806"/>
+    <circle cx="57.5" cy="98.5" r="4.8" fill="#FAAD14" stroke="#FFF1B8" stroke-width="0.8"/>
+    <circle cx="57.5" cy="98.5" r="2.8" fill="#D48806"/>
+    <line x1="57.5" y1="98.5" x2="57.5" y2="96.5" stroke="#FFF" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="57.5" y1="98.5" x2="59" y2="98.5" stroke="#FFF" stroke-width="0.8" stroke-linecap="round"/>
+  </svg>
+  </div>
+</div>`;
 
-/* Ikki qiymatni diverging (markazdan ikki tomonga) progress-bar sifatida
-   solishtirish uchun foizlarni hisoblaydi. invert=true bo'lsa (masalan
-   vaqt — kamroq yaxshi), kichikroq qiymat kattaroq foiz oladi. */
-function _duelCmpPct(myVal, oppVal, invert){
-  const a = invert ? 1/Math.max(myVal,0.001) : Math.max(myVal,0);
-  const b = invert ? 1/Math.max(oppVal,0.001) : Math.max(oppVal,0);
-  const maxV = Math.max(a,b) || 1;
-  return { mine:(a/maxV)*100, opp:(b/maxV)*100 };
+const DR_DEFEAT_TROPHY = `
+<div style="position:relative;width:145px;height:150px;display:flex;align-items:flex-end;justify-content:center;margin-left:-40px;">
+  <div class="dr-petal-1" style="position:absolute;top:6px;left:6px;color:#CBD5E1;">
+    <svg width="9" height="15" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+  </div>
+  <div class="dr-petal-2" style="position:absolute;top:14px;right:10px;color:#CBD5E1;">
+    <svg width="11" height="16" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+  </div>
+  <div class="dr-petal-3" style="position:absolute;top:44px;right:0;color:#CBD5E1;">
+    <svg width="7" height="13" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+  </div>
+  <div class="dr-petal-4" style="position:absolute;bottom:14px;left:10px;color:#CBD5E1;">
+    <svg width="8" height="14" viewBox="0 0 10 16" fill="currentColor" transform="rotate(-35)"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+  </div>
+  <div class="dr-trophy-inner">
+  <svg width="138" height="145" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="drFallenFloorShadow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#94A3B8" stop-opacity="0.55"/>
+        <stop offset="60%" stop-color="#CBD5E1" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#E2E8F0" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="drFallenCupGrad" x1="20" y1="20" x2="95" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FFFFFF"/><stop offset="30%" stop-color="#E2E8F0"/>
+        <stop offset="70%" stop-color="#CBD5E1"/><stop offset="100%" stop-color="#94A3B8"/>
+      </linearGradient>
+      <linearGradient id="drFallenRimGrad" x1="25" y1="18" x2="90" y2="28" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#F8FAFC"/><stop offset="50%" stop-color="#E2E8F0"/><stop offset="100%" stop-color="#94A3B8"/>
+      </linearGradient>
+      <linearGradient id="drFallenHandleLeft" x1="5" y1="22" x2="35" y2="52" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#F8FAFC"/><stop offset="60%" stop-color="#CBD5E1"/><stop offset="100%" stop-color="#94A3B8"/>
+      </linearGradient>
+      <linearGradient id="drFallenHandleRight" x1="110" y1="22" x2="80" y2="52" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#F8FAFC"/><stop offset="60%" stop-color="#CBD5E1"/><stop offset="100%" stop-color="#94A3B8"/>
+      </linearGradient>
+      <linearGradient id="drFallenPedestalGrad" x1="40" y1="88" x2="75" y2="108" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#94A3B8"/><stop offset="50%" stop-color="#64748B"/><stop offset="100%" stop-color="#475569"/>
+      </linearGradient>
+      <linearGradient id="drFallenStarGrad" x1="57.5" y1="36" x2="57.5" y2="60" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#CBD5E1"/><stop offset="60%" stop-color="#94A3B8"/><stop offset="100%" stop-color="#64748B"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="57.5" cy="114" rx="42" ry="5.5" fill="url(#drFallenFloorShadow)"/>
+    <g transform="translate(-32, -10) rotate(52, 57.5, 95)">
+      <path d="M 33 26 C 14 26 8 38 12 50 C 15 59 26 59 36 53" stroke="url(#drFallenHandleLeft)" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M 82 26 C 101 26 107 38 103 50 C 100 59 89 59 79 53" stroke="url(#drFallenHandleRight)" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M 30 20 H 85 C 85 45 78 68 57.5 73 C 37 68 30 45 30 20 Z" fill="url(#drFallenCupGrad)"/>
+      <ellipse cx="57.5" cy="20" rx="27.5" ry="6" fill="url(#drFallenRimGrad)"/>
+      <ellipse cx="57.5" cy="20" rx="25" ry="4.5" fill="#94A3B8" opacity="0.45"/>
+      <path d="M 37 24 C 36 38 40 56 50 66 C 45 61 41 45 42 25 Z" fill="#FFFFFF" opacity="0.6"/>
+      <path d="M 57.5 35 L 61.2 44.5 L 71 45.2 L 63.4 51.5 L 65.8 61 L 57.5 55.8 L 49.2 61 L 51.6 51.5 L 44 45.2 L 53.8 44.5 Z" fill="url(#drFallenStarGrad)" stroke="#E2E8F0" stroke-width="0.8"/>
+      <path d="M 52 72 H 63 V 86 C 63 87 61 88 57.5 88 C 54 88 52 87 52 86 Z" fill="#64748B"/>
+      <ellipse cx="57.5" cy="74" rx="7" ry="2" fill="#E2E8F0"/>
+      <ellipse cx="57.5" cy="85" rx="10" ry="2.5" fill="#94A3B8"/>
+      <path d="M 43 88 L 72 88 L 76 107 C 76 108.5 74 109 57.5 109 C 41 109 39 108.5 39 107 Z" fill="url(#drFallenPedestalGrad)"/>
+      <ellipse cx="57.5" cy="88" rx="14.5" ry="2.2" fill="#64748B"/>
+      <circle cx="57.5" cy="98.5" r="5" fill="#CBD5E1" stroke="#F1F5F9" stroke-width="0.8"/>
+      <circle cx="57.5" cy="98.5" r="3" fill="#64748B"/>
+      <line x1="57.5" y1="98.5" x2="57.5" y2="96.5" stroke="#FFF" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="57.5" y1="98.5" x2="59" y2="98.5" stroke="#FFF" stroke-width="0.8" stroke-linecap="round"/>
+    </g>
+  </svg>
+  </div>
+</div>`;
+
+/* Uchburchak "mesh" fon — g'alabada oltin, mag'lubiyatda kumush tusda. */
+function drBuildMesh(type, dark, containerWidth){
+  const height = 340;
+  const targetTileWidth = 22;
+  const cols = Math.max(14, Math.round(containerWidth / targetTileWidth));
+  const rows = 16;
+  const dx = containerWidth / cols;
+  const dy = height / rows;
+  const points = [];
+  for(let r=0; r<=rows; r++){
+    points[r] = [];
+    for(let c=0; c<=cols; c++){
+      const jitterX = (c>0 && c<cols) ? (Math.sin(r*17+c*11)*0.35*dx) : 0;
+      const jitterY = (r>0 && r<rows) ? (Math.cos(r*11+c*13)*0.35*dy) : 0;
+      points[r][c] = [c*dx+jitterX, r*dy+jitterY];
+    }
+  }
+  const goldPaletteLight = ['#FFF8DE','#FFEAA3','#FFF2BA','#FFE38C','#FFFBF0','#FFDE7A','#FFF5C6','#FFE899','#FFFDF4','#FFDC70'];
+  const silverPaletteLight = ['#FFFFFF','#F8FAFC','#F1F5F9','#E8EDF3','#DFE6EE','#F4F6F8','#ECEFF4','#FFFFFF','#F1F4F8','#E2E8F0'];
+  const goldPaletteDark = ['#2C2108','#382A0A','#201804','#43320B','#1B1403','#4E3A0E','#2E2308','#3B2D0B','#44340D','#241B04'];
+  const silverPaletteDark = ['#28354A','#1F293A','#34445F','#1A2332','#415577','#253145','#2F3E57','#1C2534','#3B4C69','#222C3D'];
+  const palette = dark
+    ? (type==='victory' ? goldPaletteDark : silverPaletteDark)
+    : (type==='victory' ? goldPaletteLight : silverPaletteLight);
+  let polys = '';
+  for(let r=0; r<rows; r++){
+    for(let c=0; c<cols; c++){
+      const p1=points[r][c], p2=points[r][c+1], p3=points[r+1][c], p4=points[r+1][c+1];
+      const rowFade = Math.max(0, 1-Math.pow(r/rows,1.35));
+      const ci1 = (r*7+c*3) % palette.length;
+      const baseOp1 = dark ? (type==='victory'?0.26:0.36) : 0.28;
+      const op1 = (baseOp1 + (Math.sin(r*3+c*5)*(dark?0.12:0.16))) * rowFade;
+      const strokeOp = op1*0.4;
+      polys += `<polygon points="${p1[0]},${p1[1]} ${p2[0]},${p2[1]} ${p3[0]},${p3[1]}" fill="${palette[ci1]}" fill-opacity="${op1}" stroke="${palette[ci1]}" stroke-width="0.3" stroke-opacity="${strokeOp}"/>`;
+      const ci2 = (r*11+c*5+2) % palette.length;
+      const baseOp2 = dark ? (type==='victory'?0.30:0.40) : 0.32;
+      const op2 = (baseOp2 + (Math.cos(r*5+c*3)*(dark?0.12:0.16))) * rowFade;
+      polys += `<polygon points="${p2[0]},${p2[1]} ${p4[0]},${p4[1]} ${p3[0]},${p3[1]}" fill="${palette[ci2]}" fill-opacity="${op2}" stroke="${palette[ci2]}" stroke-width="0.3" stroke-opacity="${strokeOp}"/>`;
+    }
+  }
+  let fadeTop, fadeMid, fadeLow, fadeEnd;
+  if(dark){
+    fadeTop = type==='victory' ? '#1E1705' : '#1A2334';
+    fadeMid = type==='victory' ? '#171206' : '#151C29';
+    fadeLow = type==='victory' ? '#13151D' : '#131825';
+    fadeEnd = '#111622';
+  } else {
+    fadeTop = type==='victory' ? '#FFF6D3' : '#F1F5F9';
+    fadeMid = type==='victory' ? '#FFFBEA' : '#F8FAFC';
+    fadeLow = type==='victory' ? '#FFFEFB' : '#FCFDFE';
+    fadeEnd = '#FFFFFF';
+  }
+  const groupOpacity = dark ? (type==='victory'?'0.7':'0.85') : '0.9';
+  const uid = type + (dark?'dark':'light');
+  return `<svg viewBox="0 0 ${containerWidth} ${height}" style="width:100%;height:100%;display:block;">
+    <defs>
+      <linearGradient id="drFade-${uid}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="${fadeTop}" stop-opacity="${dark?(type==='victory'?'0.75':'0.9'):'0.85'}"/>
+        <stop offset="50%" stop-color="${fadeMid}" stop-opacity="${dark?(type==='victory'?'0.55':'0.75'):'0.65'}"/>
+        <stop offset="80%" stop-color="${fadeLow}" stop-opacity="${dark?(type==='victory'?'0.3':'0.45'):'0.3'}"/>
+        <stop offset="100%" stop-color="${fadeEnd}" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="drFadeMask-${uid}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+        <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+        <stop offset="85%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+      </linearGradient>
+      <mask id="drMask-${uid}"><rect width="${containerWidth}" height="${height}" fill="url(#drFadeMask-${uid})"/></mask>
+    </defs>
+    <rect width="${containerWidth}" height="${height}" fill="url(#drFade-${uid})"/>
+    <g mask="url(#drMask-${uid})" opacity="${groupOpacity}">${polys}</g>
+  </svg>`;
 }
-function _duelCmpRow(label, myLabel, oppLabel, myVal, oppVal, invert){
-  const pct = _duelCmpPct(myVal, oppVal, invert);
-  return `
-    <div class="duel-cmp-row">
-      <div class="duel-cmp-numbers">
-        <span class="duel-cmp-num">${myLabel}</span>
-        <span class="duel-cmp-label">${label}</span>
-        <span class="duel-cmp-num right">${oppLabel}</span>
-      </div>
-      <div class="duel-cmp-track">
-        <div class="duel-cmp-track-half left"><div class="duel-cmp-fill mine" style="width:${pct.mine}%;"></div></div>
-        <div class="duel-cmp-track-half right"><div class="duel-cmp-fill opp" style="width:${pct.opp}%;"></div></div>
-      </div>
-    </div>`;
+
+function drPlayBars(root){
+  root.querySelectorAll('.dr-bar-fill').forEach(el=>{ el.style.width = '0%'; });
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      root.querySelectorAll('.dr-bar-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
+    }, 250);
+  });
+}
+
+function drBurstConfetti(){
+  const colors = ['#FFD700','#FFA500','#52C41A','#0091FF','#FF4D4F'];
+  for(let i=0; i<60; i++){
+    const el = document.createElement('div');
+    const size = 6 + Math.random()*5;
+    el.style.position='fixed'; el.style.left='50%'; el.style.top='45%';
+    el.style.width=size+'px'; el.style.height=size+'px';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.borderRadius = Math.random()>0.5 ? '50%' : '2px';
+    el.style.zIndex = 9999; el.style.pointerEvents = 'none';
+    document.body.appendChild(el);
+    const angle = Math.random()*Math.PI*2;
+    const distance = 80 + Math.random()*160;
+    const dx = Math.cos(angle)*distance;
+    const dy = Math.sin(angle)*distance - 60;
+    const rotate = Math.random()*720 - 360;
+    const duration = 700 + Math.random()*500;
+    el.animate([
+      { transform:'translate(-50%, -50%) rotate(0deg)', opacity:1 },
+      { transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotate}deg)`, opacity:0 }
+    ], { duration, easing:'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill:'forwards' });
+    setTimeout(()=>{ el.remove(); }, duration+50);
+  }
 }
 
 function renderDuelResultScreen(d){
@@ -17378,53 +17589,99 @@ function renderDuelResultScreen(d){
   } else {
     state = myR.score > oppR.score ? 'win' : 'lose';
   }
-  const isWin = state === 'win';
-  const heroClass = isWin ? 'win' : 'lose';
-  const title = isWin ? "G'ALABA" : (state === 'draw' ? 'DURRANG' : "MAG'LUBIYAT");
-  const subtitle = isWin ? "Duelda g'olib chiqdingiz!" : (state === 'draw' ? 'Duel durrang yakunlandi' : 'Duelda mag\'lub bo\'ldingiz');
-  const captionHtml = isWin
-    ? `<span class="duel-result-caption">Ajoyib natija! ✨</span>`
-    : (state === 'draw'
-        ? `<span class="duel-result-caption">Ikkalangiz teng kuchdasiz</span>`
-        : `<span class="duel-result-caption link" onclick="showView('grammar')">Ko'proq mashq qiling <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>`);
-  const actionLabel = isWin ? 'Ulashish' : "Qayta chaqirish";
-  const actionOnclick = isWin
-    ? `shareDuelResultBrag('${escapeHtml(oppName).replace(/'/g,"\\'")}', ${myR.score}, ${myR.total})`
+  const isVictory = state !== 'lose'; // durrang ham "win" uslubida ko'rsatiladi (neytral bo'lmasin uchun ijobiyroq)
+  const type = isVictory ? 'victory' : 'defeat';
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const title = state === 'win' ? "G'ALABA" : (state === 'draw' ? 'DURRANG' : "MAG'LUBIYAT");
+  const subtitle = state === 'win' ? "Duelda g'olib chiqdingiz!" : (state === 'draw' ? 'Duel durrang yakunlandi' : "Duelda mag'lub bo'ldingiz!");
+  const tipHtml = isVictory
+    ? `<div class="dr-reward">${state==='draw' ? "Ikkalangiz teng kuchdasiz" : "Ajoyib natija!"}</div>`
+    : `<button type="button" class="dr-defeat-tip" onclick="showView('grammar')">Ko'proq mashq qiling!</button>`;
+  const actionLabel = isVictory ? 'Ulashish' : 'Qaytarish';
+  const actionOnclick = isVictory
+    ? `shareDuelResultBrag('${oppName.replace(/'/g,"\\'")}', ${myR.score}, ${myR.total}); drBurstConfetti();`
     : `openDuelSkillSelect()`;
-  const trophySvg = isWin ? DUEL_TROPHY_SVG_WIN : DUEL_TROPHY_SVG_LOSE;
+  const trophySvg = isVictory ? DR_VICTORY_TROPHY : DR_DEFEAT_TROPHY;
 
   const myAvatarInner = myPhoto ? `<img src="${myPhoto}" alt="">` : escapeHtml((myName||'?').trim().charAt(0).toUpperCase());
   const oppAvatarInner = oppPhoto ? `<img src="${oppPhoto}" alt="">` : escapeHtml((oppName||'?').trim().charAt(0).toUpperCase());
 
-  const scoreRow = _duelCmpRow('Ball', `${myR.score}/${myR.total}`, `${oppR.score}/${oppR.total}`, myR.score, oppR.score, false);
-  const timeRow = _duelCmpRow('Vaqt', fmt(myR.timeSec), fmt(oppR.timeSec), myR.timeSec, oppR.timeSec, true);
+  const scorePct = _duelCmpPct(myR.score, oppR.score, false);
+  const timePct = _duelCmpPct(myR.timeSec, oppR.timeSec, true);
 
   wrap.innerHTML = `
-    <div class="duel-result-hero ${heroClass}">
-      <div class="duel-result-hero-inner">
-        <div class="duel-result-title">${title}</div>
-        <div class="duel-result-sub">${subtitle}</div>
-        ${captionHtml}
-        <div><button type="button" class="duel-result-action-btn" onclick="${actionOnclick}">${actionLabel}</button></div>
-      </div>
-      ${trophySvg}
-    </div>
-    <div class="card duel-cmp-card">
-      <div class="duel-cmp-title">Statistika taqqoslash</div>
-      <div class="duel-cmp-avatars">
-        <div class="duel-cmp-side">
-          <div class="duel-cmp-avatar">${myAvatarInner}</div>
-          <span class="duel-cmp-name">${escapeHtml(myName)}</span>
+    <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage">
+      <div class="dr-mesh-wrap" id="drMesh"></div>
+      <div class="dr-content">
+        <div class="dr-top-row">
+          <div class="dr-left-col">
+            <div>
+              <h1 class="dr-title dr-${type==='victory'?'victory':'defeat'} dr-anim-title">${title}</h1>
+              <div class="dr-subtitle dr-anim-subtitle">${subtitle}</div>
+              <div class="dr-anim-tip">${tipHtml}</div>
+            </div>
+            <div class="dr-action-btn-wrap dr-anim-btn">
+              <button type="button" class="dr-action-btn dr-${type==='victory'?'victory':'defeat'}" onclick="${actionOnclick}">${actionLabel}</button>
+            </div>
+          </div>
+          <div class="dr-trophy-col">${trophySvg}</div>
         </div>
-        <div class="duel-cmp-side right">
-          <div class="duel-cmp-avatar">${oppAvatarInner}</div>
-          <span class="duel-cmp-name">${escapeHtml(oppName)}</span>
+        <div class="dr-bottom-section">
+          <h2 class="dr-section-title">Taqqoslash</h2>
+          <div class="dr-players-row">
+            <div class="dr-player">
+              <div class="dr-avatar dr-p1">${myAvatarInner}</div>
+              <span class="dr-player-name">${escapeHtml(myName)}</span>
+            </div>
+            <div class="dr-player dr-right">
+              <div class="dr-avatar dr-p2">${oppAvatarInner}</div>
+              <span class="dr-player-name">${escapeHtml(oppName)}</span>
+            </div>
+          </div>
+          <div class="dr-metric">
+            <div class="dr-metric-numbers">
+              <span class="dr-num-p1">${myR.score}/${myR.total}</span>
+              <span class="dr-metric-label">Ball</span>
+              <span class="dr-num-p2">${oppR.score}/${oppR.total}</span>
+            </div>
+            <div class="dr-bars">
+              <div class="dr-bar-track dr-left"><div class="dr-bar-fill dr-green" data-w="${scorePct.mine}"></div></div>
+              <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${scorePct.opp}"></div></div>
+            </div>
+          </div>
+          <div class="dr-metric">
+            <div class="dr-metric-numbers">
+              <span class="dr-num-p1">${fmt(myR.timeSec)}</span>
+              <span class="dr-metric-label">Vaqt</span>
+              <span class="dr-num-p2">${fmt(oppR.timeSec)}</span>
+            </div>
+            <div class="dr-bars">
+              <div class="dr-bar-track dr-left"><div class="dr-bar-fill dr-green" data-w="${timePct.mine}"></div></div>
+              <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${timePct.opp}"></div></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
         </div>
       </div>
-      ${scoreRow}
-      ${timeRow}
-      <button type="button" class="btn btn-outline" style="width:100%;margin-top:22px;" onclick="showView('duelhistory')">Duellarga qaytish</button>
     </div>`;
+
+  const pageEl = document.getElementById('drPage');
+  const meshEl = document.getElementById('drMesh');
+  if(meshEl && pageEl){
+    const w = Math.max(pageEl.clientWidth || 0, 320);
+    meshEl.innerHTML = drBuildMesh(type, isDark, w);
+  }
+  drPlayBars(wrap);
+}
+
+/* Ikki qiymatni diverging (markazdan ikki tomonga) progress-bar sifatida
+   solishtirish uchun foizlarni hisoblaydi. invert=true bo'lsa (masalan
+   vaqt — kamroq yaxshi), kichikroq qiymat kattaroq foiz oladi. */
+function _duelCmpPct(myVal, oppVal, invert){
+  const a = invert ? 1/Math.max(myVal,0.001) : Math.max(myVal,0);
+  const b = invert ? 1/Math.max(oppVal,0.001) : Math.max(oppVal,0);
+  const maxV = Math.max(a,b) || 1;
+  return { mine:(a/maxV)*100, opp:(b/maxV)*100 };
 }
 
 /* Havola orqali duelga qo'shilish: Telegram start_param 'duel_<token>' bo'lsa,
