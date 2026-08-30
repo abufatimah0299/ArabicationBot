@@ -1677,6 +1677,9 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   width:12px; height:12px;
   stroke-width:2.2;
 }
+/* Duel tarixi: yutuq/mag'lubiyat rangi */
+.history-item.duel-won{ background:var(--green-bg); border-color:var(--green); }
+.history-item.duel-lost{ background:var(--red-bg); border-color:var(--red); }
 @media (max-width:480px){
   .history-item{ padding:11px 12px; gap:9px; }
   .history-icon{ width:34px; height:34px; border-radius:10px; }
@@ -1839,7 +1842,8 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .duel-skill-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .duel-skill-card{
   position:relative; overflow:hidden; border-radius:20px; padding:16px 14px;
-  display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:8px;
+  display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; gap:8px;
+  text-align:right;
   cursor:pointer; color:#fff; min-height:94px;
   transition:transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
 }
@@ -5306,6 +5310,27 @@ html[data-theme="light"] .pin-dot.filled{
             </div>
           </button>
         </div>
+        <div class="card settings-list">
+          <div class="settings-item" onclick="showView('duelhistory')">
+            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="si-text"><div class="t">Tarix</div><div class="s">O'tgan va joriy duellaringiz</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DUEL TARIXI ============ -->
+      <div class="view" id="view-duelhistory">
+        <div class="back-row" onclick="showView('duel')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Duellar</span>
+        </div>
+        <div class="view-title">Duel tarixi</div>
         <div style="display:flex;flex-direction:column;gap:10px;" id="duelList"></div>
         <div class="card placeholder-card" id="duelEmpty" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
@@ -5316,7 +5341,7 @@ html[data-theme="light"] .pin-dot.filled{
 
       <!-- ============ DUEL NATIJASI ============ -->
       <div class="view" id="view-duelresult">
-        <div class="back-row" onclick="showView('duel')">
+        <div class="back-row" onclick="showView('duelhistory')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
           <span>Duellar</span>
         </div>
@@ -5339,7 +5364,6 @@ html[data-theme="light"] .pin-dot.filled{
             </div>
             <div class="duel-skill-mix-main">
               <div class="duel-skill-mix-name">Aralash savollar</div>
-              <div class="duel-skill-mix-desc">Nahv 5 · Sarf 3 · Imlo 1 · Xato 1</div>
             </div>
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
@@ -8161,7 +8185,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','dostlarim'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelhistory','dostlarim'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -8360,7 +8384,7 @@ function showView(name, push=true){
   if(name==='admin') renderAdminPanel();
   if(name==='hamjamiyat') renderCommunityView();
   if(name==='grammar') switchGrammarTab('practice');
-  if(name==='duel') renderDuelHub();
+  if(name==='duelhistory') renderDuelHub();
   if(name==='dostlarim') renderFriendsHub();
   if(name==='skillintro') switchSkillTab('practice');
   if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
@@ -16486,8 +16510,8 @@ function _duelFromRow(row){
     count: row.count,
     category: row.category,
     questions: row.questions || [],
-    challenger: { id: String(row.challenger_id), name: row.challenger_name },
-    opponent: (row.opponent_id != null) ? { id: String(row.opponent_id), name: row.opponent_name } : null,
+    challenger: { id: String(row.challenger_id), name: row.challenger_name, photoUrl: row.challenger_photo_url || null },
+    opponent: (row.opponent_id != null) ? { id: String(row.opponent_id), name: row.opponent_name, photoUrl: row.opponent_photo_url || null } : null,
     challengerResult: row.challenger_result || null,
     opponentResult: row.opponent_result || null,
     status: row.status,
@@ -16533,7 +16557,8 @@ async function apiCreateDuel(skillId, count, category){
       p_skill_id: skillId,
       p_count: count,
       p_category: category || 'aralash',
-      p_questions: questions
+      p_questions: questions,
+      p_challenger_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
     }));
     return _duelFromRow(row);
   }catch(e){
@@ -16556,7 +16581,8 @@ async function apiJoinDuel(token){
     const row = _duelUnwrap(await duelRpc('join_duel', {
       p_token: token,
       p_opponent_id: _duelMyRawId(),
-      p_opponent_name: _duelMyName()
+      p_opponent_name: _duelMyName(),
+      p_opponent_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
     }));
     return _duelFromRow(row);
   }catch(e){
@@ -16672,22 +16698,27 @@ async function renderDuelHub(){
 function renderDuelCard(d, me){
   const iAmChallenger = d.challenger.id === me;
   const oppName = d.opponent ? (iAmChallenger ? d.opponent.name : d.challenger.name) : null;
+  const oppPhoto = d.opponent ? (iAmChallenger ? d.opponent.photoUrl : d.challenger.photoUrl) : null;
   const myResult = iAmChallenger ? d.challengerResult : d.opponentResult;
   const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
   const skillMeta = SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
   const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
   const catLabel = catMeta ? catMeta.name : 'Aralash savollar';
 
-  let statusHtml, actionHtml;
+  let statusHtml, actionHtml, cardStateClass = '';
   if(!d.opponent){
     statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ Raqib kutilmoqda</span>`;
     actionHtml = `<button type="button" class="history-btn-analyze" onclick="reopenDuelInvite('${d.id}')"><span>Ulashish</span></button>`;
   } else if(d.status === 'completed'){
     let verdict;
     if(myResult.score === oppResult.score){
-      verdict = myResult.timeSec === oppResult.timeSec ? '🤝 Durrang' : (myResult.timeSec < oppResult.timeSec ? '🏆 Siz g\'olib' : `🏆 ${escapeHtml(oppName)} g'olib`);
+      if(myResult.timeSec === oppResult.timeSec){ verdict = "🤝 Durrang"; }
+      else if(myResult.timeSec < oppResult.timeSec){ verdict = "🏆 Siz g'olib"; cardStateClass = 'duel-won'; }
+      else { verdict = `🏆 ${escapeHtml(oppName)} g'olib`; cardStateClass = 'duel-lost'; }
+    } else if(myResult.score > oppResult.score){
+      verdict = "🏆 Siz g'olib"; cardStateClass = 'duel-won';
     } else {
-      verdict = myResult.score > oppResult.score ? '🏆 Siz g\'olib' : `🏆 ${escapeHtml(oppName)} g'olib`;
+      verdict = `🏆 ${escapeHtml(oppName)} g'olib`; cardStateClass = 'duel-lost';
     }
     statusHtml = `<span style="font-weight:700;font-size:12.5px;">${verdict}</span>`;
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b><div class="p">${escapeHtml(oppName)}: ${oppResult.score}/${oppResult.total}</div></div>`;
@@ -16699,9 +16730,17 @@ function renderDuelCard(d, me){
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b></div>`;
   }
 
+  // Raqib qo'shilganda uning profil rasmi (yoki bosh harfi) ko'rsatiladi;
+  // hali raqib yo'q bo'lsa — qilich ikonkasi qoladi.
+  const avatarHtml = d.opponent
+    ? (oppPhoto
+        ? `<div class="history-icon" style="padding:0;overflow:hidden;"><img src="${oppPhoto}" alt="" style="width:100%;height:100%;object-fit:cover;"></div>`
+        : `<div class="avatar" style="width:38px;height:38px;font-size:14px;">${escapeHtml((oppName||'?').trim().charAt(0).toUpperCase())}</div>`)
+    : `<div class="history-icon" style="background:${skillMeta.bg};color:${skillMeta.color};">⚔️</div>`;
+
   return `
-    <div class="card history-item">
-      <div class="history-icon" style="background:${skillMeta.bg};color:${skillMeta.color};">⚔️</div>
+    <div class="card history-item ${cardStateClass}">
+      ${avatarHtml}
       <div class="history-main">
         <div class="t">${d.opponent ? escapeHtml(oppName) : "Do'stni kuting"}</div>
         <div class="s" style="margin-top:2px;color:var(--text-faint);font-weight:600;font-size:11px;">${escapeHtml(catLabel)}</div>
@@ -16936,7 +16975,7 @@ function renderDuelResultScreen(d){
         <div style="font-size:18px;color:var(--text-faint);">vs</div>
         <div><div style="font-size:12px;color:var(--text-faint);font-weight:600;">${escapeHtml(oppName || 'Raqib')}</div><div style="font-size:24px;font-weight:700;">${oppR ? oppR.score+'/'+oppR.total : '—'}</div><div style="font-size:11.5px;color:var(--text-faint);">${oppR ? fmt(oppR.timeSec) : ''}</div></div>
       </div>
-      <button type="button" class="btn btn-primary" style="width:100%;margin-top:22px;" onclick="showView('duel')">Duellarga qaytish</button>
+      <button type="button" class="btn btn-primary" style="width:100%;margin-top:22px;" onclick="showView('duelhistory')">Duellarga qaytish</button>
     </div>`;
   // Raqib hali javob bermagan bo'lsa — natijasini kutib, kelganda ekranni
   // avtomatik yangilaymiz (foydalanuvchi qo'lda qayta ochmasa ham).
@@ -16964,11 +17003,11 @@ async function checkPendingDuelInvite(){
   const d = await apiGetDuelByToken(token);
   if(!d){ toast("⚠️ Bu duel havolasi topilmadi yoki eskirgan"); return; }
   const me = _duelMyId();
-  if(d.challenger.id === me){ showView('duel'); return; } // o'zi yuborgan havola
+  if(d.challenger.id === me){ showView('duelhistory'); return; } // o'zi yuborgan havola
   if(d.opponent){
     if(d.opponent.id === me){
       // Bu foydalanuvchi allaqachon qo'shilgan — davom ettiramiz
-      if(!d.opponentResult){ startDuelQuiz(d.id, d); } else { showView('duel'); }
+      if(!d.opponentResult){ startDuelQuiz(d.id, d); } else { showView('duelhistory'); }
     } else {
       toast("⚠️ Bu duelga allaqachon boshqa foydalanuvchi qo'shilgan");
     }
@@ -16993,7 +17032,7 @@ async function acceptDuelInvite(token){
   if(!d){ return; } // xatolik bo'lsa apiJoinDuel o'zi toast chiqargan
   if(d.opponent && d.opponent.id !== _duelMyId()){
     toast("⚠️ Bu duelga allaqachon boshqa foydalanuvchi qo'shilgan");
-    showView('duel');
+    showView('duelhistory');
     return;
   }
   startDuelQuiz(d.id, d);
