@@ -941,6 +941,44 @@ html[data-theme="dark"] .istima-wf-bar.active{
 .legend .row{ display:flex; align-items:center; gap:8px;}
 .legend .sw{ width:12px; height:12px; border-radius:4px; }
 
+/* ---------- Duel jarayoni: VS boshlig'i (ikkala duelchi avatari + vaqt paneli) ---------- */
+.duel-vs-head{ display:flex; align-items:center; gap:0; padding:14px 18px 2px; }
+.duel-vs-side{ display:flex; align-items:center; gap:0; flex:1; min-width:0; }
+.duel-vs-avatar{
+  position:relative; width:50px; height:50px; border-radius:50%; flex-shrink:0; overflow:hidden;
+  background:var(--card-alt); border:2.5px solid var(--border); z-index:2;
+  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--text-dim);
+  transition:border-color .35s var(--ease);
+}
+.duel-vs-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.duel-vs-avatar.me{ border-color:var(--quiz-accent, var(--indigo-700)); }
+.duel-vs-avatar.answered{ border-color:var(--green); box-shadow:0 0 0 3px var(--green-bg); }
+.duel-vs-track{
+  position:relative; flex:1; height:11px; min-width:16px; margin:0 -7px; border-radius:99px; overflow:hidden;
+  background-color:var(--card-alt);
+  background-image:repeating-linear-gradient(135deg, var(--border) 0 4px, transparent 4px 9px);
+}
+.duel-vs-fill{ position:absolute; top:0; bottom:0; border-radius:99px; width:100%; background:var(--quiz-accent, var(--indigo-700)); transition:width 1s linear; }
+.duel-vs-fill.anchor-left{ left:0; }
+.duel-vs-fill.anchor-right{ right:0; }
+.duel-vs-fill.opp-fill{ background:var(--muhavara); }
+.duel-vs-fill.snap{ transition:width .45s cubic-bezier(.22,.9,.32,1); }
+.duel-vs-mid{ flex-shrink:0; padding:0 10px; font-size:12.5px; font-weight:800; color:var(--text-faint); letter-spacing:.5px; z-index:2; }
+.duel-vs-names{ display:flex; justify-content:space-between; padding:5px 18px 0; font-size:11px; font-weight:600; color:var(--text-faint); }
+.duel-vs-names span{ max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.duel-vs-names span:last-child{ text-align:right; }
+@media (max-width:480px){
+  .duel-vs-head{ padding:10px 12px 2px; }
+  .duel-vs-avatar{ width:42px; height:42px; font-size:15px; }
+  .duel-vs-names{ padding:4px 12px 0; }
+}
+
+/* Duel paytida test kartasi qat'iy (frame) qoladi — swipe/scroll gest ustida
+   turib qolgan holatda ham vertikal/gorizontal siljishga sabab bo'lmaydi. */
+.quiz-wrap.duel-locked{ touch-action:pan-y; overscroll-behavior:contain; }
+.quiz-wrap.duel-locked .quiz-body{ touch-action:pan-y; overscroll-behavior:contain; }
+.quiz-wrap.duel-locked .option{ touch-action:manipulation; }
+
 /* Soft red finish test button */
 .quiz-finish-btn-wrap {
   display: flex;
@@ -1841,10 +1879,9 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 
 .duel-skill-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .duel-skill-card{
-  position:relative; overflow:hidden; border-radius:20px; padding:16px 14px;
-  display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; gap:8px;
-  text-align:right;
-  cursor:pointer; color:#fff; min-height:94px;
+  position:relative; overflow:hidden; border-radius:18px; padding:14px 16px;
+  display:flex; flex-direction:row; align-items:center; justify-content:flex-end; gap:12px;
+  cursor:pointer; color:#fff;
   transition:transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
 }
 .duel-skill-card:hover{ transform:translateY(-3px); filter:brightness(1.04); }
@@ -1853,13 +1890,18 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   content:""; position:absolute; top:-40px; inset-inline-end:-25px; width:140px; height:140px; border-radius:50%;
   background:radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%); pointer-events:none;
 }
-.duel-skill-icon{
-  width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-  position:relative; z-index:1; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.3);
+.duel-skill-text{
+  display:flex; flex-direction:column; align-items:flex-end; text-align:right;
+  position:relative; z-index:1; min-width:0;
 }
-.duel-skill-icon svg{ width:18px; height:18px; }
-.duel-skill-name{ font-family:var(--font-ar-bold); font-size:17px; font-weight:600; position:relative; z-index:1; }
-.duel-skill-desc{ font-size:11px; color:rgba(255,255,255,0.82); font-weight:600; position:relative; z-index:1; }
+.duel-skill-icon{
+  width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  position:relative; z-index:1; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.3);
+  flex-shrink:0;
+}
+.duel-skill-icon svg{ width:17px; height:17px; }
+.duel-skill-name{ font-family:var(--font-ar-bold); font-size:16px; font-weight:600; position:relative; z-index:1; line-height:1.25; }
+.duel-skill-desc{ font-size:11px; color:rgba(255,255,255,0.82); font-weight:600; position:relative; z-index:1; margin-top:2px; }
 
 /* ---------- Onboarding Modal ---------- */
 .onboarding-overlay{
@@ -5173,6 +5215,20 @@ html[data-theme="light"] .pin-dot.filled{
                 </div>
                 <span class="timer" id="quizTimer"><span class="timer-icon">⏱</span><span class="timer-digits">18:42</span></span>
               </div>
+            </div>
+            <div class="duel-vs-head" id="duelVsHead" style="display:none;">
+              <div class="duel-vs-side">
+                <div class="duel-vs-avatar me" id="duelVsMyAvatar">?</div>
+                <div class="duel-vs-track"><div class="duel-vs-fill anchor-left" id="duelVsMyFill"></div></div>
+              </div>
+              <div class="duel-vs-mid">VS</div>
+              <div class="duel-vs-side">
+                <div class="duel-vs-track"><div class="duel-vs-fill anchor-right opp-fill" id="duelVsOppFill"></div></div>
+                <div class="duel-vs-avatar" id="duelVsOppAvatar">?</div>
+              </div>
+            </div>
+            <div class="duel-vs-names" id="duelVsNames" style="display:none;">
+              <span id="duelVsMyName">Siz</span><span id="duelVsOppName">Raqib</span>
             </div>
             <div style="height:1px;background:var(--border);"></div>
             <div class="quiz-body" id="quizBody"></div>
@@ -16137,6 +16193,7 @@ function startQuestionTimer(){
         el.style.borderColor = '';
       }
     }
+    if(currentQuiz && currentQuiz.isDuel) updateDuelVsTimer();
   }
 
   // Agar bu savolning vaqti allaqachon tugagan bo'lsa
@@ -16463,6 +16520,7 @@ function retryWhenDataReady(retryFn){
    UI/render kodi (renderDuelHub, renderDuelCard, startDuelQuiz,
    renderDuelResultScreen) o'zgarishsiz qoladi. */
 const DUEL_QUESTION_COUNT = 10;
+const DUEL_QUESTION_SECONDS = 30; /* Duelda har bir savol uchun vaqt */
 
 /* ---------- Duel — Supabase RPC orqali haqiqiy backend ----------
    Barcha apiXxx() funksiyalari endi localStorage o'rniga
@@ -16786,9 +16844,11 @@ function renderDuelSkillGrid(){
   if(!wrap) return;
   wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => `
     <div class="duel-skill-card gcat-${cat.id}" onclick="chooseDuelSkill('${cat.id}')">
+      <div class="duel-skill-text">
+        <div class="duel-skill-name">${cat.ar}</div>
+        <div class="duel-skill-desc">${cat.name}</div>
+      </div>
       <div class="duel-skill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg></div>
-      <div class="duel-skill-name">${cat.ar}</div>
-      <div class="duel-skill-desc">${cat.name}</div>
     </div>
   `).join('');
 }
@@ -16900,20 +16960,89 @@ async function reopenDuelInvite(duelId){
   openDuelInviteScreen(d);
 }
 
+/* ---------- Duel: VS boshlig'i (avatar + vaqt paneli) render/yangilash ---------- */
+function renderDuelVsHead(){
+  const wrap = document.getElementById('duelVsHead');
+  const namesWrap = document.getElementById('duelVsNames');
+  if(!wrap) return;
+  if(!currentQuiz || !currentQuiz.isDuel){
+    wrap.style.display = 'none';
+    if(namesWrap) namesWrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'flex';
+  if(namesWrap) namesWrap.style.display = 'flex';
+
+  const myAv = document.getElementById('duelVsMyAvatar');
+  const oppAv = document.getElementById('duelVsOppAvatar');
+  const myNameEl = document.getElementById('duelVsMyName');
+  const oppNameEl = document.getElementById('duelVsOppName');
+  const myName = _duelMyName();
+  const myPhoto = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
+  if(myAv){
+    myAv.innerHTML = myPhoto ? `<img src="${myPhoto}" alt="">` : escapeHtml((myName||'?').trim().charAt(0).toUpperCase());
+  }
+  if(myNameEl) myNameEl.textContent = myName || 'Siz';
+  const opp = currentQuiz.duelOpponent || {};
+  const oppName = opp.name || 'Raqib';
+  if(oppAv){
+    oppAv.innerHTML = opp.photoUrl ? `<img src="${opp.photoUrl}" alt="">` : escapeHtml((oppName||'?').trim().charAt(0).toUpperCase());
+  }
+  if(oppNameEl) oppNameEl.textContent = oppName;
+  updateDuelVsTimer();
+}
+function updateDuelVsTimer(){
+  if(!currentQuiz || !currentQuiz.isDuel || !currentQuiz.questions) return;
+  const q = currentQuiz.questions[currentQuiz.idx];
+  if(!q) return;
+  const total = DUEL_QUESTION_SECONDS;
+  const remaining = Math.max(0, q.timeLeft === undefined ? total : q.timeLeft);
+  const pct = Math.max(0, Math.min(100, (remaining/total)*100));
+  const fill = document.getElementById('duelVsMyFill');
+  const answered = q.picked !== null && q.picked !== undefined;
+  if(fill){
+    fill.classList.toggle('snap', answered);
+    fill.style.width = (answered ? 100 : pct) + '%';
+  }
+  const myAv = document.getElementById('duelVsMyAvatar');
+  if(myAv) myAv.classList.toggle('answered', answered);
+}
+/* Raqibning shu savolga javob berish holati — duel hozircha asinxron (natijalar
+   faqat oxirida solishtiriladi), shu sabab jonli (real-time) sinxronizatsiya yo'q.
+   Kelajakda backendda real-time kanal (masalan Supabase Realtime) ulanganda,
+   raqib javob bergan zahoti shu funksiyani chaqirish orqali uning panelini
+   silliq animatsiya bilan to'ldirish mumkin bo'ladi. */
+function duelMarkOpponentAnsweredEarly(){
+  const fill = document.getElementById('duelVsOppFill');
+  const oppAv = document.getElementById('duelVsOppAvatar');
+  if(fill){ fill.classList.add('snap'); fill.style.width = '100%'; }
+  if(oppAv) oppAv.classList.add('answered');
+}
+
 async function startDuelQuiz(duelId, dOverride){
   const d = dOverride || (await apiGetMyDuels()).find(x=>x.id===duelId);
   if(!d){ toast('Duel topilmadi'); return; }
   if(!d.questions || !d.questions.length){ toast('Duel savollari topilmadi'); return; }
   const skillMeta = SKILLS.find(s=>s.id===d.skillId) || SKILLS.find(s=>s.id==='grammatika');
+  const meId = _duelMyId();
+  const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
+  const oppInfo = iAmChallenger ? d.opponent : d.challenger;
   currentQuiz = {
     skillId: d.skillId, topicId: null, type: 'mcq', passage: null,
-    questions: d.questions.map(q=>({...q, picked:null, timeLeft:60, expired:false})),
+    questions: d.questions.map(q=>({...q, picked:null, timeLeft:DUEL_QUESTION_SECONDS, expired:false})),
     color: skillMeta.color, bg: skillMeta.bg, label: `⚔️ Duel — ${skillMeta.name}`,
     idx:0, startedAt: Date.now(), duration: 20*60,
     isDuel: true, duelId: d.id,
+    duelOpponent: oppInfo ? { name: oppInfo.name, photoUrl: oppInfo.photoUrl || null } : null,
   };
   const qTag = document.getElementById('quizTag');
   if(qTag){ qTag.textContent = currentQuiz.label; qTag.style.background = skillMeta.bg; qTag.style.color = skillMeta.color; }
+  // Duel paytida test kartasi qat'iy (frame) turishi uchun, va Telegram'ning
+  // vertikal swipe orqali yopilishi ehtimoli bilan to'qnashmasligi uchun.
+  try{
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if(tg && typeof tg.disableVerticalSwipes === 'function') tg.disableVerticalSwipes();
+  }catch(e){}
   buildQGrid();
   renderQuestion();
   showView('quiz');
@@ -17395,7 +17524,7 @@ function buildQGrid(){
   const isIstimaBeforeJuz2 = (currentQuiz.skillId === 'istima' || currentQuiz.type === 'listening-juz') && (
     !currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer] || currentQuiz.juz[currentQuiz.juzPointer].partNum < 2
   );
-  const isExcluded = currentQuiz.isMarathon || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active);
+  const isExcluded = currentQuiz.isMarathon || currentQuiz.isDuel || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active);
   if(isExcluded){
     if(sideEl) sideEl.style.display = 'none';
     return;
@@ -17487,9 +17616,11 @@ function renderQuestion(){
     const isIstimaBeforeJuz2 = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.type === 'listening-juz') && (
       !currentQuiz.juz || !currentQuiz.juz[currentQuiz.juzPointer] || currentQuiz.juz[currentQuiz.juzPointer].partNum < 2
     );
-    const hideSide = !currentQuiz || currentQuiz.isMarathon || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active) || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating';
+    const hideSide = !currentQuiz || currentQuiz.isMarathon || currentQuiz.isDuel || isSpeaking || isWriting || isIstimaBeforeJuz2 || (FULL_EXAM && FULL_EXAM.active) || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating';
     sideCard.style.display = hideSide ? 'none' : '';
   }
+  const quizWrapForLock = document.querySelector('#view-quiz .quiz-wrap');
+  if(quizWrapForLock) quizWrapForLock.classList.toggle('duel-locked', !!(currentQuiz && currentQuiz.isDuel));
   const fontCtrl = document.getElementById('examFontCtrl');
   if(fontCtrl){
     const hideZoom = currentQuiz && (currentQuiz.skillId === 'istima' || currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking' || currentQuiz.type === 'listening' || currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing' || currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating');
@@ -17499,13 +17630,14 @@ function renderQuestion(){
   if(topTimerEl){
     const isSpeaking = currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking');
     const isWritingDone = currentQuiz && (currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'writing') && (currentQuiz.phase === 'done' || currentQuiz.phase === 'evaluating');
-    if(isSpeaking || isWritingDone){
+    if(isSpeaking || isWritingDone || (currentQuiz && currentQuiz.isDuel)){
       topTimerEl.innerHTML = '';
       topTimerEl.style.display = 'none';
     } else {
       topTimerEl.style.display = '';
     }
   }
+  renderDuelVsHead();
   const body = document.getElementById('quizBody');
   if(currentQuiz.type==='writing'){
     clearQuestionTimer();
@@ -17726,6 +17858,7 @@ function pickOption(oi){
     el.classList.toggle('selected', idx === oi);
   });
   updateQGrid();
+  if(currentQuiz.isDuel) updateDuelVsTimer();
 }
 function nextQ(){
   clearQuestionTimer();
