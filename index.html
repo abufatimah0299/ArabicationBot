@@ -1834,6 +1834,14 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .duel-invite-status .dots span:nth-child(2){ animation-delay:.2s; }
 .duel-invite-status .dots span:nth-child(3){ animation-delay:.4s; }
 @keyframes duelDots{ 0%,80%,100%{opacity:0;} 40%{opacity:1;} }
+
+/* ---------- Duel: savol darajasidagi kutish paneli (gibrid jonli sinxron) ---------- */
+.duel-wait-panel{ margin-top:22px; padding:16px; border-radius:14px; background:var(--indigo-100); text-align:center; }
+.duel-wait-status{ font-size:14.5px; font-weight:700; color:var(--indigo-700); display:flex; align-items:center; justify-content:center; gap:2px; }
+.duel-wait-status .dots span{ animation:duelDots 1.4s infinite; opacity:0; }
+.duel-wait-status .dots span:nth-child(1){ animation-delay:0s; }
+.duel-wait-status .dots span:nth-child(2){ animation-delay:.2s; }
+.duel-wait-status .dots span:nth-child(3){ animation-delay:.4s; }
 .duel-invite-sub{ font-size:13.5px; color:var(--text-dim); margin-top:10px; max-width:280px; line-height:1.5; }
 .duel-invite-actions{ width:100%; max-width:380px; display:flex; flex-direction:column; gap:6px; margin:26px auto 0; flex-shrink:0; }
 .duel-invite-share-btn{
@@ -8580,6 +8588,7 @@ function stopQuizMediaSilently(){
 function goBack(){
   if(FULL_EXAM && FULL_EXAM.active){ toast("To'liq imtihonda orqaga qaytish mumkin emas", 2000); return; }
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  if(typeof _duelStopAnswerPolling === 'function') _duelStopAnswerPolling();
   stopQuizMediaSilently();
   viewHistory.pop();
   while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'quiz' || viewHistory[viewHistory.length - 1] === 'results')){
@@ -8613,6 +8622,7 @@ function confirmExitQuiz(){
 }
 function exitQuizAbandoned(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  if(typeof _duelStopAnswerPolling === 'function') _duelStopAnswerPolling();
   stopQuizMediaSilently();
   handleQuizBack();
   currentQuiz = null;
@@ -16230,6 +16240,12 @@ function startQuestionTimer(){
       paint();
       disableQuestionOptions();
       updateQGrid();
+      if(currentQuiz && currentQuiz.isDuel){
+        _duelStopAnswerPolling();
+        if(q.picked === null || q.picked === undefined){
+          apiSubmitDuelAnswer(currentQuiz.duelId, currentQuiz.idx, null);
+        }
+      }
       toast("⏰ Vaqt tugadi! Keyingi savolga o'tilmoqda...", 1200);
       setTimeout(()=>{
         if(!currentQuiz || !currentQuiz.questions) return;
@@ -16676,6 +16692,38 @@ async function apiSubmitDuelResult(duelId, res){
   }
 }
 
+/* ---------- Duel: har bir savol bo'yicha "jonli" holat (gibrid sinxron) ----------
+   Har bir tomon javob berganda submit_duel_answer chaqiriladi (backendga yoziladi).
+   Kutayotgan tomon esa get_duel_opponent_answer orqali pollaydi (1.5s'da bir marta)
+   va raqib javob berishi bilan darhol keyingi savolga o'tadi. Agar raqib umuman
+   javob bermasa — 30 soniyalik umumiy vaqt tugaganda avtomatik o'tiladi (mavjud
+   startQuestionTimer/expired mexanizmi), yoki foydalanuvchi "Yolg'iz davom etish"
+   tugmasi bilan kutmasdan o'tishi mumkin (bu faqat client-side qaror, backendga
+   ta'sir qilmaydi). Supabase RPC: submit_duel_answer / get_duel_opponent_answer
+   (duel_backend.sql ga qo'shiladi). */
+async function apiSubmitDuelAnswer(duelId, questionIndex, picked){
+  if(_duelMyRawId() == null) return;
+  try{
+    await duelRpc('submit_duel_answer', {
+      p_duel_id: duelId,
+      p_user_id: _duelMyRawId(),
+      p_question_index: questionIndex,
+      p_picked: (picked === null || picked === undefined) ? null : picked
+    });
+  }catch(e){ console.error('[apiSubmitDuelAnswer]', e); }
+}
+async function apiGetDuelOpponentAnswer(duelId, questionIndex){
+  if(_duelMyRawId() == null) return null;
+  try{
+    const row = _duelUnwrap(await duelRpc('get_duel_opponent_answer', {
+      p_duel_id: duelId,
+      p_user_id: _duelMyRawId(),
+      p_question_index: questionIndex
+    }));
+    return row || null;
+  }catch(e){ console.error('[apiGetDuelOpponentAnswer]', e); return null; }
+}
+
 /* Do'stlar ro'yxati alohida jadvalsiz — siz duel o'ynagan (yoki hali javob
    kutayotgan) raqiblardan get_my_duels natijasi asosida hisoblanadi. */
 async function apiGetFriends(){
@@ -17007,16 +17055,78 @@ function updateDuelVsTimer(){
   const myAv = document.getElementById('duelVsMyAvatar');
   if(myAv) myAv.classList.toggle('answered', answered);
 }
-/* Raqibning shu savolga javob berish holati — duel hozircha asinxron (natijalar
-   faqat oxirida solishtiriladi), shu sabab jonli (real-time) sinxronizatsiya yo'q.
-   Kelajakda backendda real-time kanal (masalan Supabase Realtime) ulanganda,
-   raqib javob bergan zahoti shu funksiyani chaqirish orqali uning panelini
-   silliq animatsiya bilan to'ldirish mumkin bo'ladi. */
+/* Raqibning shu savolga javob berish holati — get_duel_opponent_answer pollingi
+   orqali raqib javob bergani aniqlanganda shu funksiya chaqiriladi va uning
+   paneli silliq animatsiya bilan to'ldiriladi (pastdagi "gibrid jonli sinxron"
+   blokiga qarang). */
 function duelMarkOpponentAnsweredEarly(){
   const fill = document.getElementById('duelVsOppFill');
   const oppAv = document.getElementById('duelVsOppAvatar');
   if(fill){ fill.classList.add('snap'); fill.style.width = '100%'; }
   if(oppAv) oppAv.classList.add('answered');
+}
+
+/* ==================== Duel: gibrid jonli sinxron (savol darajasida) ====================
+   Foydalanuvchi javob tanlaganda:
+   1) submit_duel_answer backendga yuboriladi;
+   2) "Keyingi" tugmasi o'rniga kutish paneli ko'rsatiladi (renderDuelWaitPanel);
+   3) har 1.5s'da get_duel_opponent_answer so'raladi — raqib javob bergani
+      aniqlansa, darhol keyingi savolga o'tiladi;
+   4) agar 30 soniyalik umumiy vaqt tugasa — mavjud startQuestionTimer mexanizmi
+      avtomatik nextQ() chaqiradi (o'zgarishsiz);
+   5) foydalanuvchi xohlasa, kutish boshlanganidan DUEL_CONTINUE_ALONE_DELAY_MS
+      o'tgach chiqadigan "Yolg'iz davom etish" tugmasi bilan kutmasdan o'tishi
+      mumkin — bu faqat mahalliy (client-side) qaror, raqibning holatiga
+      ta'sir qilmaydi. */
+const DUEL_CONTINUE_ALONE_DELAY_MS = 4000;
+let duelAnswerPollTimer = null;
+let duelContinueAloneTimer = null;
+
+function _duelStopAnswerPolling(){
+  if(duelAnswerPollTimer){ clearInterval(duelAnswerPollTimer); duelAnswerPollTimer = null; }
+  if(duelContinueAloneTimer){ clearTimeout(duelContinueAloneTimer); duelContinueAloneTimer = null; }
+}
+
+function duelContinueAlone(){
+  _duelStopAnswerPolling();
+  nextQ();
+}
+
+/* Foydalanuvchi javob berganda (yoki vaqt tugab, javobsiz o'tilganda) chaqiriladi. */
+function handleDuelAnswerSubmitted(q, qIdx){
+  if(!currentQuiz || !currentQuiz.isDuel) return;
+  const duelId = currentQuiz.duelId;
+  apiSubmitDuelAnswer(duelId, qIdx, (q.picked === undefined ? null : q.picked));
+  renderDuelWaitPanel();
+
+  _duelStopAnswerPolling();
+  duelAnswerPollTimer = setInterval(async ()=>{
+    if(!currentQuiz || !currentQuiz.isDuel || currentQuiz.idx !== qIdx){ _duelStopAnswerPolling(); return; }
+    const opp = await apiGetDuelOpponentAnswer(duelId, qIdx);
+    if(opp){
+      _duelStopAnswerPolling();
+      duelMarkOpponentAnsweredEarly();
+      setTimeout(()=>{
+        if(currentQuiz && currentQuiz.isDuel && currentQuiz.idx === qIdx) nextQ();
+      }, 450);
+    }
+  }, 1500);
+
+  duelContinueAloneTimer = setTimeout(()=>{
+    const btn = document.getElementById('duelContinueAloneBtn');
+    if(btn) btn.style.display = '';
+  }, DUEL_CONTINUE_ALONE_DELAY_MS);
+}
+
+/* "Keyingi" tugmasi o'rniga: javob berilgach ko'rsatiladigan kutish paneli. */
+function renderDuelWaitPanel(){
+  const wrap = document.getElementById('duelNavArea');
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="duel-wait-panel">
+      <div class="duel-wait-status">⏳ Raqib javobini kutmoqda<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+      <button type="button" id="duelContinueAloneBtn" class="btn btn-outline" style="display:none;width:100%;margin-top:10px;" onclick="duelContinueAlone()">Yolg'iz davom etish →</button>
+    </div>`;
 }
 
 async function startDuelQuiz(duelId, dOverride){
@@ -17050,6 +17160,7 @@ async function startDuelQuiz(duelId, dOverride){
 
 async function handleDuelFinish(){
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
+  _duelStopAnswerPolling();
   const total = currentQuiz.questions.length;
   const correct = currentQuiz.questions.filter(q=>q.picked===q.a).length;
   const elapsedSeconds = Math.round((Date.now() - (currentQuiz.startedAt || Date.now())) / 1000);
@@ -17769,8 +17880,9 @@ function renderQuestion(){
       </div>`;
     }).join('') + `</div>`;
   } else {
+    const duelAnswered = currentQuiz.isDuel && q.picked !== null && q.picked !== undefined;
     html += `<div class="options">` + q.opts.map((opt,oi)=>`
-      <div class="option ${q.picked===oi?'selected':''} ${isExpired?'disabled is-expired':''}" onclick="pickOption(${oi})" ${isExpired?'aria-disabled="true"':''}>
+      <div class="option ${q.picked===oi?'selected':''} ${(isExpired||duelAnswered)?'disabled is-expired':''}" onclick="pickOption(${oi})" ${(isExpired||duelAnswered)?'aria-disabled="true"':''}>
         <span class="opt-circle">${ARABIC_OPT_LETTERS[oi]||''}</span><span class="opt-text">${opt}</span>
       </div>`).join('') + `</div>`;
   }
@@ -17794,6 +17906,11 @@ function renderQuestion(){
         </button>
         <button type="button" class="btn btn-primary q-nav-btn-compact" onclick="nextQ()">${isLast ? 'Yakunlash' : 'Keyingi →'}</button>
       </div>`;
+  } else if(currentQuiz.isDuel){
+    /* Duelda "Oldingi/Keyingi" tugmalari yo'q: javob tanlanmaguncha hech narsa
+       ko'rsatilmaydi (pastdagi bo'sh #duelNavArea), tanlangach esa kutish paneli
+       (renderDuelWaitPanel) yoki vaqt tugaganda avtomatik o'tish ishlaydi. */
+    html += `<div class="q-nav-row" id="duelNavArea"></div>`;
   } else {
     html += `<div class="q-nav-row">
         <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
@@ -17808,6 +17925,13 @@ function renderQuestion(){
     startQuestionTimer();
   } else {
     clearQuestionTimer();
+  }
+  if(currentQuiz.isDuel){
+    if(q.picked !== null && q.picked !== undefined){
+      renderDuelWaitPanel();
+    } else {
+      _duelStopAnswerPolling();
+    }
   }
 }
 function pickOption(oi){
@@ -17852,16 +17976,23 @@ function pickOption(oi){
     return;
   }
 
+  if(currentQuiz.isDuel && q.picked !== null && q.picked !== undefined) return; // duelda javob tanlangach o'zgartirib bo'lmaydi
+
   q.picked = oi;
   const optEls = document.querySelectorAll('#quizBody .option');
   optEls.forEach((el, idx)=>{
     el.classList.toggle('selected', idx === oi);
+    if(currentQuiz.isDuel) el.classList.add('disabled');
   });
   updateQGrid();
-  if(currentQuiz.isDuel) updateDuelVsTimer();
+  if(currentQuiz.isDuel){
+    updateDuelVsTimer();
+    handleDuelAnswerSubmitted(q, currentQuiz.idx);
+  }
 }
 function nextQ(){
   clearQuestionTimer();
+  _duelStopAnswerPolling();
   if(currentQuiz.skillId==='qiroa' && currentQuiz.phase==='questions'){
     const juz = currentQuiz.juz[currentQuiz.juzPointer];
     if(currentQuiz.idx < juz.endIdx){ currentQuiz.idx++; renderQuestion(); updateQGrid(); }
