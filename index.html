@@ -5531,6 +5531,16 @@ html[data-theme="light"] .pin-dot.filled{
             </div>
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
+          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,var(--muhavara,#8B5CF6),#6D28D9);" onclick="chooseSpeakingDuel()">
+            <div class="duel-skill-mix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+            </div>
+            <div class="duel-skill-mix-main">
+              <div class="duel-skill-mix-name">Speaking Duel</div>
+              <div class="duel-skill-mix-desc">3 ta savol — gapirib javob bering</div>
+            </div>
+            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
           <div class="duel-skill-grid" id="duelSkillGrid"></div>
         </div>
       </div>
@@ -5796,6 +5806,13 @@ html[data-theme="light"] .pin-dot.filled{
               <div class="admin-tab-title">Hamjamiyat</div>
               <div class="admin-tab-sub">Kanal/guruh kartalari</div>
             </button>
+            <button class="admin-tab tab-purple" data-atab="speakingduel" onclick="openAdminPanelModal('speakingduel')">
+              <div class="admin-tab-top">
+                <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></span>
+              </div>
+              <div class="admin-tab-title">Speaking Duel savollari</div>
+              <div class="admin-tab-sub">Bellashuv uchun savollar banki</div>
+            </button>
             <button class="admin-tab tab-slate" data-atab="admins" onclick="openAdminPanelModal('admins')" style="display:none;">
               <div class="admin-tab-top">
                 <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m2 20 2-10 5 4 3-7 3 7 5-4 2 10Z"/><path d="M4 20h16"/></svg></span>
@@ -5953,6 +5970,20 @@ html[data-theme="light"] .pin-dot.filled{
     <button class="btn btn-primary" style="margin-top:8px;" onclick="addCommunityCardAdmin()" id="ccAddBtn">+ Qo'shish va aniqlash</button>
   </div>
   <div id="communityAdminList"></div>
+</div>
+
+<!-- SPEAKING DUEL SAVOLLARI -->
+<div class="admin-panel-body" id="adminTab-speakingduel" style="display:none;">
+  <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
+    Bu savollar faqat Speaking Duel (Muhavara bellashuvi)da ishlatiladi — oddiy Muhavara mashqlaridan mustaqil, alohida bank. Har duelda ular orasidan tasodifiy 3 tasi tanlanadi.
+  </p>
+  <div class="card" style="padding:16px;margin-bottom:16px;">
+    <div style="font-weight:600;font-size:13.5px;margin-bottom:12px;">+ Yangi savol qo'shish</div>
+    <div class="form-field"><label>Arabcha savol (to'liq harakatli)</label><textarea id="sdqNewAr" rows="2" placeholder="مَاذَا تَفْعَلُ فِي أَوْقَاتِ فَرَاغِكَ؟"></textarea></div>
+    <div class="form-field"><label>Uzbekcha izoh (ixtiyoriy, faqat admin uchun)</label><input type="text" id="sdqNewUz" placeholder="Bo'sh vaqtingizda nima qilasiz?"></div>
+    <button class="btn btn-primary" style="margin-top:8px;" onclick="addSpeakingDuelQuestionAdmin()" id="sdqAddBtn">+ Qo'shish</button>
+  </div>
+  <div id="speakingDuelQuestionsAdminList"></div>
 </div>
 
 <!-- 7) XABAR YUBORISH -->
@@ -10761,7 +10792,8 @@ function renderAdminPanel(){
 const ADMIN_TAB_TITLES = {
   overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki', mocks:'Mocklar',
   reports:'Imtihon xabarlari', examcards:'Imtihon cardlari', gramorder:'Grammatika tartibi',
-  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat', skilllimits:'Kunlik limitlar'
+  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat', skilllimits:'Kunlik limitlar',
+  speakingduel:'Speaking Duel savollari'
 };
 function openAdminPanelModal(tab){
   showAdminTab(tab);
@@ -16692,6 +16724,8 @@ function _duelFromRow(row){
     count: row.count,
     category: row.category,
     questions: row.questions || [],
+    duelType: row.duel_type || 'grammar',
+    expiresAt: row.expires_at ? new Date(row.expires_at).getTime() : null,
     challenger: { id: String(row.challenger_id), name: row.challenger_name, photoUrl: row.challenger_photo_url || null },
     opponent: (row.opponent_id != null) ? { id: String(row.opponent_id), name: row.opponent_name, photoUrl: row.opponent_photo_url || null } : null,
     challengerResult: row.challenger_result || null,
@@ -16749,6 +16783,25 @@ async function apiCreateDuel(skillId, count, category){
     return null;
   }
 }
+/* Supabase RPC create_speaking_duel(p_challenger_id, p_challenger_name, p_challenger_photo_url)
+   Speaking duel — Grammatika duelidan farqli, savollar snapshot frontendda
+   emas, backendda (SQL RPC ichida) tasodifiy tanlanadi (duel_speaking_questions
+   bankidan). expires_at = yaratilgan vaqt + 24 soat (SQL tomonda o'rnatiladi). */
+async function apiCreateSpeakingDuel(){
+  if(!_duelRequireAuth()) return null;
+  try{
+    const row = _duelUnwrap(await duelRpc('create_speaking_duel', {
+      p_challenger_id: _duelMyRawId(),
+      p_challenger_name: _duelMyName(),
+      p_challenger_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
+    }));
+    return _duelFromRow(row);
+  }catch(e){
+    console.error('[apiCreateSpeakingDuel]', e);
+    toast('⚠️ Speaking duel yaratilmadi: ' + (e.message||'').slice(0,140), 5000);
+    return null;
+  }
+}
 /* Supabase RPC get_duel_by_token(p_token) */
 async function apiGetDuelByToken(token){
   try{
@@ -16776,6 +16829,7 @@ async function apiJoinDuel(token){
 /* Supabase RPC get_my_duels(p_user_id) */
 async function apiGetMyDuels(){
   if(_duelMyRawId() == null) return [];
+  try{ await duelRpc('expire_stale_speaking_duels', {}); }catch(e){ /* jim, kritik emas */ }
   try{
     const rows = await duelRpc('get_my_duels', { p_user_id: _duelMyRawId() });
     return (Array.isArray(rows) ? rows : []).map(_duelFromRow);
@@ -16940,9 +16994,14 @@ function renderDuelCard(d, me){
   const oppPhoto = d.opponent ? (iAmChallenger ? d.opponent.photoUrl : d.challenger.photoUrl) : null;
   const myResult = iAmChallenger ? d.challengerResult : d.opponentResult;
   const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
-  const skillMeta = SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'};
+  const isSpeaking = d.duelType === 'speaking';
+  const skillMeta = isSpeaking
+    ? {name:'Speaking', color:'var(--muhavara,#8B5CF6)', bg:'rgba(139,92,246,0.12)'}
+    : (SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'});
   const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
-  const catLabel = catMeta ? catMeta.name : 'Aralash savollar';
+  const catLabel = isSpeaking ? 'Speaking Duel' : (catMeta ? catMeta.name : 'Aralash savollar');
+  const startFn = isSpeaking ? 'startSpeakingDuelQuiz' : 'startDuelQuiz';
+  const resultFn = isSpeaking ? 'openSpeakingDuelResultCard' : 'openDuelResultCard';
 
   let statusHtml, actionHtml, cardStateClass = '', cardClickAttr = '';
   if(!d.opponent){
@@ -16961,14 +17020,14 @@ function renderDuelCard(d, me){
     }
     statusHtml = `<span style="font-weight:700;font-size:12.5px;">${verdict}</span>`;
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b><div class="p">${escapeHtml(oppName)}: ${oppResult.score}/${oppResult.total}</div></div>`;
-    cardClickAttr = ` onclick="openDuelResultCard('${d.id}')" style="cursor:pointer;"`;
+    cardClickAttr = ` onclick="${resultFn}('${d.id}')" style="cursor:pointer;"`;
   } else if(!myResult){
     statusHtml = `<span style="color:var(--indigo-700);font-weight:700;font-size:12.5px;">🎯 Sizning navbatingiz</span>`;
-    actionHtml = `<button type="button" class="history-btn-analyze" onclick="startDuelQuiz('${d.id}')"><span>Boshlash</span></button>`;
+    actionHtml = `<button type="button" class="history-btn-analyze" onclick="${startFn}('${d.id}')"><span>Boshlash</span></button>`;
   } else {
     statusHtml = `<span style="color:var(--text-faint);font-weight:600;font-size:12px;">⏳ ${escapeHtml(oppName)} javobini kutmoqda</span>`;
     actionHtml = `<div class="history-score"><b>${myResult.score}/${myResult.total}</b></div>`;
-    cardClickAttr = ` onclick="openDuelResultCard('${d.id}')" style="cursor:pointer;"`;
+    cardClickAttr = ` onclick="${resultFn}('${d.id}')" style="cursor:pointer;"`;
   }
 
   // Raqib qo'shilganda uning profil rasmi (yoki bosh harfi) ko'rsatiladi;
@@ -17060,6 +17119,34 @@ function openDuelSkillSelect(){
 
 async function chooseDuelSkill(category){
   await startNewDuel(category);
+}
+
+/* Speaking duel — Grammatika duelidan farqli, savol snapshot backendda
+   tanlanadi, shuning uchun apiCreateDuel emas apiCreateSpeakingDuel chaqiriladi.
+   Qolgan invite/kutish oqimi (openDuelInviteScreen, renderDuelHub) bir xil
+   ishlaydi, chunki natija baribir _duelFromRow orqali normalizatsiya qilingan
+   bir xil shakldagi obyekt. */
+async function startNewSpeakingDuel(){
+  toast('⏳ Speaking duel yaratilmoqda...', 2000);
+  const d = await apiCreateSpeakingDuel();
+  if(!d) return; // xatolik bo'lsa apiCreateSpeakingDuel o'zi toast chiqargan (masalan bankda 3 tadan kam savol bo'lsa)
+  renderDuelHub();
+  openDuelInviteScreen(d);
+}
+async function chooseSpeakingDuel(){
+  await startNewSpeakingDuel();
+}
+
+/* VAQTINCHALIK: Speaking duel yozib olish (recording) UI hali qurilmagan
+   (5-qadam). Bu ikki funksiya faqat MCQ duel oqimi (startDuelQuiz/
+   openDuelResultCard) speaking duelga tasodifan ishlab ketib xato
+   bermasligi uchun qo'yilgan. 5-qadam tayyor bo'lgach shu ikkisi
+   to'liq (mikrofon yozish, taymer, AI baholash) mantiqqa almashtiriladi. */
+async function startSpeakingDuelQuiz(duelId){
+  toast('🎙 Speaking Duel yozib olish ekrani tez orada qo\'shiladi', 3000);
+}
+async function openSpeakingDuelResultCard(duelId){
+  toast('🎙 Speaking Duel natija ekrani tez orada qo\'shiladi', 3000);
 }
 
 /* Supabase RPC delete_duel(p_duel_id, p_user_id) — faqat hali raqibi
@@ -22539,7 +22626,7 @@ bootApp();
         baseShowAdminTab(tab);
       }
 
-      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community', 'skilllimits'].forEach(t => {
+      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community', 'skilllimits', 'speakingduel'].forEach(t => {
         const el = document.getElementById('adminTab-' + t);
         if (el) {
           el.style.display = (t === tab) ? '' : 'none';
@@ -22556,6 +22643,7 @@ bootApp();
       if (tab === 'admins') renderAdminAdminsList();
       if (tab === 'community') renderCommunityAdmin();
       if (tab === 'skilllimits') renderSkillLimitsAdmin();
+      if (tab === 'speakingduel') renderSpeakingDuelQuestionsAdmin();
     };
   }
 
@@ -22904,6 +22992,112 @@ bootApp();
       await rpc('admin_move_community_card', { p_id: id, p_direction: direction });
       await renderCommunityAdmin();
       await loadAppConfig();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  let ADMIN_SPEAKING_DUEL_QUESTIONS = [];
+
+  async function renderSpeakingDuelQuestionsAdmin() {
+    const box = document.getElementById('speakingDuelQuestionsAdminList');
+    if (!box) return;
+    box.innerHTML = `<div class="loading-inline"><span class="loading-spinner"></span>Yuklanmoqda…</div>`;
+    try {
+      const rows = await rpc('admin_list_speaking_duel_questions', {});
+      ADMIN_SPEAKING_DUEL_QUESTIONS = Array.isArray(rows) ? rows : [];
+    } catch (e) {
+      box.innerHTML = `<p style="color:var(--red);font-size:13px;">Yuklab bo'lmadi: ${(e.message || '').slice(0, 150)}</p>`;
+      return;
+    }
+    if (!ADMIN_SPEAKING_DUEL_QUESTIONS.length) {
+      box.innerHTML = `<p style="font-size:13px;color:var(--text-faint);font-weight:600;">Hali savol qo'shilmagan. Kamida 3 ta faol savol bo'lmasa, foydalanuvchilar speaking duel boshlay olmaydi.</p>`;
+      return;
+    }
+    box.innerHTML = ADMIN_SPEAKING_DUEL_QUESTIONS.map(q => `
+      <div class="community-admin-row" id="sdqRow-${q.id}">
+        <div style="flex:1;min-width:0;">
+          <div class="ar-text" style="font-size:17px;font-weight:600;line-height:1.7;">${q.prompt_ar}${q.active ? '' : ' <span style="color:var(--red);font-size:11px;font-weight:700;">(nofaol)</span>'}</div>
+          ${q.prompt_uz ? `<div style="font-size:12px;color:var(--text-faint);font-weight:600;margin-top:4px;">${q.prompt_uz}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+          <button class="row-btn" onclick="toggleSpeakingDuelQuestionAdmin('${q.id}', ${!q.active})">${q.active ? '🙈 Nofaol qilish' : '👁 Faollashtirish'}</button>
+          <button class="row-btn" onclick="toggleSpeakingDuelQuestionEditForm('${q.id}')">✏️ Tahrirlash</button>
+          <button class="row-btn danger" onclick="deleteSpeakingDuelQuestionAdmin('${q.id}')">🗑 O'chirish</button>
+        </div>
+        <div id="sdqEdit-${q.id}" style="display:none;margin-top:10px;" class="community-admin-edit-form">
+          <textarea id="sdqEditAr-${q.id}" rows="2" style="width:100%;margin-bottom:6px;">${(q.prompt_ar || '')}</textarea>
+          <input type="text" id="sdqEditUz-${q.id}" value="${(q.prompt_uz || '').replace(/"/g, '&quot;')}" placeholder="Uzbekcha izoh" style="width:100%;margin-bottom:6px;">
+          <button class="btn btn-primary" onclick="saveSpeakingDuelQuestionAdmin('${q.id}')">Saqlash</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  window.renderSpeakingDuelQuestionsAdmin = renderSpeakingDuelQuestionsAdmin;
+
+  window.toggleSpeakingDuelQuestionEditForm = function (id) {
+    const el = document.getElementById('sdqEdit-' + id);
+    if (el) el.style.display = (el.style.display === 'none') ? '' : 'none';
+  };
+
+  window.addSpeakingDuelQuestionAdmin = async function () {
+    const ar = document.getElementById('sdqNewAr').value.trim();
+    const uz = document.getElementById('sdqNewUz').value.trim();
+    if (!ar) { toast("Arabcha savol matnini kiriting"); return; }
+
+    const btn = document.getElementById('sdqAddBtn');
+    btn.disabled = true; btn.textContent = 'Qo\'shilmoqda…';
+
+    try {
+      await rpc('admin_add_speaking_duel_question', { p_prompt_ar: ar, p_prompt_uz: uz || null });
+      document.getElementById('sdqNewAr').value = '';
+      document.getElementById('sdqNewUz').value = '';
+      toast('✅ Qo\'shildi');
+      await renderSpeakingDuelQuestionsAdmin();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    } finally {
+      btn.disabled = false; btn.textContent = '+ Qo\'shish';
+    }
+  };
+
+  window.saveSpeakingDuelQuestionAdmin = async function (id) {
+    const ar = document.getElementById('sdqEditAr-' + id).value.trim();
+    const uz = document.getElementById('sdqEditUz-' + id).value.trim();
+    if (!ar) { toast("Arabcha savol matnini kiriting"); return; }
+    try {
+      await rpc('admin_update_speaking_duel_question', { p_id: id, p_prompt_ar: ar, p_prompt_uz: uz || null });
+      toast('✅ Saqlandi');
+      await renderSpeakingDuelQuestionsAdmin();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.toggleSpeakingDuelQuestionAdmin = async function (id, newActive) {
+    try {
+      await rpc('admin_toggle_speaking_duel_question', { p_id: id, p_active: newActive });
+      toast('✅ Saqlandi');
+      await renderSpeakingDuelQuestionsAdmin();
+    } catch (e) {
+      toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
+    }
+  };
+
+  window.deleteSpeakingDuelQuestionAdmin = async function (id) {
+    const ok = await showLiquidConfirm({
+      title: "Savolni o'chirish",
+      message: "Ushbu speaking duel savolini butunlay o'chirmoqchimisiz?",
+      subtext: "Bu amalni ortga qaytarib bo'lmaydi.",
+      confirmLabel: "Ha, o'chirilsin",
+      cancelLabel: "Bekor qilish",
+      isDanger: true
+    });
+    if (!ok) return;
+    try {
+      await rpc('admin_delete_speaking_duel_question', { p_id: id });
+      toast('✅ O\'chirildi');
+      await renderSpeakingDuelQuestionsAdmin();
     } catch (e) {
       toast('❌ Xato: ' + (e.message || '').slice(0, 150), 4000);
     }
