@@ -1,23 +1,32 @@
 /* ============================================================
    ARABICATION — TELEGRAM SDK + SUPABASE INTEGRATSIYASI
    ============================================================ */
-const SUPABASE_URL = "https://riqtbtcsllyriyavbamt.supabase.co";       // <-- shu yerga o'z Project URL'ingizni qo'ying
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpcXRidGNzbGx5cml5YXZiYW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NDc3NzUsImV4cCI6MjEwMjIyMzc3NX0.GFhKmzx2uq9uZ8fg-cxWtuI39e0wlsIUypwxU_vWCtQ";                      // <-- shu yerga o'z anon key'ingizni qo'ying
+/* Bu qiymatlar endi kodga yozilmaydi — server ishga tushganda /config.js orqali
+   .env fayldagi o'zgaruvchilardan avtomatik in'ektsiya qilinadi (qarang: server.js va .env.example).
+   Bu fayl (app.js) GitHub'ga ochiq push qilinadi, shuning uchun bu yerda hech qanday
+   haqiqiy kalit yoki shaxsiy Telegram ID saqlanmasligi kerak. */
+const _cfg = (typeof window !== 'undefined' && window.APP_CONFIG) ? window.APP_CONFIG : {};
+if (!window.APP_CONFIG) {
+  console.error('[config] /config.js topilmadi yoki yuklanmadi — .env faylni tekshiring (SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_TELEGRAM_IDS).');
+}
+const SUPABASE_URL = _cfg.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = _cfg.SUPABASE_ANON_KEY || "";
 const AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 // Duel havolalari uchun: BotFather'da bergan bot username (@ belgisiz) va shu botga
 // bog'langan Web App'ning "short name"i (t.me/<bot>/<short_name>?startapp=... havolasi uchun).
-const BOT_USERNAME = 'arabicationbot';         // BotFather'dagi haqiqiy bot username
-const WEBAPP_SHORT_NAME = '';                  // Bo'sh qoldiring: bot "Configure Mini App" (menyu tugmasi) orqali ulangan bo'lsa, short_name kerak emas.
+const BOT_USERNAME = _cfg.BOT_USERNAME || 'arabicationbot';   // BotFather'dagi haqiqiy bot username
+const WEBAPP_SHORT_NAME = _cfg.WEBAPP_SHORT_NAME || '';       // Bo'sh qoldiring: bot "Configure Mini App" (menyu tugmasi) orqali ulangan bo'lsa, short_name kerak emas.
                                                 // Faqat /newapp orqali BotFather'da alohida nomlangan (va /myapps'da chiqadigan) ilova yaratgan bo'lsangiz, shu yerga o'sha short name'ni yozing.
 
 let SESSION_TOKEN = null;
 window.APP_READY = false; // dashboard/skill render funksiyalari shu flag chiqqach chaqiriladi
 
-/* MOSLASHTIRING: bu yerga faqat admin panelni ko'rishi kerak bo'lgan Telegram foydalanuvi ID'larini yozing.
+/* Admin panelni ko'rishi kerak bo'lgan Telegram foydalanuvchi ID'lari — .env faylidagi
+   ADMIN_TELEGRAM_IDS orqali beriladi (vergul bilan ajratilgan), bu yerda emas.
    DIQQAT: bu faqat tugmani yashiradi — haqiqiy himoya emas! Admin ma'lumotlariga backend (Supabase RLS)
    tarafida ham shu ID'lar uchun ruxsat berilishi shart, aks holda boshqa foydalanuvchi ham API orqali
    to'g'ridan-to'g'ri o'sha ma'lumotlarga kirib olishi mumkin. */
-const ADMIN_TELEGRAM_IDS = [5400174077];
+const ADMIN_TELEGRAM_IDS = Array.isArray(_cfg.ADMIN_TELEGRAM_IDS) ? _cfg.ADMIN_TELEGRAM_IDS : [];
 
 /* MOSLASHTIRING: qo'llab-quvvatlash uchun o'z Telegram username'ingizni yozing */
 const SUPPORT_USERNAME = 'arabication_support';
@@ -1348,11 +1357,16 @@ async function bootApp(){
         photoUrl: tgPhoto,
       };
     } else {
+      // DIQQAT: bu ID Telegramdan tashqarida (oddiy brauzerda) ochilganda ishlatiladigan
+      // mock/soxta profil — atayin admin ro'yxatidan tashqarida bo'lishi kerak, aks holda
+      // sizning saytingizni brauzerda ochgan har qanday kishi avtomatik admin bo'lib qoladi.
+      // Preview'da o'zingizni admin sifatida sinash uchun .env faylidagi ADMIN_TELEGRAM_IDS
+      // ro'yxatiga aynan shu 999999999 ID'ni qo'shing (faqat lokal/preview muhitida).
       TELEGRAM_PROFILE = {
         name: 'Foydalanuvchi',
         username: '@arabication',
-        id: '5400174077',
-        rawId: 5400174077,
+        id: '999999999',
+        rawId: 999999999,
         photoUrl: tgPhoto,
         gender: 'male'
       };
