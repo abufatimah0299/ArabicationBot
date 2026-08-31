@@ -4502,6 +4502,55 @@ function closeAdminPanelModal(){
 }
 
 /* ---- 1) UMUMIY KO'RINISH ---- */
+function formatLastActive(dateVal){
+  if(!dateVal || dateVal === '-' || dateVal === 'null' || dateVal === 'undefined') return '-';
+
+  const d = new Date(dateVal);
+  if(isNaN(d.getTime())){
+    return String(dateVal);
+  }
+
+  const pad = n => String(n).padStart(2, '0');
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  const seconds = pad(d.getSeconds());
+  const timeStr = `${hours}:${minutes}:${seconds}`;
+
+  const now = new Date();
+  const isSameDay = (d1, d2) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+  if(isSameDay(d, now)){
+    return `Bugun ${timeStr}`;
+  }
+  if(isSameDay(d, yesterday)){
+    return `Kecha ${timeStr}`;
+  }
+
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const year = d.getFullYear();
+  return `${day}.${month}.${year} ${timeStr}`;
+}
+
+function isUserActiveToday(dateVal){
+  if(!dateVal || dateVal === '-' || dateVal === 'null' || dateVal === 'undefined') return false;
+  if(typeof dateVal === 'string' && dateVal.startsWith('Bugun')) return true;
+  const d = new Date(dateVal);
+  if(isNaN(d.getTime())) return false;
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() &&
+         d.getMonth() === now.getMonth() &&
+         d.getDate() === now.getDate();
+}
+
+window.formatLastActive = formatLastActive;
+window.isUserActiveToday = isUserActiveToday;
+
 function renderAdminOverview(){
   const grid0 = document.getElementById('adminStatGrid');
   if(!adminUsersLoaded && grid0){
@@ -4514,7 +4563,7 @@ function renderAdminOverview(){
   const totalQuestions = Object.values(QUESTION_BANKS).reduce((s,b)=> s + (b.questions?.length||0), 0)
     + Object.values(GRAMMAR_TOPIC_BANKS).reduce((s,arr)=> s + arr.length, 0)
     + Object.values(QIROA_TESTS).reduce((s,arr)=> s + arr.reduce((s2,t)=> s2 + t.questions.length, 0), 0);
-  const activeToday = ADMIN_USERS.filter(u=>u.lastActive==='Bugun').length;
+  const activeToday = ADMIN_USERS.filter(u=>isUserActiveToday(u.rawLastActive || u.lastActive)).length;
 
   const grid = document.getElementById('adminStatGrid');
   grid.innerHTML = `
@@ -4587,7 +4636,7 @@ function renderAdminUsers(){
       </td>
       <td>${u.level}</td>
       <td>${u.xp.toLocaleString()}</td>
-      <td>${u.lastActive}</td>
+      <td>${formatLastActive(u.lastActive || u.rawLastActive)}</td>
       <td><button class="row-btn" onclick="viewAdminUser(${u.id})">Batafsil</button></td>
     </tr>
   `).join('');
@@ -10328,7 +10377,8 @@ function applyLiveAdminUsers(rows){
       username: pick(u, ['username'], ''),
       level: pick(u, ['level'], 'A1'),
       xp: Number(pick(u, ['xp'], 0)) || 0,
-      lastActive: pick(u, ['last_active','lastActive'], '-'),
+      lastActive: formatLastActive(pick(u, ['last_active','lastActive'], '-')),
+      rawLastActive: pick(u, ['last_active','lastActive'], null),
       skills: u.skills || {},
     }));
   } else {
