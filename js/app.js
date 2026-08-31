@@ -1338,23 +1338,23 @@ async function bootApp(){
       photoUrl: tgPhoto,
     };
   } else {
-    // Dev/mock rejimi: Telegram tashqarisida yoki to'g'ridan-to'g'ri brauzerda ochilganda
+    // Telegram tashqarisida yoki to'g'ridan-to'g'ri brauzerda ochilganda (Mehmon rejimi)
     if(tgUser){
       TELEGRAM_PROFILE = {
-        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Admin',
-        username: tgUser.username ? `@${tgUser.username}` : '@admin',
+        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+        username: tgUser.username ? `@${tgUser.username}` : '',
         id: String(tgUser.id),
         rawId: tgUser.id,
         photoUrl: tgPhoto,
       };
     } else {
       TELEGRAM_PROFILE = {
-        name: 'Foydalanuvchi',
-        username: '@arabication',
-        id: '5400174077',
-        rawId: 5400174077,
+        name: 'Mehmon',
+        username: '',
+        id: '-',
+        rawId: null,
         photoUrl: tgPhoto,
-        gender: 'male'
+        gender: 'unspecified'
       };
     }
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
