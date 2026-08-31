@@ -8299,6 +8299,44 @@ async function deleteVocabularyFromBackend(id) {
   saveLocalVocabularies(ADMIN_VOCABULARIES);
 }
 
+async function deleteVocabBookFromBackend(bookName) {
+  if (SESSION_TOKEN) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_vocabulary_book`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_book_name: bookName })
+      });
+      if (res.ok) {
+        // Success
+      }
+    } catch (e) {
+      console.warn("admin_delete_vocabulary_book RPC failed, removing locally", e);
+    }
+  }
+  ADMIN_VOCABULARIES = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') !== bookName);
+  saveLocalVocabularies(ADMIN_VOCABULARIES);
+}
+
+async function deleteVocabTopicFromBackend(bookName, topicName) {
+  if (SESSION_TOKEN) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_vocabulary_topic`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_book_name: bookName, p_topic: topicName })
+      });
+      if (res.ok) {
+        // Success
+      }
+    } catch (e) {
+      console.warn("admin_delete_vocabulary_topic RPC failed, removing locally", e);
+    }
+  }
+  ADMIN_VOCABULARIES = ADMIN_VOCABULARIES.filter(v => !((v.book_name || '') === bookName && (v.topic || '') === topicName));
+  saveLocalVocabularies(ADMIN_VOCABULARIES);
+}
+
 async function updateVocabularyInBackend(id, fields) {
   if (SESSION_TOKEN) {
     try {
@@ -8475,6 +8513,9 @@ async function renderAdminVocabularies(rebuildFilters = true) {
             <button type="button" class="btn btn-outline" style="font-size:11.5px;padding:4px 10px;border-radius:8px;" onclick="event.stopPropagation(); openBulkAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga ommaviy yuklash">
               Bulk JSON
             </button>
+            <button type="button" class="btn btn-outline danger" style="font-size:11.5px;padding:4px 9px;border-radius:8px;color:var(--red);border-color:rgba(239,68,68,0.3);" onclick="event.stopPropagation(); confirmDeleteVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')" title="Kitobni barcha ichidagi lug'atlari bilan butunlay o'chirish">
+              🗑️ O'chirish
+            </button>
             <div class="vocab-chevron">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
             </div>
@@ -8499,6 +8540,9 @@ async function renderAdminVocabularies(rebuildFilters = true) {
             <div class="vocab-topic-actions">
               <button type="button" class="btn btn-primary" style="font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
                 + So'z qo'shish
+              </button>
+              <button type="button" class="row-btn danger" style="padding:3px 7px;font-size:11px;border-radius:6px;" onclick="event.stopPropagation(); confirmDeleteVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuni barcha so'zlari bilan o'chirish">
+                🗑️
               </button>
               <div class="vocab-chevron">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -8865,6 +8909,54 @@ async function confirmDeleteVocab(id) {
   toast("⏳ O'chirilmoqda...");
   await deleteVocabularyFromBackend(id);
   toast("✅ Lug'at o'chirildi");
+  await renderAdminVocabularies(true);
+}
+
+async function confirmDeleteVocabBook(bookName) {
+  const wordsInBook = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') === bookName);
+  const count = wordsInBook.length;
+
+  const ok = typeof showLiquidConfirm === 'function'
+    ? await showLiquidConfirm({
+        title: "Kitobni o'chirish",
+        message: `"${bookName}" kitobi va uning ichidagi barcha ${count} ta lug'atni o'chirmoqchimisiz?`,
+        subtext: "Bu amal orqali kitob va uning barcha mavzulari hamda so'zlari butunlay o'chiriladi.",
+        confirmLabel: "Ha, butunlay o'chirilsin",
+        cancelLabel: "Bekor qilish",
+        isDanger: true
+      })
+    : confirm(`"${bookName}" kitobini barcha ${count} ta lug'ati bilan o'chirishni tasdiqlaysizmi?`);
+
+  if (!ok) return;
+
+  toast("⏳ Kitob o'chirilmoqda...");
+  await deleteVocabBookFromBackend(bookName);
+  adminVocabExpandedBooks.delete(bookName);
+  toast(`✅ "${bookName}" kitobi barcha so'zlari bilan o'chirildi`);
+  await renderAdminVocabularies(true);
+}
+
+async function confirmDeleteVocabTopic(bookName, topicName) {
+  const wordsInTopic = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') === bookName && (v.topic || '') === topicName);
+  const count = wordsInTopic.length;
+
+  const ok = typeof showLiquidConfirm === 'function'
+    ? await showLiquidConfirm({
+        title: "Mavzuni o'chirish",
+        message: `"${topicName}" mavzusidagi barcha ${count} ta lug'atni o'chirmoqchimisiz?`,
+        subtext: `Kitob: "${bookName}". Ushbu mavzudagi barcha lug'atlar o'chiriladi.`,
+        confirmLabel: "Ha, mavzuni o'chirish",
+        cancelLabel: "Bekor qilish",
+        isDanger: true
+      })
+    : confirm(`"${topicName}" mavzusini (${count} ta so'z) o'chirishni tasdiqlaysizmi?`);
+
+  if (!ok) return;
+
+  toast("⏳ Mavzu o'chirilmoqda...");
+  await deleteVocabTopicFromBackend(bookName, topicName);
+  adminVocabExpandedTopics.delete(`${bookName}:::${topicName}`);
+  toast(`✅ "${topicName}" mavzusi o'chirildi`);
   await renderAdminVocabularies(true);
 }
 
