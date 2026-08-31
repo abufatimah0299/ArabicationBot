@@ -3735,6 +3735,22 @@ html[data-theme="dark"] .skel-avatar {
   box-shadow:none;
 }
 
+.admin-tab.tab-emerald-dark{
+  background:#047857;
+  box-shadow:none;
+}
+.admin-tab.tab-emerald-dark:hover{
+  box-shadow:none;
+}
+
+.admin-tab.tab-violet{
+  background:#6366F1;
+  box-shadow:none;
+}
+.admin-tab.tab-violet:hover{
+  box-shadow:none;
+}
+
 .admin-tab.tab-orange{
   background:#EA580C;
   box-shadow:none;
