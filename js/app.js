@@ -4537,6 +4537,21 @@ function formatLastActive(dateVal){
   return `${day}.${month}.${year} ${timeStr}`;
 }
 
+function formatRegDate(dateVal){
+  if(!dateVal || dateVal === '-' || dateVal === 'null' || dateVal === 'undefined') return '-';
+  const d = new Date(dateVal);
+  if(isNaN(d.getTime())){
+    return String(dateVal);
+  }
+  const pad = n => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
 function isUserActiveToday(dateVal){
   if(!dateVal || dateVal === '-' || dateVal === 'null' || dateVal === 'undefined') return false;
   if(typeof dateVal === 'string' && dateVal.startsWith('Bugun')) return true;
@@ -4549,7 +4564,18 @@ function isUserActiveToday(dateVal){
 }
 
 window.formatLastActive = formatLastActive;
+window.formatRegDate = formatRegDate;
 window.isUserActiveToday = isUserActiveToday;
+
+let currentAdminUserStatusFilter = 'all';
+function setUserStatusFilter(filter){
+  currentAdminUserStatusFilter = filter || 'all';
+  document.querySelectorAll('.user-status-filter .status-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.sfilter === currentAdminUserStatusFilter);
+  });
+  renderAdminUsers();
+}
+window.setUserStatusFilter = setUserStatusFilter;
 
 function renderAdminOverview(){
   const grid0 = document.getElementById('adminStatGrid');
@@ -4616,43 +4642,118 @@ function renderAdminOverview(){
 function renderAdminUsers(){
   const q = (document.getElementById('adminUserSearch')?.value || '').toLowerCase().trim();
   const body = document.getElementById('adminUsersBody');
+  const countText = document.getElementById('adminUsersCountText');
   if(!body) return;
   if(!adminUsersLoaded){
-    body.innerHTML = `<tr><td colspan="5"><div class="loading-inline"><span class="loading-spinner"></span>Foydalanuvchilar yuklanmoqda…</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="7"><div class="loading-inline"><span class="loading-spinner"></span>Foydalanuvchilar yuklanmoqda…</div></td></tr>`;
+    if(countText) countText.textContent = `Yuklanmoqda...`;
     return;
   }
-  const rows = ADMIN_USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
-  if(rows.length===0){
-    body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-faint);">Hech narsa topilmadi</td></tr>`;
+  
+  const filtered = ADMIN_USERS.filter(u => {
+    const matchesQ = !q ||
+      u.name.toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q) ||
+      String(u.id).includes(q);
+
+    if(!matchesQ) return false;
+
+    if(currentAdminUserStatusFilter === 'active'){
+      return !u.isBlocked;
+    }
+    if(currentAdminUserStatusFilter === 'blocked'){
+      return u.isBlocked;
+    }
+    return true;
+  });
+
+  if(countText){
+    const totalCount = ADMIN_USERS.length;
+    const activeCount = ADMIN_USERS.filter(u => !u.isBlocked).length;
+    const blockedCount = ADMIN_USERS.filter(u => u.isBlocked).length;
+    countText.textContent = `Ko'rsatilmoqda: ${filtered.length} / ${totalCount} ta (🟢 Faol: ${activeCount}, 🔴 Bloklagan: ${blockedCount})`;
+  }
+
+  if(filtered.length === 0){
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-faint);">Hech qanday foydalanuvchi topilmadi</td></tr>`;
     return;
   }
-  body.innerHTML = rows.map(u=>`
-    <tr>
-      <td>
-        <div class="u-name">
-          <div class="u-avatar">${u.name.charAt(0)}</div>
-          <div>${u.name}<div style="font-weight:600;color:var(--text-faint);font-size:11px;">${u.username}</div></div>
-        </div>
-      </td>
-      <td>${u.level}</td>
-      <td>${u.xp.toLocaleString()}</td>
-      <td>${formatLastActive(u.lastActive || u.rawLastActive)}</td>
-      <td><button class="row-btn" onclick="viewAdminUser(${u.id})">Batafsil</button></td>
-    </tr>
-  `).join('');
+
+  body.innerHTML = filtered.map(u => {
+    const isBlocked = Boolean(u.isBlocked);
+    const regDateStr = formatRegDate(u.createdAt || u.raw?.created_at || u.raw?.joined_at || u.raw?.registered_at);
+    const lastActiveStr = formatLastActive(u.rawLastActive || u.lastActive || u.raw?.last_active);
+    const uname = (u.username || '').replace(/^@+/, '');
+    const unameHtml = uname
+      ? `<a href="https://t.me/${uname}" target="_blank" rel="noopener noreferrer" style="color:var(--indigo-600);text-decoration:none;font-weight:600;" onclick="event.stopPropagation()">@${escapeHtml(uname)}</a>`
+      : `<span style="color:var(--text-faint);">-</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div class="u-name">
+            <div class="u-avatar" style="${isBlocked ? 'background:rgba(239,68,68,0.15);color:#dc2626;' : ''}">${escapeHtml((u.name || '?').charAt(0))}</div>
+            <div>
+              <div style="font-weight:700;color:var(--text);">${escapeHtml(u.name)}</div>
+              <div style="font-weight:600;font-size:11px;display:flex;align-items:center;gap:6px;margin-top:2px;">
+                ${unameHtml}
+                <span style="color:var(--text-faint);font-size:10.5px;">(ID: ${u.id})</span>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td style="text-align:center;"><span class="rank-chip-sm">${escapeHtml(u.level || 'A1')}</span></td>
+        <td style="text-align:right;font-weight:700;color:var(--indigo-700);">${(u.xp || 0).toLocaleString()}</td>
+        <td style="text-align:center;">
+          ${isBlocked
+            ? `<span class="badge-status badge-blocked" title="Foydalanuvchi botni bloklagan"><span class="badge-dot dot-red"></span>Bloklagan</span>`
+            : `<span class="badge-status badge-active" title="Bot bilan aloqada"><span class="badge-dot dot-green"></span>Faol</span>`}
+        </td>
+        <td style="text-align:center;font-size:11.5px;color:var(--text-dim);white-space:nowrap;">${regDateStr}</td>
+        <td style="text-align:center;font-size:11.5px;color:var(--text-dim);white-space:nowrap;">${lastActiveStr}</td>
+        <td style="text-align:center;"><button class="row-btn" onclick="viewAdminUser(${u.id})">Batafsil</button></td>
+      </tr>
+    `;
+  }).join('');
 }
+
 function viewAdminUser(userId){
   const u = ADMIN_USERS.find(x=>x.id===userId);
   if(!u) return;
+  const isBlocked = Boolean(u.isBlocked);
+  const regDateStr = formatRegDate(u.createdAt || u.raw?.created_at || u.raw?.joined_at || u.raw?.registered_at);
+  const lastActiveStr = formatLastActive(u.rawLastActive || u.lastActive || u.raw?.last_active);
+  const uname = (u.username || '').replace(/^@+/, '');
+
   document.getElementById('modalTitle').textContent = u.name;
   document.getElementById('modalBody').innerHTML = `
     <div style="padding:14px 4px;">
-      <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;margin-bottom:16px;">${u.username} · ID: ${u.id} · Daraja: ${u.level}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="font-size:12.5px;color:var(--text-faint);font-weight:600;">
+          ${uname ? `<a href="https://t.me/${uname}" target="_blank" rel="noopener noreferrer" style="color:var(--indigo-600);text-decoration:none;font-weight:700;">@${escapeHtml(uname)}</a> · ` : ''}ID: <code style="background:var(--bg);padding:2px 6px;border-radius:6px;border:1px solid var(--border);">${u.id}</code> · Daraja: <b style="color:var(--text);">${u.level}</b>
+        </div>
+        <div>
+          ${isBlocked
+            ? `<span class="badge-status badge-blocked"><span class="badge-dot dot-red"></span>Botni bloklagan</span>`
+            : `<span class="badge-status badge-active"><span class="badge-dot dot-green"></span>Bot faol</span>`}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
+          <div style="font-size:11px;color:var(--text-faint);font-weight:600;">Ro'yxatdan o'tgan</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px;">${regDateStr}</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
+          <div style="font-size:11px;color:var(--text-faint);font-weight:600;">Oxirgi faollik</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:2px;">${lastActiveStr}</div>
+        </div>
+      </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:6px;">
         <div>
           <div style="font-size:11px;color:var(--text-faint);font-weight:600;">Joriy XP</div>
-          <div style="font-size:22px;font-weight:600;" id="xpCurrentVal">${u.xp.toLocaleString()}</div>
+          <div style="font-size:22px;font-weight:600;" id="xpCurrentVal">${(u.xp || 0).toLocaleString()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <input type="number" id="xpAdjustAmount" min="1" step="1" placeholder="masalan: 50"
@@ -10372,14 +10473,17 @@ function applyLiveAdminUsers(rows){
   adminUsersLoaded = true; // backend javob berdi (bo'sh bo'lsa ham) — "Yuklanmoqda" tugadi
   if(Array.isArray(rows) && rows.length){
     ADMIN_USERS = rows.map(u=>({
-      id: pick(u, ['telegram_id','id'], 0),
-      name: pick(u, ['name','full_name'], 'Foydalanuvchi'),
+      id: pick(u, ['telegram_id','id','user_id'], 0),
+      name: pick(u, ['name','full_name','first_name'], 'Foydalanuvchi'),
       username: pick(u, ['username'], ''),
       level: pick(u, ['level'], 'A1'),
       xp: Number(pick(u, ['xp'], 0)) || 0,
-      lastActive: formatLastActive(pick(u, ['last_active','lastActive'], '-')),
-      rawLastActive: pick(u, ['last_active','lastActive'], null),
+      lastActive: formatLastActive(pick(u, ['last_active','lastActive','last_seen'], '-')),
+      rawLastActive: pick(u, ['last_active','lastActive','last_seen'], null),
+      createdAt: pick(u, ['created_at','registered_at','joined_at','reg_date','createdAt','regDate'], null),
+      isBlocked: Boolean(u.is_blocked || u.blocked || u.is_bot_blocked || u.bot_blocked || (typeof u.status === 'string' && u.status.toLowerCase().includes('block'))),
       skills: u.skills || {},
+      raw: u
     }));
   } else {
     ADMIN_USERS = [];
