@@ -9,8 +9,10 @@ const app = express();
 const PORT = 3000;
 const HOST = '0.0.0.0';
 
-// Serve static files from root directory
+// Serve static files from root directory and public directory
 app.use(express.static(__dirname));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Fallback all routes to index.html for SPA support
 app.get('*', (req, res) => {

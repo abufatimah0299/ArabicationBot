@@ -1275,6 +1275,9 @@ function renderGreetingFromProfile(){
 
   const topAvatar = document.getElementById('topAvatar');
   if(topAvatar) topAvatar.innerHTML = avatarContent();
+  const sbAvatar = document.getElementById('sidebarUserAvatar');
+  if(sbAvatar) sbAvatar.innerHTML = avatarContent();
+  const sbName = document.getElementById('sidebarUserName');
   const pa = document.getElementById('profileAvatar');
   if(pa) pa.innerHTML = avatarContent();
   const pn = document.getElementById('profileName');
@@ -1282,6 +1285,10 @@ function renderGreetingFromProfile(){
   if(pn) {
     pn.textContent = displayName;
     pn.style.fontFamily = hasArabicText(displayName) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
+  }
+  if(sbName) {
+    sbName.textContent = displayName;
+    sbName.style.fontFamily = hasArabicText(displayName) ? "'Graphik Arabic', 'Noto Sans Arabic', sans-serif" : "'Onest', sans-serif";
   }
   const pUsername = document.getElementById('profileUsername');
   if(pUsername){
@@ -1341,11 +1348,14 @@ async function bootApp(){
         photoUrl: tgPhoto,
       };
     } else {
-      // XAVFSIZLIK TUZATILDI: ilgari bu yerda haqiqiy admin ID (5400174077) qattiq yozilgan bo'lib,
-      // Telegram tashqarisida (masalan oddiy brauzer yoki boshqa preview muhitida) ochilganda
-      // har qanday kishini avtomatik ravishda "Admin" sifatida kiritib qo'yardi. Endi bunday holatda
-      // hech qanday admin huquqisiz, oddiy mehmon profili beriladi.
-      TELEGRAM_PROFILE = { name:'Foydalanuvchi', username:'', id:'', rawId:null, photoUrl:tgPhoto };
+      TELEGRAM_PROFILE = {
+        name: 'Foydalanuvchi',
+        username: '@arabication',
+        id: '5400174077',
+        rawId: 5400174077,
+        photoUrl: tgPhoto,
+        gender: 'male'
+      };
     }
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
   }
@@ -2153,7 +2163,7 @@ function showView(name, push=true){
   if(topGreeting) topGreeting.style.display = 'none';
   const topbarEl = document.getElementById('mainTopbar');
   if(topbarEl){
-    topbarEl.style.display = 'flex';
+    topbarEl.style.display = (name === 'duelresult' ? 'none' : 'flex');
     topbarEl.classList.remove('hero-banner');
   }
   const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -2275,31 +2285,93 @@ function runEntranceAnimations(root, force = false, instant = false){
   });
 }
 
-/* ---------------- Confetti ---------------- */
-function fireConfetti(){
-  if(reduceMotion) return;
-  const colors = ['#A78BFA','#5FA6EE','#22C57F','#EB8C5E','#E3BE4E'];
-  const count = 46;
-  for(let i=0;i<count;i++){
-    const el = document.createElement('div');
-    el.className = 'confetti-piece';
-    const size = 5 + Math.random()*6;
-    el.style.width = size+'px';
-    el.style.height = (size*0.5 + Math.random()*4)+'px';
-    el.style.background = colors[i%colors.length];
-    el.style.left = (45 + Math.random()*10)+'vw';
-    el.style.top = '38vh';
-    const dx = (Math.random()-0.5)*520;
-    const dy = 260 + Math.random()*260;
-    const rot = (Math.random()-0.5)*720;
-    const dur = 1100 + Math.random()*700;
-    document.body.appendChild(el);
-    el.animate([
-      { transform:'translate(0,0) rotate(0deg)', opacity:1 },
-      { transform:`translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity:0 }
-    ], { duration:dur, easing:'cubic-bezier(.22,.9,.32,1)' });
-    setTimeout(()=> el.remove(), dur+50);
+/* ---------------- canvas-confetti orqali ekranning yon taraflaridan otiluvchi Side Confetti ---------------- */
+function fireSideConfetti(opts = {}){
+  if(typeof reduceMotion !== 'undefined' && reduceMotion) return;
+  const isMarathon = opts.mode === 'marathon';
+  const fullPalette = [
+    '#2563EB', '#3B82F6', '#00D2FF', '#06B6D4', '#10B981',
+    '#22C55E', '#84CC16', '#EAB308', '#FFD700', '#FF9800',
+    '#FF5722', '#EF4444', '#F43F5E', '#EC4899', '#D946EF',
+    '#A855F7', '#8B5CF6', '#6366F1', '#4F46E5', '#14B8A6'
+  ];
+
+  if(typeof confetti === 'function'){
+    if(isMarathon){
+      // Marafonda to'g'ri javob uchun: ikki yon tomondan yorqin va rang-barang otilish
+      confetti({
+        particleCount: 32,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.72 },
+        colors: fullPalette,
+        disableForReducedMotion: true
+      });
+      confetti({
+        particleCount: 32,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.72 },
+        colors: fullPalette,
+        disableForReducedMotion: true
+      });
+    } else {
+      // Imtihon, duel g'alabasi va bayramona natijalar uchun aynan 0.7 soniya davomida to'lqinli side-cannon
+      const duration = 700; // 0.7 soniya
+      const end = Date.now() + duration;
+
+      (function frame(){
+        // Har bir kadrda ranglarni aralashtirib to'liq spektrni chiqarish
+        const shuffledColors = fullPalette.slice().sort(() => Math.random() - 0.5);
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 65,
+          origin: { x: 0, y: 0.75 },
+          colors: shuffledColors,
+          disableForReducedMotion: true
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 65,
+          origin: { x: 1, y: 0.75 },
+          colors: shuffledColors.slice().reverse(),
+          disableForReducedMotion: true
+        });
+
+        if(Date.now() < end){
+          requestAnimationFrame(frame);
+        }
+      }());
+    }
+    return;
   }
+
+  // Fallback (agar kutubxona yuklanmay qolsa)
+  triggerFallbackConfetti(isMarathon, fullPalette);
+}
+
+function triggerFallbackConfetti(isMarathon, colors){
+  const count = isMarathon ? 35 : 80;
+  for(let i = 0; i < count; i++){
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;width:6px;height:9px;background:${colors[i%colors.length]};top:65vh;left:${i%2===0 ? '5vw' : '95vw'};pointer-events:none;z-index:999999;border-radius:2px;`;
+    document.body.appendChild(el);
+    const dx = (i % 2 === 0 ? 1 : -1) * (100 + Math.random() * 240);
+    const dy = -(180 + Math.random() * 260);
+    const rot = (Math.random() - 0.5) * 720;
+    const dur = 900 + Math.random() * 500;
+    el.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy + 350}px) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(.22,.9,.32,1)' });
+    setTimeout(()=> el.remove(), dur + 50);
+  }
+}
+
+function fireConfetti(){
+  fireSideConfetti({ mode: 'celebration' });
 }
 /* Muhavara (so'zlashuv) yozib olish jarayonida sahifadan chiqib ketilsa (orqaga
    tugmasi yoki "Testni yakunlash" orqali), MediaRecorder'ni to'xtatishdan oldin
@@ -2414,19 +2486,51 @@ document.addEventListener('click', (e)=>{
   document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
 });
 
-/* mobile sidebar (agar mavjud bo'lsa) */
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const menuBtn = document.getElementById('menuBtn');
-if(menuBtn && sidebar && overlay){
-  menuBtn.addEventListener('click', ()=>{
-    sidebar.classList.add('open'); overlay.classList.add('show');
-  });
+/* ---------- Sidebar Controls ---------- */
+function openSidebar(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if(sb) sb.classList.add('open');
+  if(ov) ov.classList.add('show');
 }
-if(overlay){
-  overlay.addEventListener('click', closeSidebar);
+function closeSidebar(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if(sb) sb.classList.remove('open');
+  if(ov) ov.classList.remove('show');
 }
-function closeSidebar(){ if(sidebar) sidebar.classList.remove('open'); if(overlay) overlay.classList.remove('show'); }
+function toggleSidebar(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  const sb = document.getElementById('sidebar');
+  if(sb && sb.classList.contains('open')){
+    closeSidebar(e);
+  } else {
+    openSidebar(e);
+  }
+}
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+window.toggleSidebar = toggleSidebar;
+
+// Sidebar navigation link clicks & escape key
+document.addEventListener('click', (e) => {
+  const navBtn = e.target.closest('#sidebar .navlink, #sidebar .admin-link');
+  if(navBtn){
+    const targetView = navBtn.getAttribute('data-view');
+    if(targetView && typeof showView === 'function'){
+      showView(targetView);
+    }
+    closeSidebar();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    closeSidebar();
+  }
+});
 
 /* view-dashboard is default active in HTML already */
 document.querySelector('.bn-btn[data-view="dashboard"]').classList.add('active');
@@ -9430,7 +9534,7 @@ function showFullExamResults(){
     <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="finishFullExamAndGoHome()">Bosh sahifaga qaytish</button>
   `;
   runEntranceAnimations(body, true);
-  if(overallPct>=60) fireConfetti();
+  if(overallPct >= 25) fireSideConfetti({ mode: 'celebration' });
 }
 function finishFullExamAndGoHome(){
   FULL_EXAM = null;
@@ -11198,21 +11302,21 @@ function _duelStopResultPolling(){
 }
 
 const DR_VICTORY_TROPHY = `
-<div style="position:relative;width:145px;height:150px;display:flex;align-items:flex-end;justify-content:center;">
+<div style="position:relative;width:155px;height:160px;display:flex;align-items:flex-end;justify-content:center;">
   <div class="dr-sparkle-1" style="position:absolute;top:6px;left:2px;color:#FBBF24;">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
   </div>
   <div class="dr-sparkle-2" style="position:absolute;top:58px;left:-6px;color:#F59E0B;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
   </div>
   <div class="dr-sparkle-3" style="position:absolute;top:14px;right:0;color:#FBBF24;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
   </div>
   <div class="dr-sparkle-4" style="position:absolute;bottom:44px;right:-2px;color:#FCD34D;">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>
   </div>
   <div class="dr-trophy-inner">
-  <svg width="138" height="145" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="150" height="158" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="drGoldCupGrad" x1="20" y1="20" x2="95" y2="85" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stop-color="#FFF275"/><stop offset="25%" stop-color="#FFD000"/>
@@ -11262,21 +11366,21 @@ const DR_VICTORY_TROPHY = `
 </div>`;
 
 const DR_DEFEAT_TROPHY = `
-<div style="position:relative;width:145px;height:150px;display:flex;align-items:flex-end;justify-content:center;margin-left:-40px;">
+<div style="position:relative;width:155px;height:160px;display:flex;align-items:flex-end;justify-content:center;margin-left:-24px;">
   <div class="dr-petal-1" style="position:absolute;top:6px;left:6px;color:#CBD5E1;">
-    <svg width="9" height="15" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
   </div>
   <div class="dr-petal-2" style="position:absolute;top:14px;right:10px;color:#CBD5E1;">
-    <svg width="11" height="16" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+    <svg width="12" height="17" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
   </div>
   <div class="dr-petal-3" style="position:absolute;top:44px;right:0;color:#CBD5E1;">
-    <svg width="7" height="13" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+    <svg width="8" height="14" viewBox="0 0 10 16" fill="currentColor"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
   </div>
   <div class="dr-petal-4" style="position:absolute;bottom:14px;left:10px;color:#CBD5E1;">
-    <svg width="8" height="14" viewBox="0 0 10 16" fill="currentColor" transform="rotate(-35)"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
+    <svg width="9" height="15" viewBox="0 0 10 16" fill="currentColor" transform="rotate(-35)"><path d="M5 0C8 5 10 9 7 14C5 16 3 14 2 11C1 7 3 3 5 0Z"/></svg>
   </div>
   <div class="dr-trophy-inner">
-  <svg width="138" height="145" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="150" height="158" viewBox="0 0 115 120" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <radialGradient id="drFallenFloorShadow" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="#94A3B8" stop-opacity="0.55"/>
@@ -11326,12 +11430,12 @@ const DR_DEFEAT_TROPHY = `
   </div>
 </div>`;
 
-/* Uchburchak "mesh" fon — g'alabada oltin, mag'lubiyatda kumush tusda. */
+/* Uchburchak "mesh" fon — g'alabada oltin, mag'lubiyatda kumush tusda (420px balandlik). */
 function drBuildMesh(type, dark, containerWidth){
-  const height = 340;
+  const height = 420;
   const targetTileWidth = 22;
   const cols = Math.max(14, Math.round(containerWidth / targetTileWidth));
-  const rows = 16;
+  const rows = 20;
   const dx = containerWidth / cols;
   const dy = height / rows;
   const points = [];
@@ -11345,8 +11449,8 @@ function drBuildMesh(type, dark, containerWidth){
   }
   const goldPaletteLight = ['#FFF8DE','#FFEAA3','#FFF2BA','#FFE38C','#FFFBF0','#FFDE7A','#FFF5C6','#FFE899','#FFFDF4','#FFDC70'];
   const silverPaletteLight = ['#FFFFFF','#F8FAFC','#F1F5F9','#E8EDF3','#DFE6EE','#F4F6F8','#ECEFF4','#FFFFFF','#F1F4F8','#E2E8F0'];
-  const goldPaletteDark = ['#2C2108','#382A0A','#201804','#43320B','#1B1403','#4E3A0E','#2E2308','#3B2D0B','#44340D','#241B04'];
-  const silverPaletteDark = ['#28354A','#1F293A','#34445F','#1A2332','#415577','#253145','#2F3E57','#1C2534','#3B4C69','#222C3D'];
+  const goldPaletteDark = ['#2C2508','#382E0A','#201B04','#43370B','#1B1703','#4E3F0E','#2E2608','#3B310B','#44390D','#241E04'];
+  const silverPaletteDark = ['#1A2C23','#14231C','#1E342A','#111E18','#233C30','#162720','#1B2F25','#13201A','#22382D','#182A21'];
   const palette = dark
     ? (type==='victory' ? goldPaletteDark : silverPaletteDark)
     : (type==='victory' ? goldPaletteLight : silverPaletteLight);
@@ -11368,10 +11472,10 @@ function drBuildMesh(type, dark, containerWidth){
   }
   let fadeTop, fadeMid, fadeLow, fadeEnd;
   if(dark){
-    fadeTop = type==='victory' ? '#1E1705' : '#1A2334';
-    fadeMid = type==='victory' ? '#171206' : '#151C29';
-    fadeLow = type==='victory' ? '#13151D' : '#131825';
-    fadeEnd = '#111622';
+    fadeTop = type==='victory' ? '#1E2B1A' : '#17271F';
+    fadeMid = type==='victory' ? '#15241B' : '#122019';
+    fadeLow = type==='victory' ? '#101B15' : '#0E1914';
+    fadeEnd = '#0D1713';
   } else {
     fadeTop = type==='victory' ? '#FFF6D3' : '#F1F5F9';
     fadeMid = type==='victory' ? '#FFFBEA' : '#F8FAFC';
@@ -11411,28 +11515,7 @@ function drPlayBars(root){
 }
 
 function drBurstConfetti(){
-  const colors = ['#FFD700','#FFA500','#52C41A','#0091FF','#FF4D4F'];
-  for(let i=0; i<60; i++){
-    const el = document.createElement('div');
-    const size = 6 + Math.random()*5;
-    el.style.position='fixed'; el.style.left='50%'; el.style.top='45%';
-    el.style.width=size+'px'; el.style.height=size+'px';
-    el.style.background = colors[Math.floor(Math.random()*colors.length)];
-    el.style.borderRadius = Math.random()>0.5 ? '50%' : '2px';
-    el.style.zIndex = 9999; el.style.pointerEvents = 'none';
-    document.body.appendChild(el);
-    const angle = Math.random()*Math.PI*2;
-    const distance = 80 + Math.random()*160;
-    const dx = Math.cos(angle)*distance;
-    const dy = Math.sin(angle)*distance - 60;
-    const rotate = Math.random()*720 - 360;
-    const duration = 700 + Math.random()*500;
-    el.animate([
-      { transform:'translate(-50%, -50%) rotate(0deg)', opacity:1 },
-      { transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotate}deg)`, opacity:0 }
-    ], { duration, easing:'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill:'forwards' });
-    setTimeout(()=>{ el.remove(); }, duration+50);
-  }
+  fireSideConfetti({ mode: 'celebration' });
 }
 
 function renderDuelResultScreen(d){
@@ -11451,14 +11534,20 @@ function renderDuelResultScreen(d){
   const myPhoto = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
   const oppPhoto = oppInfo ? oppInfo.photoUrl : null;
   const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
   if(d.status !== 'completed'){
     wrap.innerHTML = `
-      <div class="card" style="padding:28px 22px;text-align:center;">
-        <div style="font-size:32px;margin-bottom:10px;">⏳</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Natijangiz saqlandi</div>
-        <div style="font-size:13px;color:var(--text-dim);line-height:1.5;">${escapeHtml(oppName)} hali javob bermadi — u yakunlagach natija shu yerda ko'rinadi.</div>
-        <button type="button" class="btn btn-outline" style="width:100%;margin-top:18px;" onclick="showView('duelhistory')">Duellarga qaytish</button>
+      <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage" style="display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh;">
+        <button type="button" class="dr-top-close-btn" onclick="showView('duelhistory')" title="Duellarga qaytish" aria-label="Duellarga qaytish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="card" style="padding:32px 24px;text-align:center;max-width:380px;width:100%;border-radius:20px;">
+          <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Natijangiz saqlandi</div>
+          <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">${escapeHtml(oppName)} hali javob bermadi — u yakunlagach natija shu yerda ko'rinadi.</div>
+          <button type="button" class="btn btn-outline" style="width:100%;margin-top:20px;padding:11px 18px;font-weight:700;" onclick="showView('duelhistory')">Duellarga qaytish</button>
+        </div>
       </div>`;
     duelResultPollTimer = setInterval(async ()=>{
       const resultView = document.getElementById('view-duelresult');
@@ -11479,11 +11568,10 @@ function renderDuelResultScreen(d){
   } else {
     state = myR.score > oppR.score ? 'win' : 'lose';
   }
-  const isVictory = state !== 'lose'; // durrang ham "win" uslubida ko'rsatiladi (neytral bo'lmasin uchun ijobiyroq)
+  const isVictory = state !== 'lose'; // durrang ham "win" uslubida ko'rsatiladi
   const type = isVictory ? 'victory' : 'defeat';
-  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-  const title = state === 'win' ? "G'ALABA" : (state === 'draw' ? 'DURRANG' : "MAG'LUBIYAT");
-  const subtitle = state === 'win' ? "Duelda g'olib chiqdingiz!" : (state === 'draw' ? 'Duel durrang yakunlandi' : "Duelda mag'lub bo'ldingiz!");
+  const title = state === 'win' ? "G'ALABA!" : (state === 'draw' ? 'DURRANG' : "MAG'LUBIYAT");
+  const subtitle = state === 'win' ? "Bellashuvda g'olib bo'ldingiz!" : (state === 'draw' ? 'Bellashuv durrang yakunlandi' : "Bellashuvda mag'lub bo'ldingiz!");
   const tipHtml = isVictory
     ? `<div class="dr-reward">${state==='draw' ? "Ikkalangiz teng kuchdasiz" : "Ajoyib natija!"}</div>`
     : `<button type="button" class="dr-defeat-tip" onclick="showView('grammar')">Ko'proq mashq qiling!</button>`;
@@ -11501,6 +11589,9 @@ function renderDuelResultScreen(d){
 
   wrap.innerHTML = `
     <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage">
+      <button type="button" class="dr-top-close-btn" onclick="showView('duelhistory')" title="Duellarga qaytish" aria-label="Duellarga qaytish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <div class="dr-mesh-wrap" id="drMesh"></div>
       <div class="dr-content">
         <div class="dr-top-row">
@@ -11517,40 +11608,17 @@ function renderDuelResultScreen(d){
           <div class="dr-trophy-col">${trophySvg}</div>
         </div>
         <div class="dr-bottom-section">
-          <h2 class="dr-section-title">Taqqoslash</h2>
-          <div class="dr-players-row">
-            <div class="dr-player">
-              <div class="dr-avatar dr-p1">${myAvatarInner}</div>
-              <span class="dr-player-name">${escapeHtml(myName)}</span>
+          <div class="dr-compare-row">
+            <div class="dr-compare-user">
+              <div class="dr-avatar-lg dr-p1">${myAvatarInner}</div>
+              <span class="dr-compare-name">Siz</span>
             </div>
-            <div class="dr-player dr-right">
-              <div class="dr-avatar dr-p2">${oppAvatarInner}</div>
-              <span class="dr-player-name">${escapeHtml(oppName)}</span>
-            </div>
-          </div>
-          <div class="dr-metric">
-            <div class="dr-metric-numbers">
-              <span class="dr-num-p1">${myR.score}/${myR.total}</span>
-              <span class="dr-metric-label">Ball</span>
-              <span class="dr-num-p2">${oppR.score}/${oppR.total}</span>
-            </div>
-            <div class="dr-bars">
-              <div class="dr-bar-track dr-left"><div class="dr-bar-fill dr-green" data-w="${scorePct.mine}"></div></div>
-              <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${scorePct.opp}"></div></div>
+            <div class="dr-compare-score">${myR.score}-${oppR.score}</div>
+            <div class="dr-compare-user">
+              <div class="dr-avatar-lg dr-p2">${oppAvatarInner}</div>
+              <span class="dr-compare-name">${escapeHtml(oppName)}</span>
             </div>
           </div>
-          ${isSpeaking ? '' : `
-          <div class="dr-metric">
-            <div class="dr-metric-numbers">
-              <span class="dr-num-p1">${fmt(myR.timeSec)}</span>
-              <span class="dr-metric-label">Vaqt</span>
-              <span class="dr-num-p2">${fmt(oppR.timeSec)}</span>
-            </div>
-            <div class="dr-bars">
-              <div class="dr-bar-track dr-left"><div class="dr-bar-fill dr-green" data-w="${timePct.mine}"></div></div>
-              <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${timePct.opp}"></div></div>
-            </div>
-          </div>`}
           <div class="dr-btn-row">
             <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
             <button type="button" class="btn btn-primary dr-analyze-btn" onclick="${isSpeaking ? 'openSpeakingDuelAnalysis()' : 'openDuelAnalysis()'}">Tahlil</button>
@@ -11562,11 +11630,41 @@ function renderDuelResultScreen(d){
   const pageEl = document.getElementById('drPage');
   const meshEl = document.getElementById('drMesh');
   if(meshEl && pageEl){
-    const w = Math.max(pageEl.clientWidth || 0, 320);
+    const w = Math.max(pageEl.clientWidth || window.innerWidth || 0, 320);
     meshEl.innerHTML = drBuildMesh(type, isDark, w);
   }
-  drPlayBars(wrap);
+  if(state === 'win'){
+    setTimeout(()=>{
+      fireSideConfetti({ mode: 'celebration' });
+    }, 220);
+  }
 }
+
+// Admin/Dasturchi uchun preview sinovi: window.previewDuelResult('win' | 'lose' | 'draw')
+window.previewDuelResult = function(type = 'win'){
+  const me = _duelMyId();
+  const myName = _duelMyName();
+  const mockDuel = {
+    token: 'preview_test_token',
+    status: 'completed',
+    duelType: 'grammar',
+    skill: 'grammar',
+    challenger: { id: me, name: myName },
+    opponent: { id: 'opp_preview', name: 'Sardorbek' },
+    challengerResult: {
+      score: type === 'win' ? 9 : (type === 'lose' ? 5 : 8),
+      total: 10,
+      timeSec: type === 'win' ? 42 : (type === 'lose' ? 78 : 55)
+    },
+    opponentResult: {
+      score: type === 'win' ? 6 : (type === 'lose' ? 9 : 8),
+      total: 10,
+      timeSec: type === 'win' ? 64 : (type === 'lose' ? 48 : 55)
+    }
+  };
+  showView('duelresult');
+  renderDuelResultScreen(mockDuel);
+};
 
 /* ---------- Duel: "Tahlil" — savollar bo'yicha ikkala tomon javoblarini
    solishtirish. Faqat submit_duel_answer orqali saqlangan (yangi sxema)
@@ -12449,6 +12547,9 @@ function pickOption(oi){
     if(q.picked !== null && q.picked !== undefined) return;
     q.picked = oi;
     const isCorrect = (oi === q.a);
+    if(isCorrect){
+      fireSideConfetti({ mode: 'marathon' });
+    }
     const optEls = document.querySelectorAll('#quizBody .option');
     optEls.forEach((el, idx)=>{
       el.classList.remove('selected', 'correct', 'incorrect');
@@ -13299,7 +13400,7 @@ function renderMuhavaraSummary(totalScore, maxScore){
     <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="showView('dashboard')">Bosh sahifaga qaytish</button>
   `;
   runEntranceAnimations(body, true);
-  if(pct>=60) fireConfetti();
+  if(pct >= 25) fireSideConfetti({ mode: 'celebration' });
 }
 function renderMuhavaraPhase(){
   clearQuestionTimer();
@@ -13581,7 +13682,7 @@ function renderKitabaSummary(){
     </div>
   `;
   runEntranceAnimations(body, true);
-  if(pct>=60) fireConfetti();
+  if(pct >= 25) fireSideConfetti({ mode: 'celebration' });
 }
 /* Natijadan keyin "Qayta boshlash" bosilsa — 3 qism uchun yangi (tasodifiy)
    mavzular bilan butun imtihon qaytadan boshlanadi. */
@@ -13849,7 +13950,7 @@ function finishQuiz(force = false){
     analyzeBtn.onclick = showMistakes;
   }
 
-  if(pct>=60) fireConfetti();
+  if(pct >= 25) fireSideConfetti({ mode: 'celebration' });
 
   renderReviewGrid();
   while(viewHistory.length > 0 && viewHistory[viewHistory.length - 1] === 'quiz'){

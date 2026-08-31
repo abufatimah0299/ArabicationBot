@@ -4,68 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Arabication — Arab tili platformasi</title>
+<link rel="icon" type="image/jpeg" href="public/Arabication-06.jpg">
+<link rel="apple-touch-icon" href="public/Arabication-06.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Onest:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="js/telegram-init.js"></script>
+  <script>
+    /* Immediate global sidebar functions to guarantee instant response on click */
+    function openSidebar(e){
+      if(e && e.stopPropagation) e.stopPropagation();
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('overlay');
+      if(sb) sb.classList.add('open');
+      if(ov) ov.classList.add('show');
+    }
+    function closeSidebar(e){
+      if(e && e.stopPropagation) e.stopPropagation();
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('overlay');
+      if(sb) sb.classList.remove('open');
+      if(ov) ov.classList.remove('show');
+    }
+    function toggleSidebar(e){
+      if(e && e.stopPropagation) e.stopPropagation();
+      const sb = document.getElementById('sidebar');
+      if(sb && sb.classList.contains('open')){
+        closeSidebar(e);
+      } else {
+        openSidebar(e);
+      }
+    }
+    window.openSidebar = openSidebar;
+    window.closeSidebar = closeSidebar;
+    window.toggleSidebar = toggleSidebar;
+  </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="app">
   <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="brand-mark"><img src="data:image/jpeg;base64,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" alt="Arabication logo"></div>
-      <div>
-        <div class="brand-text">Arabication</div>
-        <div class="brand-sub">Arab tili platformasi</div>
+  <aside class="sidebar" id="sidebar" aria-label="Asosiy menyu">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-mark" aria-label="Arabication logo">
+          <img src="public/Arabication-06.jpg" alt="Arabication logo" width="40" height="40">
+        </div>
+        <div>
+          <div class="brand-text">Arabication</div>
+          <div class="brand-sub">Arab tili platformasi</div>
+        </div>
       </div>
     </div>
+
     <nav class="navlist" id="navlist">
       <button class="navlink" data-view="flashcards">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M12 6v6m-3-3h6"/></svg>
         Mening lug‘atim
       </button>
-      <button class="navlink" data-view="natijalar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-        Natijalarim
-      </button>
       <button class="navlink" data-view="xatolar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         Xatolarim
       </button>
-      <button class="navlink" data-view="rank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        Reyting
-      </button>
-      <button class="navlink" data-view="sozlamalar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
-        Sozlamalar
-      </button>
-      <button class="navlink" onclick="contactSupport()">
+      <button class="navlink" onclick="contactSupport(); closeSidebar(event);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         Yordam
       </button>
     </nav>
     <div class="sidebar-bottom">
-      <button class="admin-link" data-view="profil" id="sidebarProfilLink" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-        Profil
-      </button>
-      <button class="admin-link" data-view="admin" id="adminNavLink" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg>
-        Admin panel
-      </button>
+      <div class="sidebar-footer-info">
+        <span>Arabication</span>
+        <span>v2.0</span>
+      </div>
     </div>
   </aside>
-  <div class="overlay" id="overlay"></div>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
   <!-- MAIN -->
   <main class="main">
     <div class="topbar" id="mainTopbar">
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
         <div class="hello" id="topGreeting" style="display:none;">
           <h1 id="greetingName">Assalomu alaykum! 👋</h1>
           <p id="greetingSub">Yuklanmoqda...</p>
@@ -83,7 +104,7 @@
           </svg>
           <span class="user-msg-badge" id="userMsgBadge">0</span>
         </button>
-        <div class="avatar" id="topAvatar" onclick="showView('profil')" title="Profil" style="cursor:pointer; display:none;">?</div>
+        <div class="avatar" id="topAvatar" onclick="toggleSidebar(event)" title="Menyuni ochish" style="cursor:pointer; display:flex;">?</div>
       </div>
     </div>
 
@@ -92,7 +113,7 @@
       <!-- ============ DASHBOARD ============ -->
       <div class="view active" id="view-dashboard">
         <div class="dash-hero-container" id="dashHeroContainer">
-          <div class="dash-avatar-circle" id="dashUserAvatar">
+          <div class="dash-avatar-circle" id="dashUserAvatar" onclick="openSidebar()" role="button" tabindex="0" title="Menyuni ochish" aria-label="Menyuni ochish">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
           </div>
           <div class="dash-greeting-sub" id="dashGreetingName">Assalamu alaykum!</div>
@@ -1215,18 +1236,16 @@
           <button class="skill-banner sb-duel" onclick="openDuelSkillSelect()">
             <div class="skill-banner-left">
               <div class="skill-banner-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <div>
-                <div class="skill-banner-title">Do'stni duelga chaqirish</div>
+                <div class="skill-banner-title">Do'stni chaqirish</div>
                 <div class="skill-banner-meta">
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>Grammatika va So'zlashuvda bellashuv</span>
+                  <span>Grammatika va So'zlashuvda</span>
                 </div>
               </div>
             </div>
-            <div class="skill-banner-arrow-btn" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 8 4 4-4 4"/></svg>
-            </div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </button>
         </div>
         <div class="card settings-list">
@@ -1245,34 +1264,29 @@
 
       <!-- ============ DUEL TARIXI ============ -->
       <div class="view" id="view-duelhistory">
-        <div class="back-row" onclick="showView('duel')">
+        <div class="back-row" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-          <span>Duellar</span>
+          Ortga
         </div>
         <div class="view-title">Duel tarixi</div>
         <div style="display:flex;flex-direction:column;gap:10px;" id="duelList"></div>
         <div class="card placeholder-card" id="duelEmpty" style="display:none;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <h3>Hali duellaringiz yo'q</h3>
           <p>Do'stingizni Grammatika bo'yicha duelga chaqiring — havolani Telegram orqali ulashing va kim ko'proq to'g'ri javob berishini bilib oling.</p>
         </div>
       </div>
 
-      <!-- ============ DUEL NATIJASI ============ -->
+      <!-- ============ DUEL NATIJASI (Full-screen) ============ -->
       <div class="view" id="view-duelresult">
-        <div class="back-row" onclick="showView('duelhistory')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-          <span>Duellar</span>
-        </div>
-        <div class="view-title">Duel natijasi</div>
         <div id="duelResultBody"></div>
       </div>
 
       <!-- ============ DUEL UCHUN BO'LIM TANLASH ============ -->
       <div class="view" id="view-duelskillselect">
-        <div class="back-row" onclick="showView('duel')">
+        <div class="back-row" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-          <span>Duellar</span>
+          Ortga
         </div>
         <div class="view-title">Duel uchun bo'lim tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Do'stingiz bilan qaysi mavzudan bellashmoqchisiz?</div>
@@ -1302,11 +1316,11 @@
 
       <!-- ============ DUEL — GRAMMATIKA MAVZU TANLASH (2-bosqich) ============ -->
       <div class="view" id="view-duelgrammarselect">
-        <div class="back-row" onclick="showView('duelskillselect')">
+        <div class="back-row" onclick="goBack()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-          <span>Ortga</span>
+          Ortga
         </div>
-        <div class="view-title">Grammatika mavzusini tanlang</div>
+        <div class="view-title">Mavzu tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Qaysi mavzudan bellashmoqchisiz?</div>
         <div class="duel-skill-body">
           <div class="duel-skill-mix-card" onclick="chooseDuelSkill('aralash')">
