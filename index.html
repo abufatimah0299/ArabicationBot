@@ -1549,20 +1549,26 @@ html[data-theme="dark"] .attanal-hero-badge{ color:#2B1A00; }
   border-radius:28px;
   overflow:hidden;
   cursor:pointer;
-  background:
-    radial-gradient(130% 130% at 100% 0%, #E93FAC 0%, transparent 58%),
-    radial-gradient(130% 130% at 0% 100%, #5AA0F4 0%, transparent 58%),
-    linear-gradient(135deg, #8B3DF0 0%, #6A5CF5 100%);
   box-shadow:0 16px 36px -12px rgba(107,63,224,0.55), var(--shadow-lg);
   animation:attanalHeroIn .6s var(--ease) both;
   transition:transform .28s var(--ease), box-shadow .28s var(--ease);
 }
+.attanal-hero-card2::before{
+  content:"";
+  position:absolute; inset:0; z-index:-1;
+  background:
+    radial-gradient(130% 130% at 100% 0%, #E93FAC 0%, transparent 58%),
+    radial-gradient(130% 130% at 0% 100%, #5AA0F4 0%, transparent 58%),
+    linear-gradient(135deg, #8B3DF0 0%, #6A5CF5 100%);
+  animation:ah2HueSpin 7s ease-in-out infinite alternate;
+}
+@keyframes ah2HueSpin{ from{ filter:hue-rotate(-22deg) saturate(1.05); } to{ filter:hue-rotate(22deg) saturate(1.15); } }
 .attanal-hero-card2:hover{ transform:translateY(-3px); }
 .attanal-hero-card2:active{ transform:translateY(-1px) scale(0.995); }
-.ah2-top{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.ah2-top{ display:flex; align-items:center; gap:16px; margin-bottom:18px; }
 .ah2-logo{ flex-shrink:0; line-height:0; }
-.ah2-logo svg{ width:122px; height:auto; display:block; }
-.ah2-title{ font-size:23px; font-weight:800; line-height:1.2; color:#fff; font-family:'Onest',sans-serif; }
+.ah2-logo svg{ width:150px; height:auto; display:block; }
+.ah2-title{ flex:1; text-align:right; font-size:24px; font-weight:900; line-height:1.2; color:#fff; font-family:'Onest',sans-serif; }
 .ah2-desc{ font-size:13.5px; line-height:1.62; color:rgba(255,255,255,0.92); font-weight:600; margin:0 0 24px; max-width:100%; }
 .ah2-cta{
   display:block; margin:0 auto; padding:15px 42px; border:none; border-radius:999px;
@@ -1572,10 +1578,23 @@ html[data-theme="dark"] .attanal-hero-badge{ color:#2B1A00; }
 }
 .ah2-cta:hover{ transform:translateY(-1px); }
 .ah2-cta:active{ transform:scale(0.97); }
+.attanal-hero-card2::after{
+  content:"";
+  position:absolute; top:0; left:-60%; width:35%; height:100%;
+  background:linear-gradient(115deg, transparent, rgba(255,255,255,0.38), transparent);
+  transform:skewX(-18deg);
+  animation:ah2Shimmer 5s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes ah2Shimmer{ 0%{ left:-60%; } 45%{ left:130%; } 100%{ left:130%; } }
+@media (prefers-reduced-motion: reduce){
+  .attanal-hero-card2::before{ animation:none; }
+  .attanal-hero-card2::after{ animation:none; display:none; }
+}
 @media (max-width:480px){
   .attanal-hero-card2{ padding:24px 20px; border-radius:24px; }
-  .ah2-logo svg{ width:98px; }
-  .ah2-title{ font-size:19.5px; }
+  .ah2-logo svg{ width:126px; }
+  .ah2-title{ font-size:20.5px; }
   .ah2-desc{ font-size:13px; }
   .ah2-cta{ width:100%; }
 }
