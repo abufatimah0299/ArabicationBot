@@ -1252,7 +1252,7 @@
         baseShowAdminTab(tab);
       }
 
-      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community', 'skilllimits', 'speakingduel'].forEach(t => {
+      ['examcards', 'gramorder', 'sendmsg', 'admins', 'community', 'skilllimits', 'speakingduel', 'vocabularies'].forEach(t => {
         const el = document.getElementById('adminTab-' + t);
         if (el) {
           el.style.display = (t === tab) ? '' : 'none';
@@ -1270,6 +1270,7 @@
       if (tab === 'community') renderCommunityAdmin();
       if (tab === 'skilllimits') renderSkillLimitsAdmin();
       if (tab === 'speakingduel') renderSpeakingDuelQuestionsAdmin();
+      if (tab === 'vocabularies' && typeof renderAdminVocabularies === 'function') renderAdminVocabularies();
     };
   }
 
