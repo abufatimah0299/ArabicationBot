@@ -16898,6 +16898,76 @@ async function apiGetDuelAnswers(duelId){
   }catch(e){ console.error('[apiGetDuelAnswers]', e); return []; }
 }
 
+async function apiGetDuelSpeakingAnswers(duelId){
+  try{
+    const rows = await duelRpc('get_duel_speaking_answers', { p_duel_id: duelId });
+    return Array.isArray(rows) ? rows : [];
+  }catch(e){ console.error('[apiGetDuelSpeakingAnswers]', e); return []; }
+}
+
+/* Speaking Duel "Tahlil" — ikkala tarafning har savolga bergan transkripti,
+   bali va AI izohini ketma-ket ko'rsatadi. Grid+detail popup (grammatika
+   duelidagi kabi) o'rniga to'g'ridan-to'g'ri ro'yxat, chunki bu yerda
+   "to'g'ri/noto'g'ri" belgisi yo'q, faqat matn+ball. */
+async function openSpeakingDuelAnalysis(){
+  const d = _duelCurrentResult;
+  if(!d) return;
+  document.getElementById('modalTitle').textContent = "Speaking Duel — Tahlil";
+  document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:34px 0;color:var(--text-dim);font-size:13.5px;">Yuklanmoqda...</div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+
+  const me = _duelMyId();
+  const iAmChallenger = d.challenger.id === me;
+  const myId = iAmChallenger ? d.challenger.id : d.opponent.id;
+  const oppId = iAmChallenger ? d.opponent.id : d.challenger.id;
+  const myName = _duelMyName();
+  const oppName = (iAmChallenger ? d.opponent : d.challenger) ? (iAmChallenger ? d.opponent.name : d.challenger.name) : 'Raqib';
+
+  const rows = await apiGetDuelSpeakingAnswers(d.id);
+  const questions = Array.isArray(d.questions) ? d.questions : [];
+
+  const byIdx = {};
+  rows.forEach(r=>{
+    const idx = r.question_index;
+    if(!byIdx[idx]) byIdx[idx] = {};
+    if(String(r.user_id) === String(myId)) byIdx[idx].mine = r;
+    else if(String(r.user_id) === String(oppId)) byIdx[idx].opp = r;
+  });
+
+  const sideBlock = (label, r) => {
+    if(!r){
+      return `<div style="padding:10px 12px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);color:var(--text-faint);font-size:12.5px;font-weight:600;">${escapeHtml(label)}: hali javob bermagan</div>`;
+    }
+    return `
+      <div style="padding:10px 12px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-dim);">${escapeHtml(label)}</span>
+          <span style="font-size:13px;font-weight:800;">${r.score ?? 0}/5</span>
+        </div>
+        ${r.transcript ? `<div style="font-size:12.5px;line-height:1.5;margin-top:2px;">🎙 "${escapeHtml(r.transcript)}"</div>` : ''}
+        ${r.feedback ? `<div style="font-size:12px;color:var(--text-faint);margin-top:4px;">💡 ${escapeHtml(r.feedback)}</div>` : ''}
+      </div>`;
+  };
+
+  const bodyHtml = questions.map((q,i)=>{
+    const entry = byIdx[i] || {};
+    return `
+      <div style="margin-bottom:16px;">
+        <div style="font-family:var(--font-ar);font-size:16px;direction:rtl;text-align:right;line-height:1.6;font-weight:600;margin-bottom:8px;">${q.prompt_ar || ''}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${sideBlock(myName, entry.mine)}
+          ${sideBlock(oppName, entry.opp)}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;">
+      ${bodyHtml || `<div class="review-hint" style="margin:0;">Tahlil topilmadi</div>`}
+      <button type="button" class="btn btn-primary btn-block" style="margin-top:6px;" onclick="document.getElementById('modalOverlay').classList.remove('show')">Yopish</button>
+    </div>`;
+}
+
 /* Do'stlar ro'yxati alohida jadvalsiz — siz duel o'ynagan (yoki hali javob
    kutayotgan) raqiblardan get_my_duels natijasi asosida hisoblanadi. */
 async function apiGetFriends(){
@@ -17071,11 +17141,12 @@ function shareDuelLink(token){
 }
 
 /* Duel g'alabasini do'stlarga "ulashish" (natija ekranidagi yashil tugma). */
-function shareDuelResultBrag(oppName, score, total){
+function shareDuelResultBrag(oppName, score, total, isSpeaking){
   const url = WEBAPP_SHORT_NAME
     ? `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}`
     : `https://t.me/${BOT_USERNAME}`;
-  const text = `🏆 ${oppName}ni Grammatika duelida ${score}/${total} ball bilan mag'lub etdim! Meni yenga olasizmi?`;
+  const label = isSpeaking ? 'Speaking Duelda' : 'Grammatika duelida';
+  const text = `🏆 ${oppName}ni ${label} ${score}/${total} ball bilan mag'lub etdim! Meni yenga olasizmi?`;
   const tg = window.Telegram?.WebApp;
   if(tg && typeof tg.openTelegramLink === 'function'){
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
@@ -17137,16 +17208,123 @@ async function chooseSpeakingDuel(){
   await startNewSpeakingDuel();
 }
 
-/* VAQTINCHALIK: Speaking duel yozib olish (recording) UI hali qurilmagan
-   (5-qadam). Bu ikki funksiya faqat MCQ duel oqimi (startDuelQuiz/
-   openDuelResultCard) speaking duelga tasodifan ishlab ketib xato
-   bermasligi uchun qo'yilgan. 5-qadam tayyor bo'lgach shu ikkisi
-   to'liq (mikrofon yozish, taymer, AI baholash) mantiqqa almashtiriladi. */
+/* Speaking Duel — real yozib olish oqimi. Mavjud Muhavara mexanizmini
+   (startMuhavaraPrep/startMuhavaraRecording/storeMuhavaraAnswer) qayta
+   ishlatadi: shu funksiyalar currentQuiz.questions[idx]/currentQuiz.phase
+   bilan ishlaydi, duel-xos bo'lishidan qat'i nazar farq qilmaydi. Faqat
+   currentQuiz.isSpeakingDuel=true bo'lganda, oxirida evaluateAllMuhavaraAnswers
+   o'rniga evaluateAllSpeakingDuelAnswers chaqiriladi (storeMuhavaraAnswer
+   ichida shu branch allaqachon qo'shilgan). Supabase Storage kerak emas —
+   audio to'g'ridan-to'g'ri base64 orqali evaluate-speaking-batch'ga
+   yuboriladi (oddiy Muhavaradagi kabi), submit_duel_speaking_answer'ga
+   audio_url = null bilan yoziladi.
+   10 soniya tayyorgarlik / 30 soniya yozish — spec bo'yicha. */
 async function startSpeakingDuelQuiz(duelId){
-  toast('🎙 Speaking Duel yozib olish ekrani tez orada qo\'shiladi', 3000);
+  const d = _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x=>x.id===duelId);
+  if(!d){ toast('Duel topilmadi'); return; }
+  if(!d.questions || d.questions.length < 3){ toast('Duel savollari topilmadi'); return; }
+  const meId = _duelMyId();
+  const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
+  const oppInfo = iAmChallenger ? d.opponent : d.challenger;
+  const speakingPart = { name: 'Speaking Duel', prepSecs: 10, answerSecs: 30 };
+  currentQuiz = {
+    skillId: 'muhavara', topicId: null, type: 'speaking',
+    questions: d.questions.map(q => ({
+      id: q.id, prompt: q.prompt_ar, part: speakingPart,
+      score: null, feedback: null, transcript: null
+    })),
+    idx: 0, phase: 'prep',
+    color: 'var(--muhavara,#8B5CF6)', bg: 'rgba(139,92,246,0.12)', label: '🎙 Speaking Duel',
+    startedAt: Date.now(),
+    isSpeakingDuel: true, duelId: d.id,
+    duelOpponent: oppInfo ? { name: oppInfo.name, photoUrl: oppInfo.photoUrl || null } : null,
+  };
+  const qTag = document.getElementById('quizTag');
+  if(qTag){ qTag.textContent = currentQuiz.label; qTag.style.background = currentQuiz.bg; qTag.style.color = currentQuiz.color; }
+  document.getElementById('quizSide').style.display = 'none';
+  showView('quiz');
+  startMuhavaraPrep();
 }
-async function openSpeakingDuelResultCard(duelId){
-  toast('🎙 Speaking Duel natija ekrani tez orada qo\'shiladi', 3000);
+
+/* Barcha 3 ta javob yozib olingach — bitta so'rovda AI baholaydi (xuddi
+   oddiy Muhavara batch baholash kabi), so'ng har biri alohida
+   submit_duel_speaking_answer RPC orqali serverga yoziladi. */
+async function evaluateAllSpeakingDuelAnswers(){
+  currentQuiz.phase = 'evaluating';
+  renderQuestion();
+  try{
+    const answers = currentQuiz.questions.map(q => ({
+      question_id: q.id, part_id: 'speakingduel', prompt: q.prompt,
+      audio_base64: q.audioBase64 || '', mime_type: q.mimeType || 'audio/webm'
+    }));
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/evaluate-speaking-batch`, {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({ answers })
+    });
+    const data = await res.json().catch(()=>null);
+    const results = data && Array.isArray(data.results) ? data.results : null;
+    if(!res.ok || !results){
+      toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
+      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = q.transcript || ''; });
+    } else {
+      currentQuiz.questions.forEach((q, i)=>{
+        const r = results[i] || results.find(x => x.question_id === q.id) || {};
+        q.score = Math.max(0, Math.min(5, typeof r.score === 'number' ? r.score : 0));
+        q.feedback = r.feedback || '';
+        q.transcript = r.transcript || '';
+      });
+    }
+  }catch(e){
+    toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
+    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = q.transcript || ''; });
+  }
+  currentQuiz.questions.forEach(q=>{ delete q.audioBase64; });
+  await submitSpeakingDuelResults();
+}
+
+/* Har savol javobini submit_duel_speaking_answer RPC orqali ketma-ket
+   yozadi. RPC har chaqiriqda eng yangi duels qatorini qaytaradi — oxirgisi
+   (3-savoldan keyingisi) natija ekranida ishlatiladi. */
+async function submitSpeakingDuelResults(){
+  const duelId = currentQuiz.duelId;
+  const myId = _duelMyRawId();
+  let updated = null;
+  for(let i=0; i<currentQuiz.questions.length; i++){
+    const q = currentQuiz.questions[i];
+    try{
+      const row = _duelUnwrap(await duelRpc('submit_duel_speaking_answer', {
+        p_duel_id: duelId, p_user_id: myId, p_question_index: i,
+        p_question_id: q.id, p_audio_url: null,
+        p_transcript: q.transcript || '', p_score: q.score || 0,
+        p_feedback: q.feedback || null
+      }));
+      if(row) updated = _duelFromRow(row);
+    }catch(e){
+      console.error('[submitSpeakingDuelResults]', e);
+    }
+  }
+  clearInterval(timerInterval);
+  showView('duelresult');
+  if(updated){
+    _duelHistoryCache[updated.id] = updated;
+    renderDuelResultScreen(updated);
+  } else {
+    const wrap = document.getElementById('duelResultBody');
+    if(wrap) wrap.innerHTML = `
+      <div class="card" style="padding:28px 22px;text-align:center;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;">⚠️ Natija saqlanmadi</div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.5;">Internet aloqasini tekshiring — Do'stlarim/Duellar bo'limidan qayta kirib ko'ring.</div>
+        <button type="button" class="btn btn-primary" style="width:100%;" onclick="showView('duel')">Duellar bo'limiga qaytish</button>
+      </div>`;
+  }
+  renderDuelHub();
+}
+
+function openSpeakingDuelResultCard(duelId){
+  const d = _duelHistoryCache[duelId];
+  if(!d) return;
+  showView('duelresult');
+  renderDuelResultScreen(d);
 }
 
 /* Supabase RPC delete_duel(p_duel_id, p_user_id) — faqat hali raqibi
@@ -17671,6 +17849,7 @@ function renderDuelResultScreen(d){
   _duelCurrentResult = d;
   const me = _duelMyId();
   const iAmChallenger = d.challenger.id === me;
+  const isSpeaking = d.duelType === 'speaking';
   const myR = iAmChallenger ? d.challengerResult : d.opponentResult;
   const oppR = iAmChallenger ? d.opponentResult : d.challengerResult;
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
@@ -17717,8 +17896,8 @@ function renderDuelResultScreen(d){
     : `<button type="button" class="dr-defeat-tip" onclick="showView('grammar')">Ko'proq mashq qiling!</button>`;
   const actionLabel = isVictory ? 'Ulashish' : 'Qaytarish';
   const actionOnclick = isVictory
-    ? `shareDuelResultBrag('${oppName.replace(/'/g,"\\'")}', ${myR.score}, ${myR.total}); drBurstConfetti();`
-    : `openDuelSkillSelect()`;
+    ? `shareDuelResultBrag('${oppName.replace(/'/g,"\\'")}', ${myR.score}, ${myR.total}, ${isSpeaking}); drBurstConfetti();`
+    : (isSpeaking ? `openDuelSkillSelect()` : `openDuelSkillSelect()`);
   const trophySvg = isVictory ? DR_VICTORY_TROPHY : DR_DEFEAT_TROPHY;
 
   const myAvatarInner = myPhoto ? `<img src="${myPhoto}" alt="">` : escapeHtml((myName||'?').trim().charAt(0).toUpperCase());
@@ -17767,6 +17946,7 @@ function renderDuelResultScreen(d){
               <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${scorePct.opp}"></div></div>
             </div>
           </div>
+          ${isSpeaking ? '' : `
           <div class="dr-metric">
             <div class="dr-metric-numbers">
               <span class="dr-num-p1">${fmt(myR.timeSec)}</span>
@@ -17777,10 +17957,10 @@ function renderDuelResultScreen(d){
               <div class="dr-bar-track dr-left"><div class="dr-bar-fill dr-green" data-w="${timePct.mine}"></div></div>
               <div class="dr-bar-track dr-right"><div class="dr-bar-fill dr-orange" data-w="${timePct.opp}"></div></div>
             </div>
-          </div>
+          </div>`}
           <div class="dr-btn-row">
             <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
-            <button type="button" class="btn btn-primary dr-analyze-btn" onclick="openDuelAnalysis()">Tahlil</button>
+            <button type="button" class="btn btn-primary dr-analyze-btn" onclick="${isSpeaking ? 'openSpeakingDuelAnalysis()' : 'openDuelAnalysis()'}">Tahlil</button>
           </div>
         </div>
       </div>
@@ -19397,6 +19577,8 @@ async function storeMuhavaraAnswer(blob){
   if(currentQuiz.idx < currentQuiz.questions.length-1){
     currentQuiz.idx++;
     startMuhavaraPrep();
+  } else if(currentQuiz.isSpeakingDuel){
+    evaluateAllSpeakingDuelAnswers();
   } else {
     evaluateAllMuhavaraAnswers();
   }
