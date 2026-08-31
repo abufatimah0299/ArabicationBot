@@ -8179,6 +8179,9 @@ let ADMIN_VOCABULARIES = [];
 let adminVocabSearchQuery = '';
 let adminVocabBookFilter = 'all';
 let adminVocabTopicFilter = 'all';
+let adminVocabExpandedBooks = new Set();
+let adminVocabExpandedTopics = new Set();
+let adminVocabInitializedExpand = false;
 
 function getLocalVocabularies() {
   try {
@@ -8231,7 +8234,6 @@ async function loadVocabulariesFromBackend() {
 
 async function saveVocabulariesBulkToBackend(items) {
   if (!items || !items.length) return null;
-  let backendSuccess = false;
 
   if (SESSION_TOKEN) {
     try {
@@ -8250,7 +8252,6 @@ async function saveVocabulariesBulkToBackend(items) {
       });
 
       if (res.ok) {
-        backendSuccess = true;
         const text = await res.text();
         const json = text ? JSON.parse(text) : { inserted_count: items.length };
         return json;
@@ -8328,15 +8329,49 @@ async function updateVocabularyInBackend(id, fields) {
   }
 }
 
-async function renderAdminVocabularies() {
-  const tbody = document.getElementById('adminVocabBody');
-  if (!tbody) return;
+function toggleAdminVocabBook(bookName) {
+  if (adminVocabExpandedBooks.has(bookName)) {
+    adminVocabExpandedBooks.delete(bookName);
+  } else {
+    adminVocabExpandedBooks.add(bookName);
+  }
+  renderAdminVocabularies(false);
+}
+
+function toggleAdminVocabTopic(bookName, topicName) {
+  const key = `${bookName}:::${topicName}`;
+  if (adminVocabExpandedTopics.has(key)) {
+    adminVocabExpandedTopics.delete(key);
+  } else {
+    adminVocabExpandedTopics.add(key);
+  }
+  renderAdminVocabularies(false);
+}
+
+function toggleAllAdminVocabTrees(expandAll = true) {
+  if (expandAll) {
+    ADMIN_VOCABULARIES.forEach(v => {
+      if (v.book_name) adminVocabExpandedBooks.add(v.book_name);
+      if (v.book_name && v.topic) adminVocabExpandedTopics.add(`${v.book_name}:::${v.topic}`);
+    });
+  } else {
+    adminVocabExpandedBooks.clear();
+    adminVocabExpandedTopics.clear();
+  }
+  renderAdminVocabularies(false);
+}
+
+async function renderAdminVocabularies(rebuildFilters = true) {
+  const container = document.getElementById('adminVocabTree');
+  if (!container) return;
 
   if (!ADMIN_VOCABULARIES.length) {
     await loadVocabulariesFromBackend();
   }
 
-  updateAdminVocabFilterOptions();
+  if (rebuildFilters) {
+    updateAdminVocabFilterOptions();
+  }
 
   const searchInput = document.getElementById('adminVocabSearch');
   adminVocabSearchQuery = (searchInput?.value || '').toLowerCase().trim();
@@ -8347,6 +8382,16 @@ async function renderAdminVocabularies() {
   const topicSel = document.getElementById('adminVocabTopicFilter');
   adminVocabTopicFilter = topicSel?.value || 'all';
 
+  // Default initial expand
+  if (!adminVocabInitializedExpand && ADMIN_VOCABULARIES.length > 0) {
+    ADMIN_VOCABULARIES.forEach(v => {
+      if (v.book_name) adminVocabExpandedBooks.add(v.book_name);
+      if (v.book_name && v.topic) adminVocabExpandedTopics.add(`${v.book_name}:::${v.topic}`);
+    });
+    adminVocabInitializedExpand = true;
+  }
+
+  // Filter items
   let filtered = ADMIN_VOCABULARIES.filter(v => {
     if (adminVocabBookFilter !== 'all' && (v.book_name || '') !== adminVocabBookFilter) return false;
     if (adminVocabTopicFilter !== 'all' && (v.topic || '') !== adminVocabTopicFilter) return false;
@@ -8357,53 +8402,160 @@ async function renderAdminVocabularies() {
     return true;
   });
 
+  // Grouping: Book -> Topic -> Words
+  const bookMap = new Map();
+  let totalWordsCount = 0;
+  let totalTopicsCount = 0;
+
+  filtered.forEach(v => {
+    const bookName = v.book_name || 'Umumiy kitob';
+    const topicName = v.topic || 'Umumiy mavzu';
+
+    if (!bookMap.has(bookName)) {
+      bookMap.set(bookName, new Map());
+    }
+    const topicMap = bookMap.get(bookName);
+    if (!topicMap.has(topicName)) {
+      topicMap.set(topicName, []);
+      totalTopicsCount++;
+    }
+    topicMap.get(topicName).push(v);
+    totalWordsCount++;
+  });
+
   const stats = document.getElementById('adminVocabStatsCount');
   if (stats) {
-    stats.textContent = `${filtered.length} ta lug'at (Jami: ${ADMIN_VOCABULARIES.length})`;
+    stats.textContent = `${bookMap.size} ta kitob · ${totalTopicsCount} ta mavzu · ${totalWordsCount} ta lug'at`;
   }
 
-  if (!filtered.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align:center;padding:32px 16px;color:var(--text-faint);">
-          <div style="font-size:24px;margin-bottom:6px;">📖</div>
-          <div style="font-weight:700;font-size:13.5px;color:var(--text);">Lug'atlar topilmadi</div>
-          <div style="font-size:12px;margin-top:4px;">Yangi lug'at qo'shish yoki ommaviy yuklash uchun yuqoridagi tugmalardan foydalaning.</div>
-        </td>
-      </tr>
+  if (bookMap.size === 0) {
+    container.innerHTML = `
+      <div class="placeholder-card" style="padding:36px 16px;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:16px;">
+        <div style="font-size:32px;margin-bottom:8px;">📚</div>
+        <h3 style="margin-bottom:6px;font-size:16px;font-weight:700;color:var(--text);">Lug'atlar topilmadi</h3>
+        <p style="margin-bottom:16px;color:var(--text-faint);font-size:13px;">
+          ${adminVocabSearchQuery ? "Qidiruv so'rovi bo'yicha hech qanday lug'at topilmadi." : "Hozircha tizimda kitoblar va lug'atlar mavjud emas."}
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" onclick="openAddVocabModal()">+ Yangi lug'at qo'shish</button>
+          <button type="button" class="btn btn-outline" onclick="openBulkAddVocabModal()">Ommaviy yuklash (JSON)</button>
+        </div>
+      </div>
     `;
     return;
   }
 
-  tbody.innerHTML = filtered.map(v => `
-    <tr>
-      <td>
-        <div style="font-weight:700;color:var(--text);font-size:13px;">${escapeHtml(v.book_name || '—')}</div>
-      </td>
-      <td>
-        <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:var(--indigo-100);color:var(--indigo-700);font-size:11px;font-weight:700;">
-          ${escapeHtml(v.topic || '—')}
-        </span>
-      </td>
-      <td style="text-align:right;">
-        <div style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:var(--emerald-700, #047857);direction:rtl;" class="notranslate">
-          ${escapeHtml(v.word || '—')}
+  // If search is active, expand all matching groups automatically
+  const isSearching = !!adminVocabSearchQuery;
+
+  let html = '';
+
+  bookMap.forEach((topicsMap, bookName) => {
+    let bookWordCount = 0;
+    topicsMap.forEach(words => { bookWordCount += words.length; });
+    const isBookExpanded = isSearching || adminVocabExpandedBooks.has(bookName);
+
+    html += `
+      <div class="vocab-book-card ${isBookExpanded ? 'expanded' : ''}" id="vocabBookCard_${encodeURIComponent(bookName)}">
+        <div class="vocab-book-header" onclick="toggleAdminVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')">
+          <div class="vocab-book-title-wrap">
+            <div class="vocab-book-icon">📚</div>
+            <div>
+              <div class="vocab-book-title">${escapeHtml(bookName)}</div>
+              <div class="vocab-book-meta">
+                <span class="vocab-badge indigo">${topicsMap.size} ta mavzu</span>
+                <span class="vocab-badge emerald">${bookWordCount} ta so'z</span>
+              </div>
+            </div>
+          </div>
+          <div class="vocab-book-actions">
+            <button type="button" class="btn btn-outline" style="font-size:11.5px;padding:4px 10px;border-radius:8px;" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga yangi so'z qo'shish">
+              + Lug'at
+            </button>
+            <button type="button" class="btn btn-outline" style="font-size:11.5px;padding:4px 10px;border-radius:8px;" onclick="event.stopPropagation(); openBulkAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga ommaviy yuklash">
+              Bulk JSON
+            </button>
+            <div class="vocab-chevron">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
         </div>
-      </td>
-      <td>
-        <div style="font-weight:600;color:var(--text);font-size:12.5px;">${escapeHtml(v.translation || '—')}</div>
-      </td>
-      <td>
-        <div style="font-size:11.5px;color:var(--text-faint);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(v.description || '')}">
-          ${escapeHtml(v.description || '—')}
+
+        <div class="vocab-book-body">
+    `;
+
+    topicsMap.forEach((words, topicName) => {
+      const topicKey = `${bookName}:::${topicName}`;
+      const isTopicExpanded = isSearching || adminVocabExpandedTopics.has(topicKey);
+
+      html += `
+        <div class="vocab-topic-item ${isTopicExpanded ? 'expanded' : ''}">
+          <div class="vocab-topic-header" onclick="toggleAdminVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
+            <div class="vocab-topic-title-wrap">
+              <span class="vocab-topic-icon">📑</span>
+              <span class="vocab-topic-title">${escapeHtml(topicName)}</span>
+              <span class="vocab-badge" style="font-size:10.5px;">${words.length} ta so'z</span>
+            </div>
+            <div class="vocab-topic-actions">
+              <button type="button" class="btn btn-primary" style="font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
+                + So'z qo'shish
+              </button>
+              <div class="vocab-chevron">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="vocab-topic-body">
+            <div style="overflow-x:auto;">
+              <table class="vocab-words-table">
+                <thead>
+                  <tr>
+                    <th style="text-align:right;width:28%;min-width:140px;">Arabcha so'z</th>
+                    <th style="text-align:left;width:30%;min-width:150px;">Tarjimasi</th>
+                    <th style="text-align:left;min-width:160px;">Tavsifi / Izoh</th>
+                    <th style="text-align:center;width:90px;">Amallar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${words.map(w => `
+                    <tr>
+                      <td style="text-align:right;">
+                        <div style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:var(--emerald-700, #047857);direction:rtl;" class="notranslate">
+                          ${escapeHtml(w.word || '—')}
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600;color:var(--text);font-size:13px;">
+                          ${escapeHtml(w.translation || '—')}
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-size:12px;color:var(--text-faint);line-height:1.4;">
+                          ${w.description ? escapeHtml(w.description) : '<span style="opacity:0.4;">—</span>'}
+                        </div>
+                      </td>
+                      <td style="text-align:center;white-space:nowrap;">
+                        <button class="row-btn" style="padding:4px 8px;margin-right:4px;" onclick="openEditVocabModal('${w.id}')" title="Tahrirlash">✏️</button>
+                        <button class="row-btn danger" style="padding:4px 8px;" onclick="confirmDeleteVocab('${w.id}')" title="O'chirish">🗑️</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </td>
-      <td style="text-align:center;white-space:nowrap;">
-        <button class="row-btn" style="padding:4px 8px;margin-right:4px;" onclick="openEditVocabModal('${v.id}')" title="Tahrirlash">✏️</button>
-        <button class="row-btn danger" style="padding:4px 8px;" onclick="confirmDeleteVocab('${v.id}')" title="O'chirish">🗑️</button>
-      </td>
-    </tr>
-  `).join('');
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
 }
 
 function updateAdminVocabFilterOptions() {
@@ -8430,19 +8582,18 @@ function updateAdminVocabFilterOptions() {
 }
 
 function onAdminVocabBookFilterChange() {
-  const bookSel = document.getElementById('adminVocabBookFilter');
   const topicSel = document.getElementById('adminVocabTopicFilter');
   if (topicSel) topicSel.value = 'all';
-  renderAdminVocabularies();
+  renderAdminVocabularies(true);
 }
 
-function openAddVocabModal() {
+function openAddVocabModal(defaultBook = '', defaultTopic = '') {
   document.getElementById('modalTitle').textContent = "Yangi lug'at qo'shish";
   document.getElementById('modalBody').innerHTML = `
     <form id="addVocabForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddVocab(event)">
       <div class="form-field">
         <label>Kitob nomi <span style="color:var(--red);">*</span></label>
-        <input type="text" id="vBookName" placeholder="Masalan: Durusul lug'ah 1-jild" required list="vocabBookSuggestions">
+        <input type="text" id="vBookName" value="${escapeHtml(defaultBook)}" placeholder="Masalan: Durusul lug'ah 1-jild" required list="vocabBookSuggestions">
         <datalist id="vocabBookSuggestions">
           ${Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.book_name).filter(Boolean))).map(b => `<option value="${escapeHtml(b)}">`).join('')}
         </datalist>
@@ -8450,7 +8601,7 @@ function openAddVocabModal() {
 
       <div class="form-field">
         <label>Lug'at mavzusi <span style="color:var(--red);">*</span></label>
-        <input type="text" id="vTopic" placeholder="Masalan: 1-dars: Uy jihozlari" required list="vocabTopicSuggestions">
+        <input type="text" id="vTopic" value="${escapeHtml(defaultTopic)}" placeholder="Masalan: 1-dars: Uy jihozlari" required list="vocabTopicSuggestions">
         <datalist id="vocabTopicSuggestions">
           ${Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.topic).filter(Boolean))).map(t => `<option value="${escapeHtml(t)}">`).join('')}
         </datalist>
@@ -8502,27 +8653,29 @@ async function submitAddVocab(e) {
   toast("⏳ Lug'at saqlanmoqda...");
   const res = await saveVocabulariesBulkToBackend([item]);
   if (res) {
+    adminVocabExpandedBooks.add(book);
+    adminVocabExpandedTopics.add(`${book}:::${topic}`);
     toast("✅ Yangi lug'at qo'shildi!");
-    await renderAdminVocabularies();
+    await renderAdminVocabularies(true);
   } else {
     toast("⚠️ Saqlashda xatolik yuz berdi: " + (window.LAST_BACKEND_ERROR || ''));
   }
   return false;
 }
 
-function openBulkAddVocabModal() {
+function openBulkAddVocabModal(defaultBook = '', defaultTopic = '') {
   document.getElementById('modalTitle').textContent = "Lug'atlarni ommaviy qo'shish (Bulk / JSON)";
   document.getElementById('modalBody').innerHTML = `
     <form id="bulkVocabForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkVocab(event)">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-field">
           <label>Standart kitob nomi (ixtiyoriy)</label>
-          <input type="text" id="bvDefaultBook" placeholder="Masalan: Durusul lug'ah" list="vocabBookSuggestions">
+          <input type="text" id="bvDefaultBook" value="${escapeHtml(defaultBook)}" placeholder="Masalan: Durusul lug'ah" list="vocabBookSuggestions">
           <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">JSON'da kitob ko'rsatilmagan bo'lsa ishlatiladi</div>
         </div>
         <div class="form-field">
           <label>Standart mavzu (ixtiyoriy)</label>
-          <input type="text" id="bvDefaultTopic" placeholder="Masalan: 1-dars" list="vocabTopicSuggestions">
+          <input type="text" id="bvDefaultTopic" value="${escapeHtml(defaultTopic)}" placeholder="Masalan: 1-dars" list="vocabTopicSuggestions">
           <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">JSON'da mavzu ko'rsatilmagan bo'lsa ishlatiladi</div>
         </div>
       </div>
@@ -8531,22 +8684,22 @@ function openBulkAddVocabModal() {
         <label>Lug'atlar (JSON massiv)</label>
         <textarea id="bvJson" rows="13" placeholder='[
   {
-    "book_name": "Durusul lug\\'ah 1",
-    "topic": "1-dars",
+    "book_name": "${escapeHtml(defaultBook || "Durusul lug'ah 1")}",
+    "topic": "${escapeHtml(defaultTopic || "1-dars")}",
     "word": "بَيْتٌ",
     "translation": "Uy",
     "description": "Ko\\'pligi: بُيُوتٌ"
   },
   {
-    "book_name": "Durusul lug\\'ah 1",
-    "topic": "1-dars",
+    "book_name": "${escapeHtml(defaultBook || "Durusul lug'ah 1")}",
+    "topic": "${escapeHtml(defaultTopic || "1-dars")}",
     "word": "مَسْجِدٌ",
     "translation": "Masjid",
     "description": "Ko\\'pligi: مَسَاجِدُ"
   },
   {
-    "book_name": "Durusul lug\\'ah 1",
-    "topic": "1-dars",
+    "book_name": "${escapeHtml(defaultBook || "Durusul lug'ah 1")}",
+    "topic": "${escapeHtml(defaultTopic || "1-dars")}",
     "word": "بَابٌ",
     "translation": "Eshik",
     "description": "Ko\\'pligi: أَبْوَابٌ"
@@ -8612,8 +8765,12 @@ async function submitBulkVocab(e) {
   const res = await saveVocabulariesBulkToBackend(items);
   if (res) {
     const count = res.inserted_count ?? items.length;
+    items.forEach(it => {
+      adminVocabExpandedBooks.add(it.book_name);
+      adminVocabExpandedTopics.add(`${it.book_name}:::${it.topic}`);
+    });
     toast(`✅ ${count} ta lug'at muvaffaqiyatli saqlandi!`, 6000);
-    await renderAdminVocabularies();
+    await renderAdminVocabularies(true);
   } else {
     toast("⚠️ Backendga yuborilmadi: " + (window.LAST_BACKEND_ERROR || ''));
   }
@@ -8684,7 +8841,7 @@ async function submitEditVocab(e, id) {
     description: description
   });
   toast("✅ Lug'at muvaffaqiyatli yangilandi!");
-  await renderAdminVocabularies();
+  await renderAdminVocabularies(true);
   return false;
 }
 
@@ -8708,7 +8865,7 @@ async function confirmDeleteVocab(id) {
   toast("⏳ O'chirilmoqda...");
   await deleteVocabularyFromBackend(id);
   toast("✅ Lug'at o'chirildi");
-  await renderAdminVocabularies();
+  await renderAdminVocabularies(true);
 }
 
 /* ================= ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ================= */
