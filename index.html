@@ -19434,7 +19434,7 @@ function advanceIstimaToQuestions(){
   renderIstimaQuestionAnimated();
 }
 
-/* ================= Muhavara (Speaking) — mikrofon + Groq AI baholash ================= */
+/* ================= Muhavara (Speaking) — mikrofon +  AI baholash ================= */
 /* Oqim: har savol uchun avval "tayyorgarlik" (prepSecs, yozib olinmaydi), so'ng
    "yozib olish" (answerSecs, MediaRecorder orqali) fazasi bo'ladi. Yozib olish tugagach
    audio Supabase Edge Function'ga (evaluate-speaking) yuboriladi — u Groq Whisper bilan
@@ -19793,7 +19793,7 @@ function renderMuhavaraPhase(){
   body.innerHTML = `
     <div class="q-sub">Barcha javoblar AI baholamoqda</div>
     <div class="prompt-box" style="text-align:center;">
-      <div class="lbl">Barcha javoblaringiz Groq AI'ga yuborildi</div>
+      <div class="lbl">Barcha javoblaringiz AI'ga yuborildi</div>
       <div style="margin-top:14px;">⏳ Baholanmoqda, biroz kuting...</div>
     </div>
   `;
@@ -19809,7 +19809,7 @@ function submitWriting(){
   const words = countArabicWords(text);
   const unlockTarget = cur.part.unlockWords || Math.round(cur.part.minWords / 2);
   if(words < unlockTarget){
-    toast(`⚠️ Kamida ${unlockTarget} ta so'z bo'lganda yuborish ochiladi (hozir: ${words} ta)`, 4500);
+    toast(`⚠️ Kamida ${unlockTarget} ta so'z bo'lganda yuborish tugmasi ochiladi (hozir: ${words} ta)`, 4500);
     return;
   }
   storeWritingAnswer(text);
