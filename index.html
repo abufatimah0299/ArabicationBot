@@ -5464,8 +5464,7 @@ html[data-theme="light"] .pin-dot.filled{
               <div>
                 <div class="skill-banner-title">Do'stni duelga chaqirish</div>
                 <div class="skill-banner-meta">
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>10 ta savol</span>
-                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Grammatika</span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>Grammatika va So'zlashuvda bellashuv</span>
                 </div>
               </div>
             </div>
@@ -5522,12 +5521,13 @@ html[data-theme="light"] .pin-dot.filled{
         <div class="view-title">Duel uchun bo'lim tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Do'stingiz bilan qaysi mavzudan bellashmoqchisiz?</div>
         <div class="duel-skill-body">
-          <div class="duel-skill-mix-card" onclick="chooseDuelSkill('aralash')">
+          <div class="duel-skill-mix-card" onclick="openDuelGrammarSelect()">
             <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             </div>
             <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Aralash savollar</div>
+              <div class="duel-skill-mix-name">Grammatika</div>
+              <div class="duel-skill-mix-desc">Test savollari — to'g'ri variantni tanlang</div>
             </div>
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
@@ -5536,8 +5536,29 @@ html[data-theme="light"] .pin-dot.filled{
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
             </div>
             <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Speaking Duel</div>
+              <div class="duel-skill-mix-name">Muhadasa</div>
               <div class="duel-skill-mix-desc">3 ta savol — gapirib javob bering</div>
+            </div>
+            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DUEL — GRAMMATIKA MAVZU TANLASH (2-bosqich) ============ -->
+      <div class="view" id="view-duelgrammarselect">
+        <div class="back-row" onclick="showView('duelskillselect')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          <span>Ortga</span>
+        </div>
+        <div class="view-title">Grammatika mavzusini tanlang</div>
+        <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Qaysi mavzudan bellashmoqchisiz?</div>
+        <div class="duel-skill-body">
+          <div class="duel-skill-mix-card" onclick="chooseDuelSkill('aralash')">
+            <div class="duel-skill-mix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <div class="duel-skill-mix-main">
+              <div class="duel-skill-mix-name">Aralash savollar</div>
             </div>
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
@@ -8388,7 +8409,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelhistory','dostlarim'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelgrammarselect','duelhistory','dostlarim'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -16912,7 +16933,7 @@ async function apiGetDuelSpeakingAnswers(duelId){
 async function openSpeakingDuelAnalysis(){
   const d = _duelCurrentResult;
   if(!d) return;
-  document.getElementById('modalTitle').textContent = "Speaking Duel — Tahlil";
+  document.getElementById('modalTitle').textContent = "Muhadasa — Tahlil";
   document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:34px 0;color:var(--text-dim);font-size:13.5px;">Yuklanmoqda...</div>`;
   document.getElementById('modalOverlay').classList.add('show');
 
@@ -17065,10 +17086,10 @@ function renderDuelCard(d, me){
   const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
   const isSpeaking = d.duelType === 'speaking';
   const skillMeta = isSpeaking
-    ? {name:'Speaking', color:'var(--muhavara,#8B5CF6)', bg:'rgba(139,92,246,0.12)'}
+    ? {name:'Muhadasa', color:'var(--muhavara,#8B5CF6)', bg:'rgba(139,92,246,0.12)'}
     : (SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'});
   const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
-  const catLabel = isSpeaking ? 'Speaking Duel' : (catMeta ? catMeta.name : 'Aralash savollar');
+  const catLabel = isSpeaking ? 'Muhadasa' : (catMeta ? catMeta.name : 'Aralash savollar');
   const startFn = isSpeaking ? 'startSpeakingDuelQuiz' : 'startDuelQuiz';
   const resultFn = isSpeaking ? 'openSpeakingDuelResultCard' : 'openDuelResultCard';
 
@@ -17144,7 +17165,7 @@ function shareDuelResultBrag(oppName, score, total, isSpeaking){
   const url = WEBAPP_SHORT_NAME
     ? `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}`
     : `https://t.me/${BOT_USERNAME}`;
-  const label = isSpeaking ? 'Speaking Duelda' : 'Grammatika duelida';
+  const label = isSpeaking ? 'Muhadasada' : 'Grammatika duelida';
   const text = `🏆 ${oppName}ni ${label} ${score}/${total} ball bilan mag'lub etdim! Meni yenga olasizmi?`;
   const tg = window.Telegram?.WebApp;
   if(tg && typeof tg.openTelegramLink === 'function'){
@@ -17183,8 +17204,12 @@ function renderDuelSkillGrid(){
 }
 
 function openDuelSkillSelect(){
-  renderDuelSkillGrid();
   showView('duelskillselect');
+}
+
+function openDuelGrammarSelect(){
+  renderDuelSkillGrid();
+  showView('duelgrammarselect');
 }
 
 async function chooseDuelSkill(category){
@@ -17225,7 +17250,7 @@ async function startSpeakingDuelQuiz(duelId){
   const meId = _duelMyId();
   const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
-  const speakingPart = { name: 'Speaking Duel', prepSecs: 10, answerSecs: 30 };
+  const speakingPart = { name: 'Muhadasa', prepSecs: 10, answerSecs: 30 };
   currentQuiz = {
     skillId: 'muhavara', topicId: null, type: 'speaking',
     questions: d.questions.map(q => ({
@@ -17233,7 +17258,7 @@ async function startSpeakingDuelQuiz(duelId){
       score: null, feedback: null, transcript: null
     })),
     idx: 0, phase: 'prep',
-    color: 'var(--muhavara,#8B5CF6)', bg: 'rgba(139,92,246,0.12)', label: '🎙 Speaking Duel',
+    color: 'var(--muhavara,#8B5CF6)', bg: 'rgba(139,92,246,0.12)', label: '🎙 Muhadasa',
     startedAt: Date.now(),
     isSpeakingDuel: true, duelId: d.id,
     duelOpponent: oppInfo ? { name: oppInfo.name, photoUrl: oppInfo.photoUrl || null } : null,
