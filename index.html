@@ -1624,7 +1624,7 @@
         </div>
 
         <div class="modal-overlay" id="adminPanelModalOverlay" onclick="if(event.target===this) closeAdminPanelModal()">
-        <div class="modal-box" style="max-width:640px;">
+        <div class="modal-box admin-modal-box" id="adminPanelModalBox">
         <div class="modal-head">
           <h3 id="adminPanelModalTitle">Umumiy</h3>
           <button class="modal-close" onclick="closeAdminPanelModal()">✕</button>
@@ -1642,21 +1642,41 @@
 
         <!-- 2) FOYDALANUVCHILAR -->
         <div class="admin-panel-body" id="adminTab-users" style="display:none;">
-          <div class="admin-search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="adminUserSearch" placeholder="Ism yoki username bo'yicha qidirish..." oninput="renderAdminUsers()">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+            <div class="admin-search" style="flex:1;min-width:220px;margin-bottom:0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="adminUserSearch" placeholder="Ism, username yoki Telegram ID..." oninput="renderAdminUsers()">
+            </div>
+            <div class="user-status-filter" style="display:flex;gap:4px;background:var(--card);padding:3px;border:1px solid var(--border);border-radius:11px;">
+              <button type="button" class="status-tab active" data-sfilter="all" onclick="setUserStatusFilter('all')">Barchasi</button>
+              <button type="button" class="status-tab" data-sfilter="active" onclick="setUserStatusFilter('active')">🟢 Faol</button>
+              <button type="button" class="status-tab" data-sfilter="blocked" onclick="setUserStatusFilter('blocked')">🔴 Bloklagan</button>
+            </div>
           </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
-            <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="clearAllExamHistory()">
-              🗑 Barcha imtihon tarixini tozalash
-            </button>
-            <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);" onclick="resetAllUsersXp()">
-              ↺ Barcha XP'larni 0'ga qaytarish
-            </button>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
+            <div id="adminUsersCountText" style="font-size:12.5px;color:var(--text-faint);font-weight:600;">0 ta foydalanuvchi</div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);font-size:12px;padding:7px 12px;" onclick="clearAllExamHistory()">
+                🗑 Imtihon tarixini tozalash
+              </button>
+              <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);font-size:12px;padding:7px 12px;" onclick="resetAllUsersXp()">
+                ↺ XP'larni 0'ga qaytarish
+              </button>
+            </div>
           </div>
-          <div class="card" style="padding:8px;overflow-x:auto;">
+          <div class="card" style="padding:6px;overflow-x:auto;border-radius:16px;">
             <table class="data-table">
-              <thead><tr><th>Foydalanuvchi</th><th>Daraja</th><th>XP</th><th>Oxirgi faollik</th><th></th></tr></thead>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Foydalanuvchi</th>
+                  <th style="text-align:center;">Daraja</th>
+                  <th style="text-align:right;">XP</th>
+                  <th style="text-align:center;">Status</th>
+                  <th style="text-align:center;">Reg. sana</th>
+                  <th style="text-align:center;">Oxirgi faollik</th>
+                  <th style="text-align:center;">Amallar</th>
+                </tr>
+              </thead>
               <tbody id="adminUsersBody"></tbody>
             </table>
           </div>
