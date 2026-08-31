@@ -11539,9 +11539,6 @@ function renderDuelResultScreen(d){
   if(d.status !== 'completed'){
     wrap.innerHTML = `
       <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage" style="display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh;">
-        <button type="button" class="dr-top-close-btn" onclick="showView('duelhistory')" title="Duellarga qaytish" aria-label="Duellarga qaytish">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </button>
         <div class="card" style="padding:32px 24px;text-align:center;max-width:380px;width:100%;border-radius:20px;">
           <div style="font-size:36px;margin-bottom:12px;">⏳</div>
           <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Natijangiz saqlandi</div>
@@ -11589,9 +11586,6 @@ function renderDuelResultScreen(d){
 
   wrap.innerHTML = `
     <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage">
-      <button type="button" class="dr-top-close-btn" onclick="showView('duelhistory')" title="Duellarga qaytish" aria-label="Duellarga qaytish">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
       <div class="dr-mesh-wrap" id="drMesh"></div>
       <div class="dr-content">
         <div class="dr-top-row">
