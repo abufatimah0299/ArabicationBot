@@ -2113,6 +2113,21 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   scrollbar-width:none;
   -ms-overflow-style:none;
 }
+.modal-box.admin-modal-box{
+  max-width: 640px;
+  transition: max-width .25s ease;
+}
+@media (min-width: 768px){
+  .modal-box.admin-modal-box{
+    max-width: 960px;
+    width: 92vw;
+  }
+}
+@media (min-width: 1200px){
+  .modal-box.admin-modal-box{
+    max-width: 1100px;
+  }
+}
 .modal-box::-webkit-scrollbar{ display:none; width:0; height:0; }
 .modal-head{
   display:flex; align-items:center; justify-content:space-between;
@@ -3781,14 +3796,68 @@ html[data-theme="dark"] .skel-avatar {
 .admin-search svg{ width:16px; height:16px; color:var(--text-faint); flex-shrink:0; }
 
 .data-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
-.data-table th{ text-align:right; font-weight:600; color:var(--text-faint); font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 12px; border-bottom:1px solid var(--border); }
+.data-table th{ text-align:right; font-weight:600; color:var(--text-faint); font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap; }
 .data-table td{ padding:12px; border-bottom:1px solid var(--border); font-weight:600; color:var(--text-dim); vertical-align:middle; }
 .data-table tr:last-child td{ border-bottom:none; }
-.data-table .u-name{ display:flex; align-items:center; gap:10px; font-weight:600; color:var(--text); }
-.data-table .u-avatar{ width:32px; height:32px; border-radius:50%; background:var(--indigo-100); color:var(--indigo-700); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px; flex-shrink:0; }
-.data-table .row-btn{ font-family:inherit; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-weight:600; font-size:11.5px; padding:6px 11px; border-radius:8px; }
-.data-table .row-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); }
+.data-table tbody tr{ transition: background .18s ease; }
+.data-table tbody tr:hover{ background: rgba(99, 102, 241, 0.04); }
+.data-table .u-name{ display:flex; align-items:center; gap:10px; font-weight:600; color:var(--text); min-width:180px; }
+.data-table .u-avatar{ width:32px; height:32px; border-radius:50%; background:var(--indigo-100); color:var(--indigo-700); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; }
+.data-table .row-btn{ font-family:inherit; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-dim); font-weight:600; font-size:11.5px; padding:6px 11px; border-radius:8px; transition:all .15s ease; white-space:nowrap; }
+.data-table .row-btn:hover{ border-color:var(--indigo-500); color:var(--indigo-700); background:var(--indigo-100); }
 .data-table .row-btn.danger:hover{ border-color:var(--red); color:var(--red); }
+
+/* Status Badges */
+.badge-status{
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:700; padding:4px 9px;
+  border-radius:99px; white-space:nowrap; line-height:1.2;
+}
+.badge-status.badge-active{
+  background:rgba(34, 197, 94, 0.12);
+  color:#16a34a;
+  border:1px solid rgba(34, 197, 94, 0.28);
+}
+html[data-theme="dark"] .badge-status.badge-active{
+  background:rgba(34, 197, 94, 0.18);
+  color:#4ade80;
+  border-color:rgba(74, 222, 128, 0.35);
+}
+.badge-status.badge-blocked{
+  background:rgba(239, 68, 68, 0.12);
+  color:#dc2626;
+  border:1px solid rgba(239, 68, 68, 0.28);
+}
+html[data-theme="dark"] .badge-status.badge-blocked{
+  background:rgba(239, 68, 68, 0.18);
+  color:#f87171;
+  border-color:rgba(248, 113, 113, 0.35);
+}
+.badge-dot{
+  width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0;
+}
+.badge-dot.dot-green{ background:#16a34a; box-shadow:0 0 6px rgba(22, 163, 74, 0.6); }
+html[data-theme="dark"] .badge-dot.dot-green{ background:#4ade80; box-shadow:0 0 6px rgba(74, 222, 128, 0.8); }
+.badge-dot.dot-red{ background:#dc2626; box-shadow:0 0 6px rgba(220, 38, 38, 0.6); }
+html[data-theme="dark"] .badge-dot.dot-red{ background:#f87171; box-shadow:0 0 6px rgba(248, 113, 113, 0.8); }
+
+.rank-chip-sm{
+  display:inline-block; font-size:11px; font-weight:700;
+  padding:3px 8px; border-radius:6px;
+  background:var(--bg); border:1px solid var(--border); color:var(--text-dim);
+}
+
+.status-tab{
+  font-family:inherit; font-size:11.5px; font-weight:600;
+  padding:6px 12px; border-radius:8px; border:none;
+  background:transparent; color:var(--text-faint);
+  cursor:pointer; transition:all .18s ease; white-space:nowrap;
+}
+.status-tab:hover{ color:var(--text); }
+.status-tab.active{
+  background:var(--bg); color:var(--text); font-weight:700;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
 
 /* ---- Mavzu/test qatorlaridagi amal tugmalari (ko'rish/qo'shish/tahrirlash/o'chirish) ---- */
 .icon-btn-row{ display:flex; gap:8px; flex-shrink:0; }
