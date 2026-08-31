@@ -16956,7 +16956,6 @@ async function openSpeakingDuelAnalysis(){
         <div style="font-family:var(--font-ar);font-size:16px;direction:rtl;text-align:right;line-height:1.6;font-weight:600;margin-bottom:8px;">${q.prompt_ar || ''}</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           ${sideBlock(myName, entry.mine)}
-          ${sideBlock(oppName, entry.opp)}
         </div>
       </div>`;
   }).join('');
@@ -19467,9 +19466,14 @@ function skipMuhavaraPrep(){
 }
 async function startMuhavaraRecording(){
   try{
-    muhavaraStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const micPromise = navigator.mediaDevices.getUserMedia({audio:true});
+    const timeoutPromise = new Promise((_,reject)=> setTimeout(()=> reject(new Error('TIMEOUT')), 8000));
+    muhavaraStream = await Promise.race([micPromise, timeoutPromise]);
   }catch(e){
-    toast("🎤 Mikrofonga ruxsat berilmadi. Brauzer sozlamalaridan ruxsat bering va qayta urinib ko'ring.", 6000);
+    const msg = (e && e.message === 'TIMEOUT')
+      ? "🎤 Mikrofon javob bermadi (8 soniya kutildi). Telegram ilovasini yangilang yoki qayta ishga tushiring, so'ng qayta urinib ko'ring."
+      : "🎤 Mikrofonga ruxsat berilmadi. Brauzer sozlamalaridan ruxsat bering va qayta urinib ko'ring.";
+    toast(msg, 6000);
     currentQuiz.phase = 'prep';
     renderQuestion();
     return;
