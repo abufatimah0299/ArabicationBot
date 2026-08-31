@@ -4467,7 +4467,7 @@ async function submitExamReport(){
 /* ================= ADMIN PANEL — asosiy mantiq ================= */
 function showAdminTab(tab){
   document.querySelectorAll('#adminTabs .admin-tab').forEach(b=>b.classList.toggle('active', b.dataset.atab===tab));
-  ['overview','users','questions','mocks','reports'].forEach(t=>{
+  ['overview','users','questions','mocks','reports','vocabularies'].forEach(t=>{
     const el = document.getElementById('adminTab-'+t);
     if(el) el.style.display = (t===tab) ? '' : 'none';
   });
@@ -4476,6 +4476,7 @@ function showAdminTab(tab){
   if(tab==='questions') renderAdminQuestions();
   if(tab==='mocks') renderAdminMocks();
   if(tab==='reports') renderAdminReports();
+  if(tab==='vocabularies') renderAdminVocabularies();
 }
 
 function renderAdminPanel(){
@@ -4485,9 +4486,9 @@ function renderAdminPanel(){
 
 const ADMIN_TAB_TITLES = {
   overview:'Umumiy', users:'Foydalanuvchilar', questions:'Savollar banki', mocks:'Mocklar',
-  reports:'Imtihon xabarlari', examcards:'Imtihon cardlari', gramorder:'Grammatika tartibi',
-  sendmsg:'Xabar yuborish', admins:'Adminlar', community:'Hamjamiyat', skilllimits:'Kunlik limitlar',
-  speakingduel:'Speaking Duel savollari'
+  vocabularies:"Lug'atlar bazasi", reports:'Imtihon xabarlari', examcards:'Imtihon cardlari',
+  gramorder:'Grammatika tartibi', sendmsg:'Xabar yuborish', admins:'Adminlar',
+  community:'Hamjamiyat', skilllimits:'Kunlik limitlar', speakingduel:'Speaking Duel savollari'
 };
 function openAdminPanelModal(tab){
   showAdminTab(tab);
@@ -8171,6 +8172,543 @@ async function submitBulkQuestions(e){
     toast("⚠️ Backendga yuborilmadi: " + window.LAST_BACKEND_ERROR, 6000);
   }
   return false;
+}
+
+/* ================= LUG'ATLAR BAZASI (ADMIN & DATA LAYER) ================= */
+let ADMIN_VOCABULARIES = [];
+let adminVocabSearchQuery = '';
+let adminVocabBookFilter = 'all';
+let adminVocabTopicFilter = 'all';
+
+function getLocalVocabularies() {
+  try {
+    const raw = localStorage.getItem('arab_admin_vocabularies_v1');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLocalVocabularies(list) {
+  try {
+    localStorage.setItem('arab_admin_vocabularies_v1', JSON.stringify(list || []));
+  } catch (e) {}
+}
+
+async function loadVocabulariesFromBackend() {
+  if (SESSION_TOKEN) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_vocabularies`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({})
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows)) {
+          ADMIN_VOCABULARIES = rows.map(r => ({
+            id: r.id || r.vocab_id || String(Date.now() + Math.random()),
+            book_name: r.book_name || r.book || '',
+            description: r.description || r.desc || '',
+            topic: r.topic || r.topic_name || '',
+            word: r.word || r.arabic || r.word_ar || '',
+            translation: r.translation || r.meaning || r.uz || '',
+            created_at: r.created_at || new Date().toISOString()
+          }));
+          saveLocalVocabularies(ADMIN_VOCABULARIES);
+          return ADMIN_VOCABULARIES;
+        }
+      }
+    } catch (e) {
+      console.warn("admin_list_vocabularies RPC mavjud emas yoki xatolik:", e);
+    }
+  }
+
+  // Fallback to local storage
+  ADMIN_VOCABULARIES = getLocalVocabularies();
+  return ADMIN_VOCABULARIES;
+}
+
+async function saveVocabulariesBulkToBackend(items) {
+  if (!items || !items.length) return null;
+  let backendSuccess = false;
+
+  if (SESSION_TOKEN) {
+    try {
+      const payload = items.map(it => ({
+        p_book_name: it.book_name || it.book || '',
+        p_description: it.description || it.desc || '',
+        p_topic: it.topic || it.topic_name || '',
+        p_word: it.word || it.word_ar || it.arabic || '',
+        p_translation: it.translation || it.meaning || it.uz || ''
+      }));
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_bulk_add_vocabularies`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_items: payload })
+      });
+
+      if (res.ok) {
+        backendSuccess = true;
+        const text = await res.text();
+        const json = text ? JSON.parse(text) : { inserted_count: items.length };
+        return json;
+      } else {
+        setLastBackendError(res.status, await res.text());
+      }
+    } catch (e) {
+      setLastBackendError('—', e.message);
+    }
+  }
+
+  // Fallback: Local storage persistence
+  const existing = getLocalVocabularies();
+  const newItems = items.map((it, idx) => ({
+    id: it.id || 'voc_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2, 4),
+    book_name: it.book_name || it.book || '',
+    description: it.description || it.desc || '',
+    topic: it.topic || it.topic_name || '',
+    word: it.word || it.word_ar || it.arabic || '',
+    translation: it.translation || it.meaning || it.uz || '',
+    created_at: new Date().toISOString()
+  }));
+  const merged = [...newItems, ...existing];
+  saveLocalVocabularies(merged);
+  ADMIN_VOCABULARIES = merged;
+  return { inserted_count: items.length, local_fallback: true };
+}
+
+async function deleteVocabularyFromBackend(id) {
+  if (SESSION_TOKEN) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_vocabulary`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ p_id: id })
+      });
+      if (res.ok) {
+        // Success
+      }
+    } catch (e) {
+      console.warn("admin_delete_vocabulary RPC failed, removing locally", e);
+    }
+  }
+  ADMIN_VOCABULARIES = ADMIN_VOCABULARIES.filter(v => String(v.id) !== String(id));
+  saveLocalVocabularies(ADMIN_VOCABULARIES);
+}
+
+async function updateVocabularyInBackend(id, fields) {
+  if (SESSION_TOKEN) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_vocabulary`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          p_id: id,
+          p_book_name: fields.book_name || '',
+          p_description: fields.description || '',
+          p_topic: fields.topic || '',
+          p_word: fields.word || '',
+          p_translation: fields.translation || ''
+        })
+      });
+      if (res.ok) {
+        // Success
+      }
+    } catch (e) {
+      console.warn("admin_update_vocabulary RPC failed, updating locally", e);
+    }
+  }
+
+  const idx = ADMIN_VOCABULARIES.findIndex(v => String(v.id) === String(id));
+  if (idx !== -1) {
+    ADMIN_VOCABULARIES[idx] = { ...ADMIN_VOCABULARIES[idx], ...fields };
+    saveLocalVocabularies(ADMIN_VOCABULARIES);
+  }
+}
+
+async function renderAdminVocabularies() {
+  const tbody = document.getElementById('adminVocabBody');
+  if (!tbody) return;
+
+  if (!ADMIN_VOCABULARIES.length) {
+    await loadVocabulariesFromBackend();
+  }
+
+  updateAdminVocabFilterOptions();
+
+  const searchInput = document.getElementById('adminVocabSearch');
+  adminVocabSearchQuery = (searchInput?.value || '').toLowerCase().trim();
+
+  const bookSel = document.getElementById('adminVocabBookFilter');
+  adminVocabBookFilter = bookSel?.value || 'all';
+
+  const topicSel = document.getElementById('adminVocabTopicFilter');
+  adminVocabTopicFilter = topicSel?.value || 'all';
+
+  let filtered = ADMIN_VOCABULARIES.filter(v => {
+    if (adminVocabBookFilter !== 'all' && (v.book_name || '') !== adminVocabBookFilter) return false;
+    if (adminVocabTopicFilter !== 'all' && (v.topic || '') !== adminVocabTopicFilter) return false;
+    if (adminVocabSearchQuery) {
+      const fullText = `${v.book_name || ''} ${v.topic || ''} ${v.word || ''} ${v.translation || ''} ${v.description || ''}`.toLowerCase();
+      if (!fullText.includes(adminVocabSearchQuery)) return false;
+    }
+    return true;
+  });
+
+  const stats = document.getElementById('adminVocabStatsCount');
+  if (stats) {
+    stats.textContent = `${filtered.length} ta lug'at (Jami: ${ADMIN_VOCABULARIES.length})`;
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;padding:32px 16px;color:var(--text-faint);">
+          <div style="font-size:24px;margin-bottom:6px;">📖</div>
+          <div style="font-weight:700;font-size:13.5px;color:var(--text);">Lug'atlar topilmadi</div>
+          <div style="font-size:12px;margin-top:4px;">Yangi lug'at qo'shish yoki ommaviy yuklash uchun yuqoridagi tugmalardan foydalaning.</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(v => `
+    <tr>
+      <td>
+        <div style="font-weight:700;color:var(--text);font-size:13px;">${escapeHtml(v.book_name || '—')}</div>
+      </td>
+      <td>
+        <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:var(--indigo-100);color:var(--indigo-700);font-size:11px;font-weight:700;">
+          ${escapeHtml(v.topic || '—')}
+        </span>
+      </td>
+      <td style="text-align:right;">
+        <div style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:var(--emerald-700, #047857);direction:rtl;" class="notranslate">
+          ${escapeHtml(v.word || '—')}
+        </div>
+      </td>
+      <td>
+        <div style="font-weight:600;color:var(--text);font-size:12.5px;">${escapeHtml(v.translation || '—')}</div>
+      </td>
+      <td>
+        <div style="font-size:11.5px;color:var(--text-faint);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(v.description || '')}">
+          ${escapeHtml(v.description || '—')}
+        </div>
+      </td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="row-btn" style="padding:4px 8px;margin-right:4px;" onclick="openEditVocabModal('${v.id}')" title="Tahrirlash">✏️</button>
+        <button class="row-btn danger" style="padding:4px 8px;" onclick="confirmDeleteVocab('${v.id}')" title="O'chirish">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateAdminVocabFilterOptions() {
+  const bookSel = document.getElementById('adminVocabBookFilter');
+  const topicSel = document.getElementById('adminVocabTopicFilter');
+  if (!bookSel || !topicSel) return;
+
+  const currentBook = bookSel.value || 'all';
+  const currentTopic = topicSel.value || 'all';
+
+  const books = Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.book_name).filter(Boolean))).sort();
+  bookSel.innerHTML = `<option value="all">Barcha kitoblar (${ADMIN_VOCABULARIES.length})</option>` +
+    books.map(b => `<option value="${escapeHtml(b)}" ${b === currentBook ? 'selected' : ''}>${escapeHtml(b)}</option>`).join('');
+
+  let relevantTopics;
+  if (currentBook !== 'all') {
+    relevantTopics = Array.from(new Set(ADMIN_VOCABULARIES.filter(v => v.book_name === currentBook).map(v => v.topic).filter(Boolean))).sort();
+  } else {
+    relevantTopics = Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.topic).filter(Boolean))).sort();
+  }
+
+  topicSel.innerHTML = `<option value="all">Barcha mavzular</option>` +
+    relevantTopics.map(t => `<option value="${escapeHtml(t)}" ${t === currentTopic ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('');
+}
+
+function onAdminVocabBookFilterChange() {
+  const bookSel = document.getElementById('adminVocabBookFilter');
+  const topicSel = document.getElementById('adminVocabTopicFilter');
+  if (topicSel) topicSel.value = 'all';
+  renderAdminVocabularies();
+}
+
+function openAddVocabModal() {
+  document.getElementById('modalTitle').textContent = "Yangi lug'at qo'shish";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="addVocabForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitAddVocab(event)">
+      <div class="form-field">
+        <label>Kitob nomi <span style="color:var(--red);">*</span></label>
+        <input type="text" id="vBookName" placeholder="Masalan: Durusul lug'ah 1-jild" required list="vocabBookSuggestions">
+        <datalist id="vocabBookSuggestions">
+          ${Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.book_name).filter(Boolean))).map(b => `<option value="${escapeHtml(b)}">`).join('')}
+        </datalist>
+      </div>
+
+      <div class="form-field">
+        <label>Lug'at mavzusi <span style="color:var(--red);">*</span></label>
+        <input type="text" id="vTopic" placeholder="Masalan: 1-dars: Uy jihozlari" required list="vocabTopicSuggestions">
+        <datalist id="vocabTopicSuggestions">
+          ${Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.topic).filter(Boolean))).map(t => `<option value="${escapeHtml(t)}">`).join('')}
+        </datalist>
+      </div>
+
+      <div class="form-field">
+        <label>Lug'at (Arabcha so'z) <span style="color:var(--red);">*</span></label>
+        <input type="text" id="vWord" dir="rtl" placeholder="بَيْتٌ" required style="font-family:'Amiri',serif;font-size:18px;font-weight:700;">
+      </div>
+
+      <div class="form-field">
+        <label>Tarjimasi (O'zbekcha) <span style="color:var(--red);">*</span></label>
+        <input type="text" id="vTranslation" placeholder="Uy / hovli" required>
+      </div>
+
+      <div class="form-field">
+        <label>Tavsifi (Izoh / qo'shimcha ma'lumot)</label>
+        <textarea id="vDescription" rows="3" placeholder="Masalan: Ko'pligi: بُيُوتٌ (buyutun). Ism jinsida muzakkar."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Lug'atni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function submitAddVocab(e) {
+  e.preventDefault();
+  const book = document.getElementById('vBookName')?.value.trim();
+  const topic = document.getElementById('vTopic')?.value.trim();
+  const word = document.getElementById('vWord')?.value.trim();
+  const translation = document.getElementById('vTranslation')?.value.trim();
+  const description = document.getElementById('vDescription')?.value.trim() || '';
+
+  if (!book || !topic || !word || !translation) {
+    toast("❌ Barcha majburiy maydonlarni to'ldiring");
+    return false;
+  }
+
+  const item = {
+    book_name: book,
+    topic: topic,
+    word: word,
+    translation: translation,
+    description: description
+  };
+
+  closeModal();
+  toast("⏳ Lug'at saqlanmoqda...");
+  const res = await saveVocabulariesBulkToBackend([item]);
+  if (res) {
+    toast("✅ Yangi lug'at qo'shildi!");
+    await renderAdminVocabularies();
+  } else {
+    toast("⚠️ Saqlashda xatolik yuz berdi: " + (window.LAST_BACKEND_ERROR || ''));
+  }
+  return false;
+}
+
+function openBulkAddVocabModal() {
+  document.getElementById('modalTitle').textContent = "Lug'atlarni ommaviy qo'shish (Bulk / JSON)";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="bulkVocabForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitBulkVocab(event)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-field">
+          <label>Standart kitob nomi (ixtiyoriy)</label>
+          <input type="text" id="bvDefaultBook" placeholder="Masalan: Durusul lug'ah" list="vocabBookSuggestions">
+          <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">JSON'da kitob ko'rsatilmagan bo'lsa ishlatiladi</div>
+        </div>
+        <div class="form-field">
+          <label>Standart mavzu (ixtiyoriy)</label>
+          <input type="text" id="bvDefaultTopic" placeholder="Masalan: 1-dars" list="vocabTopicSuggestions">
+          <div style="font-size:11px;color:var(--text-faint);margin-top:4px;">JSON'da mavzu ko'rsatilmagan bo'lsa ishlatiladi</div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Lug'atlar (JSON massiv)</label>
+        <textarea id="bvJson" rows="13" placeholder='[
+  {
+    "book_name": "Durusul lug\\'ah 1",
+    "topic": "1-dars",
+    "word": "بَيْتٌ",
+    "translation": "Uy",
+    "description": "Ko\\'pligi: بُيُوتٌ"
+  },
+  {
+    "book_name": "Durusul lug\\'ah 1",
+    "topic": "1-dars",
+    "word": "مَسْجِدٌ",
+    "translation": "Masjid",
+    "description": "Ko\\'pligi: مَسَاجِدُ"
+  },
+  {
+    "book_name": "Durusul lug\\'ah 1",
+    "topic": "1-dars",
+    "word": "بَابٌ",
+    "translation": "Eshik",
+    "description": "Ko\\'pligi: أَبْوَابٌ"
+  }
+]' required style="font-family:monospace;font-size:12.5px;direction:ltr;"></textarea>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:6px;line-height:1.5;">
+          Har bir element parametrlari:<br>
+          • <b>book_name</b> (yoki <b>book</b>) — Kitob nomi<br>
+          • <b>topic</b> (yoki <b>mavzu</b>) — Lug'at mavzusi / dars<br>
+          • <b>word</b> (yoki <b>lugat</b>, <b>arabic</b>) — Arabcha so'z<br>
+          • <b>translation</b> (yoki <b>tarjimasi</b>, <b>uz</b>) — Tarjimasi<br>
+          • <b>description</b> (yoki <b>tavsifi</b>) — Tavsifi / qo'shimcha ma'lumot (ixtiyoriy)
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Barcha lug'atlarni saqlash</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function submitBulkVocab(e) {
+  e.preventDefault();
+  const defaultBook = document.getElementById('bvDefaultBook')?.value.trim() || '';
+  const defaultTopic = document.getElementById('bvDefaultTopic')?.value.trim() || '';
+  const rawJson = document.getElementById('bvJson')?.value.trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(rawJson);
+    if (!Array.isArray(parsed) || !parsed.length) throw new Error('Massiv bo\'sh');
+  } catch (err) {
+    toast("❌ JSON formati noto'g'ri: " + err.message, 6000);
+    return false;
+  }
+
+  const items = [];
+  for (let i = 0; i < parsed.length; i++) {
+    const row = parsed[i];
+    const book = row.book_name || row.book || row.kitob || defaultBook;
+    const topic = row.topic || row.mavzu || row.topic_name || defaultTopic;
+    const word = row.word || row.lugat || row.word_ar || row.arabic || '';
+    const translation = row.translation || row.tarjimasi || row.meaning || row.uz || '';
+    const description = row.description || row.tavsifi || row.desc || '';
+
+    if (!word || !translation) {
+      toast(`❌ ${i + 1}-qatorda arabcha so'z yoki tarjimasi kiritilmagan`, 6000);
+      return false;
+    }
+
+    items.push({
+      book_name: book || 'Umumiy kitob',
+      topic: topic || 'Umumiy mavzu',
+      word: word,
+      translation: translation,
+      description: description
+    });
+  }
+
+  closeModal();
+  toast(`⏳ ${items.length} ta lug'at yuklanmoqda...`);
+
+  const res = await saveVocabulariesBulkToBackend(items);
+  if (res) {
+    const count = res.inserted_count ?? items.length;
+    toast(`✅ ${count} ta lug'at muvaffaqiyatli saqlandi!`, 6000);
+    await renderAdminVocabularies();
+  } else {
+    toast("⚠️ Backendga yuborilmadi: " + (window.LAST_BACKEND_ERROR || ''));
+  }
+  return false;
+}
+
+function openEditVocabModal(id) {
+  const item = ADMIN_VOCABULARIES.find(v => String(v.id) === String(id));
+  if (!item) return;
+
+  document.getElementById('modalTitle').textContent = "Lug'atni tahrirlash";
+  document.getElementById('modalBody').innerHTML = `
+    <form id="editVocabForm" style="display:flex;flex-direction:column;gap:14px;padding:6px 4px;" onsubmit="return submitEditVocab(event, '${id}')">
+      <div class="form-field">
+        <label>Kitob nomi <span style="color:var(--red);">*</span></label>
+        <input type="text" id="evBookName" value="${escapeHtml(item.book_name || '')}" required>
+      </div>
+
+      <div class="form-field">
+        <label>Lug'at mavzusi <span style="color:var(--red);">*</span></label>
+        <input type="text" id="evTopic" value="${escapeHtml(item.topic || '')}" required>
+      </div>
+
+      <div class="form-field">
+        <label>Lug'at (Arabcha so'z) <span style="color:var(--red);">*</span></label>
+        <input type="text" id="evWord" dir="rtl" value="${escapeHtml(item.word || '')}" required style="font-family:'Amiri',serif;font-size:18px;font-weight:700;">
+      </div>
+
+      <div class="form-field">
+        <label>Tarjimasi (O'zbekcha) <span style="color:var(--red);">*</span></label>
+        <input type="text" id="evTranslation" value="${escapeHtml(item.translation || '')}" required>
+      </div>
+
+      <div class="form-field">
+        <label>Tavsifi (Izoh / qo'shimcha ma'lumot)</label>
+        <textarea id="evDescription" rows="3">${escapeHtml(item.description || '')}</textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeModal()">Bekor qilish</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">O'zgarishlarni saqlash</button>
+      </div>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function submitEditVocab(e, id) {
+  e.preventDefault();
+  const book = document.getElementById('evBookName')?.value.trim();
+  const topic = document.getElementById('evTopic')?.value.trim();
+  const word = document.getElementById('evWord')?.value.trim();
+  const translation = document.getElementById('evTranslation')?.value.trim();
+  const description = document.getElementById('evDescription')?.value.trim() || '';
+
+  if (!book || !topic || !word || !translation) {
+    toast("❌ Majburiy maydonlarni to'ldiring");
+    return false;
+  }
+
+  closeModal();
+  toast("⏳ Saqlanmoqda...");
+  await updateVocabularyInBackend(id, {
+    book_name: book,
+    topic: topic,
+    word: word,
+    translation: translation,
+    description: description
+  });
+  toast("✅ Lug'at muvaffaqiyatli yangilandi!");
+  await renderAdminVocabularies();
+  return false;
+}
+
+async function confirmDeleteVocab(id) {
+  const item = ADMIN_VOCABULARIES.find(v => String(v.id) === String(id));
+  if (!item) return;
+
+  const ok = typeof showLiquidConfirm === 'function'
+    ? await showLiquidConfirm({
+        title: "Lug'atni o'chirish",
+        message: `"${item.word}" (${item.translation}) lug'atini o'chirmoqchimisiz?`,
+        subtext: "Bu amal orqali lug'at bazadan butunlay o'chiriladi.",
+        confirmLabel: "Ha, o'chirilsin",
+        cancelLabel: "Bekor qilish",
+        isDanger: true
+      })
+    : confirm(`"${item.word}" lug'atini o'chirmoqchimisiz?`);
+
+  if (!ok) return;
+
+  toast("⏳ O'chirilmoqda...");
+  await deleteVocabularyFromBackend(id);
+  toast("✅ Lug'at o'chirildi");
+  await renderAdminVocabularies();
 }
 
 /* ================= ADMIN IMTIHON XABARLARI BOSHQARUV TIZIMI ================= */
