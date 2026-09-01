@@ -1988,7 +1988,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelgrammarselect','duelhistory','dostlarim'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelgrammarselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -11444,6 +11444,9 @@ function _duelFromRow(row){
 const DUEL_MIX_RATIO = { nahv:5, sarf:3, imlo:1, xatolar:1 };
 
 function _duelBuildSnapshot(skillId, count, category){
+  if(skillId === 'vocabularies'){
+    return _duelBuildVocabSnapshot(category, count);
+  }
   const fullBank = (QUESTION_BANKS[skillId] && QUESTION_BANKS[skillId].questions) || [];
   const toQ = q => ({ id: q.id, q: q.q, opts: q.opts, a: q.a, exp: q.exp || '', category: q.category || '' });
 
@@ -11468,10 +11471,124 @@ function _duelBuildSnapshot(skillId, count, category){
   return shuffleArray(bank).slice(0, count).map(toQ);
 }
 
+/* Lug'atlar bazasidan duel uchun 10 ta test savollarini avtomatik tuzish */
+function _duelBuildVocabSnapshot(categoryParam, count = 10){
+  let pool = Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length ? ADMIN_VOCABULARIES : getLocalVocabularies();
+  if(!pool || !pool.length){
+    // Agar umuman bo'sh bo'lsa
+    toast("⚠️ Lug'atlar bazasi bo'sh. Avval lug'at qo'shing.");
+    return [];
+  }
+
+  let bookName = categoryParam || 'all';
+  let topicName = 'all';
+  if(categoryParam && typeof categoryParam === 'string' && categoryParam.includes(':::')){
+    const parts = categoryParam.split(':::');
+    bookName = parts[0] || 'all';
+    topicName = parts[1] || 'all';
+  }
+
+  let targetWords = pool;
+  if(bookName && bookName !== 'all'){
+    targetWords = targetWords.filter(v => (v.book_name || '').trim() === bookName.trim());
+  }
+  if(topicName && topicName !== 'all'){
+    targetWords = targetWords.filter(v => (v.topic || '').trim() === topicName.trim());
+  }
+
+  if(!targetWords.length){
+    targetWords = (bookName && bookName !== 'all')
+      ? pool.filter(v => (v.book_name || '').trim() === bookName.trim())
+      : pool;
+  }
+  if(!targetWords.length) targetWords = pool;
+
+  const shuffledTargets = shuffleArray([...targetWords]);
+  const selectedTargets = shuffledTargets.slice(0, count);
+
+  // 10 taga yetmasa takrorlash orqali to'ldirish
+  while(selectedTargets.length < count && targetWords.length > 0){
+    selectedTargets.push(targetWords[Math.floor(Math.random() * targetWords.length)]);
+  }
+
+  const questions = selectedTargets.map((item, idx) => {
+    const isArToUz = Math.random() > 0.35; // Arabchadan o'zbekchaga yoki aksincha
+    const wordSafe = (item.word || '—').trim();
+    const transSafe = (item.translation || '—').trim();
+    const bookTitle = item.book_name || 'Lug\'at';
+    const topicTitle = item.topic ? ` · ${item.topic}` : '';
+
+    if(isArToUz){
+      const correctOpt = transSafe;
+      const wrongPool = shuffleArray(pool.filter(w => (w.translation || '').trim() !== correctOpt));
+      const wrongOpts = [];
+      const used = new Set([correctOpt]);
+      for(const w of wrongPool){
+        const t = (w.translation || '').trim();
+        if(t && !used.has(t)){
+          wrongOpts.push(t);
+          used.add(t);
+          if(wrongOpts.length === 3) break;
+        }
+      }
+      while(wrongOpts.length < 3){
+        wrongOpts.push(`Boshqa variant ${wrongOpts.length + 1}`);
+      }
+      const allOpts = shuffleArray([correctOpt, ...wrongOpts]);
+      const correctIdx = allOpts.indexOf(correctOpt);
+
+      return {
+        id: item.id || `vq_${idx}_${Date.now()}`,
+        q: `<div style="font-family:'Noto Sans Arabic','Noto Sans',sans-serif;font-size:22px;font-weight:700;color:var(--emerald-700,#047857);direction:rtl;margin-bottom:6px;" class="notranslate">${escapeHtml(wordSafe)}</div> so'zining to'g'ri ma'nosini toping:`,
+        opts: allOpts,
+        a: correctIdx,
+        exp: `${wordSafe} — ${transSafe} (${bookTitle}${topicTitle})`,
+        category: item.topic ? `${bookTitle} · ${item.topic}` : bookTitle
+      };
+    } else {
+      const correctOpt = wordSafe;
+      const wrongPool = shuffleArray(pool.filter(w => (w.word || '').trim() !== correctOpt));
+      const wrongOpts = [];
+      const used = new Set([correctOpt]);
+      for(const w of wrongPool){
+        const wAr = (w.word || '').trim();
+        if(wAr && !used.has(wAr)){
+          wrongOpts.push(wAr);
+          used.add(wAr);
+          if(wrongOpts.length === 3) break;
+        }
+      }
+      while(wrongOpts.length < 3){
+        wrongOpts.push(`—`);
+      }
+      const allOpts = shuffleArray([correctOpt, ...wrongOpts]);
+      const correctIdx = allOpts.indexOf(correctOpt);
+
+      return {
+        id: item.id || `vq_${idx}_${Date.now()}`,
+        q: `«<b>${escapeHtml(transSafe)}</b>» so'zining arabcha tarjimasini toping:`,
+        opts: allOpts,
+        a: correctIdx,
+        exp: `${wordSafe} — ${transSafe} (${bookTitle}${topicTitle})`,
+        category: item.topic ? `${bookTitle} · ${item.topic}` : bookTitle
+      };
+    }
+  });
+
+  return questions;
+}
+
 /* Supabase RPC create_duel(p_challenger_id, p_challenger_name, p_skill_id, p_count, p_category, p_questions) */
 async function apiCreateDuel(skillId, count, category){
   if(!_duelRequireAuth()) return null;
-  const questions = _duelBuildSnapshot(skillId, count, category);
+  const questions = (skillId === 'vocabularies') 
+    ? _duelBuildVocabSnapshot(category, count) 
+    : _duelBuildSnapshot(skillId, count, category);
+
+  if(!questions || !questions.length){
+    toast("⚠️ Duel uchun savollar topilmadi");
+    return null;
+  }
   try{
     const row = _duelUnwrap(await duelRpc('create_duel', {
       p_challenger_id: _duelMyRawId(),
@@ -11770,11 +11887,29 @@ function renderDuelCard(d, me){
   const myResult = iAmChallenger ? d.challengerResult : d.opponentResult;
   const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
   const isSpeaking = d.duelType === 'speaking';
+  const isVocab = d.skillId === 'vocabularies';
   const skillMeta = isSpeaking
     ? {name:'Muhadasa', color:'var(--muhavara,#8B5CF6)', bg:'rgba(139,92,246,0.12)'}
-    : (SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'});
-  const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
-  const catLabel = isSpeaking ? 'Muhadasa' : (catMeta ? catMeta.name : 'Aralash savollar');
+    : (isVocab
+        ? {name:"Lug'atlar", color:'var(--emerald-600, #059669)', bg:'rgba(16,185,129,0.12)'}
+        : (SKILLS.find(s=>s.id===d.skillId) || {name:'Grammatika', color:'var(--grammatika)', bg:'var(--grammatika-bg)'}));
+  
+  let catLabel = 'Aralash savollar';
+  if(isSpeaking){
+    catLabel = 'Muhadasa';
+  } else if(isVocab){
+    if(d.category && d.category.includes(':::')){
+      const [b, t] = d.category.split(':::');
+      catLabel = `${b} · ${t}`;
+    } else if(d.category && d.category !== 'all'){
+      catLabel = `${d.category} (Aralash)`;
+    } else {
+      catLabel = "Barcha kitoblar";
+    }
+  } else {
+    const catMeta = GRAMMAR_CATEGORIES.find(c=>c.id===d.category);
+    catLabel = catMeta ? catMeta.name : 'Aralash savollar';
+  }
   const startFn = isSpeaking ? 'startSpeakingDuelQuiz' : 'startDuelQuiz';
   const resultFn = isSpeaking ? 'openSpeakingDuelResultCard' : 'openDuelResultCard';
 
@@ -11899,6 +12034,138 @@ function openDuelGrammarSelect(){
 
 async function chooseDuelSkill(category){
   await startNewDuel(category);
+}
+
+let CURRENT_DUEL_VOCAB_BOOK = '';
+
+/* Duel — Lug'at kitobini tanlash (2-bosqich) */
+async function openDuelVocabSelect(){
+  showView('duelvocabselect');
+  await renderDuelVocabGrid();
+}
+
+async function renderDuelVocabGrid(){
+  const grid = document.getElementById('duelVocabGrid');
+  const allDesc = document.getElementById('duelVocabAllDesc');
+  if(!grid) return;
+
+  if(!ADMIN_VOCABULARIES || !ADMIN_VOCABULARIES.length){
+    grid.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-weight:600;">⏳ Lug'at kitoblari yuklanmoqda...</div>`;
+    await loadVocabulariesFromBackend();
+  }
+
+  const pool = (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) ? ADMIN_VOCABULARIES : getLocalVocabularies();
+  const totalWords = pool.length;
+  const allBooks = Array.from(new Set(pool.map(v => (v.book_name || '').trim()).filter(Boolean))).sort();
+  const totalTopics = Array.from(new Set(pool.map(v => `${(v.book_name||'').trim()}:::${(v.topic||'').trim()}`).filter(Boolean))).length;
+
+  if(allDesc){
+    allDesc.textContent = totalWords > 0 
+      ? `Jami ${allBooks.length} ta kitob · ${totalTopics} ta bo'lim · ${totalWords} ta lug'at`
+      : `Barcha mavzulardagi lug'atlardan test`;
+  }
+
+  if(!allBooks.length){
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align:center; padding:30px 16px; background:var(--card); border:1.5px dashed var(--border); border-radius:16px;">
+        <div style="font-size:32px;margin-bottom:8px;">📚</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Lug'at kitoblari topilmadi</div>
+        <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Admin panel orqali yangi lug'atlar va kitoblar qo'shishingiz mumkin</div>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = allBooks.map(bookName => {
+    const words = pool.filter(v => (v.book_name || '').trim() === bookName);
+    const topics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean)));
+    const topicCount = topics.length || 1;
+    const wordCount = words.length;
+
+    return `
+      <div class="duel-book-card" onclick="openDuelVocabBookTopics('${escapeHtml(bookName).replace(/'/g, "\\'")}')">
+        <div class="duel-book-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div class="duel-book-main">
+          <div class="duel-book-title">${escapeHtml(bookName)}</div>
+          <div class="duel-book-badges">
+            <span class="duel-book-badge badge-accent">📑 ${topicCount} ta bo'lim</span>
+            <span class="duel-book-badge">🔤 ${wordCount} ta savol</span>
+          </div>
+        </div>
+        <svg class="duel-book-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    `;
+  }).join('');
+}
+
+/* Duel — Tanlangan kitob ichidagi mavzular (3-bosqich) */
+function openDuelVocabBookTopics(bookName){
+  CURRENT_DUEL_VOCAB_BOOK = bookName;
+  const pool = (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) ? ADMIN_VOCABULARIES : getLocalVocabularies();
+  const words = pool.filter(v => (v.book_name || '').trim() === bookName);
+  const topics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean))).sort();
+
+  const titleEl = document.getElementById('duelVocabTopicBookTitle');
+  const subEl = document.getElementById('duelVocabTopicBookSub');
+  const mixTitleEl = document.getElementById('duelVocabBookMixTitle');
+  const mixDescEl = document.getElementById('duelVocabBookMixDesc');
+  const grid = document.getElementById('duelVocabTopicsGrid');
+
+  if(titleEl) titleEl.textContent = bookName;
+  if(subEl) subEl.textContent = `Ushbu kitobdagi qaysi mavzudan bellashmoqchisiz? (${words.length} ta so'z)`;
+  if(mixTitleEl) mixTitleEl.textContent = `${bookName} (Aralash)`;
+  if(mixDescEl) mixDescEl.textContent = `Kitobdagi barcha ${topics.length} ta bo'limdan aralash test (${words.length} ta savol)`;
+
+  if(grid){
+    if(!topics.length){
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:var(--text-faint); font-weight:600;">
+          Ushbu kitobda bo'limlar topilmadi
+        </div>
+      `;
+    } else {
+      grid.innerHTML = topics.map(topicName => {
+        const topicWords = words.filter(v => (v.topic || '').trim() === topicName);
+        return `
+          <div class="duel-book-card" onclick="chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
+            <div class="duel-book-icon" style="background:rgba(59,130,246,0.1);color:var(--istima,#2563eb);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div class="duel-book-main">
+              <div class="duel-book-title">${escapeHtml(topicName)}</div>
+              <div class="duel-book-badges">
+                <span class="duel-book-badge badge-accent">🔤 ${topicWords.length} ta savol</span>
+              </div>
+            </div>
+            <svg class="duel-book-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  showView('duelvocabtopics');
+}
+
+async function chooseVocabDuel(bookName, topicName = 'all'){
+  toast("⏳ Lug'at dueli yaratilmoqda...", 2000);
+  const categoryPayload = (topicName && topicName !== 'all') 
+    ? `${bookName}:::${topicName}`
+    : (bookName || 'all');
+  const d = await apiCreateDuel('vocabularies', DUEL_QUESTION_COUNT, categoryPayload);
+  if(!d) return;
+  renderDuelHub();
+  openDuelInviteScreen(d);
 }
 
 /* Speaking duel — Grammatika duelidan farqli, savol snapshot backendda
@@ -12259,14 +12526,32 @@ async function startDuelQuiz(duelId, dOverride){
   const d = dOverride || (await apiGetMyDuels()).find(x=>x.id===duelId);
   if(!d){ toast('Duel topilmadi'); return; }
   if(!d.questions || !d.questions.length){ toast('Duel savollari topilmadi'); return; }
-  const skillMeta = SKILLS.find(s=>s.id===d.skillId) || SKILLS.find(s=>s.id==='grammatika');
+  const isVocab = d.skillId === 'vocabularies';
+  const skillMeta = isVocab
+    ? { id:'vocabularies', name:"Lug'atlar", color:'var(--emerald-600, #059669)', bg:'rgba(16,185,129,0.12)' }
+    : (SKILLS.find(s=>s.id===d.skillId) || SKILLS.find(s=>s.id==='grammatika'));
+  
+  let catDisplay = '';
+  if(isVocab){
+    if(d.category && d.category.includes(':::')){
+      const [b, t] = d.category.split(':::');
+      catDisplay = `${b} · ${t}`;
+    } else if(d.category && d.category !== 'all'){
+      catDisplay = `${d.category} (Aralash)`;
+    } else {
+      catDisplay = "Barcha kitoblar";
+    }
+  }
+  const duelLabel = isVocab
+    ? `⚔️ Duel — Lug'atlar (${catDisplay})`
+    : `⚔️ Duel — ${skillMeta.name}`;
   const meId = _duelMyId();
   const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
   currentQuiz = {
     skillId: d.skillId, topicId: null, type: 'mcq', passage: null,
     questions: d.questions.map(q=>({...q, picked:null, timeLeft:DUEL_QUESTION_SECONDS, expired:false})),
-    color: skillMeta.color, bg: skillMeta.bg, label: `⚔️ Duel — ${skillMeta.name}`,
+    color: skillMeta.color, bg: skillMeta.bg, label: duelLabel,
     idx:0, startedAt: Date.now(), duration: 20*60,
     isDuel: true, duelId: d.id,
     duelOpponent: oppInfo ? { name: oppInfo.name, photoUrl: oppInfo.photoUrl || null } : null,
