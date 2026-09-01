@@ -1301,6 +1301,16 @@
             </div>
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
+          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" onclick="openDuelVocabSelect()">
+            <div class="duel-skill-mix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div class="duel-skill-mix-main">
+              <div class="duel-skill-mix-name">Lug'atlar</div>
+              <div class="duel-skill-mix-desc">Kitoblar bo'yicha so'z boyligi dueli</div>
+            </div>
+            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
           <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,var(--muhavara,#8B5CF6),#6D28D9);" onclick="chooseSpeakingDuel()">
             <div class="duel-skill-mix-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
@@ -1333,6 +1343,52 @@
             <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
           <div class="duel-skill-grid" id="duelSkillGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============ DUEL — LUG'AT KITOBINI TANLASH (2-bosqich) ============ -->
+      <div class="view" id="view-duelvocabselect">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div class="view-title">Lug'at kitobini tanlang</div>
+        <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Qaysi kitob bo'yicha bellashmoqchisiz?</div>
+        <div class="duel-skill-body">
+          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" onclick="chooseVocabDuel('all')">
+            <div class="duel-skill-mix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <div class="duel-skill-mix-main">
+              <div class="duel-skill-mix-name">Barcha kitoblar (Aralash)</div>
+              <div class="duel-skill-mix-desc" id="duelVocabAllDesc">Barcha mavzulardagi lug'atlardan test</div>
+            </div>
+            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div class="duel-vocab-grid" id="duelVocabGrid"></div>
+        </div>
+      </div>
+
+      <!-- ============ DUEL — LUG'AT MAVZUSINI TANLASH (3-bosqich) ============ -->
+      <div class="view" id="view-duelvocabtopics">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div class="view-title" id="duelVocabTopicBookTitle">Kitob mavzulari</div>
+        <div class="duel-skill-sub" id="duelVocabTopicBookSub" style="margin:-12px 0 18px 2px;">Qaysi mavzudan bellashmoqchisiz?</div>
+        <div class="duel-skill-body">
+          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" id="duelVocabBookMixCard" onclick="chooseVocabDuel(CURRENT_DUEL_VOCAB_BOOK, 'all')">
+            <div class="duel-skill-mix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <div class="duel-skill-mix-main">
+              <div class="duel-skill-mix-name" id="duelVocabBookMixTitle">Shu kitob bo'yicha aralash</div>
+              <div class="duel-skill-mix-desc" id="duelVocabBookMixDesc">Barcha bo'limlardagi lug'atlardan test</div>
+            </div>
+            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div class="duel-vocab-grid" id="duelVocabTopicsGrid"></div>
         </div>
       </div>
 
