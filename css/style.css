@@ -2302,6 +2302,99 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   }
 }
 
+/* Duel Lug'at kitoblari gridi */
+.duel-vocab-grid{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+@media (min-width: 640px){
+  .duel-vocab-grid{
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+.duel-book-card{
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.duel-book-card:hover{
+  transform: translateY(-2px);
+  border-color: var(--emerald-600, #059669);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08);
+}
+.duel-book-card:active{
+  transform: scale(0.98);
+}
+.duel-book-icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--emerald-700, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.duel-book-icon svg{
+  width: 22px;
+  height: 22px;
+}
+.duel-book-main{
+  flex: 1;
+  min-width: 0;
+}
+.duel-book-title{
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+.duel-book-badges{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.duel-book-badge{
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--card-alt);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.duel-book-badge.badge-accent{
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--emerald-700, #047857);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.duel-book-chev{
+  width: 18px;
+  height: 18px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  transition: transform .18s var(--ease), color .18s var(--ease);
+}
+.duel-book-card:hover .duel-book-chev{
+  transform: translateX(3px);
+  color: var(--emerald-700, #047857);
+}
+
 /* ==================== Duel natijasi (Victory / Defeat) ekrani (Full-screen) ====================
    To'liq ekranli tayyor dizayn (mesh-uchburchak fon, 3D animatsiyali kubok SVG, taqqoslash, konfetti) —
    barcha klasslar to'qnashuvning oldini olish uchun "dr-" prefiksi bilan. */
