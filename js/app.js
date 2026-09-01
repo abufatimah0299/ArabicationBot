@@ -4779,9 +4779,51 @@ function viewAdminUser(userId){
           </div>
         </div>`;
       }).join('')}
+
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+        <button type="button" class="btn btn-outline danger btn-block" style="font-size:12.5px;padding:9px 12px;" onclick="clearUserDuelHistory(${u.id})">
+          ⚔️ Foydalanuvchining duel tarixini tozalash
+        </button>
+      </div>
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('show');
+}
+
+/* ---- Admin: Foydalanuvchining duel tarixini tozalash ---- */
+async function clearUserDuelHistoryOnBackend(userId){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_clear_user_duel_history`, {
+      method:"POST", headers: authHeaders(),
+      body: JSON.stringify({ p_user_id: userId })
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+
+async function clearUserDuelHistory(userId){
+  const u = ADMIN_USERS.find(x=>x.id===userId);
+  const name = u ? (u.name || u.id) : userId;
+  const ok = await showLiquidConfirm({
+    title: "Duel tarixini tozalash",
+    message: `"${name}" foydalanuvchisining barcha duel tarixi (yaratgan va qatnashgan duellari) o'chirilsinmi?`,
+    subtext: "Bu amal qaytarilmaydi.",
+    confirmLabel: "Ha, tozalansin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
+
+  toast("⏳ Duel tarixi tozalanmoqda...");
+  const res = await clearUserDuelHistoryOnBackend(userId);
+  if(res === null){
+    toast("⚠️ Xatolik: Duel tarixi tozalanmadi (" + (window.LAST_BACKEND_ERROR || '') + ")");
+    return;
+  }
+  toast(`✅ "${name}" foydalanuvchisining duel tarixi muvaffaqiyatli tozalandi!`);
+  _duelHistoryCache = {};
 }
 
 /* ---- Admin: foydalanuvchi XP'sini qo'lda +/- qilish ---- */
@@ -4981,6 +5023,39 @@ function clearAllExamHistory(){
       });
     }
   });
+}
+
+/* ---- Admin: BARCHA duellar tarixini tozalash ---- */
+async function clearAllDuelHistoryOnBackend(){
+  if(!SESSION_TOKEN){ setLastBackendError('—', "SESSION_TOKEN yo'q (Telegram orqali kirilmagan)"); return null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_clear_all_duel_history`, {
+      method:"POST", headers: authHeaders(), body: JSON.stringify({})
+    });
+    if(!res.ok){ setLastBackendError(res.status, await res.text()); return null; }
+    return await res.json();
+  }catch(e){ setLastBackendError('—', e.message); return null; }
+}
+
+async function clearAllDuelHistory(){
+  const ok = await showLiquidConfirm({
+    title: "Barcha duellar tarixini tozalash",
+    message: "DIQQAT: Bu bazadagi BARCHA foydalanuvchilarning barcha duel natijalari va faol/tugagan duellarini butunlay o'chiradi.",
+    subtext: "Bu amalni ORQAGA QAYTARIB BO'LMAYDI!",
+    confirmLabel: "Ha, butunlay tozalansin",
+    cancelLabel: "Bekor qilish",
+    isDanger: true
+  });
+  if(!ok) return;
+
+  toast("⏳ Barcha duel tarixi tozalanmoqda...");
+  const res = await clearAllDuelHistoryOnBackend();
+  if(res === null){
+    toast("⚠️ O'chirilmadi: " + (window.LAST_BACKEND_ERROR || ''));
+    return;
+  }
+  _duelHistoryCache = {};
+  toast(`🗑 Barcha duel tarixi muvaffaqiyatli tozalandi (${typeof res === 'number' ? res + ' ta yozuv' : 'bajarildi'})`);
 }
 
 /* ---- BOSHQA qurilmalardagi eski lokal Tarix keshini tozalash mexanizmi ----
@@ -8507,15 +8582,11 @@ async function renderAdminVocabularies(rebuildFilters = true) {
             </div>
           </div>
           <div class="vocab-book-actions">
-            <button type="button" class="btn btn-outline" style="font-size:11.5px;padding:4px 10px;border-radius:8px;" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga yangi so'z qo'shish">
-              + Lug'at
-            </button>
-            <button type="button" class="btn btn-outline" style="font-size:11.5px;padding:4px 10px;border-radius:8px;" onclick="event.stopPropagation(); openBulkAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga ommaviy yuklash">
-              Bulk JSON
-            </button>
-            <button type="button" class="btn btn-outline danger" style="font-size:11.5px;padding:4px 9px;border-radius:8px;color:var(--red);border-color:rgba(239,68,68,0.3);" onclick="event.stopPropagation(); confirmDeleteVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')" title="Kitobni barcha ichidagi lug'atlari bilan butunlay o'chirish">
-              🗑️ O'chirish
-            </button>
+            <div class="icon-btn-row">
+              <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga yangi so'z qo'shish">${IB_ICON_ADD}</button>
+              <button type="button" class="icon-btn ib-edit" onclick="event.stopPropagation(); openBulkAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga ommaviy yuklash (JSON)">${AS_ICON_PLUS}</button>
+              <button type="button" class="icon-btn ib-del" onclick="event.stopPropagation(); confirmDeleteVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')" title="Kitobni barcha ichidagi lug'atlari bilan butunlay o'chirish">${IB_ICON_DEL}</button>
+            </div>
             <div class="vocab-chevron">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
             </div>
@@ -8538,12 +8609,10 @@ async function renderAdminVocabularies(rebuildFilters = true) {
               <span class="vocab-badge" style="font-size:10.5px;">${words.length} ta so'z</span>
             </div>
             <div class="vocab-topic-actions">
-              <button type="button" class="btn btn-primary" style="font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
-                + So'z qo'shish
-              </button>
-              <button type="button" class="row-btn danger" style="padding:3px 7px;font-size:11px;border-radius:6px;" onclick="event.stopPropagation(); confirmDeleteVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuni barcha so'zlari bilan o'chirish">
-                🗑️
-              </button>
+              <div class="icon-btn-row">
+                <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuga yangi so'z qo'shish">${IB_ICON_ADD}</button>
+                <button type="button" class="icon-btn ib-del" onclick="event.stopPropagation(); confirmDeleteVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuni barcha so'zlari bilan o'chirish">${IB_ICON_DEL}</button>
+              </div>
               <div class="vocab-chevron">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
               </div>
@@ -8565,7 +8634,7 @@ async function renderAdminVocabularies(rebuildFilters = true) {
                   ${words.map(w => `
                     <tr>
                       <td style="text-align:right;">
-                        <div style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:var(--emerald-700, #047857);direction:rtl;" class="notranslate">
+                        <div style="font-family:'Noto Sans Arabic','Noto Sans',sans-serif;font-size:16px;font-weight:700;color:var(--emerald-700, #047857);direction:rtl;" class="notranslate">
                           ${escapeHtml(w.word || '—')}
                         </div>
                       </td>
@@ -8580,8 +8649,10 @@ async function renderAdminVocabularies(rebuildFilters = true) {
                         </div>
                       </td>
                       <td style="text-align:center;white-space:nowrap;">
-                        <button class="row-btn" style="padding:4px 8px;margin-right:4px;" onclick="openEditVocabModal('${w.id}')" title="Tahrirlash">✏️</button>
-                        <button class="row-btn danger" style="padding:4px 8px;" onclick="confirmDeleteVocab('${w.id}')" title="O'chirish">🗑️</button>
+                        <div class="icon-btn-row" style="justify-content:center;gap:5px;">
+                          <button type="button" class="icon-btn ib-edit" style="width:30px;height:30px;" onclick="openEditVocabModal('${w.id}')" title="Tahrirlash">${IB_ICON_EDIT}</button>
+                          <button type="button" class="icon-btn ib-del" style="width:30px;height:30px;" onclick="confirmDeleteVocab('${w.id}')" title="O'chirish">${IB_ICON_DEL}</button>
+                        </div>
                       </td>
                     </tr>
                   `).join('')}
@@ -8653,7 +8724,7 @@ function openAddVocabModal(defaultBook = '', defaultTopic = '') {
 
       <div class="form-field">
         <label>Lug'at (Arabcha so'z) <span style="color:var(--red);">*</span></label>
-        <input type="text" id="vWord" dir="rtl" placeholder="بَيْتٌ" required style="font-family:'Amiri',serif;font-size:18px;font-weight:700;">
+        <input type="text" id="vWord" dir="rtl" placeholder="بَيْتٌ" required style="font-family:'Noto Sans Arabic','Noto Sans',sans-serif;font-size:17px;font-weight:700;">
       </div>
 
       <div class="form-field">
@@ -8840,7 +8911,7 @@ function openEditVocabModal(id) {
 
       <div class="form-field">
         <label>Lug'at (Arabcha so'z) <span style="color:var(--red);">*</span></label>
-        <input type="text" id="evWord" dir="rtl" value="${escapeHtml(item.word || '')}" required style="font-family:'Amiri',serif;font-size:18px;font-weight:700;">
+        <input type="text" id="evWord" dir="rtl" value="${escapeHtml(item.word || '')}" required style="font-family:'Noto Sans Arabic','Noto Sans',sans-serif;font-size:17px;font-weight:700;">
       </div>
 
       <div class="form-field">
