@@ -1376,43 +1376,7 @@
         <div class="view-title">Duel uchun bo'lim tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Do'stingiz bilan qaysi mavzudan bellashmoqchisiz?</div>
         <div class="marathon-cards-stack">
-          <!-- 1-Card: Grammatika -->
-          <div class="marathon-action-card card-duel-grammar" onclick="openDuelGrammarSelect()" role="button" tabindex="0">
-            <div class="dmb-left">
-              <div class="dmb-badge">
-                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
-                  <defs>
-                    <linearGradient id="dmbPurpleGrammarGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#A78BFA"/>
-                      <stop offset="0.6" stop-color="#8C6DF0"/>
-                      <stop offset="1" stop-color="#5B3EC7"/>
-                    </linearGradient>
-                    <filter id="dmbPurpleGrammarGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#5B3EC7" flood-opacity="0.32"/>
-                    </filter>
-                  </defs>
-                  <circle cx="22" cy="22" r="18" fill="url(#dmbPurpleGrammarGrad)" filter="url(#dmbPurpleGrammarGlow)"/>
-                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                  </g>
-                </svg>
-              </div>
-              <div class="dmb-text-block">
-                <div class="dmb-title">Grammatika</div>
-                <div class="dmb-sub">Test savollari — to'g'ri variantni tanlang</div>
-              </div>
-            </div>
-            <div class="dmb-right">
-              <div class="dmb-arrow">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2-Card: Lug'atlar -->
+          <!-- 1-Card: Lug'at -->
           <div class="marathon-action-card card-duel-vocab" onclick="openDuelVocabSelect()" role="button" tabindex="0">
             <div class="dmb-left">
               <div class="dmb-badge">
@@ -1435,8 +1399,44 @@
                 </svg>
               </div>
               <div class="dmb-text-block">
-                <div class="dmb-title">Lug'atlar</div>
+                <div class="dmb-title">Lug'at</div>
                 <div class="dmb-sub">Kitoblar bo'yicha so'z boyligi dueli</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Card: Grammar -->
+          <div class="marathon-action-card card-duel-grammar" onclick="openDuelGrammarSelect()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbPurpleGrammarGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A78BFA"/>
+                      <stop offset="0.6" stop-color="#8C6DF0"/>
+                      <stop offset="1" stop-color="#5B3EC7"/>
+                    </linearGradient>
+                    <filter id="dmbPurpleGrammarGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#5B3EC7" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbPurpleGrammarGrad)" filter="url(#dmbPurpleGrammarGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Grammar</div>
+                <div class="dmb-sub">Test savollari — to'g'ri variantni tanlang</div>
               </div>
             </div>
             <div class="dmb-right">
@@ -1580,7 +1580,7 @@
               </div>
             </div>
           </div>
-          <div class="duel-vocab-stack" id="duelVocabGrid"></div>
+          <div class="duel-vocab-books-grid" id="duelVocabGrid"></div>
         </div>
       </div>
 
