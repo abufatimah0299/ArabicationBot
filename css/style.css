@@ -46,8 +46,8 @@
   --shadow-lg:0 8px 24px -4px rgba(0,0,0,0.4), 0 24px 56px -10px rgba(3,18,12,0.65);
   --font-sans:'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-ar:'Noto Sans Arabic', 'Amiri', sans-serif;
-  --font-ar-bold:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
-  --font-ar-title:'Graphik Arabic', 'Noto Sans Arabic', sans-serif;
+  --font-ar-bold:'Graphik Arabic', 'Graphik Arabic Semibold', 'Noto Sans Arabic', sans-serif;
+  --font-ar-title:'Graphik Arabic', 'Graphik Arabic Semibold', 'Noto Sans Arabic', sans-serif;
 }
 /* ---------- Light mode palette (Warm pastel with emerald glow) ---------- */
 html[data-theme="light"]{
@@ -4005,6 +4005,56 @@ html[data-theme="dark"] .vocab-badge.emerald{
   flex-shrink: 0;
 }
 
+/* Vocab Topic Drag Handle & Reordering */
+.vocab-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-faint);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  font-size: 15px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.vocab-drag-handle:hover,
+.vocab-drag-handle:active {
+  color: var(--indigo-600);
+  background: var(--indigo-50, rgba(99,102,241,0.08));
+}
+.vocab-drag-handle:active {
+  cursor: grabbing;
+}
+.vocab-topic-item {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+}
+.vocab-topic-item.dragging {
+  opacity: 0.45 !important;
+  border: 2px dashed var(--indigo-600) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+  transform: scale(0.99);
+}
+.vocab-topic-item.drag-over-top {
+  border-top: 3px solid var(--indigo-600) !important;
+  transform: translateY(2px);
+}
+.vocab-topic-item.drag-over-bottom {
+  border-bottom: 3px solid var(--indigo-600) !important;
+  transform: translateY(-2px);
+}
+.vocab-topic-item.touch-active-drag {
+  opacity: 0.85;
+  box-shadow: 0 10px 28px rgba(99,102,241,0.25);
+  border-color: var(--indigo-600);
+  position: relative;
+  z-index: 20;
+}
+
 .vocab-topic-body{
   display: none;
   background: var(--card);
@@ -5429,7 +5479,114 @@ html[data-theme="dark"] .marathon-action-card.card-duel-xatolar:hover .dmb-arrow
   color: #F87171;
 }
 
-/* 9. Kitoblar (Teal/Emerald) */
+/* 9. Kitoblar Grid & Card (2 ustunli, iconsiz, rasm shabloni bo'yicha) */
+.duel-vocab-books-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .duel-vocab-books-grid {
+    gap: 10px;
+  }
+}
+
+.duel-book-card {
+  background: var(--card, #FFFFFF);
+  border: 1.5px solid var(--border, #E2E8F0);
+  border-radius: 16px;
+  padding: 14px 14px 12px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  min-height: 96px;
+  transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  user-select: none;
+  box-sizing: border-box;
+}
+
+html[data-theme="dark"] .duel-book-card {
+  background: var(--card, #1E293B);
+  border-color: var(--border, #334155);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.duel-book-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary, #6366F1);
+  box-shadow: 0 6px 16px -4px rgba(99, 102, 241, 0.15);
+}
+
+html[data-theme="dark"] .duel-book-card:hover {
+  border-color: #818CF8;
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.4);
+}
+
+.duel-book-card:active {
+  transform: scale(0.98);
+}
+
+.duel-book-card .dbc-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.duel-book-card .dbc-title {
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text, #0F172A);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme="dark"] .duel-book-card .dbc-title {
+  color: #F8FAFC;
+}
+
+.duel-book-card .dbc-sub {
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-dim, #64748B);
+  line-height: 1.3;
+  margin-top: 3px;
+}
+
+html[data-theme="dark"] .duel-book-card .dbc-sub {
+  color: #94A3B8;
+}
+
+.duel-book-card .dbc-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  gap: 6px;
+}
+
+.duel-book-card .dbc-meta-topics,
+.duel-book-card .dbc-meta-words {
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-dim, #64748B);
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] .duel-book-card .dbc-meta-topics,
+html[data-theme="dark"] .duel-book-card .dbc-meta-words {
+  color: #94A3B8;
+}
+
 .marathon-action-card.card-duel-book {
   background: #F0FDFA;
   border-color: #CCFBF1;
@@ -5452,6 +5609,110 @@ html[data-theme="dark"] .marathon-action-card.card-duel-book:hover {
 html[data-theme="dark"] .marathon-action-card.card-duel-book:hover .dmb-arrow {
   color: #2DD4BF;
 }
+/* Duel Vocab Topic items (Umumiy grammatika mavzulari kabi) */
+.duel-vocab-topic-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), border-color .22s var(--ease), background .22s var(--ease), box-shadow .22s var(--ease);
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+.duel-vocab-topic-item:hover {
+  border-color: var(--indigo-300, #A5B4FC);
+  transform: translateX(3px);
+  background: var(--card-alt);
+  box-shadow: 0 4px 14px -4px rgba(99, 102, 241, 0.12);
+}
+html[data-theme="dark"] .duel-vocab-topic-item:hover {
+  border-color: var(--indigo-500, #6366F1);
+  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.4);
+}
+
+.topic-icon.topic-number {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--indigo-100, #E0E7FF);
+  color: var(--indigo-700, #4338CA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+html[data-theme="dark"] .topic-icon.topic-number {
+  background: rgba(99, 102, 241, 0.2);
+  color: #A5B4FC;
+}
+
+.duel-topic-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dvt-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dvt-uz {
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text, #0F172A);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.dvt-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dvt-ar {
+  font-family: 'Graphik Arabic', 'Graphik Arabic Semibold', var(--font-ar-bold), 'Noto Sans Arabic', sans-serif;
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--text, #0F172A);
+  line-height: 1.25;
+  text-align: right;
+  direction: rtl;
+}
+
+.dvt-count {
+  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim, #64748B);
+  margin-top: 3px;
+  text-align: right;
+}
+
+html[data-theme="dark"] .dvt-count {
+  color: var(--text-dim, #94A3B8);
+}
+
 .marathon-action-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px -4px rgba(0,0,0,0.08);
