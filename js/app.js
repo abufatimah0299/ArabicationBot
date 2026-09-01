@@ -10069,7 +10069,7 @@ function renderPodium(period, skill, type){
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${rankAvatarHTML(u, RANK_COLORS[i])}</div>
       <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
-      <div class="podium-xp"><span class="num-target" data-target="${u.xp}">0</span> XP · ${escapeHtml(u.level)}</div>
+      <div class="podium-xp"><span class="num-target" data-target="${u.xp}">0</span> XP</div>
     </div>`;
   }).join('');
   runEntranceAnimations(podiumEl, true);
@@ -10099,14 +10099,14 @@ function renderLeaderboard(period, skill, type){
     return;
   }
   listEl.innerHTML = data.map((u,i)=>{
-    const countTxt = u.count > 0 ? ` · ${u.count} ${rankCountUnit(skill)}` : '';
+    const countTxt = u.count > 0 ? `${u.count} ${rankCountUnit(skill)}` : '';
     return `
     <div class="lb-row ${u.me?'me':''} fade-in-enter">
       <div class="lb-rank">${u.rank}</div>
       <div class="lb-avatar" style="background:${RANK_COLORS[i%RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i%RANK_COLORS.length])}</div>
       <div class="lb-info">
         <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
-        <div class="l">${escapeHtml(u.level)} daraja${countTxt}</div>
+        ${countTxt ? `<div class="l">${escapeHtml(countTxt)}</div>` : ''}
       </div>
       <div class="lb-xp"><span class="num-target" data-target="${u.xp}">0</span><span style="font-size:10.5px;color:var(--text-faint);font-weight:600;"> XP</span></div>
     </div>
