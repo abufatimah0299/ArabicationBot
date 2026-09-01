@@ -8442,6 +8442,190 @@ async function updateVocabularyInBackend(id, fields) {
   }
 }
 
+function getVocabTopicOrder(bookName) {
+  try {
+    const raw = localStorage.getItem('arab_vocab_topic_order');
+    if (!raw) return [];
+    const map = JSON.parse(raw);
+    return Array.isArray(map[bookName]) ? map[bookName] : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveVocabTopicOrder(bookName, orderArray) {
+  try {
+    const raw = localStorage.getItem('arab_vocab_topic_order');
+    const map = raw ? JSON.parse(raw) : {};
+    map[bookName] = orderArray;
+    localStorage.setItem('arab_vocab_topic_order', JSON.stringify(map));
+  } catch (e) {
+    console.error("saveVocabTopicOrder error:", e);
+  }
+
+  // Reorder ADMIN_VOCABULARIES in memory so sequence is preserved
+  if (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) {
+    const bookWords = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') === bookName);
+    const otherWords = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') !== bookName);
+    bookWords.sort((a, b) => {
+      const topA = a.topic || '';
+      const topB = b.topic || '';
+      const ia = orderArray.indexOf(topA);
+      const ib = orderArray.indexOf(topB);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return 0;
+    });
+    ADMIN_VOCABULARIES = [...otherWords, ...bookWords];
+    saveLocalVocabularies(ADMIN_VOCABULARIES);
+  }
+}
+
+async function moveVocabTopic(bookName, topicName, dir) {
+  const words = (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) 
+    ? ADMIN_VOCABULARIES.filter(v => (v.book_name || 'Umumiy kitob') === bookName)
+    : getLocalVocabularies().filter(v => (v.book_name || 'Umumiy kitob') === bookName);
+
+  const rawTopics = Array.from(new Set(words.map(v => (v.topic || 'Umumiy mavzu')).filter(Boolean)));
+  const customOrder = getVocabTopicOrder(bookName);
+  
+  const currentList = rawTopics.sort((a, b) => {
+    const ia = customOrder.indexOf(a);
+    const ib = customOrder.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return 0;
+  });
+
+  const idx = currentList.indexOf(topicName);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= currentList.length) return;
+
+  const item = currentList.splice(idx, 1)[0];
+  currentList.splice(newIdx, 0, item);
+
+  saveVocabTopicOrder(bookName, currentList);
+  await renderAdminVocabularies(false);
+  toast("✅ Mavzu tartibi saqlandi", 1800);
+}
+
+function initVocabTopicDragDrop(bookBodyEl, bookName) {
+  if (!bookBodyEl) return;
+  const topicCards = Array.from(bookBodyEl.querySelectorAll('.vocab-topic-item[data-topic-name]'));
+  if (topicCards.length <= 1) return;
+
+  let dragEl = null;
+
+  topicCards.forEach(card => {
+    card.setAttribute('draggable', 'true');
+
+    card.addEventListener('dragstart', function(e) {
+      if (e.target.closest('button') || e.target.closest('input') || e.target.closest('table')) {
+        e.preventDefault();
+        return;
+      }
+      dragEl = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', this.dataset.topicName || '');
+    });
+
+    card.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      bookBodyEl.querySelectorAll('.vocab-topic-item').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      dragEl = null;
+      saveTopicOrderFromDOM(bookBodyEl, bookName);
+    });
+
+    card.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (!dragEl || dragEl === this) return;
+      const box = this.getBoundingClientRect();
+      const mid = box.top + box.height / 2;
+      if (e.clientY < mid) {
+        this.classList.add('drag-over-top');
+        this.classList.remove('drag-over-bottom');
+        bookBodyEl.insertBefore(dragEl, this);
+      } else {
+        this.classList.add('drag-over-bottom');
+        this.classList.remove('drag-over-top');
+        bookBodyEl.insertBefore(dragEl, this.nextSibling);
+      }
+    });
+
+    card.addEventListener('dragleave', function() {
+      this.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    // Touch Drag (Mobile)
+    const handle = card.querySelector('.vocab-drag-handle') || card.querySelector('.vocab-topic-header');
+    if (handle) {
+      let touchStartY = 0;
+      let isTouching = false;
+      let activeTouchEl = null;
+
+      handle.addEventListener('touchstart', function(e) {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        isTouching = true;
+        activeTouchEl = card;
+      }, { passive: true });
+
+      handle.addEventListener('touchmove', function(e) {
+        if (!isTouching || !activeTouchEl) return;
+        const touch = e.touches[0];
+        const deltaY = Math.abs(touch.clientY - touchStartY);
+        if (deltaY > 10) {
+          activeTouchEl.classList.add('dragging', 'touch-active-drag');
+          const targetEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.vocab-topic-item');
+          if (targetEl && targetEl !== activeTouchEl && targetEl.parentNode === bookBodyEl) {
+            const box = targetEl.getBoundingClientRect();
+            if (touch.clientY < box.top + box.height / 2) {
+              bookBodyEl.insertBefore(activeTouchEl, targetEl);
+            } else {
+              bookBodyEl.insertBefore(activeTouchEl, targetEl.nextSibling);
+            }
+          }
+        }
+      }, { passive: true });
+
+      handle.addEventListener('touchend', function() {
+        if (activeTouchEl && activeTouchEl.classList.contains('dragging')) {
+          activeTouchEl.classList.remove('dragging', 'touch-active-drag');
+          saveTopicOrderFromDOM(bookBodyEl, bookName);
+        }
+        isTouching = false;
+        activeTouchEl = null;
+      });
+
+      handle.addEventListener('touchcancel', function() {
+        if (activeTouchEl) {
+          activeTouchEl.classList.remove('dragging', 'touch-active-drag');
+        }
+        isTouching = false;
+        activeTouchEl = null;
+      });
+    }
+  });
+}
+
+function saveTopicOrderFromDOM(bookBodyEl, bookName) {
+  if (!bookBodyEl) return;
+  const items = Array.from(bookBodyEl.querySelectorAll('.vocab-topic-item[data-topic-name]'));
+  const newOrder = items.map(el => el.dataset.topicName).filter(Boolean);
+  if (newOrder.length) {
+    saveVocabTopicOrder(bookName, newOrder);
+    renderAdminVocabularies(false);
+    toast("✅ Mavzular tartibi saqlandi", 1800);
+  }
+}
+
 function toggleAdminVocabBook(bookName) {
   if (adminVocabExpandedBooks.has(bookName)) {
     adminVocabExpandedBooks.delete(bookName);
@@ -8568,6 +8752,16 @@ async function renderAdminVocabularies(rebuildFilters = true) {
     topicsMap.forEach(words => { bookWordCount += words.length; });
     const isBookExpanded = isSearching || adminVocabExpandedBooks.has(bookName);
 
+    const customOrder = getVocabTopicOrder(bookName);
+    const sortedTopicEntries = Array.from(topicsMap.entries()).sort(([topA], [topB]) => {
+      const ia = customOrder.indexOf(topA);
+      const ib = customOrder.indexOf(topB);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return 0;
+    });
+
     html += `
       <div class="vocab-book-card ${isBookExpanded ? 'expanded' : ''}" id="vocabBookCard_${encodeURIComponent(bookName)}">
         <div class="vocab-book-header" onclick="toggleAdminVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')">
@@ -8576,7 +8770,7 @@ async function renderAdminVocabularies(rebuildFilters = true) {
             <div>
               <div class="vocab-book-title">${escapeHtml(bookName)}</div>
               <div class="vocab-book-meta">
-                <span class="vocab-badge indigo">${topicsMap.size} ta mavzu</span>
+                <span class="vocab-badge indigo">${sortedTopicEntries.length} ta mavzu</span>
                 <span class="vocab-badge emerald">${bookWordCount} ta so'z</span>
               </div>
             </div>
@@ -8593,23 +8787,28 @@ async function renderAdminVocabularies(rebuildFilters = true) {
           </div>
         </div>
 
-        <div class="vocab-book-body">
+        <div class="vocab-book-body" id="vocabBookBody_${encodeURIComponent(bookName)}" data-book-name="${escapeHtml(bookName)}">
     `;
 
-    topicsMap.forEach((words, topicName) => {
+    sortedTopicEntries.forEach(([topicName, words], topicIdx) => {
       const topicKey = `${bookName}:::${topicName}`;
       const isTopicExpanded = isSearching || adminVocabExpandedTopics.has(topicKey);
 
       html += `
-        <div class="vocab-topic-item ${isTopicExpanded ? 'expanded' : ''}">
+        <div class="vocab-topic-item ${isTopicExpanded ? 'expanded' : ''}" 
+             data-book-name="${escapeHtml(bookName)}" 
+             data-topic-name="${escapeHtml(topicName)}">
           <div class="vocab-topic-header" onclick="toggleAdminVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
             <div class="vocab-topic-title-wrap">
+              <span class="vocab-drag-handle" onclick="event.stopPropagation()" title="Mavzuni surish uchun ushlab torting">⠿</span>
               <span class="vocab-topic-icon">📑</span>
               <span class="vocab-topic-title">${escapeHtml(topicName)}</span>
               <span class="vocab-badge" style="font-size:10.5px;">${words.length} ta so'z</span>
             </div>
             <div class="vocab-topic-actions">
               <div class="icon-btn-row">
+                <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); moveVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}', -1)" ${topicIdx === 0 ? 'disabled' : ''} title="Mavzuni yuqoriga surish">${IB_ICON_UP}</button>
+                <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); moveVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}', 1)" ${topicIdx === sortedTopicEntries.length - 1 ? 'disabled' : ''} title="Mavzuni pastga surish">${IB_ICON_DOWN}</button>
                 <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuga yangi so'z qo'shish">${IB_ICON_ADD}</button>
                 <button type="button" class="icon-btn ib-del" onclick="event.stopPropagation(); confirmDeleteVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuni barcha so'zlari bilan o'chirish">${IB_ICON_DEL}</button>
               </div>
@@ -8671,6 +8870,14 @@ async function renderAdminVocabularies(rebuildFilters = true) {
   });
 
   container.innerHTML = html;
+
+  // Initialize drag & drop for each rendered book body
+  container.querySelectorAll('.vocab-book-body[data-book-name]').forEach(bodyEl => {
+    const bName = bodyEl.dataset.bookName;
+    if (bName) {
+      initVocabTopicDragDrop(bodyEl, bName);
+    }
+  });
 }
 
 function updateAdminVocabFilterOptions() {
@@ -8687,7 +8894,16 @@ function updateAdminVocabFilterOptions() {
 
   let relevantTopics;
   if (currentBook !== 'all') {
-    relevantTopics = Array.from(new Set(ADMIN_VOCABULARIES.filter(v => v.book_name === currentBook).map(v => v.topic).filter(Boolean))).sort();
+    const rawT = Array.from(new Set(ADMIN_VOCABULARIES.filter(v => v.book_name === currentBook).map(v => v.topic).filter(Boolean)));
+    const cOrder = getVocabTopicOrder(currentBook);
+    relevantTopics = rawT.sort((a, b) => {
+      const ia = cOrder.indexOf(a);
+      const ib = cOrder.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b);
+    });
   } else {
     relevantTopics = Array.from(new Set(ADMIN_VOCABULARIES.map(v => v.topic).filter(Boolean))).sort();
   }
@@ -12101,6 +12317,24 @@ async function openDuelVocabSelect(){
   await renderDuelVocabGrid();
 }
 
+function formatBookDisplayName(name) {
+  if (!name) return '';
+  let clean = name.replace(/^manhaj(?:ul\s+ilmiya)?\s*[-_:]?\s*/i, '').trim();
+  return clean || name;
+}
+
+function getBookLevelSubtitle(bookName) {
+  const norm = (bookName || '').toLowerCase();
+  if (norm.includes('a1')) return "Boshlang'ich";
+  if (norm.includes('a2')) return "Elementar";
+  if (norm.includes('b1')) return "O'rta daraja";
+  if (norm.includes('b2')) return "Yuqori o'rta";
+  if (norm.includes('c1')) return "Mukammal";
+  if (norm.includes('c2')) return "Ilg'or";
+  if (norm.includes('madina') || norm.includes('kurs')) return "Darslik";
+  return "Lug'at to'plami";
+}
+
 async function renderDuelVocabGrid(){
   const grid = document.getElementById('duelVocabGrid');
   const allDesc = document.getElementById('duelVocabAllDesc');
@@ -12124,7 +12358,7 @@ async function renderDuelVocabGrid(){
 
   if(!allBooks.length){
     grid.innerHTML = `
-      <div style="text-align:center; padding:30px 16px; background:var(--card); border:1.5px dashed var(--border); border-radius:16px;">
+      <div style="text-align:center; padding:30px 16px; background:var(--card); border:1.5px dashed var(--border); border-radius:16px; grid-column:1 / -1;">
         <div style="font-size:32px;margin-bottom:8px;">📚</div>
         <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Lug'at kitoblari topilmadi</div>
         <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Admin panel orqali yangi lug'atlar va kitoblar qo'shishingiz mumkin</div>
@@ -12133,50 +12367,75 @@ async function renderDuelVocabGrid(){
     return;
   }
 
-  grid.innerHTML = allBooks.map((bookName, idx) => {
+  grid.innerHTML = allBooks.map((bookName) => {
     const words = pool.filter(v => (v.book_name || '').trim() === bookName);
     const topics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean)));
     const topicCount = topics.length || 1;
     const wordCount = words.length;
-    const gradId = `dmbBookGrad_${idx}`;
+    const displayName = formatBookDisplayName(bookName);
+    const subTitle = getBookLevelSubtitle(bookName);
 
     return `
-      <div class="marathon-action-card card-duel-book" onclick="openDuelVocabBookTopics('${escapeHtml(bookName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
-        <div class="dmb-left">
-          <div class="dmb-badge">
-            <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
-              <defs>
-                <linearGradient id="${gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#2DD4BF"/>
-                  <stop offset="0.6" stop-color="#0D9488"/>
-                  <stop offset="1" stop-color="#115E59"/>
-                </linearGradient>
-                <filter id="${gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#115E59" flood-opacity="0.3"/>
-                </filter>
-              </defs>
-              <circle cx="22" cy="22" r="18" fill="url(#${gradId})" filter="url(#${gradId}Glow)"/>
-              <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              </g>
-            </svg>
-          </div>
-          <div class="dmb-text-block">
-            <div class="dmb-title">${escapeHtml(bookName)}</div>
-            <div class="dmb-sub">${topicCount} ta bo'lim · ${wordCount} ta savol</div>
-          </div>
+      <div class="duel-book-card" onclick="openDuelVocabBookTopics('${escapeHtml(bookName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
+        <div class="dbc-top">
+          <div class="dbc-title">${escapeHtml(displayName)}</div>
+          <div class="dbc-sub">${escapeHtml(subTitle)}</div>
         </div>
-        <div class="dmb-right">
-          <div class="dmb-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </div>
+        <div class="dbc-bottom">
+          <span class="dbc-meta-topics">${topicCount} ta mavzu</span>
+          <span class="dbc-meta-words">${wordCount} ta so'z</span>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function getDuelTopicTitles(topicName, topicWords = []){
+  let uzTitle = '';
+  let arTitle = '';
+
+  for(const w of topicWords){
+    if(w.topic_uz && String(w.topic_uz).trim()){
+      uzTitle = String(w.topic_uz).trim();
+      break;
+    }
+    if(w.topic_translation && String(w.topic_translation).trim()){
+      uzTitle = String(w.topic_translation).trim();
+      break;
+    }
+    if(w.topic_desc && String(w.topic_desc).trim()){
+      uzTitle = String(w.topic_desc).trim();
+      break;
+    }
+  }
+
+  const raw = (topicName || '').trim();
+
+  if(raw.includes(' - ') || raw.includes(' — ') || raw.includes(' : ') || raw.includes(' / ')){
+    const parts = raw.split(/\s*[-—:/]\s*/).filter(Boolean);
+    if(parts.length >= 2){
+      if(hasArabicText(parts[0]) && !hasArabicText(parts[1])){
+        arTitle = parts[0];
+        if(!uzTitle) uzTitle = parts[1];
+      } else if(!hasArabicText(parts[0]) && hasArabicText(parts[1])){
+        arTitle = parts[1];
+        if(!uzTitle) uzTitle = parts[0];
+      } else if(hasArabicText(parts[0])){
+        arTitle = parts[0];
+        if(!uzTitle) uzTitle = parts.slice(1).join(' - ');
+      }
+    }
+  }
+
+  if(!arTitle){
+    arTitle = raw;
+  }
+
+  if(!uzTitle){
+    uzTitle = "Mavzu nomi";
+  }
+
+  return { arTitle, uzTitle };
 }
 
 /* Duel — Tanlangan kitob ichidagi mavzular (3-bosqich) */
@@ -12184,7 +12443,17 @@ function openDuelVocabBookTopics(bookName){
   CURRENT_DUEL_VOCAB_BOOK = bookName;
   const pool = (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) ? ADMIN_VOCABULARIES : getLocalVocabularies();
   const words = pool.filter(v => (v.book_name || '').trim() === bookName);
-  const topics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean))).sort();
+  const customOrder = getVocabTopicOrder(bookName);
+  const rawTopics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean)));
+  const topics = rawTopics.sort((a, b) => {
+    const ia = customOrder.indexOf(a);
+    const ib = customOrder.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  const displayName = formatBookDisplayName(bookName);
 
   const titleEl = document.getElementById('duelVocabTopicBookTitle');
   const subEl = document.getElementById('duelVocabTopicBookSub');
@@ -12192,57 +12461,41 @@ function openDuelVocabBookTopics(bookName){
   const mixDescEl = document.getElementById('duelVocabBookMixDesc');
   const grid = document.getElementById('duelVocabTopicsGrid');
 
-  if(titleEl) titleEl.textContent = bookName;
+  if(titleEl) titleEl.textContent = displayName;
   if(subEl) subEl.textContent = `Ushbu kitobdagi qaysi mavzudan bellashmoqchisiz? (${words.length} ta so'z)`;
-  if(mixTitleEl) mixTitleEl.textContent = `${bookName} (Aralash)`;
-  if(mixDescEl) mixDescEl.textContent = `Kitobdagi barcha ${topics.length} ta bo'limdan aralash test (${words.length} ta savol)`;
+  if(mixTitleEl) mixTitleEl.textContent = `${displayName} (Aralash)`;
+  if(mixDescEl) mixDescEl.textContent = `Kitobdagi barcha ${topics.length} ta bo'limdan aralash test (${words.length} ta so'z)`;
 
   if(grid){
     if(!topics.length){
       grid.innerHTML = `
-        <div style="text-align:center; padding:24px; color:var(--text-faint); font-weight:600;">
+        <div style="text-align:center; padding:24px; color:var(--text-faint); font-weight:600; background:var(--card); border:1.5px dashed var(--border); border-radius:14px;">
           Ushbu kitobda bo'limlar topilmadi
         </div>
       `;
     } else {
       grid.innerHTML = topics.map((topicName, idx) => {
         const topicWords = words.filter(v => (v.topic || '').trim() === topicName);
-        const gradId = `dmbTopicGrad_${idx}`;
+        const { arTitle, uzTitle } = getDuelTopicTitles(topicName, topicWords);
         return `
-          <div class="marathon-action-card card-duel-topic" onclick="chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
-            <div class="dmb-left">
-              <div class="dmb-badge">
-                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
-                  <defs>
-                    <linearGradient id="${gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#60A5FA"/>
-                      <stop offset="0.6" stop-color="#3B82F6"/>
-                      <stop offset="1" stop-color="#1D4ED8"/>
-                    </linearGradient>
-                    <filter id="${gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.3"/>
-                    </filter>
-                  </defs>
-                  <circle cx="22" cy="22" r="18" fill="url(#${gradId})" filter="url(#${gradId}Glow)"/>
-                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                  </g>
-                </svg>
+          <div class="topic-item duel-vocab-topic-item" onclick="chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
+            <div class="topic-icon topic-number">${idx + 1}</div>
+            <div class="duel-topic-content">
+              <div class="dvt-left">
+                <div class="dvt-uz">${escapeHtml(uzTitle)}</div>
               </div>
-              <div class="dmb-text-block">
-                <div class="dmb-title">${escapeHtml(topicName)}</div>
-                <div class="dmb-sub">${topicWords.length} ta savol</div>
+              <div class="dvt-right">
+                <div class="dvt-ar">${escapeHtml(arTitle)}</div>
+                <div class="dvt-count">${topicWords.length} ta so'z</div>
               </div>
             </div>
-            <div class="dmb-right">
-              <div class="dmb-arrow">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
+            <div class="topic-mini">
+              <button class="topic-start-btn" aria-label="Duelni boshlash" onclick="event.stopPropagation();chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="m10 8 4 4-4 4"/>
                 </svg>
-              </div>
+              </button>
             </div>
           </div>
         `;
