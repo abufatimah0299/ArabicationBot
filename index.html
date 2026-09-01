@@ -1232,32 +1232,117 @@
       <!-- ============ DUEL (asinxron bellashuv) ============ -->
       <div class="view" id="view-duel">
         <div class="view-title">Duellar</div>
-        <div class="skill-banner-list stagger" style="margin-bottom:18px;">
-          <button class="skill-banner sb-duel" onclick="openDuelSkillSelect()">
-            <div class="skill-banner-left">
-              <div class="skill-banner-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="marathon-cards-stack">
+          <!-- 1-Card: Do'stni chaqirish -->
+          <div class="marathon-action-card card-duel-challenge" onclick="openDuelSkillSelect()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbPurpleGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A78BFA"/>
+                      <stop offset="0.6" stop-color="#8C6DF0"/>
+                      <stop offset="1" stop-color="#5B3EC7"/>
+                    </linearGradient>
+                    <filter id="dmbPurpleGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#5B3EC7" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbPurpleGrad)" filter="url(#dmbPurpleGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </g>
+                </svg>
               </div>
-              <div>
-                <div class="skill-banner-title">Do'stni chaqirish</div>
-                <div class="skill-banner-meta">
-                  <span>Grammatika va So'zlashuvda</span>
-                </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Do'stni chaqirish</div>
+                <div class="dmb-sub">Grammatika, Lug'atlar va Muhadasa</div>
               </div>
             </div>
-            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
-          </button>
-        </div>
-        <div class="card settings-list">
-          <div class="settings-item" onclick="showView('duelhistory')">
-            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <div class="si-text"><div class="t">Tarix</div><div class="s">O'tgan va joriy duellaringiz</div></div>
-            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+
+          <!-- 2-Card: Duel tarixi -->
+          <div class="marathon-action-card card-duel-history" onclick="showView('duelhistory')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbOrangeHistoryGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#FB923C"/>
+                      <stop offset="0.6" stop-color="#F97316"/>
+                      <stop offset="1" stop-color="#C2410C"/>
+                    </linearGradient>
+                    <filter id="dmbOrangeHistoryGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#C2410C" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbOrangeHistoryGrad)" filter="url(#dmbOrangeHistoryGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Duel tarixi</div>
+                <div class="dmb-sub">O'tgan va joriy duellaringiz</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Card: Do'stlarim -->
+          <div class="marathon-action-card card-duel-friends" onclick="showView('dostlarim')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbBlueFriendsGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#60A5FA"/>
+                      <stop offset="0.6" stop-color="#3B82F6"/>
+                      <stop offset="1" stop-color="#1D4ED8"/>
+                    </linearGradient>
+                    <filter id="dmbBlueFriendsGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.3"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbBlueFriendsGrad)" filter="url(#dmbBlueFriendsGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Do'stlarim</div>
+                <div class="dmb-sub">Duel o'ynagan do'stlaringiz va statistika</div>
+              </div>
+            </div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1290,36 +1375,115 @@
         </div>
         <div class="view-title">Duel uchun bo'lim tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Do'stingiz bilan qaysi mavzudan bellashmoqchisiz?</div>
-        <div class="duel-skill-body">
-          <div class="duel-skill-mix-card" onclick="openDuelGrammarSelect()">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <div class="marathon-cards-stack">
+          <!-- 1-Card: Grammatika -->
+          <div class="marathon-action-card card-duel-grammar" onclick="openDuelGrammarSelect()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbPurpleGrammarGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A78BFA"/>
+                      <stop offset="0.6" stop-color="#8C6DF0"/>
+                      <stop offset="1" stop-color="#5B3EC7"/>
+                    </linearGradient>
+                    <filter id="dmbPurpleGrammarGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#5B3EC7" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbPurpleGrammarGrad)" filter="url(#dmbPurpleGrammarGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Grammatika</div>
+                <div class="dmb-sub">Test savollari — to'g'ri variantni tanlang</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Grammatika</div>
-              <div class="duel-skill-mix-desc">Test savollari — to'g'ri variantni tanlang</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" onclick="openDuelVocabSelect()">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+
+          <!-- 2-Card: Lug'atlar -->
+          <div class="marathon-action-card card-duel-vocab" onclick="openDuelVocabSelect()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbGreenVocabGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#34D399"/>
+                      <stop offset="0.6" stop-color="#10B981"/>
+                      <stop offset="1" stop-color="#059669"/>
+                    </linearGradient>
+                    <filter id="dmbGreenVocabGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#059669" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbGreenVocabGrad)" filter="url(#dmbGreenVocabGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Lug'atlar</div>
+                <div class="dmb-sub">Kitoblar bo'yicha so'z boyligi dueli</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Lug'atlar</div>
-              <div class="duel-skill-mix-desc">Kitoblar bo'yicha so'z boyligi dueli</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,var(--muhavara,#8B5CF6),#6D28D9);" onclick="chooseSpeakingDuel()">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+
+          <!-- 3-Card: Muhadasa -->
+          <div class="marathon-action-card card-duel-speaking" onclick="chooseSpeakingDuel()" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbVioletGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#C084FC"/>
+                      <stop offset="0.6" stop-color="#A855F7"/>
+                      <stop offset="1" stop-color="#7E22CE"/>
+                    </linearGradient>
+                    <filter id="dmbVioletGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7E22CE" flood-opacity="0.3"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbVioletGrad)" filter="url(#dmbVioletGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Muhadasa</div>
+                <div class="dmb-sub">3 ta savol — gapirib javob bering</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Muhadasa</div>
-              <div class="duel-skill-mix-desc">3 ta savol — gapirib javob bering</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
         </div>
       </div>
@@ -1332,17 +1496,43 @@
         </div>
         <div class="view-title">Mavzu tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Qaysi mavzudan bellashmoqchisiz?</div>
-        <div class="duel-skill-body">
-          <div class="duel-skill-mix-card" onclick="chooseDuelSkill('aralash')">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <div class="marathon-cards-stack">
+          <div class="marathon-action-card card-duel-grammar-mix" onclick="chooseDuelSkill('aralash')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbOrangeMixGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#FB923C"/>
+                      <stop offset="0.6" stop-color="#F97316"/>
+                      <stop offset="1" stop-color="#C2410C"/>
+                    </linearGradient>
+                    <filter id="dmbOrangeMixGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#C2410C" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbOrangeMixGrad)" filter="url(#dmbOrangeMixGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Aralash savollar</div>
+                <div class="dmb-sub">Nahv, Sarf, Imlo, Xatolar</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Aralash savollar</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="duel-skill-grid" id="duelSkillGrid"></div>
+          <div class="duel-grammar-stack" id="duelSkillGrid"></div>
         </div>
       </div>
 
@@ -1354,18 +1544,43 @@
         </div>
         <div class="view-title">Lug'at kitobini tanlang</div>
         <div class="duel-skill-sub" style="margin:-12px 0 18px 2px;">Qaysi kitob bo'yicha bellashmoqchisiz?</div>
-        <div class="duel-skill-body">
-          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" onclick="chooseVocabDuel('all')">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <div class="marathon-cards-stack">
+          <div class="marathon-action-card card-duel-vocab-all" onclick="chooseVocabDuel('all')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbGreenAllVocabGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#34D399"/>
+                      <stop offset="0.6" stop-color="#10B981"/>
+                      <stop offset="1" stop-color="#059669"/>
+                    </linearGradient>
+                    <filter id="dmbGreenAllVocabGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#059669" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbGreenAllVocabGrad)" filter="url(#dmbGreenAllVocabGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">Barcha kitoblar (Aralash)</div>
+                <div class="dmb-sub" id="duelVocabAllDesc">Barcha mavzulardagi lug'atlardan test</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name">Barcha kitoblar (Aralash)</div>
-              <div class="duel-skill-mix-desc" id="duelVocabAllDesc">Barcha mavzulardagi lug'atlardan test</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="duel-vocab-grid" id="duelVocabGrid"></div>
+          <div class="duel-vocab-stack" id="duelVocabGrid"></div>
         </div>
       </div>
 
@@ -1377,18 +1592,43 @@
         </div>
         <div class="view-title" id="duelVocabTopicBookTitle">Kitob mavzulari</div>
         <div class="duel-skill-sub" id="duelVocabTopicBookSub" style="margin:-12px 0 18px 2px;">Qaysi mavzudan bellashmoqchisiz?</div>
-        <div class="duel-skill-body">
-          <div class="duel-skill-mix-card" style="background:linear-gradient(135deg,#059669,#047857);" id="duelVocabBookMixCard" onclick="chooseVocabDuel(CURRENT_DUEL_VOCAB_BOOK, 'all')">
-            <div class="duel-skill-mix-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <div class="marathon-cards-stack">
+          <div class="marathon-action-card card-duel-vocab-bookmix" id="duelVocabBookMixCard" onclick="chooseVocabDuel(CURRENT_DUEL_VOCAB_BOOK, 'all')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="dmbGreenBookMixGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#34D399"/>
+                      <stop offset="0.6" stop-color="#10B981"/>
+                      <stop offset="1" stop-color="#059669"/>
+                    </linearGradient>
+                    <filter id="dmbGreenBookMixGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#059669" flood-opacity="0.32"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbGreenBookMixGrad)" filter="url(#dmbGreenBookMixGlow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                    <polyline points="2 17 12 22 22 17"/>
+                    <polyline points="2 12 12 17 22 12"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title" id="duelVocabBookMixTitle">Shu kitob bo'yicha aralash</div>
+                <div class="dmb-sub" id="duelVocabBookMixDesc">Barcha bo'limlardagi lug'atlardan test</div>
+              </div>
             </div>
-            <div class="duel-skill-mix-main">
-              <div class="duel-skill-mix-name" id="duelVocabBookMixTitle">Shu kitob bo'yicha aralash</div>
-              <div class="duel-skill-mix-desc" id="duelVocabBookMixDesc">Barcha bo'limlardagi lug'atlardan test</div>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
             </div>
-            <svg class="duel-skill-mix-chev" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="duel-vocab-grid" id="duelVocabTopicsGrid"></div>
+          <div class="duel-vocab-stack" id="duelVocabTopicsGrid"></div>
         </div>
       </div>
 
