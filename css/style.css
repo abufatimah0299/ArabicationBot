@@ -5191,6 +5191,267 @@ html[data-theme="dark"] .marathon-action-card.card-saved {
   background: rgba(113, 63, 18, 0.22);
   border-color: rgba(234, 179, 8, 0.28);
 }
+
+/* ============ DUEL CARDS (MARATHON ACTION CARD STYLING) ============ */
+.duel-grammar-stack,
+.duel-vocab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* 1. Do'stni chaqirish & Grammatika (Purple/Indigo) */
+.marathon-action-card.card-duel-challenge,
+.marathon-action-card.card-duel-grammar {
+  background: #F5F3FF;
+  border-color: #DDD6FE;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-challenge,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar {
+  background: rgba(91, 62, 199, 0.22);
+  border-color: rgba(140, 109, 240, 0.28);
+}
+.marathon-action-card.card-duel-challenge:hover,
+.marathon-action-card.card-duel-grammar:hover {
+  border-color: #C4B5FD;
+  box-shadow: 0 10px 24px -4px rgba(124, 58, 237, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-challenge:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar:hover {
+  border-color: rgba(167, 139, 250, 0.4);
+}
+.marathon-action-card.card-duel-challenge:hover .dmb-arrow,
+.marathon-action-card.card-duel-grammar:hover .dmb-arrow {
+  color: #7C3AED;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-challenge:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar:hover .dmb-arrow {
+  color: #A78BFA;
+}
+
+/* 2. Lug'atlar (Emerald Green) */
+.marathon-action-card.card-duel-vocab,
+.marathon-action-card.card-duel-vocab-all,
+.marathon-action-card.card-duel-vocab-bookmix {
+  background: #ECFDF5;
+  border-color: #D1FAE5;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-all,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-bookmix {
+  background: rgba(6, 78, 59, 0.22);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+.marathon-action-card.card-duel-vocab:hover,
+.marathon-action-card.card-duel-vocab-all:hover,
+.marathon-action-card.card-duel-vocab-bookmix:hover {
+  border-color: #A7F3D0;
+  box-shadow: 0 10px 24px -4px rgba(16, 185, 129, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-all:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-bookmix:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+.marathon-action-card.card-duel-vocab:hover .dmb-arrow,
+.marathon-action-card.card-duel-vocab-all:hover .dmb-arrow,
+.marathon-action-card.card-duel-vocab-bookmix:hover .dmb-arrow {
+  color: #10B981;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-all:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-vocab-bookmix:hover .dmb-arrow {
+  color: #34D399;
+}
+
+/* 3. Muhadasa (Violet) */
+.marathon-action-card.card-duel-speaking {
+  background: #FAF5FF;
+  border-color: #F3E8FF;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-speaking {
+  background: rgba(109, 40, 217, 0.22);
+  border-color: rgba(139, 92, 246, 0.28);
+}
+.marathon-action-card.card-duel-speaking:hover {
+  border-color: #E9D5FF;
+  box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-speaking:hover {
+  border-color: rgba(192, 132, 252, 0.4);
+}
+.marathon-action-card.card-duel-speaking:hover .dmb-arrow {
+  color: #8B5CF6;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-speaking:hover .dmb-arrow {
+  color: #C084FC;
+}
+
+/* 4. Tarix & Grammatika aralash (Amber/Orange) */
+.marathon-action-card.card-duel-history,
+.marathon-action-card.card-duel-grammar-mix {
+  background: #FFF7ED;
+  border-color: #FFEDD5;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-history,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar-mix {
+  background: rgba(124, 45, 18, 0.22);
+  border-color: rgba(249, 115, 22, 0.28);
+}
+.marathon-action-card.card-duel-history:hover,
+.marathon-action-card.card-duel-grammar-mix:hover {
+  border-color: #FED7AA;
+  box-shadow: 0 10px 24px -4px rgba(234, 88, 12, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-history:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar-mix:hover {
+  border-color: rgba(251, 146, 60, 0.4);
+}
+.marathon-action-card.card-duel-history:hover .dmb-arrow,
+.marathon-action-card.card-duel-grammar-mix:hover .dmb-arrow {
+  color: #EA580C;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-history:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-grammar-mix:hover .dmb-arrow {
+  color: #FB923C;
+}
+
+/* 5. Do'stlarim & Nahv & Topic (Blue) */
+.marathon-action-card.card-duel-friends,
+.marathon-action-card.card-duel-nahv,
+.marathon-action-card.card-duel-topic {
+  background: #EFF6FF;
+  border-color: #DBEAFE;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-friends,
+html[data-theme="dark"] .marathon-action-card.card-duel-nahv,
+html[data-theme="dark"] .marathon-action-card.card-duel-topic {
+  background: rgba(30, 58, 138, 0.22);
+  border-color: rgba(59, 130, 246, 0.28);
+}
+.marathon-action-card.card-duel-friends:hover,
+.marathon-action-card.card-duel-nahv:hover,
+.marathon-action-card.card-duel-topic:hover {
+  border-color: #BFDBFE;
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-friends:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-nahv:hover,
+html[data-theme="dark"] .marathon-action-card.card-duel-topic:hover {
+  border-color: rgba(96, 165, 250, 0.4);
+}
+.marathon-action-card.card-duel-friends:hover .dmb-arrow,
+.marathon-action-card.card-duel-nahv:hover .dmb-arrow,
+.marathon-action-card.card-duel-topic:hover .dmb-arrow {
+  color: #2563EB;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-friends:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-nahv:hover .dmb-arrow,
+html[data-theme="dark"] .marathon-action-card.card-duel-topic:hover .dmb-arrow {
+  color: #60A5FA;
+}
+
+/* 6. Sarf (Green) */
+.marathon-action-card.card-duel-sarf {
+  background: #F0FDF4;
+  border-color: #DCFCE7;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-sarf {
+  background: rgba(20, 83, 45, 0.22);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+.marathon-action-card.card-duel-sarf:hover {
+  border-color: #BBF7D0;
+  box-shadow: 0 10px 24px -4px rgba(22, 163, 74, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-sarf:hover {
+  border-color: rgba(74, 222, 128, 0.4);
+}
+.marathon-action-card.card-duel-sarf:hover .dmb-arrow {
+  color: #16A34A;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-sarf:hover .dmb-arrow {
+  color: #4ADE80;
+}
+
+/* 7. Imlo (Violet/Purple) */
+.marathon-action-card.card-duel-imlo {
+  background: #FAF5FF;
+  border-color: #F3E8FF;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-imlo {
+  background: rgba(109, 40, 217, 0.22);
+  border-color: rgba(139, 92, 246, 0.28);
+}
+.marathon-action-card.card-duel-imlo:hover {
+  border-color: #E9D5FF;
+  box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-imlo:hover {
+  border-color: rgba(192, 132, 252, 0.4);
+}
+.marathon-action-card.card-duel-imlo:hover .dmb-arrow {
+  color: #8B5CF6;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-imlo:hover .dmb-arrow {
+  color: #C084FC;
+}
+
+/* 8. Umumiy xatolar (Red) */
+.marathon-action-card.card-duel-xatolar {
+  background: #FEF2F2;
+  border-color: #FEE2E2;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-xatolar {
+  background: rgba(127, 29, 29, 0.22);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+.marathon-action-card.card-duel-xatolar:hover {
+  border-color: #FECACA;
+  box-shadow: 0 10px 24px -4px rgba(220, 38, 38, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-xatolar:hover {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+.marathon-action-card.card-duel-xatolar:hover .dmb-arrow {
+  color: #DC2626;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-xatolar:hover .dmb-arrow {
+  color: #F87171;
+}
+
+/* 9. Kitoblar (Teal/Emerald) */
+.marathon-action-card.card-duel-book {
+  background: #F0FDFA;
+  border-color: #CCFBF1;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-book {
+  background: rgba(19, 78, 74, 0.22);
+  border-color: rgba(20, 184, 166, 0.28);
+}
+.marathon-action-card.card-duel-book:hover {
+  border-color: #99F6E4;
+  box-shadow: 0 10px 24px -4px rgba(13, 148, 136, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-book:hover {
+  border-color: rgba(45, 212, 191, 0.4);
+}
+.marathon-action-card.card-duel-book:hover .dmb-arrow {
+  color: #0D9488;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-book:hover .dmb-arrow {
+  color: #2DD4BF;
+}
 .marathon-action-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px -4px rgba(0,0,0,0.08);
