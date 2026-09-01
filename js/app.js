@@ -12006,21 +12006,78 @@ async function startNewDuel(category){
   openDuelInviteScreen(d);
 }
 
-/* Duel uchun bo'lim tanlash oynasi: yuqorida "Aralash savollar" (katta card),
-   pastda GRAMMAR_CATEGORIES asosida 2x2 grid (umumiy Grammatika bo'limidagi
-   cardlar bilan bir xil rang/ikonka — gcat-* CSS klasslari qayta ishlatiladi). */
+/* Duel uchun bo'lim tanlash oynasi: Marafon card style asosida (ranglar eski card bo'yicha) */
 function renderDuelSkillGrid(){
   const wrap = document.getElementById('duelSkillGrid');
   if(!wrap) return;
-  wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => `
-    <div class="duel-skill-card gcat-${cat.id}" onclick="chooseDuelSkill('${cat.id}')">
-      <div class="duel-skill-text">
-        <div class="duel-skill-name">${cat.ar}</div>
-        <div class="duel-skill-desc">${cat.name}</div>
+
+  const catConfigs = {
+    nahv: {
+      cardClass: 'card-duel-nahv',
+      gradId: 'dmbNahvGrad',
+      gradColors: ['#60A5FA', '#3B82F6', '#1D4ED8'],
+      glowColor: '#1D4ED8',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="9" y="2" width="6" height="6" rx="1.5"/><rect x="16" y="16" width="6" height="6" rx="1.5"/><rect x="2" y="16" width="6" height="6" rx="1.5"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></g>'
+    },
+    sarf: {
+      cardClass: 'card-duel-sarf',
+      gradId: 'dmbSarfGrad',
+      gradColors: ['#4ADE80', '#22C55E', '#15803D'],
+      glowColor: '#15803D',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></g>'
+    },
+    imlo: {
+      cardClass: 'card-duel-imlo',
+      gradId: 'dmbImloGrad',
+      gradColors: ['#C084FC', '#A855F7', '#7E22CE'],
+      glowColor: '#7E22CE',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></g>'
+    },
+    xatolar: {
+      cardClass: 'card-duel-xatolar',
+      gradId: 'dmbXatolarGrad',
+      gradColors: ['#F87171', '#EF4444', '#B91C1C'],
+      glowColor: '#B91C1C',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>'
+    }
+  };
+
+  wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => {
+    const cfg = catConfigs[cat.id] || catConfigs.nahv;
+    return `
+      <div class="marathon-action-card ${cfg.cardClass}" onclick="chooseDuelSkill('${cat.id}')" role="button" tabindex="0">
+        <div class="dmb-left">
+          <div class="dmb-badge">
+            <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+              <defs>
+                <linearGradient id="${cfg.gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="${cfg.gradColors[0]}"/>
+                  <stop offset="0.6" stop-color="${cfg.gradColors[1]}"/>
+                  <stop offset="1" stop-color="${cfg.gradColors[2]}"/>
+                </linearGradient>
+                <filter id="${cfg.gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="${cfg.glowColor}" flood-opacity="0.32"/>
+                </filter>
+              </defs>
+              <circle cx="22" cy="22" r="18" fill="url(#${cfg.gradId})" filter="url(#${cfg.gradId}Glow)"/>
+              ${cfg.iconPath}
+            </svg>
+          </div>
+          <div class="dmb-text-block">
+            <div class="dmb-title font-ar-bold" style="font-family:var(--font-ar-bold);font-size:18px;line-height:1.2;">${cat.ar}</div>
+            <div class="dmb-sub" style="font-size:13px;font-weight:600;color:var(--text-dim);margin-top:2px;">${escapeHtml(cat.name)}</div>
+          </div>
+        </div>
+        <div class="dmb-right">
+          <div class="dmb-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
       </div>
-      <div class="duel-skill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg></div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function openDuelSkillSelect(){
@@ -12067,7 +12124,7 @@ async function renderDuelVocabGrid(){
 
   if(!allBooks.length){
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align:center; padding:30px 16px; background:var(--card); border:1.5px dashed var(--border); border-radius:16px;">
+      <div style="text-align:center; padding:30px 16px; background:var(--card); border:1.5px dashed var(--border); border-radius:16px;">
         <div style="font-size:32px;margin-bottom:8px;">📚</div>
         <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Lug'at kitoblari topilmadi</div>
         <div style="font-size:12px;color:var(--text-dim);font-weight:600;">Admin panel orqali yangi lug'atlar va kitoblar qo'shishingiz mumkin</div>
@@ -12076,28 +12133,47 @@ async function renderDuelVocabGrid(){
     return;
   }
 
-  grid.innerHTML = allBooks.map(bookName => {
+  grid.innerHTML = allBooks.map((bookName, idx) => {
     const words = pool.filter(v => (v.book_name || '').trim() === bookName);
     const topics = Array.from(new Set(words.map(v => (v.topic || '').trim()).filter(Boolean)));
     const topicCount = topics.length || 1;
     const wordCount = words.length;
+    const gradId = `dmbBookGrad_${idx}`;
 
     return `
-      <div class="duel-book-card" onclick="openDuelVocabBookTopics('${escapeHtml(bookName).replace(/'/g, "\\'")}')">
-        <div class="duel-book-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </div>
-        <div class="duel-book-main">
-          <div class="duel-book-title">${escapeHtml(bookName)}</div>
-          <div class="duel-book-badges">
-            <span class="duel-book-badge badge-accent">📑 ${topicCount} ta bo'lim</span>
-            <span class="duel-book-badge">🔤 ${wordCount} ta savol</span>
+      <div class="marathon-action-card card-duel-book" onclick="openDuelVocabBookTopics('${escapeHtml(bookName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
+        <div class="dmb-left">
+          <div class="dmb-badge">
+            <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+              <defs>
+                <linearGradient id="${gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#2DD4BF"/>
+                  <stop offset="0.6" stop-color="#0D9488"/>
+                  <stop offset="1" stop-color="#115E59"/>
+                </linearGradient>
+                <filter id="${gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#115E59" flood-opacity="0.3"/>
+                </filter>
+              </defs>
+              <circle cx="22" cy="22" r="18" fill="url(#${gradId})" filter="url(#${gradId}Glow)"/>
+              <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </g>
+            </svg>
+          </div>
+          <div class="dmb-text-block">
+            <div class="dmb-title">${escapeHtml(bookName)}</div>
+            <div class="dmb-sub">${topicCount} ta bo'lim · ${wordCount} ta savol</div>
           </div>
         </div>
-        <svg class="duel-book-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <div class="dmb-right">
+          <div class="dmb-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
       </div>
     `;
   }).join('');
@@ -12124,30 +12200,50 @@ function openDuelVocabBookTopics(bookName){
   if(grid){
     if(!topics.length){
       grid.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align:center; padding:24px; color:var(--text-faint); font-weight:600;">
+        <div style="text-align:center; padding:24px; color:var(--text-faint); font-weight:600;">
           Ushbu kitobda bo'limlar topilmadi
         </div>
       `;
     } else {
-      grid.innerHTML = topics.map(topicName => {
+      grid.innerHTML = topics.map((topicName, idx) => {
         const topicWords = words.filter(v => (v.topic || '').trim() === topicName);
+        const gradId = `dmbTopicGrad_${idx}`;
         return `
-          <div class="duel-book-card" onclick="chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
-            <div class="duel-book-icon" style="background:rgba(59,130,246,0.1);color:var(--istima,#2563eb);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
-            </div>
-            <div class="duel-book-main">
-              <div class="duel-book-title">${escapeHtml(topicName)}</div>
-              <div class="duel-book-badges">
-                <span class="duel-book-badge badge-accent">🔤 ${topicWords.length} ta savol</span>
+          <div class="marathon-action-card card-duel-topic" onclick="chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" role="button" tabindex="0">
+            <div class="dmb-left">
+              <div class="dmb-badge">
+                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+                  <defs>
+                    <linearGradient id="${gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#60A5FA"/>
+                      <stop offset="0.6" stop-color="#3B82F6"/>
+                      <stop offset="1" stop-color="#1D4ED8"/>
+                    </linearGradient>
+                    <filter id="${gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.3"/>
+                    </filter>
+                  </defs>
+                  <circle cx="22" cy="22" r="18" fill="url(#${gradId})" filter="url(#${gradId}Glow)"/>
+                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="dmb-text-block">
+                <div class="dmb-title">${escapeHtml(topicName)}</div>
+                <div class="dmb-sub">${topicWords.length} ta savol</div>
               </div>
             </div>
-            <svg class="duel-book-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <div class="dmb-right">
+              <div class="dmb-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
           </div>
         `;
       }).join('');
