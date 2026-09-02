@@ -13706,14 +13706,14 @@ async function checkPendingDuelInvite(){
   const isVocab = d.skillId === 'vocabularies';
   const skillTitle = isSpeaking ? "So'zlashuv (Muhadasa)" : (isVocab ? "Lug'atlar" : "Grammatika");
   const descText = isSpeaking
-    ? "3 ta og'zaki savol (10 soniya tayyorgarlik, 30 soniya gapirish). AI sizning talaffuz va nutqingizni baholaydi."
+    ? "3 ta og'zaki savol (10 soniya tayyorgarlik, 30 soniya gapirish). javoblarni AI baholaydi."
     : `${d.count || 10} ta savol, vaqt cheklovi yo'q. Qabul qilib, hoziroq yechishingiz mumkin.`;
 
   document.getElementById('modalTitle').textContent = 'Duelga taklif';
   document.getElementById('modalBody').innerHTML = `
     <div style="text-align:center;padding:10px 4px 6px;">
       <div style="font-size:38px;margin-bottom:12px;">${isSpeaking ? '🎙️' : '⚔️'}</div>
-      <div style="font-size:15.5px;font-weight:700;margin-bottom:8px;">${escapeHtml(d.challenger.name)} sizni ${skillTitle} bo'yicha duelga chaqirdi!</div>
+      <div style="font-size:15.5px;font-weight:700;margin-bottom:8px;">${escapeHtml(d.challenger.name)} sizni ${skillTitle} bo'yicha bellashuvga chaqirdi!</div>
       <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">${descText}</p>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-outline" style="flex:1;padding:12px;" onclick="closeModal();showView('duel')">Keyinroq</button>
