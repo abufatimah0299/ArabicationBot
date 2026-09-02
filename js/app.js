@@ -3952,7 +3952,11 @@ function openSpeakingOrWritingAttemptModal(rec, idStr){
               <div style="font-size:13px;color:var(--text);background:var(--card-alt);padding:8px 12px;border-radius:10px;border:1px solid var(--border);line-height:1.5;">
                 <b style="color:var(--indigo-700);">🎙 Sizning javobingiz:</b> "${escapeHtml(q.transcript)}"
               </div>
-            ` : ''}
+            ` : `
+              <div style="font-size:13px;color:var(--text-faint);background:var(--card-alt);padding:8px 12px;border-radius:10px;border:1px solid var(--border);line-height:1.5;font-style:italic;">
+                🎙 Javob berilmagan
+              </div>
+            `}
             ${q.feedback ? `
               <div style="font-size:12.5px;color:var(--text-dim);background:var(--card-alt);padding:8px 12px;border-radius:10px;line-height:1.5;">
                 <b style="color:var(--indigo-700);">💡 AI izohi:</b> ${escapeHtml(q.feedback)}
@@ -12029,6 +12033,67 @@ async function apiGetDuelSpeakingAnswers(duelId){
   }catch(e){ return []; }
 }
 
+/* Speaking (Muhadasa) — Whisper AI jimlikda gallyutsinatsiya qilgan
+   YouTube subtitrlari yoki soxta matnlarni aniqlash va "Javob berilmadi"ga aylantirish */
+function isSpeakingHallucinationOrSilence(rawTranscript){
+  if(!rawTranscript || typeof rawTranscript !== 'string') return true;
+  const t = rawTranscript.trim();
+  if(!t) return true;
+  // Belgilar va bo'shliqlarni tozalash
+  const clean = t.replace(/[.,/#!$%^&*;:{}=\-_`~()\[\]"'«»؟،؛♪♫\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  if(!clean || clean.length < 2) return true;
+
+  const hallucinationPatterns = [
+    /^موسيقى/i,
+    /موسيقى$/i,
+    /^music$/i,
+    /اشترك/i,
+    /اشتركوا/i,
+    /في القناة/i,
+    /بالقناة/i,
+    /للمشاهدة/i,
+    /على المشاهدة/i,
+    /^شكرا$/i,
+    /^شكراً$/i,
+    /^شكرا لكم$/i,
+    /^شكراً لكم$/i,
+    /^thanks/i,
+    /^thank you/i,
+    /^subscribe/i,
+    /^subtitles/i,
+    /^ترجمة/i,
+    /^تمت الترجمة/i,
+    /^يتبع$/i,
+    /^إلى اللقاء$/i,
+    /^مع السلامة$/i
+  ];
+
+  for(const pat of hallucinationPatterns){
+    if(pat.test(clean) || pat.test(t)){
+      return true;
+    }
+  }
+  return false;
+}
+
+function sanitizeSpeakingResultItem(r){
+  if(!r) return { score: 0, transcript: '', feedback: "Javob berilmadi (ovoz yozilmadi yoki mikrofonga gapirilmadi)." };
+  const rawTrans = r.transcript ? String(r.transcript).trim() : '';
+  const isHallucination = isSpeakingHallucinationOrSilence(rawTrans);
+  if(isHallucination){
+    return {
+      score: 0,
+      transcript: '',
+      feedback: "Javob berilmadi (ovoz yozilmadi yoki mikrofonga gapirilmadi)."
+    };
+  }
+  return {
+    score: Math.max(0, Math.min(5, typeof r.score === 'number' ? r.score : 0)),
+    transcript: rawTrans,
+    feedback: r.feedback ? String(r.feedback).trim() : ''
+  };
+}
+
 /* Speaking Duel "Tahlil" — ikkala tarafning har savolga bergan transkripti,
    bali va AI izohini ketma-ket ko'rsatadi. Grid+detail popup (grammatika
    duelidagi kabi) o'rniga to'g'ridan-to'g'ri ro'yxat, chunki bu yerda
@@ -12062,14 +12127,23 @@ async function openSpeakingDuelAnalysis(){
     if(!r){
       return `<div style="padding:10px 12px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);color:var(--text-faint);font-size:12.5px;font-weight:600;">${escapeHtml(label)}: hali javob bermagan</div>`;
     }
+    const isHallucination = isSpeakingHallucinationOrSilence(r.transcript);
+    const hasTranscript = !isHallucination && r.transcript && r.transcript.trim();
+    const feedbackText = isHallucination
+      ? "Javob berilmadi (ovoz yozilmadi yoki gapirilmadi)."
+      : (r.feedback || '');
+    const scoreVal = isHallucination ? 0 : (r.score ?? 0);
+
     return `
       <div style="padding:10px 12px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <span style="font-size:12px;font-weight:700;color:var(--text-dim);">${escapeHtml(label)}</span>
-          <span style="font-size:13px;font-weight:800;">${r.score ?? 0}/5</span>
+          <span style="font-size:13px;font-weight:800;color:${scoreVal > 0 ? 'var(--green, #10b981)' : 'var(--text-dim)'};">${scoreVal}/5</span>
         </div>
-        ${r.transcript ? `<div style="font-size:12.5px;line-height:1.5;margin-top:2px;">🎙 "${escapeHtml(r.transcript)}"</div>` : ''}
-        ${r.feedback ? `<div style="font-size:12px;color:var(--text-faint);margin-top:4px;">💡 ${escapeHtml(r.feedback)}</div>` : ''}
+        <div style="font-size:12.5px;line-height:1.5;margin-top:2px;">
+          ${hasTranscript ? `🎙 "${escapeHtml(r.transcript)}"` : `<span style="color:var(--text-faint);font-style:italic;">🎙 Javob berilmagan</span>`}
+        </div>
+        ${feedbackText ? `<div style="font-size:12px;color:var(--text-faint);margin-top:4px;">💡 ${escapeHtml(feedbackText)}</div>` : ''}
       </div>`;
   };
 
@@ -12080,6 +12154,7 @@ async function openSpeakingDuelAnalysis(){
         <div style="font-family:var(--font-ar);font-size:16px;direction:rtl;text-align:right;line-height:1.6;font-weight:600;margin-bottom:8px;">${q.prompt_ar || ''}</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           ${sideBlock(myName, entry.mine)}
+          ${sideBlock(oppName, entry.opp)}
         </div>
       </div>`;
   }).join('');
@@ -12653,18 +12728,19 @@ async function evaluateAllSpeakingDuelAnswers(){
     const results = data && Array.isArray(data.results) ? data.results : null;
     if(!res.ok || !results){
       toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
-      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = q.transcript || ''; });
+      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = ''; });
     } else {
       currentQuiz.questions.forEach((q, i)=>{
         const r = results[i] || results.find(x => x.question_id === q.id) || {};
-        q.score = Math.max(0, Math.min(5, typeof r.score === 'number' ? r.score : 0));
-        q.feedback = r.feedback || '';
-        q.transcript = r.transcript || '';
+        const sanitized = sanitizeSpeakingResultItem(r);
+        q.score = sanitized.score;
+        q.feedback = sanitized.feedback;
+        q.transcript = sanitized.transcript;
       });
     }
   }catch(e){
     toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
-    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = q.transcript || ''; });
+    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = ''; });
   }
   currentQuiz.questions.forEach(q=>{ delete q.audioBase64; });
   await submitSpeakingDuelResults();
@@ -15168,18 +15244,19 @@ async function evaluateAllMuhavaraAnswers(){
     const results = data && Array.isArray(data.results) ? data.results : null;
     if(!res.ok || !results){
       toast("⚠️ AI baholay olmadi: " + (data?.error || ('HTTP '+res.status)), 6000);
-      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = q.transcript || ''; });
+      currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Texnik sabab bilan baholanmadi."; q.transcript = ''; });
     } else {
       currentQuiz.questions.forEach((q, i)=>{
         const r = results[i] || results.find(x => x.question_id === q.id) || {};
-        q.score = Math.max(0, Math.min(5, typeof r.score === 'number' ? r.score : 0));
-        q.feedback = r.feedback || '';
-        q.transcript = r.transcript || '';
+        const sanitized = sanitizeSpeakingResultItem(r);
+        q.score = sanitized.score;
+        q.feedback = sanitized.feedback;
+        q.transcript = sanitized.transcript;
       });
     }
   }catch(e){
     toast("⚠️ Tarmoq xatosi: " + e.message, 6000);
-    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = q.transcript || ''; });
+    currentQuiz.questions.forEach(q=>{ q.score = 0; q.feedback = "Tarmoq xatosi tufayli baholanmadi."; q.transcript = ''; });
   }
   // Endi kerak emas — audioni xotirada saqlab turishning hojati yo'q
   currentQuiz.questions.forEach(q=>{ delete q.audioBase64; });
@@ -15265,8 +15342,8 @@ function renderMuhavaraSummary(totalScore, maxScore){
           <div style="flex:1;">
             <div class="t-name" style="font-size:13px;font-weight:700;color:var(--indigo-700);">${q.part.name} · Savol ${i+1}</div>
             <div dir="rtl" style="font-size:15px;margin:6px 0;">${escapeHtml(q.prompt)}</div>
-            ${q.transcript?`<div class="t-meta" style="margin-top:4px;"><b>🎙 Sizning javobingiz:</b> "${escapeHtml(q.transcript)}"</div>`:''}
-            ${q.feedback?`<div class="t-meta" style="margin-top:4px;color:var(--text-dim);"><b>💡 AI izohi:</b> ${escapeHtml(q.feedback)}</div>`:''}
+            ${q.transcript ? `<div class="t-meta" style="margin-top:4px;"><b>🎙 Sizning javobingiz:</b> "${escapeHtml(q.transcript)}"</div>` : `<div class="t-meta" style="margin-top:4px;color:var(--text-faint);font-style:italic;">🎙 Javob berilmagan</div>`}
+            ${q.feedback ? `<div class="t-meta" style="margin-top:4px;color:var(--text-dim);"><b>💡 AI izohi:</b> ${escapeHtml(q.feedback)}</div>` : ''}
           </div>
           <div style="font-weight:700;font-size:16px;flex-shrink:0;color:var(--text);">${q.score ?? 0} / 5 ball</div>
         </div>
