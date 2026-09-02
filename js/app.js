@@ -1306,7 +1306,7 @@ function renderGreetingFromProfile(){
     pId.textContent = `ID: ${uid}`;
   }
 
-  const isAdmin = !!(TELEGRAM_PROFILE.rawId && ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId));
+  const isAdmin = ADMIN_TELEGRAM_IDS.includes(TELEGRAM_PROFILE.rawId);
   showDebug(`ℹ️ rawId=${TELEGRAM_PROFILE.rawId} (${typeof TELEGRAM_PROFILE.rawId}), ADMIN_TELEGRAM_IDS=[${ADMIN_TELEGRAM_IDS.join(',')}], isAdmin=${isAdmin}`);
   // Hardcoded ro'yxatdagi adminlar uchun tugmalar darhol (kechikishsiz) ko'rinadi.
   showAdminButtons(isAdmin);
@@ -1351,7 +1351,7 @@ async function bootApp(){
       TELEGRAM_PROFILE = {
         name: 'Mehmon',
         username: '',
-        id: '',
+        id: '-',
         rawId: null,
         photoUrl: tgPhoto,
         gender: 'unspecified'
@@ -1988,7 +1988,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelgrammarselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -1997,7 +1997,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -2120,11 +2120,6 @@ function handleTelegramNativeBack(){
       else goBack();
       return;
     }
-    if (curView === 'duelresult') {
-      if (typeof returnFromDuelResult === 'function') returnFromDuelResult();
-      else goBack();
-      return;
-    }
     if (curView === 'fullexamintro' || curView === 'miccheck') {
       showView('attanal');
       return;
@@ -2168,26 +2163,14 @@ function showView(name, push=true){
   if(topGreeting) topGreeting.style.display = 'none';
   const topbarEl = document.getElementById('mainTopbar');
   if(topbarEl){
-    const hideTopbar = (name === 'duelresult');
-    topbarEl.style.display = hideTopbar ? 'none' : 'flex';
+    topbarEl.style.display = (name === 'duelresult' ? 'none' : 'flex');
     topbarEl.classList.remove('hero-banner');
   }
-  const isSpeakingQuiz = (name === 'quiz' && window.currentQuiz && (window.currentQuiz.skillId === 'muhavara' || window.currentQuiz.type === 'speaking'));
-  document.body.classList.toggle('speaking-quiz-active', !!isSpeakingQuiz);
-  if(name !== 'quiz' || !isSpeakingQuiz){
-    document.body.classList.remove('speaking-recording-active');
-    const quizHeadEl = document.getElementById('quizHead');
-    if(quizHeadEl) quizHeadEl.classList.remove('quiz-head-collapsed');
-  }
-  const topbarRightEl = document.querySelector('#mainTopbar .topbar-right');
-  if(topbarRightEl){
-    topbarRightEl.style.display = isSpeakingQuiz ? 'none' : 'flex';
-  }
   const themeToggleBtn = document.getElementById('themeToggleBtn');
-  if(themeToggleBtn) themeToggleBtn.style.display = isSpeakingQuiz ? 'none' : '';
+  if(themeToggleBtn) themeToggleBtn.style.display = '';
   const topAvatarEl = document.getElementById('topAvatar');
   if(topAvatarEl){
-    const hideAvatar = (name === 'dashboard' || name === 'profil' || name === 'sozlamalar' || isSpeakingQuiz);
+    const hideAvatar = (name === 'dashboard' || name === 'profil' || name === 'sozlamalar');
     topAvatarEl.style.display = hideAvatar ? 'none' : 'flex';
   }
   if(push){
@@ -2407,14 +2390,9 @@ function goBack(){
   if(FULL_EXAM && FULL_EXAM.active){ toast("To'liq imtihonda orqaga qaytish mumkin emas", 2000); return; }
   clearInterval(timerInterval); clearInterval(mcqTimerInterval);
   if(typeof _duelStopAnswerPolling === 'function') _duelStopAnswerPolling();
-  if(typeof _duelStopResultPolling === 'function') _duelStopResultPolling();
   stopQuizMediaSilently();
   viewHistory.pop();
-  while(viewHistory.length > 0 && (
-    viewHistory[viewHistory.length - 1] === 'quiz' || 
-    viewHistory[viewHistory.length - 1] === 'results' ||
-    viewHistory[viewHistory.length - 1] === 'duelresult'
-  )){
+  while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'quiz' || viewHistory[viewHistory.length - 1] === 'results')){
     viewHistory.pop();
   }
   const prev = viewHistory[viewHistory.length-1] || 'dashboard';
@@ -3158,24 +3136,13 @@ async function runMicCheck(){
   btn.disabled = true;
   statusEl.className = 'mic-check-status';
   statusEl.textContent = "Ruxsat so'ralmoqda...";
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    btn.disabled = false;
-    btn.textContent = '🎤 Qayta urinish';
-    statusEl.className = 'mic-check-status err';
-    statusEl.textContent = "❌ Brauzeringiz yoki muhit mikrofonni qo'llab-quvvatlamaydi. Ilovani yangi oynada ochib ko'ring.";
-    return;
-  }
   try{
     micCheckStream = await navigator.mediaDevices.getUserMedia({audio:true});
   }catch(e){
     btn.disabled = false;
     btn.textContent = '🎤 Qayta urinish';
     statusEl.className = 'mic-check-status err';
-    if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError'){
-      statusEl.textContent = "❌ Mikrofonga ruxsat berilmadi yoki bloklangan. Brauzer manzillar qatoridagi 🔒 (yoki 🎤) belgisidan ruxsat bering.";
-    } else {
-      statusEl.textContent = "❌ Mikrofon topilmadi yoki ruxsat berilmadi: " + (e.message || e.name || '');
-    }
+    statusEl.textContent = "❌ Mikrofonga ruxsat berilmadi. Brauzer/Telegram sozlamalaridan ruxsat berib, qayta urinib ko'ring.";
     return;
   }
   btn.disabled = false;
@@ -5186,7 +5153,7 @@ let ROW_MENU_SEQ = 0;
 function rowMenuBtn(items, title){
   const id = 'rm' + (++ROW_MENU_SEQ);
   ROW_MENU_REGISTRY[id] = { items, title: title || 'Amallar' };
-  return `<button type="button" class="icon-btn ib-menu" title="Amallar" onclick="event.stopPropagation(); openRowMenu('${id}')">${IB_ICON_DOTS}</button>`;
+  return `<button type="button" class="icon-btn ib-menu" title="Amallar" onclick="openRowMenu('${id}')">${IB_ICON_DOTS}</button>`;
 }
 function openRowMenu(id){
   const entry = ROW_MENU_REGISTRY[id];
@@ -8496,9 +8463,10 @@ function saveVocabTopicOrder(bookName, orderArray) {
     console.error("saveVocabTopicOrder error:", e);
   }
 
-  // In-place sort in ADMIN_VOCABULARIES so items within the book preserve order without shifting other books
+  // Reorder ADMIN_VOCABULARIES in memory so sequence is preserved
   if (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) {
     const bookWords = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') === bookName);
+    const otherWords = ADMIN_VOCABULARIES.filter(v => (v.book_name || '') !== bookName);
     bookWords.sort((a, b) => {
       const topA = a.topic || '';
       const topB = b.topic || '';
@@ -8509,22 +8477,12 @@ function saveVocabTopicOrder(bookName, orderArray) {
       if (ib !== -1) return 1;
       return 0;
     });
-    let bIdx = 0;
-    ADMIN_VOCABULARIES = ADMIN_VOCABULARIES.map(v => {
-      if ((v.book_name || '') === bookName) {
-        return bookWords[bIdx++];
-      }
-      return v;
-    });
+    ADMIN_VOCABULARIES = [...otherWords, ...bookWords];
     saveLocalVocabularies(ADMIN_VOCABULARIES);
   }
 }
 
 async function moveVocabTopic(bookName, topicName, dir) {
-  // Keep the current book expanded so it doesn't close
-  adminVocabExpandedBooks.add(bookName);
-  // Do not force expand the topic items so it stays compact
-
   const words = (Array.isArray(ADMIN_VOCABULARIES) && ADMIN_VOCABULARIES.length) 
     ? ADMIN_VOCABULARIES.filter(v => (v.book_name || 'Umumiy kitob') === bookName)
     : getLocalVocabularies().filter(v => (v.book_name || 'Umumiy kitob') === bookName);
@@ -8538,7 +8496,7 @@ async function moveVocabTopic(bookName, topicName, dir) {
     if (ia !== -1 && ib !== -1) return ia - ib;
     if (ia !== -1) return -1;
     if (ib !== -1) return 1;
-    return a.localeCompare(b, 'uz', { numeric: true });
+    return 0;
   });
 
   const idx = currentList.indexOf(topicName);
@@ -8659,7 +8617,6 @@ function initVocabTopicDragDrop(bookBodyEl, bookName) {
 
 function saveTopicOrderFromDOM(bookBodyEl, bookName) {
   if (!bookBodyEl) return;
-  adminVocabExpandedBooks.add(bookName);
   const items = Array.from(bookBodyEl.querySelectorAll('.vocab-topic-item[data-topic-name]'));
   const newOrder = items.map(el => el.dataset.topicName).filter(Boolean);
   if (newOrder.length) {
@@ -8722,10 +8679,12 @@ async function renderAdminVocabularies(rebuildFilters = true) {
   const topicSel = document.getElementById('adminVocabTopicFilter');
   adminVocabTopicFilter = topicSel?.value || 'all';
 
-  // Default initial expand: keep collapsed by default for clean and fast overview
-  if (!adminVocabInitializedExpand) {
-    adminVocabExpandedBooks.clear();
-    adminVocabExpandedTopics.clear();
+  // Default initial expand
+  if (!adminVocabInitializedExpand && ADMIN_VOCABULARIES.length > 0) {
+    ADMIN_VOCABULARIES.forEach(v => {
+      if (v.book_name) adminVocabExpandedBooks.add(v.book_name);
+      if (v.book_name && v.topic) adminVocabExpandedTopics.add(`${v.book_name}:::${v.topic}`);
+    });
     adminVocabInitializedExpand = true;
   }
 
@@ -8788,11 +8747,7 @@ async function renderAdminVocabularies(rebuildFilters = true) {
 
   let html = '';
 
-  const sortedBookEntries = Array.from(bookMap.entries()).sort(([bookA], [bookB]) => {
-    return bookA.localeCompare(bookB, 'uz', { numeric: true, sensitivity: 'base' });
-  });
-
-  sortedBookEntries.forEach(([bookName, topicsMap]) => {
+  bookMap.forEach((topicsMap, bookName) => {
     let bookWordCount = 0;
     topicsMap.forEach(words => { bookWordCount += words.length; });
     const isBookExpanded = isSearching || adminVocabExpandedBooks.has(bookName);
@@ -8806,12 +8761,6 @@ async function renderAdminVocabularies(rebuildFilters = true) {
       if (ib !== -1) return 1;
       return 0;
     });
-
-    const bookMenu = rowMenuBtn([
-      { icon: IB_ICON_ADD, label: "+ So'z qo'shish", run: () => openAddVocabModal(bookName, '') },
-      { icon: AS_ICON_PLUS || IB_ICON_ADD, label: "Ommaviy yuklash (JSON)", run: () => openBulkAddVocabModal(bookName, '') },
-      { icon: IB_ICON_DEL, label: "Kitobni o'chirish", danger: true, run: () => confirmDeleteVocabBook(bookName) }
-    ], bookName);
 
     html += `
       <div class="vocab-book-card ${isBookExpanded ? 'expanded' : ''}" id="vocabBookCard_${encodeURIComponent(bookName)}">
@@ -8828,7 +8777,9 @@ async function renderAdminVocabularies(rebuildFilters = true) {
           </div>
           <div class="vocab-book-actions">
             <div class="icon-btn-row">
-              ${bookMenu}
+              <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga yangi so'z qo'shish">${IB_ICON_ADD}</button>
+              <button type="button" class="icon-btn ib-edit" onclick="event.stopPropagation(); openBulkAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '')" title="Ushbu kitobga ommaviy yuklash (JSON)">${AS_ICON_PLUS}</button>
+              <button type="button" class="icon-btn ib-del" onclick="event.stopPropagation(); confirmDeleteVocabBook('${escapeHtml(bookName).replace(/'/g, "\\'")}')" title="Kitobni barcha ichidagi lug'atlari bilan butunlay o'chirish">${IB_ICON_DEL}</button>
             </div>
             <div class="vocab-chevron">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -8842,11 +8793,6 @@ async function renderAdminVocabularies(rebuildFilters = true) {
     sortedTopicEntries.forEach(([topicName, words], topicIdx) => {
       const topicKey = `${bookName}:::${topicName}`;
       const isTopicExpanded = isSearching || adminVocabExpandedTopics.has(topicKey);
-
-      const topicMenu = rowMenuBtn([
-        { icon: IB_ICON_ADD, label: "+ So'z qo'shish", run: () => openAddVocabModal(bookName, topicName) },
-        { icon: IB_ICON_DEL, label: "Mavzuni o'chirish", danger: true, run: () => confirmDeleteVocabTopic(bookName, topicName) }
-      ], topicName);
 
       html += `
         <div class="vocab-topic-item ${isTopicExpanded ? 'expanded' : ''}" 
@@ -8863,7 +8809,8 @@ async function renderAdminVocabularies(rebuildFilters = true) {
               <div class="icon-btn-row">
                 <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); moveVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}', -1)" ${topicIdx === 0 ? 'disabled' : ''} title="Mavzuni yuqoriga surish">${IB_ICON_UP}</button>
                 <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); moveVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}', 1)" ${topicIdx === sortedTopicEntries.length - 1 ? 'disabled' : ''} title="Mavzuni pastga surish">${IB_ICON_DOWN}</button>
-                ${topicMenu}
+                <button type="button" class="icon-btn ib-add" onclick="event.stopPropagation(); openAddVocabModal('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuga yangi so'z qo'shish">${IB_ICON_ADD}</button>
+                <button type="button" class="icon-btn ib-del" onclick="event.stopPropagation(); confirmDeleteVocabTopic('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')" title="Mavzuni barcha so'zlari bilan o'chirish">${IB_ICON_DEL}</button>
               </div>
               <div class="vocab-chevron">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -11660,25 +11607,7 @@ const DUEL_QUESTION_SECONDS = 30; /* Duelda har bir savol uchun vaqt */
    Kerakli SQL migratsiya (jadval + RPC funksiyalar) alohida
    duel_backend.sql faylida berilgan — uni Supabase SQL Editor'da
    bir marta ishga tushirish kifoya. */
-const LOCAL_DUELS_KEY = 'mishkat_local_duels_cache';
-
-function getCachedLocalDuels(){
-  try {
-    const raw = localStorage.getItem(LOCAL_DUELS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e){ return []; }
-}
-
-function setCachedLocalDuels(duels){
-  try {
-    if(Array.isArray(duels)){
-      localStorage.setItem(LOCAL_DUELS_KEY, JSON.stringify(duels.slice(0, 50)));
-    }
-  } catch(e){}
-}
-
 async function duelRpc(name, body){
-  if(!SUPABASE_URL || typeof fetch === 'undefined') return null;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
     method: 'POST', headers: authHeaders(), body: JSON.stringify(body || {})
   });
@@ -11917,7 +11846,7 @@ async function apiGetDuelByToken(token){
   try{
     const row = _duelUnwrap(await duelRpc('get_duel_by_token', { p_token: token }));
     return _duelFromRow(row);
-  }catch(e){ return null; }
+  }catch(e){ console.error('[apiGetDuelByToken]', e); return null; }
 }
 /* Supabase RPC join_duel(p_token, p_opponent_id, p_opponent_name) */
 async function apiJoinDuel(token){
@@ -11929,31 +11858,21 @@ async function apiJoinDuel(token){
       p_opponent_name: _duelMyName(),
       p_opponent_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
     }));
-    const duelObj = _duelFromRow(row);
-    if(duelObj){
-      const cached = getCachedLocalDuels().filter(x => x.id !== duelObj.id);
-      setCachedLocalDuels([duelObj, ...cached]);
-    }
-    return duelObj;
+    return _duelFromRow(row);
   }catch(e){
+    console.error('[apiJoinDuel]', e);
     toast("⚠️ Duelga qo'shilmadi: " + (e.message||'').slice(0,140), 5000);
     return null;
   }
 }
 /* Supabase RPC get_my_duels(p_user_id) */
 async function apiGetMyDuels(){
-  if(_duelMyRawId() == null) return getCachedLocalDuels();
+  if(_duelMyRawId() == null) return [];
   try{ await duelRpc('expire_stale_speaking_duels', {}); }catch(e){ /* jim, kritik emas */ }
   try{
     const rows = await duelRpc('get_my_duels', { p_user_id: _duelMyRawId() });
-    const list = (Array.isArray(rows) ? rows : []).map(_duelFromRow);
-    if(list && list.length > 0){
-      setCachedLocalDuels(list);
-    }
-    return list.length ? list : getCachedLocalDuels();
-  }catch(e){
-    return getCachedLocalDuels();
-  }
+    return (Array.isArray(rows) ? rows : []).map(_duelFromRow);
+  }catch(e){ console.error('[apiGetMyDuels]', e); return []; }
 }
 /* Supabase RPC submit_duel_result(p_duel_id, p_user_id, p_score, p_total, p_time_sec) */
 async function apiSubmitDuelResult(duelId, res){
@@ -11966,13 +11885,9 @@ async function apiSubmitDuelResult(duelId, res){
       p_total: res.total,
       p_time_sec: res.timeSec
     }));
-    const duelObj = _duelFromRow(row);
-    if(duelObj){
-      const cached = getCachedLocalDuels().filter(x => x.id !== duelObj.id);
-      setCachedLocalDuels([duelObj, ...cached]);
-    }
-    return duelObj;
+    return _duelFromRow(row);
   }catch(e){
+    console.error('[apiSubmitDuelResult]', e);
     toast('⚠️ Natija saqlanmadi: ' + (e.message||'').slice(0,140), 6000);
     return null;
   }
@@ -11996,7 +11911,7 @@ async function apiSubmitDuelAnswer(duelId, questionIndex, picked){
       p_question_index: questionIndex,
       p_picked: (picked === null || picked === undefined) ? null : picked
     });
-  }catch(e){}
+  }catch(e){ console.error('[apiSubmitDuelAnswer]', e); }
 }
 async function apiGetDuelOpponentAnswer(duelId, questionIndex){
   if(_duelMyRawId() == null) return null;
@@ -12007,7 +11922,7 @@ async function apiGetDuelOpponentAnswer(duelId, questionIndex){
       p_question_index: questionIndex
     }));
     return row || null;
-  }catch(e){ return null; }
+  }catch(e){ console.error('[apiGetDuelOpponentAnswer]', e); return null; }
 }
 /* Supabase RPC get_duel_answers(p_duel_id) — ikkala tomonning duel
    yakunlangandan keyingi to'liq javoblar ro'yxatini (har bir savol
@@ -12019,14 +11934,14 @@ async function apiGetDuelAnswers(duelId){
   try{
     const rows = await duelRpc('get_duel_answers', { p_duel_id: duelId });
     return Array.isArray(rows) ? rows : [];
-  }catch(e){ return []; }
+  }catch(e){ console.error('[apiGetDuelAnswers]', e); return []; }
 }
 
 async function apiGetDuelSpeakingAnswers(duelId){
   try{
     const rows = await duelRpc('get_duel_speaking_answers', { p_duel_id: duelId });
     return Array.isArray(rows) ? rows : [];
-  }catch(e){ return []; }
+  }catch(e){ console.error('[apiGetDuelSpeakingAnswers]', e); return []; }
 }
 
 /* Speaking Duel "Tahlil" — ikkala tarafning har savolga bergan transkripti,
@@ -12153,8 +12068,6 @@ function renderFriendCard(f){
     </div>`;
 }
 
-let _duelHistoryCache = {};
-
 async function renderDuelHub(){
   const listEl = document.getElementById('duelList');
   const emptyEl = document.getElementById('duelEmpty');
@@ -12162,12 +12075,7 @@ async function renderDuelHub(){
   const me = _duelMyId();
   const duels = (await apiGetMyDuels()).sort((a,b)=> b.createdAt - a.createdAt);
   _duelHistoryCache = {};
-  duels.forEach(d=>{ 
-    if(d && d.id != null) {
-      _duelHistoryCache[String(d.id)] = d;
-      _duelHistoryCache[d.id] = d;
-    }
-  });
+  duels.forEach(d=>{ _duelHistoryCache[d.id] = d; });
   if(!duels.length){
     listEl.innerHTML = '';
     if(emptyEl) emptyEl.style.display = '';
@@ -12180,8 +12088,9 @@ async function renderDuelHub(){
 /* Tarix ro'yxatidagi duel obyektlarini id bo'yicha keshlab turadi — karta
    bosilganda qayta backendga so'rov yubormasdan, natija ekranini darhol
    ochish uchun ishlatiladi. */
+let _duelHistoryCache = {};
 function openDuelResultCard(duelId){
-  const d = _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId];
+  const d = _duelHistoryCache[duelId];
   if(!d) return;
   showView('duelresult');
   renderDuelResultScreen(d);
@@ -12275,30 +12184,30 @@ function shareDuelLink(token){
   const url = WEBAPP_SHORT_NAME
     ? `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}?startapp=duel_${token}`
     : `https://t.me/${BOT_USERNAME}?startapp=duel_${token}`;
-  const text = `⚔️ Sizni arab tili bo'yicha bellashuvga chaqiraman! Qabul qiling — kim ko'proq to'g'ri javob berishini bilib olamiz.`;
+  const text = `⚔️ Sizni Grammatika bo'yicha duelga chaqiraman! Qabul qiling — kim ko'proq to'g'ri javob berishini bilib olamiz.`;
   const tg = window.Telegram?.WebApp;
   if(tg && typeof tg.openTelegramLink === 'function'){
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
   } else if(navigator.share){
-    navigator.share({ title:'Bellashuv', text, url }).catch(()=>{});
+    navigator.share({ title:'Duel', text, url }).catch(()=>{});
   } else if(navigator.clipboard){
     navigator.clipboard.writeText(`${text}\n${url}`);
     toast('Havola nusxalandi 📋');
   }
 }
 
-/* Bellashuv g'alabasini do'stlarga "ulashish" (natija ekranidagi yashil tugma). */
+/* Duel g'alabasini do'stlarga "ulashish" (natija ekranidagi yashil tugma). */
 function shareDuelResultBrag(oppName, score, total, isSpeaking){
   const url = WEBAPP_SHORT_NAME
     ? `https://t.me/${BOT_USERNAME}/${WEBAPP_SHORT_NAME}`
     : `https://t.me/${BOT_USERNAME}`;
-  const label = isSpeaking ? 'So\'zlashuv bellashuvida' : 'Grammatika bellashuvida';
+  const label = isSpeaking ? 'Muhadasada' : 'Grammatika duelida';
   const text = `🏆 ${oppName}ni ${label} ${score}/${total} ball bilan mag'lub etdim! Meni yenga olasizmi?`;
   const tg = window.Telegram?.WebApp;
   if(tg && typeof tg.openTelegramLink === 'function'){
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
   } else if(navigator.share){
-    navigator.share({ title:'Bellashuv g\'alabasi', text, url }).catch(()=>{});
+    navigator.share({ title:'Duel g\'alabasi', text, url }).catch(()=>{});
   } else if(navigator.clipboard){
     navigator.clipboard.writeText(`${text}\n${url}`);
     toast('Nusxalandi 📋');
@@ -12306,41 +12215,81 @@ function shareDuelResultBrag(oppName, score, total, isSpeaking){
 }
 
 async function startNewDuel(category){
-  toast('⏳ Bellashuv yaratilmoqda...', 2000);
+  toast('⏳ Duel yaratilmoqda...', 2000);
   const d = await apiCreateDuel('grammatika', DUEL_QUESTION_COUNT, category || 'aralash');
   if(!d) return; // xatolik bo'lsa apiCreateDuel o'zi toast chiqargan
   renderDuelHub();
   openDuelInviteScreen(d);
 }
 
-/* Duel uchun bo'lim tanlash oynasi: 2x2 Grid card style (iconsiz, toza matnli) */
+/* Duel uchun bo'lim tanlash oynasi: Marafon card style asosida (ranglar eski card bo'yicha) */
 function renderDuelSkillGrid(){
   const wrap = document.getElementById('duelSkillGrid');
   if(!wrap) return;
 
   const catConfigs = {
-    nahv: { cardClass: 'card-duel-nahv' },
-    sarf: { cardClass: 'card-duel-sarf' },
-    imlo: { cardClass: 'card-duel-imlo' },
-    xatolar: { cardClass: 'card-duel-xatolar' }
+    nahv: {
+      cardClass: 'card-duel-nahv',
+      gradId: 'dmbNahvGrad',
+      gradColors: ['#60A5FA', '#3B82F6', '#1D4ED8'],
+      glowColor: '#1D4ED8',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="9" y="2" width="6" height="6" rx="1.5"/><rect x="16" y="16" width="6" height="6" rx="1.5"/><rect x="2" y="16" width="6" height="6" rx="1.5"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></g>'
+    },
+    sarf: {
+      cardClass: 'card-duel-sarf',
+      gradId: 'dmbSarfGrad',
+      gradColors: ['#4ADE80', '#22C55E', '#15803D'],
+      glowColor: '#15803D',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></g>'
+    },
+    imlo: {
+      cardClass: 'card-duel-imlo',
+      gradId: 'dmbImloGrad',
+      gradColors: ['#C084FC', '#A855F7', '#7E22CE'],
+      glowColor: '#7E22CE',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></g>'
+    },
+    xatolar: {
+      cardClass: 'card-duel-xatolar',
+      gradId: 'dmbXatolarGrad',
+      gradColors: ['#F87171', '#EF4444', '#B91C1C'],
+      glowColor: '#B91C1C',
+      iconPath: '<g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>'
+    }
   };
 
   wrap.innerHTML = GRAMMAR_CATEGORIES.map(cat => {
     const cfg = catConfigs[cat.id] || catConfigs.nahv;
-    const shortName = cat.id === 'xatolar' ? 'Xatolar' : cat.name;
-    const shortAr = cat.id === 'xatolar' ? 'الأخطاء' : cat.ar;
     return `
-      <div class="duel-grammar-card ${cfg.cardClass}" onclick="chooseDuelSkill('${cat.id}')" role="button" tabindex="0">
-        <div class="dgc-top">
-          <div class="dgc-ar font-ar-bold">${shortAr}</div>
-          <div class="dgc-arrow">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <div class="marathon-action-card ${cfg.cardClass}" onclick="chooseDuelSkill('${cat.id}')" role="button" tabindex="0">
+        <div class="dmb-left">
+          <div class="dmb-badge">
+            <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
+              <defs>
+                <linearGradient id="${cfg.gradId}" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="${cfg.gradColors[0]}"/>
+                  <stop offset="0.6" stop-color="${cfg.gradColors[1]}"/>
+                  <stop offset="1" stop-color="${cfg.gradColors[2]}"/>
+                </linearGradient>
+                <filter id="${cfg.gradId}Glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="${cfg.glowColor}" flood-opacity="0.32"/>
+                </filter>
+              </defs>
+              <circle cx="22" cy="22" r="18" fill="url(#${cfg.gradId})" filter="url(#${cfg.gradId}Glow)"/>
+              ${cfg.iconPath}
+            </svg>
+          </div>
+          <div class="dmb-text-block">
+            <div class="dmb-title font-ar-bold" style="font-family:var(--font-ar-bold);font-size:18px;line-height:1.2;">${cat.ar}</div>
+            <div class="dmb-sub" style="font-size:13px;font-weight:600;color:var(--text-dim);margin-top:2px;">${escapeHtml(cat.name)}</div>
+          </div>
+        </div>
+        <div class="dmb-right">
+          <div class="dmb-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-        </div>
-        <div class="dgc-bottom">
-          <div class="dgc-name">${escapeHtml(shortName)}</div>
         </div>
       </div>
     `;
@@ -12351,12 +12300,13 @@ function openDuelSkillSelect(){
   showView('duelskillselect');
 }
 
-async function openDuelGrammarSelect(){
-  await startNewDuel('aralash');
+function openDuelGrammarSelect(){
+  renderDuelSkillGrid();
+  showView('duelgrammarselect');
 }
 
 async function chooseDuelSkill(category){
-  await startNewDuel(category || 'aralash');
+  await startNewDuel(category);
 }
 
 let CURRENT_DUEL_VOCAB_BOOK = '';
@@ -12557,7 +12507,7 @@ function openDuelVocabBookTopics(bookName){
 }
 
 async function chooseVocabDuel(bookName, topicName = 'all'){
-  toast("⏳ Lug'at bellashuvi yaratilmoqda...", 2000);
+  toast("⏳ Lug'at dueli yaratilmoqda...", 2000);
   const categoryPayload = (topicName && topicName !== 'all') 
     ? `${bookName}:::${topicName}`
     : (bookName || 'all');
@@ -12573,7 +12523,7 @@ async function chooseVocabDuel(bookName, topicName = 'all'){
    ishlaydi, chunki natija baribir _duelFromRow orqali normalizatsiya qilingan
    bir xil shakldagi obyekt. */
 async function startNewSpeakingDuel(){
-  toast('⏳ So\'zlashuv bellashuvi yaratilmoqda...', 2000);
+  toast('⏳ Speaking duel yaratilmoqda...', 2000);
   const d = await apiCreateSpeakingDuel();
   if(!d) return; // xatolik bo'lsa apiCreateSpeakingDuel o'zi toast chiqargan (masalan bankda 3 tadan kam savol bo'lsa)
   renderDuelHub();
@@ -12595,21 +12545,9 @@ async function chooseSpeakingDuel(){
    audio_url = null bilan yoziladi.
    10 soniya tayyorgarlik / 30 soniya yozish — spec bo'yicha. */
 async function startSpeakingDuelQuiz(duelId){
-  let d = _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x => String(x.id) === String(duelId));
-  if(!d && duelId){
-    d = await apiGetDuelByToken(duelId);
-  }
-  if(!d){ toast('Bellashuv topilmadi'); return; }
-  if(!d.questions || d.questions.length < 3){
-    if(d.token){
-      const full = await apiGetDuelByToken(d.token);
-      if(full && full.questions && full.questions.length >= 3){
-        d = full;
-        _duelHistoryCache[String(d.id)] = d;
-      }
-    }
-  }
-  if(!d.questions || d.questions.length < 3){ toast('Bellashuv savollari topilmadi'); return; }
+  const d = _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x=>x.id===duelId);
+  if(!d){ toast('Duel topilmadi'); return; }
+  if(!d.questions || d.questions.length < 3){ toast('Duel savollari topilmadi'); return; }
   const meId = _duelMyId();
   const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
@@ -12700,8 +12638,8 @@ async function submitSpeakingDuelResults(){
     if(wrap) wrap.innerHTML = `
       <div class="card" style="padding:28px 22px;text-align:center;">
         <div style="font-size:15px;font-weight:700;margin-bottom:10px;">⚠️ Natija saqlanmadi</div>
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.5;">Internet aloqasini tekshiring — Do'stlarim/Bellashuvlar bo'limidan qayta kirib ko'ring.</div>
-        <button type="button" class="btn btn-primary" style="width:100%;" onclick="returnFromDuelResult()">Bellashuvlar bo'limiga qaytish</button>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.5;">Internet aloqasini tekshiring — Do'stlarim/Duellar bo'limidan qayta kirib ko'ring.</div>
+        <button type="button" class="btn btn-primary" style="width:100%;" onclick="showView('duel')">Duellar bo'limiga qaytish</button>
       </div>`;
   }
   renderDuelHub();
@@ -12720,7 +12658,7 @@ function openSpeakingDuelResultCard(duelId){
 async function apiDeleteDuel(duelId){
   if(!_duelRequireAuth()) return;
   try{ await duelRpc('delete_duel', { p_duel_id: duelId, p_user_id: _duelMyRawId() }); }
-  catch(e){}
+  catch(e){ console.error('[apiDeleteDuel]', e); }
 }
 
 let currentDuelInviteToken = null;
@@ -12798,7 +12736,7 @@ async function cancelDuelInviteScreen(){
   _duelStopInvitePolling();
   const idToDelete = currentDuelInviteId;
   closeDuelInviteScreen();
-  toast("Bellashuv bekor qilindi");
+  toast("Duel bekor qilindi");
   if(idToDelete){
     await apiDeleteDuel(idToDelete);
     renderDuelHub();
@@ -12806,15 +12744,10 @@ async function cancelDuelInviteScreen(){
 }
 
 async function reopenDuelInvite(duelId){
-  let d = _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x => String(x.id) === String(duelId));
-  if(!d && duelId){
-    d = await apiGetDuelByToken(duelId);
-  }
-  if(!d){ toast('Bellashuv topilmadi'); return; }
+  const list = await apiGetMyDuels();
+  const d = list.find(x=>x.id===duelId);
+  if(!d){ toast('Duel topilmadi'); return; }
   openDuelInviteScreen(d);
-  if(d.token){
-    shareDuelLink(d.token);
-  }
 }
 
 /* ---------- Duel: VS boshlig'i (avatar + vaqt paneli) render/yangilash ---------- */
@@ -12875,21 +12808,25 @@ function duelMarkOpponentAnsweredEarly(){
   if(oppAv) oppAv.classList.add('answered');
 }
 
-/* ==================== Duel: mustaqil tezlikda ravon va to'siqsiz o'tish ====================
-   Har bir ishtirokchi 10 ta savolni o'z tezligida, hech qanday kutishsiz yechadi.
-   Javob tanlanganda javob tahlil uchun backendga yoziladi va qisqa (350-400ms) silliq
-   kechikish bilan avtomatik yoki "Keyingi" tugmasi orqali to'xtovsiz keyingi savolga o'tiladi.
-   Raqibni har bir savolda kutib o'tirish yo'q. Yakuniy g'olib to'g'ri javoblar soni va
-   ketgan umumiy vaqt (sekund) bo'yicha aniqlanadi. */
+/* ==================== Duel: gibrid jonli sinxron (savol darajasida) ====================
+   Foydalanuvchi javob tanlaganda:
+   1) submit_duel_answer backendga yuboriladi;
+   2) "Keyingi" tugmasi o'rniga kutish paneli ko'rsatiladi (renderDuelWaitPanel);
+   3) har 1.5s'da get_duel_opponent_answer so'raladi — raqib javob bergani
+      aniqlansa, darhol keyingi savolga o'tiladi;
+   4) agar 30 soniyalik umumiy vaqt tugasa — mavjud startQuestionTimer mexanizmi
+      avtomatik nextQ() chaqiradi (o'zgarishsiz);
+   5) foydalanuvchi xohlasa, kutish boshlanganidan DUEL_CONTINUE_ALONE_DELAY_MS
+      o'tgach chiqadigan "Yolg'iz davom etish" tugmasi bilan kutmasdan o'tishi
+      mumkin — bu faqat mahalliy (client-side) qaror, raqibning holatiga
+      ta'sir qilmaydi. */
 const DUEL_CONTINUE_ALONE_DELAY_MS = 4000;
 let duelAnswerPollTimer = null;
 let duelContinueAloneTimer = null;
-let duelAutoAdvanceTimer = null;
 
 function _duelStopAnswerPolling(){
   if(duelAnswerPollTimer){ clearInterval(duelAnswerPollTimer); duelAnswerPollTimer = null; }
   if(duelContinueAloneTimer){ clearTimeout(duelContinueAloneTimer); duelContinueAloneTimer = null; }
-  if(duelAutoAdvanceTimer){ clearTimeout(duelAutoAdvanceTimer); duelAutoAdvanceTimer = null; }
 }
 
 function duelContinueAlone(){
@@ -12902,36 +12839,41 @@ function handleDuelAnswerSubmitted(q, qIdx){
   if(!currentQuiz || !currentQuiz.isDuel) return;
   const duelId = currentQuiz.duelId;
   apiSubmitDuelAnswer(duelId, qIdx, (q.picked === undefined ? null : q.picked));
+  renderDuelWaitPanel();
 
   _duelStopAnswerPolling();
-  // Tanlangan variantni qisqa ko'rsatib, darhol keyingi savolga ravon o'tadi
-  duelAutoAdvanceTimer = setTimeout(()=>{
-    if(currentQuiz && currentQuiz.isDuel && currentQuiz.idx === qIdx){
-      nextQ();
+  duelAnswerPollTimer = setInterval(async ()=>{
+    if(!currentQuiz || !currentQuiz.isDuel || currentQuiz.idx !== qIdx){ _duelStopAnswerPolling(); return; }
+    const opp = await apiGetDuelOpponentAnswer(duelId, qIdx);
+    if(opp){
+      _duelStopAnswerPolling();
+      duelMarkOpponentAnsweredEarly();
+      setTimeout(()=>{
+        if(currentQuiz && currentQuiz.isDuel && currentQuiz.idx === qIdx) nextQ();
+      }, 450);
     }
-  }, 380);
+  }, 1500);
+
+  duelContinueAloneTimer = setTimeout(()=>{
+    const btn = document.getElementById('duelContinueAloneBtn');
+    if(btn) btn.style.display = '';
+  }, DUEL_CONTINUE_ALONE_DELAY_MS);
 }
 
-/* "Keyingi" tugmasi o'rniga: kutish paneli endi kerak emas */
+/* "Keyingi" tugmasi o'rniga: javob berilgach ko'rsatiladigan kutish paneli. */
 function renderDuelWaitPanel(){
-  // Kutish paneli olib tashlandi — foydalanuvchi o'z tezligida to'xtovsiz harakatlanadi
+  const wrap = document.getElementById('duelNavArea');
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="duel-wait-panel">
+      <div class="duel-wait-status">⏳ Raqib javobini kutmoqda<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+      <button type="button" id="duelContinueAloneBtn" class="btn btn-outline" style="display:none;width:100%;margin-top:10px;" onclick="duelContinueAlone()">Yolg'iz davom etish →</button>
+    </div>`;
 }
 
 async function startDuelQuiz(duelId, dOverride){
-  let d = dOverride || _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x => String(x.id) === String(duelId));
-  if(!d && duelId){
-    d = await apiGetDuelByToken(duelId);
-  }
+  const d = dOverride || (await apiGetMyDuels()).find(x=>x.id===duelId);
   if(!d){ toast('Duel topilmadi'); return; }
-  if(!d.questions || !d.questions.length){
-    if(d.token){
-      const full = await apiGetDuelByToken(d.token);
-      if(full && full.questions && full.questions.length){
-        d = full;
-        _duelHistoryCache[String(d.id)] = d;
-      }
-    }
-  }
   if(!d.questions || !d.questions.length){ toast('Duel savollari topilmadi'); return; }
   const isVocab = d.skillId === 'vocabularies';
   const skillMeta = isVocab
@@ -12950,8 +12892,8 @@ async function startDuelQuiz(duelId, dOverride){
     }
   }
   const duelLabel = isVocab
-    ? `⚔️ Bellashuv — Lug'atlar (${catDisplay})`
-    : `⚔️ Bellashuv — ${skillMeta.name}`;
+    ? `⚔️ Duel — Lug'atlar (${catDisplay})`
+    : `⚔️ Duel — ${skillMeta.name}`;
   const meId = _duelMyId();
   const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
@@ -12985,20 +12927,14 @@ async function handleDuelFinish(){
   const duelId = currentQuiz.duelId;
   showView('duelresult');
   const wrap = document.getElementById('duelResultBody');
-  if(wrap) wrap.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:24px;">
-      <div style="font-size:15px;font-weight:600;color:var(--text-dim);display:flex;align-items:center;gap:10px;">
-        <span style="font-size:24px;">⏳</span> Natija yuborilmoqda...
-      </div>
-    </div>`;
+  if(wrap) wrap.innerHTML = `<div class="card" style="padding:32px;text-align:center;color:var(--text-dim);font-weight:600;">⏳ Natija yuborilmoqda...</div>`;
   const updated = await apiSubmitDuelResult(duelId, { score: correct, total, timeSec: elapsedSeconds });
   if(!updated){
     if(wrap) wrap.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:32px 20px;">
-        <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
-        <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px;">Natija saqlanmadi</div>
-        <div style="font-size:13.5px;color:var(--text-dim);margin-bottom:20px;line-height:1.5;max-width:320px;">Internet aloqasini tekshirib qayta urinib ko'ring — javoblaringiz hozircha saqlanib turibdi.</div>
-        <button type="button" class="btn btn-primary" style="padding:12px 24px;border-radius:12px;font-weight:700;" onclick="handleDuelFinish()">Qayta urinish</button>
+      <div class="card" style="padding:28px 22px;text-align:center;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;">⚠️ Natija saqlanmadi</div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.5;">Internet aloqasini tekshirib qayta urinib ko'ring — javoblaringiz hozircha yo'qolmagan.</div>
+        <button type="button" class="btn btn-primary" style="width:100%;" onclick="handleDuelFinish()">Qayta urinish</button>
       </div>`;
     return;
   }
@@ -13228,37 +13164,6 @@ function drBurstConfetti(){
   fireSideConfetti({ mode: 'celebration' });
 }
 
-function returnFromDuelResult(){
-  _duelStopResultPolling();
-  // Natija, test yoki oraliq duel tanlov sahifalarini tarixdan tozalaymiz
-  while(viewHistory.length > 0 && (
-    viewHistory[viewHistory.length - 1] === 'duelresult' ||
-    viewHistory[viewHistory.length - 1] === 'quiz' ||
-    viewHistory[viewHistory.length - 1] === 'results' ||
-    viewHistory[viewHistory.length - 1] === 'duelskillselect' ||
-    viewHistory[viewHistory.length - 1] === 'duelvocabselect' ||
-    viewHistory[viewHistory.length - 1] === 'duelvocabtopics'
-  )){
-    viewHistory.pop();
-  }
-
-  // Agar tarixdan oldin 'duelhistory' mavjud bo'lsa, to'g'ridan-to'g'ri o'shanga o'tamiz
-  if(viewHistory.length > 0 && viewHistory[viewHistory.length - 1] === 'duelhistory'){
-    showView('duelhistory', false);
-    return;
-  }
-
-  // Tarix zanjirini toza holatga keltiramiz: dashboard -> duel -> duelhistory
-  const duelIdx = viewHistory.lastIndexOf('duel');
-  if(duelIdx !== -1){
-    viewHistory = viewHistory.slice(0, duelIdx + 1);
-  } else {
-    viewHistory = ['dashboard', 'duel'];
-  }
-  viewHistory.push('duelhistory');
-  showView('duelhistory', false);
-}
-
 function renderDuelResultScreen(d){
   _duelStopResultPolling();
   const wrap = document.getElementById('duelResultBody');
@@ -13279,21 +13184,12 @@ function renderDuelResultScreen(d){
 
   if(d.status !== 'completed'){
     wrap.innerHTML = `
-      <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;min-height:85vh;text-align:center;">
-        <div style="width:100%;max-width:360px;margin:0 auto;display:flex;flex-direction:column;align-items:center;">
-          <div style="width:68px;height:68px;border-radius:50%;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:18px;">
-            ⏳
-          </div>
-          <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-0.01em;">Natijangiz saqlandi</div>
-          <div style="font-size:14px;color:var(--text-dim);line-height:1.55;max-width:320px;margin:0 0 24px;">
-            <strong style="color:var(--text);font-weight:700;">${escapeHtml(oppName)}</strong> hali javob bermadi — u yakunlagach natija shu yerda avtomatik ko'rinadi.
-          </div>
-          <div>
-            <div class="back-row" style="margin:0;cursor:pointer;justify-content:center;padding:8px 12px;" onclick="returnFromDuelResult()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="m15 18-6-6 6-6"/></svg>
-              Bellashuvlarga qaytish
-            </div>
-          </div>
+      <div class="dr-page ${isDark ? 'dr-dark' : ''}" id="drPage" style="display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh;">
+        <div class="card" style="padding:32px 24px;text-align:center;max-width:380px;width:100%;border-radius:20px;">
+          <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:17px;font-weight:700;margin-bottom:8px;">Natijangiz saqlandi</div>
+          <div style="font-size:13.5px;color:var(--text-dim);line-height:1.5;">${escapeHtml(oppName)} hali javob bermadi — u yakunlagach natija shu yerda ko'rinadi.</div>
+          <button type="button" class="btn btn-outline" style="width:100%;margin-top:20px;padding:11px 18px;font-weight:700;" onclick="showView('duelhistory')">Duellarga qaytish</button>
         </div>
       </div>`;
     duelResultPollTimer = setInterval(async ()=>{
@@ -13364,7 +13260,7 @@ function renderDuelResultScreen(d){
             </div>
           </div>
           <div class="dr-btn-row">
-            <button type="button" class="btn btn-outline dr-back-btn" onclick="returnFromDuelResult()">Bellashuvlarga qaytish</button>
+            <button type="button" class="btn btn-outline dr-back-btn" onclick="showView('duelhistory')">Duellarga qaytish</button>
             <button type="button" class="btn btn-primary dr-analyze-btn" onclick="${isSpeaking ? 'openSpeakingDuelAnalysis()' : 'openDuelAnalysis()'}">Tahlil</button>
           </div>
         </div>
@@ -13999,107 +13895,6 @@ function buildQGrid(){
   }
   updateQGrid();
 }
-function renderQuizCapsules(){
-  const container = document.getElementById('quizCapsulesContainer');
-  if(!container) return;
-  if(!currentQuiz || !Array.isArray(currentQuiz.questions) || currentQuiz.questions.length === 0 || currentQuiz.phase === 'done' || currentQuiz.phase === 'summary' || currentQuiz.phase === 'evaluating'){
-    container.style.display = 'none';
-    return;
-  }
-  container.style.display = 'flex';
-
-  let partTitle = '1-qism';
-  let startIdx = 0;
-  let partQuestionsCount = 6;
-  const curIdx = currentQuiz.idx || 0;
-
-  if(currentQuiz.juz && Array.isArray(currentQuiz.juz) && currentQuiz.juz.length > 0){
-    let curJuzIndex = 0;
-    for(let j = 0; j < currentQuiz.juz.length; j++){
-      const jz = currentQuiz.juz[j];
-      if(jz && curIdx >= jz.startIdx && curIdx <= jz.endIdx){
-        curJuzIndex = j;
-        break;
-      }
-    }
-    const curJuz = currentQuiz.juz[curJuzIndex] || currentQuiz.juz[0];
-    if(curJuz){
-      if(curJuz.partNum){
-        partTitle = `${curJuz.partNum}-qism`;
-      } else if(curJuz.name){
-        const cleanName = curJuz.name.replace(/juz/i, 'qism');
-        partTitle = cleanName.includes('qism') ? cleanName : `${curJuzIndex + 1}-qism`;
-      } else {
-        partTitle = `${curJuzIndex + 1}-qism`;
-      }
-      startIdx = curJuz.startIdx !== undefined ? curJuz.startIdx : 0;
-      const totalInJuz = curJuz.endIdx !== undefined ? (curJuz.endIdx - curJuz.startIdx + 1) : 6;
-      partQuestionsCount = Math.max(1, totalInJuz);
-    }
-  } else if(currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'muhavara'){
-    const q = currentQuiz.questions[curIdx];
-    if(q && q.part){
-      partTitle = q.part.name || '1-qism';
-      const partQs = currentQuiz.questions.filter(item => item.part && item.part.id === q.part.id);
-      partQuestionsCount = partQs.length || 2;
-      const fIdx = currentQuiz.questions.findIndex(item => item.part && item.part.id === q.part.id);
-      startIdx = fIdx >= 0 ? fIdx : 0;
-    } else {
-      const partNum = Math.floor(curIdx / 2) + 1;
-      partTitle = `${partNum}-qism`;
-      startIdx = (partNum - 1) * 2;
-      partQuestionsCount = 2;
-    }
-  } else if(currentQuiz.skillId === 'kitaba' || currentQuiz.type === 'kitaba'){
-    const q = currentQuiz.questions[curIdx];
-    if(q && q.part && q.part.name){
-      partTitle = q.part.name;
-    } else {
-      partTitle = `${curIdx + 1}-qism`;
-    }
-    startIdx = curIdx;
-    partQuestionsCount = 1;
-  } else {
-    const total = currentQuiz.questions.length;
-    if(total <= 6){
-      partTitle = "1-qism";
-      startIdx = 0;
-      partQuestionsCount = total;
-    } else {
-      const currentPartNum = Math.floor(curIdx / 6) + 1;
-      partTitle = `${currentPartNum}-qism`;
-      startIdx = (currentPartNum - 1) * 6;
-      partQuestionsCount = Math.min(6, total - startIdx);
-    }
-  }
-
-  const titleEl = document.getElementById('quizPartTitle');
-  if(titleEl){
-    titleEl.textContent = partTitle;
-  }
-
-  const rowEl = document.getElementById('quizCapsulesRow');
-  if(rowEl){
-    let capsulesHtml = '';
-    for(let k = 0; k < partQuestionsCount; k++){
-      const qIdx = startIdx + k;
-      const q = currentQuiz.questions[qIdx];
-      const isCurrent = (curIdx === qIdx);
-      const isAnswered = !!(q && (q.picked !== null && q.picked !== undefined || q.answered || (q.userAnswer !== undefined && q.userAnswer !== null && q.userAnswer !== '')));
-
-      let statusClass = 'upcoming';
-      if(isCurrent){
-        statusClass = 'current';
-      } else if(isAnswered){
-        statusClass = 'answered';
-      }
-
-      capsulesHtml += `<div class="quiz-capsule ${statusClass}" data-qidx="${qIdx}"></div>`;
-    }
-    rowEl.innerHTML = capsulesHtml;
-  }
-}
-
 function updateQGrid(){
   if(currentQuiz){
     if(currentQuiz.maxUnlockedIdx === undefined){
@@ -14125,7 +13920,6 @@ function updateQGrid(){
       b.removeAttribute('title');
     }
   });
-  renderQuizCapsules();
 }
 function jumpTo(i){
   if(!isQuestionAccessible(i)) return;
@@ -14141,20 +13935,6 @@ function jumpTo(i){
 }
 
 function renderQuestion(){
-  const isSpeaking = !!(currentQuiz && (currentQuiz.skillId === 'muhavara' || currentQuiz.type === 'speaking'));
-  const isSpeakingRec = isSpeaking && currentQuiz.phase === 'recording';
-  document.body.classList.toggle('speaking-quiz-active', isSpeaking);
-  document.body.classList.toggle('speaking-recording-active', isSpeakingRec);
-  const quizHeadEl = document.getElementById('quizHead');
-  if(quizHeadEl){
-    quizHeadEl.style.display = '';
-    quizHeadEl.classList.toggle('quiz-head-collapsed', isSpeakingRec);
-  }
-  const topbarRightEl = document.querySelector('#mainTopbar .topbar-right');
-  if(topbarRightEl){
-    topbarRightEl.style.display = isSpeaking ? 'none' : 'flex';
-  }
-  renderQuizCapsules();
   if(currentQuiz && currentQuiz.color){
     const quizWrapEl = document.getElementById('view-quiz');
     if(quizWrapEl) quizWrapEl.style.setProperty('--quiz-accent', currentQuiz.color);
@@ -14371,10 +14151,10 @@ function renderQuestion(){
         <button type="button" class="btn btn-primary q-nav-btn-compact" onclick="nextQ()">${isLast ? 'Yakunlash' : 'Keyingi →'}</button>
       </div>`;
   } else if(currentQuiz.isDuel){
-    const isLast = currentQuiz.idx === currentQuiz.questions.length - 1;
-    html += `<div class="q-nav-row" id="duelNavArea">
-        <button type="button" class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;font-weight:700;" onclick="nextQ()">${isLast ? 'Yakunlash' : 'Keyingi →'}</button>
-      </div>`;
+    /* Duelda "Oldingi/Keyingi" tugmalari yo'q: javob tanlanmaguncha hech narsa
+       ko'rsatilmaydi (pastdagi bo'sh #duelNavArea), tanlangach esa kutish paneli
+       (renderDuelWaitPanel) yoki vaqt tugaganda avtomatik o'tish ishlaydi. */
+    html += `<div class="q-nav-row" id="duelNavArea"></div>`;
   } else {
     html += `<div class="q-nav-row">
         <button class="btn btn-outline" onclick="prevQ()" ${currentQuiz.idx===0?'disabled style="opacity:.4;cursor:default;"':''}>← Oldingi</button>
@@ -14391,7 +14171,11 @@ function renderQuestion(){
     clearQuestionTimer();
   }
   if(currentQuiz.isDuel){
-    _duelStopAnswerPolling();
+    if(q.picked !== null && q.picked !== undefined){
+      renderDuelWaitPanel();
+    } else {
+      _duelStopAnswerPolling();
+    }
   }
 }
 function pickOption(oi){
@@ -14515,7 +14299,7 @@ function renderQiroaPhase(){
        faqat admin panelda testlar ro'yxatini ko'rishni qulaylashtirish uchun (pastda,
        renderAdminQuestions() ichida ishlatiladi), imtihon oynasiga taalluqli emas. */
     body.innerHTML = `
-      <div class="q-sub" style="text-align:center;font-size:14px;font-weight:600;color:var(--text-faint);margin-bottom:14px;">Tayyorgarlik vaqti</div>
+      <div class="q-sub">${juzLabel} · Matnni o'qing — savollar avtomatik boshlanadi, yoki tayyor bo'lsangiz oldinroq o'ting</div>
       <div style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--indigo-700);background:var(--indigo-100);padding:6px 14px;border-radius:99px;margin-bottom:12px;">
         <span>💡</span> Tushunmagan so'zingiz ustiga bosing — 1 bosishda shaxsiy lug'atga saqlanadi
       </div>
@@ -15059,13 +14843,12 @@ function startMuhavaraLevelMeter(){
     const data = new Uint8Array(analyser.frequencyBinCount);
     const startedAt = Date.now();
     function tick(){
-      const ring1 = document.getElementById('micRing1');
+      const ring = document.getElementById('micRing');
       const ring2 = document.getElementById('micRing2');
-      const ring3 = document.getElementById('micRing3');
       const glow1 = document.getElementById('micGlow1');
       const glow2 = document.getElementById('micGlow2');
       const glow3 = document.getElementById('micGlow3');
-      if(!ring1 || !currentQuiz || currentQuiz.phase !== 'recording'){ muhavaraLevelRaf = null; return; }
+      if(!ring || !currentQuiz || currentQuiz.phase !== 'recording'){ muhavaraLevelRaf = null; return; }
       analyser.getByteTimeDomainData(data);
       let sum = 0;
       for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum += v*v; }
@@ -15077,29 +14860,23 @@ function startMuhavaraLevelMeter(){
       const t = (Date.now() - startedAt) / 1000;
       const idle = 0.5 + 0.5 * Math.sin(t * 2.2);
       const boosted = Math.max(level, idle * 0.22);
-      if(ring1){
-        ring1.style.opacity = (0.75 + boosted*0.25).toFixed(2);
-        ring1.style.transform = `scale(${(1 + boosted*0.08).toFixed(3)})`;
-      }
+      ring.style.opacity = (0.15 + level*0.75).toFixed(2);
+      ring.style.transform = `scale(${(1 + level*0.5).toFixed(3)})`;
       if(ring2){
-        ring2.style.opacity = (0.65 + boosted*0.3).toFixed(2);
-        ring2.style.transform = `scale(${(1 + boosted*0.14).toFixed(3)})`;
-      }
-      if(ring3){
-        ring3.style.opacity = (0.5 + boosted*0.35).toFixed(2);
-        ring3.style.transform = `scale(${(1 + boosted*0.2).toFixed(3)})`;
+        ring2.style.opacity = (0.10 + level*0.5).toFixed(2);
+        ring2.style.transform = `scale(${(1 + level*0.9).toFixed(3)})`;
       }
       if(glow1){
-        glow1.style.opacity = (0.4 + boosted*0.45).toFixed(2);
-        glow1.style.transform = `scale(${(1 + boosted*0.18).toFixed(3)})`;
+        glow1.style.opacity = (0.32 + boosted*0.55).toFixed(2);
+        glow1.style.transform = `scale(${(1 + boosted*0.35).toFixed(3)})`;
       }
       if(glow2){
-        glow2.style.opacity = (0.3 + boosted*0.4).toFixed(2);
-        glow2.style.transform = `scale(${(1 + boosted*0.28).toFixed(3)})`;
+        glow2.style.opacity = (0.20 + boosted*0.45).toFixed(2);
+        glow2.style.transform = `scale(${(1 + boosted*0.55).toFixed(3)})`;
       }
       if(glow3){
-        glow3.style.opacity = (0.2 + boosted*0.35).toFixed(2);
-        glow3.style.transform = `scale(${(1 + boosted*0.42).toFixed(3)})`;
+        glow3.style.opacity = (0.10 + boosted*0.35).toFixed(2);
+        glow3.style.transform = `scale(${(1 + boosted*0.8).toFixed(3)})`;
       }
       muhavaraLevelRaf = requestAnimationFrame(tick);
     }
@@ -15137,17 +14914,8 @@ async function storeMuhavaraAnswer(blob){
     q.mimeType = blob.type || 'audio/webm';
   }
   if(currentQuiz.idx < currentQuiz.questions.length-1){
-    const frontCard = document.getElementById('quizStackFrontCard');
-    if(frontCard){
-      frontCard.classList.add('card-slide-out-left');
-      setTimeout(()=>{
-        currentQuiz.idx++;
-        startMuhavaraPrep();
-      }, 350);
-    } else {
-      currentQuiz.idx++;
-      startMuhavaraPrep();
-    }
+    currentQuiz.idx++;
+    startMuhavaraPrep();
   } else if(currentQuiz.isSpeakingDuel){
     evaluateAllSpeakingDuelAnswers();
   } else {
@@ -15242,15 +15010,6 @@ function finishMuhavaraQuiz(){
   renderMuhavaraSummary(totalScore, maxScore);
 }
 function renderMuhavaraSummary(totalScore, maxScore){
-  const quizHeadEl = document.getElementById('quizHead');
-  if(quizHeadEl){
-    quizHeadEl.style.display = 'none';
-    quizHeadEl.classList.remove('quiz-head-collapsed');
-  }
-  const capsulesContainer = document.getElementById('quizCapsulesContainer');
-  if(capsulesContainer) capsulesContainer.style.display = 'none';
-  document.body.classList.remove('speaking-recording-active');
-  document.body.classList.remove('speaking-quiz-active');
   const sideEl = document.getElementById('quizSide');
   if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
@@ -15287,81 +15046,56 @@ function renderMuhavaraPhase(){
   clearQuestionTimer();
   const body = document.getElementById('quizBody');
   const q = currentQuiz.questions[currentQuiz.idx];
-  const qNum = currentQuiz.idx + 1;
+  const num = `${q.part.name} · Savol ${currentQuiz.idx+1} / ${currentQuiz.questions.length}`;
 
   if(currentQuiz.phase==='prep'){
-    const quizHeadEl = document.getElementById('quizHead');
-    if(quizHeadEl) quizHeadEl.classList.remove('quiz-head-collapsed');
-    document.body.classList.remove('speaking-recording-active');
-
     const prepSecs = q.part.prepSecs || 60;
     const prepMin = Math.floor(prepSecs / 60);
     const prepRemSec = prepSecs % 60;
     const prepFormatted = String(prepMin).padStart(2, '0') + ':' + String(prepRemSec).padStart(2, '0');
 
     body.innerHTML = `
-      <div class="q-sub" style="text-align:center;font-size:14px;font-weight:600;color:var(--text-faint);margin-bottom:14px;margin-top:-20px;">Tayyorgarlik vaqti</div>
+      <div class="q-sub">${num}</div>
       <div style="display:flex;justify-content:center;margin:16px 0 14px 0;">
-        <div id="muhavaraBigTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;margin-top:-11px;">${prepFormatted}</div>
+        <div id="muhavaraBigTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;">${prepFormatted}</div>
       </div>
-      <div class="quiz-card-stack" id="quizCardStackContainer">
-        <div class="quiz-card-back quiz-card-back-2"></div>
-        <div class="quiz-card-back quiz-card-back-1"></div>
-        <div class="quiz-card-front" id="quizStackFrontCard">
-          <div class="quiz-card-label">Savol ${qNum}</div>
-          <div class="quiz-card-prompt">${escapeHtml(q.prompt || '')}</div>
-        </div>
+      <div class="prompt-box">
+        <div class="lbl">Savol</div>
+        <div style="font-family:var(--font-ar);font-size:21px;direction:rtl;text-align:right;line-height:1.7;">${q.prompt}</div>
       </div>
-      <div class="mic-hint" style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--text-faint);width:160px;height:16px;padding-top:0px;margin-left:auto;margin-right:auto;">Tayyorlaning, yozib olish tez orada boshlanadi.</div>
-      <div style="display:flex;justify-content:center;margin-top:60px;">
-        <button class="btn btn-primary" style="width:120px;height:40px;border-radius:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;border:1.5px solid #f97316;background-color:#f97316;background:#f97316;color:#ffffff;" onclick="skipMuhavaraPrep()">Tayyorman</button>
-      </div>
+      <div class="mic-hint" style="text-align:center;margin-top:16px;font-size:13.5px;color:var(--text-faint);">Fikringizni tartiblang — tayyorgarlik vaqti tugagach yozib olish avtomatik boshlanadi.</div>
+      <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="skipMuhavaraPrep()">✅ Tayyorman, boshlayman</button>
     `;
     return;
   }
   if(currentQuiz.phase==='recording'){
-    const quizHeadEl = document.getElementById('quizHead');
-    if(quizHeadEl) quizHeadEl.classList.add('quiz-head-collapsed');
-    document.body.classList.add('speaking-recording-active');
-
     const ansSecs = q.part.answerSecs || 60;
     const ansMin = Math.floor(ansSecs / 60);
     const ansRemSec = ansSecs % 60;
     const ansFormatted = String(ansMin).padStart(2, '0') + ':' + String(ansRemSec).padStart(2, '0');
 
     body.innerHTML = `
-      <div class="muhavara-recording-view">
-        <div class="q-sub" style="text-align:center;font-size:14px;font-weight:600;color:var(--text-faint);margin-bottom:14px;margin-top:-6px;">Gapirish vaqti</div>
-        <div style="display:flex;justify-content:center;margin:16px 0 14px 0;">
-          <div id="muhavaraRecTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red,#EF4444);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;margin-top:-11px;">${ansFormatted}</div>
-        </div>
-        <div class="quiz-card-stack" id="quizCardStackContainer">
-          <div class="quiz-card-back quiz-card-back-2"></div>
-          <div class="quiz-card-back quiz-card-back-1"></div>
-          <div class="quiz-card-front" id="quizStackFrontCard">
-            <div class="quiz-card-label">Savol ${qNum}</div>
-            <div class="quiz-card-prompt">${escapeHtml(q.prompt || '')}</div>
+      <div class="q-sub">${num}</div>
+      <div style="display:flex;justify-content:center;margin:16px 0 14px 0;">
+        <div id="muhavaraRecTimer" style="font-size:46px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red,#EF4444);letter-spacing:1px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-height:50px;">${ansFormatted}</div>
+      </div>
+      <div class="prompt-box">
+        <div class="lbl">Savol</div>
+        <div style="font-family:var(--font-ar);font-size:21px;direction:rtl;text-align:right;line-height:1.7;">${q.prompt}</div>
+      </div>
+      <div class="mic-wrap" style="margin-top:14px;">
+        <div class="mic-circle-wrap">
+          <div class="mic-glow mic-glow3" id="micGlow3"></div>
+          <div class="mic-glow mic-glow2" id="micGlow2"></div>
+          <div class="mic-glow mic-glow1" id="micGlow1"></div>
+          <div class="mic-ring" id="micRing"></div>
+          <div class="mic-ring mic-ring2" id="micRing2"></div>
+          <div class="mic-circle recording" id="micCircle">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
           </div>
         </div>
-        <div class="mic-wrap" style="margin-top:14px;">
-          <div class="mic-circle-wrap recording">
-            <div class="mic-glow mic-glow3" id="micGlow3"></div>
-            <div class="mic-glow mic-glow2" id="micGlow2"></div>
-            <div class="mic-glow mic-glow1" id="micGlow1"></div>
-            <div class="mic-ring mic-ring3" id="micRing3"></div>
-            <div class="mic-ring mic-ring2" id="micRing2"></div>
-            <div class="mic-ring mic-ring1" id="micRing1"></div>
-            <div class="mic-circle recording" id="micCircle">
-              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="2.5" width="6" height="11.5" rx="3"></rect>
-                <path d="M5.5 10a6.5 6.5 0 0 0 13 0"></path>
-                <line x1="12" y1="16.5" x2="12" y2="20.5"></line>
-                <line x1="8.5" y1="20.5" x2="15.5" y2="20.5"></line>
-              </svg>
-            </div>
-          </div>
-          <button class="btn btn-outline" style="margin-top:38px;min-width:160px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
-        </div>
+        <div class="mic-hint" style="margin-top:12px;">Gapiring — vaqt tugagach avtomatik to'xtaydi.</div>
+        <button class="btn btn-outline" style="margin-top:18px;min-width:160px;" onclick="stopMuhavaraRecording()">Yakunlash</button>
       </div>
     `;
     return;
@@ -15539,13 +15273,6 @@ function finishKitabaExam(){
   renderQuestion();
 }
 function renderKitabaSummary(){
-  const quizHeadEl = document.getElementById('quizHead');
-  if(quizHeadEl){
-    quizHeadEl.style.display = 'none';
-    quizHeadEl.classList.remove('quiz-head-collapsed');
-  }
-  const capsulesContainer = document.getElementById('quizCapsulesContainer');
-  if(capsulesContainer) capsulesContainer.style.display = 'none';
   const sideEl = document.getElementById('quizSide');
   if(sideEl) sideEl.style.display = 'none';
   const timerEl = document.getElementById('quizTimer');
