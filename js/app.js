@@ -12594,8 +12594,8 @@ async function chooseSpeakingDuel(){
    yuboriladi (oddiy Muhavaradagi kabi), submit_duel_speaking_answer'ga
    audio_url = null bilan yoziladi.
    10 soniya tayyorgarlik / 30 soniya yozish — spec bo'yicha. */
-async function startSpeakingDuelQuiz(duelId){
-  let d = _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x => String(x.id) === String(duelId));
+async function startSpeakingDuelQuiz(duelId, dOverride){
+  let d = dOverride || _duelHistoryCache[String(duelId)] || _duelHistoryCache[duelId] || (await apiGetMyDuels()).find(x => String(x.id) === String(duelId));
   if(!d && duelId){
     d = await apiGetDuelByToken(duelId);
   }
@@ -12610,6 +12610,7 @@ async function startSpeakingDuelQuiz(duelId){
     }
   }
   if(!d.questions || d.questions.length < 3){ toast('Bellashuv savollari topilmadi'); return; }
+  _duelHistoryCache[String(d.id)] = d;
   const meId = _duelMyId();
   const iAmChallenger = d.challenger && String(d.challenger.id) === String(meId);
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
@@ -12623,7 +12624,7 @@ async function startSpeakingDuelQuiz(duelId){
     idx: 0, phase: 'prep',
     color: 'var(--muhavara,#8B5CF6)', bg: 'rgba(139,92,246,0.12)', label: '🎙 Muhadasa',
     startedAt: Date.now(),
-    isSpeakingDuel: true, duelId: d.id,
+    isSpeakingDuel: true, isDuel: true, duelId: d.id,
     duelOpponent: oppInfo ? { name: oppInfo.name, photoUrl: oppInfo.photoUrl || null } : null,
   };
   const qTag = document.getElementById('quizTag');
@@ -12753,7 +12754,11 @@ function _duelStartInvitePolling(d){
       renderDuelHub();
       setTimeout(()=>{
         closeDuelInviteScreen();
-        startDuelQuiz(fresh.id, fresh);
+        if(fresh.duelType === 'speaking' || fresh.skillId === 'muhavara'){
+          startSpeakingDuelQuiz(fresh.id, fresh);
+        } else {
+          startDuelQuiz(fresh.id, fresh);
+        }
       }, 900);
     }
   }, 3000);
@@ -12923,6 +12928,9 @@ async function startDuelQuiz(duelId, dOverride){
     d = await apiGetDuelByToken(duelId);
   }
   if(!d){ toast('Duel topilmadi'); return; }
+  if(d.duelType === 'speaking' || d.skillId === 'muhavara'){
+    return startSpeakingDuelQuiz(d.id, d);
+  }
   if(!d.questions || !d.questions.length){
     if(d.token){
       const full = await apiGetDuelByToken(d.token);
@@ -13585,7 +13593,16 @@ function _duelCmpPct(myVal, oppVal, invert){
    tasdiqlash oynasini ko'rsatamiz. checkPendingDuelInvite() ilova ishga
    tushgach (auth tugagach) chaqiriladi. */
 async function checkPendingDuelInvite(){
-  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+  const urlParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param
+    || urlParams.get('tgWebAppStartParam')
+    || urlParams.get('startapp')
+    || urlParams.get('start_param')
+    || hashParams.get('tgWebAppStartParam')
+    || hashParams.get('startapp')
+    || hashParams.get('duel')
+    || '';
   if(!startParam.startsWith('duel_')) return;
   const token = startParam.slice(5);
   const d = await apiGetDuelByToken(token);
@@ -13595,18 +13612,33 @@ async function checkPendingDuelInvite(){
   if(d.opponent){
     if(d.opponent.id === me){
       // Bu foydalanuvchi allaqachon qo'shilgan — davom ettiramiz
-      if(!d.opponentResult){ startDuelQuiz(d.id, d); } else { showView('duelhistory'); }
+      if(!d.opponentResult){
+        if(d.duelType === 'speaking' || d.skillId === 'muhavara'){
+          startSpeakingDuelQuiz(d.id, d);
+        } else {
+          startDuelQuiz(d.id, d);
+        }
+      } else {
+        showView('duelhistory');
+      }
     } else {
       toast("⚠️ Bu duelga allaqachon boshqa foydalanuvchi qo'shilgan");
     }
     return;
   }
+  const isSpeaking = d.duelType === 'speaking' || d.skillId === 'muhavara';
+  const isVocab = d.skillId === 'vocabularies';
+  const skillTitle = isSpeaking ? "So'zlashuv (Muhadasa)" : (isVocab ? "Lug'atlar" : "Grammatika");
+  const descText = isSpeaking
+    ? "3 ta og'zaki savol (10 soniya tayyorgarlik, 30 soniya gapirish). AI sizning talaffuz va nutqingizni baholaydi."
+    : `${d.count || 10} ta savol, vaqt cheklovi yo'q. Qabul qilib, hoziroq yechishingiz mumkin.`;
+
   document.getElementById('modalTitle').textContent = 'Duelga taklif';
   document.getElementById('modalBody').innerHTML = `
     <div style="text-align:center;padding:10px 4px 6px;">
-      <div style="font-size:38px;margin-bottom:12px;">⚔️</div>
-      <div style="font-size:15.5px;font-weight:700;margin-bottom:8px;">${escapeHtml(d.challenger.name)} sizni Grammatika bo'yicha duelga chaqirdi!</div>
-      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">${d.count} ta savol, vaqt cheklovi yo'q. Qabul qilib, hoziroq yechishingiz mumkin.</p>
+      <div style="font-size:38px;margin-bottom:12px;">${isSpeaking ? '🎙️' : '⚔️'}</div>
+      <div style="font-size:15.5px;font-weight:700;margin-bottom:8px;">${escapeHtml(d.challenger.name)} sizni ${skillTitle} bo'yicha duelga chaqirdi!</div>
+      <p style="font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 20px;">${descText}</p>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-outline" style="flex:1;padding:12px;" onclick="closeModal();showView('duel')">Keyinroq</button>
         <button class="btn btn-primary" style="flex:1;padding:12px;" onclick="closeModal();acceptDuelInvite('${token}')">Qabul qilish</button>
@@ -13623,7 +13655,11 @@ async function acceptDuelInvite(token){
     showView('duelhistory');
     return;
   }
-  startDuelQuiz(d.id, d);
+  if(d.duelType === 'speaking' || d.skillId === 'muhavara'){
+    startSpeakingDuelQuiz(d.id, d);
+  } else {
+    startDuelQuiz(d.id, d);
+  }
 }
 
 function startQuiz(skillId, customLabel, topicId){
@@ -15244,10 +15280,14 @@ function renderMuhavaraSummary(totalScore, maxScore){
 function renderMuhavaraPhase(){
   clearQuestionTimer();
   const body = document.getElementById('quizBody');
+  if(!currentQuiz || !currentQuiz.questions || !currentQuiz.questions[currentQuiz.idx]){
+    return;
+  }
   const q = currentQuiz.questions[currentQuiz.idx];
   const qNum = currentQuiz.idx + 1;
 
-  if(currentQuiz.phase==='prep'){
+  if(!currentQuiz.phase || currentQuiz.phase === 'prep'){
+    currentQuiz.phase = 'prep';
     const quizHeadEl = document.getElementById('quizHead');
     if(quizHeadEl) quizHeadEl.classList.remove('quiz-head-collapsed');
     document.body.classList.remove('speaking-recording-active');
