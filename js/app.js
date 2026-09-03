@@ -1511,13 +1511,26 @@ async function bootApp(){
 /* ---------------- Theme (dark / light) ---------------- */
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
+  const isDark = (theme !== 'light');
   const sw = document.getElementById('themeSettingSwitch');
   const sub = document.getElementById('themeSettingSub');
-  if(sw) sw.checked = (theme==='light');
-  if(sub) sub.textContent = theme==='light' ? "Yorug' mavzu" : "Qorong'i mavzu";
+  if(sw) sw.checked = isDark;
+  if(sub) sub.textContent = isDark ? "Qorong'i mavzu yoqilgan" : "Kunduzgi yorug' mavzu";
+
+  const iconMoon = document.getElementById('themeIconMoon');
+  const iconSun = document.getElementById('themeIconSun');
+  const iconBox = document.getElementById('themeSettingIcon');
+  if(iconMoon && iconSun){
+    iconMoon.style.display = isDark ? 'block' : 'none';
+    iconSun.style.display = isDark ? 'none' : 'block';
+  }
+  if(iconBox){
+    iconBox.style.background = isDark ? 'rgba(99,102,241,0.16)' : 'rgba(245,158,11,0.16)';
+    iconBox.style.color = isDark ? 'var(--indigo-700, #6366f1)' : '#F59E0B';
+  }
+
   const drPage = document.getElementById('drPage');
   if(drPage){
-    const isDark = theme !== 'light';
     const type = drPage.querySelector('.dr-title.dr-victory') ? 'victory' : 'defeat';
     drPage.classList.toggle('dr-dark', isDark);
     const meshEl = document.getElementById('drMesh');
@@ -1988,7 +2001,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim','bildirishnomalar'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -1997,7 +2010,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim','bildirishnomalar']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -2183,12 +2196,21 @@ function showView(name, push=true){
   if(topbarRightEl){
     topbarRightEl.style.display = isSpeakingQuiz ? 'none' : 'flex';
   }
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
-  if(themeToggleBtn) themeToggleBtn.style.display = isSpeakingQuiz ? 'none' : '';
   const topAvatarEl = document.getElementById('topAvatar');
   if(topAvatarEl){
     const hideAvatar = (name === 'dashboard' || name === 'profil' || name === 'sozlamalar' || isSpeakingQuiz);
     topAvatarEl.style.display = hideAvatar ? 'none' : 'flex';
+  }
+  // Notify (xabarlar/qo'ng'iroq) tugmasi faqat Asosiy (dashboard) va Profil bo'limlarida ko'rinadi
+  document.body.setAttribute('data-view', name);
+  const userMsgBellEl = document.getElementById('userMsgBell');
+  if(userMsgBellEl){
+    const showBell = (name === 'dashboard' || name === 'profil') && !isSpeakingQuiz;
+    userMsgBellEl.style.display = showBell ? 'inline-flex' : 'none';
+  }
+  const userMsgPanelEl = document.getElementById('userMsgPanel');
+  if(userMsgPanelEl && !userMsgPanelEl.hidden && name !== 'dashboard' && name !== 'profil'){
+    userMsgPanelEl.hidden = true;
   }
   if(push){
     if(viewHistory.length === 0 || viewHistory[viewHistory.length - 1] !== name){
@@ -2211,6 +2233,7 @@ function showView(name, push=true){
   if(name==='dashboard') renderDashboardPracticeCards();
   if(name==='flashcards') renderFlashcardsView();
   if(name==='marathon') renderMarathonHub();
+  if(name==='bildirishnomalar' && typeof renderNotificationsView === 'function') renderNotificationsView();
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
   // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
@@ -2510,31 +2533,52 @@ document.addEventListener('click', (e)=>{
 
 /* ---------- Sidebar Controls ---------- */
 function openSidebar(e){
-  if(e && e.stopPropagation) e.stopPropagation();
+  const evt = e || (typeof window !== 'undefined' ? window.event : null);
+  if(evt && evt.stopPropagation) evt.stopPropagation();
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('overlay');
   if(sb) sb.classList.add('open');
   if(ov) ov.classList.add('show');
 }
 function closeSidebar(e){
-  if(e && e.stopPropagation) e.stopPropagation();
+  const evt = e || (typeof window !== 'undefined' ? window.event : null);
+  if(evt && evt.stopPropagation) evt.stopPropagation();
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('overlay');
   if(sb) sb.classList.remove('open');
   if(ov) ov.classList.remove('show');
 }
 function toggleSidebar(e){
-  if(e && e.stopPropagation) e.stopPropagation();
+  const evt = e || (typeof window !== 'undefined' ? window.event : null);
+  if(evt && evt.stopPropagation) evt.stopPropagation();
   const sb = document.getElementById('sidebar');
   if(sb && sb.classList.contains('open')){
-    closeSidebar(e);
+    closeSidebar(evt);
   } else {
-    openSidebar(e);
+    openSidebar(evt);
   }
 }
 window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
 window.toggleSidebar = toggleSidebar;
+
+// Asosiy sahifadagi avatar (#dashUserAvatar) bosilganda yon menyuni ochish
+function bindDashAvatarClick(){
+  const dashAvatar = document.getElementById('dashUserAvatar');
+  if(dashAvatar){
+    dashAvatar.onclick = (e) => {
+      toggleSidebar(e);
+    };
+    dashAvatar.onkeydown = (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        toggleSidebar(e);
+      }
+    };
+  }
+}
+bindDashAvatarClick();
+document.addEventListener('DOMContentLoaded', bindDashAvatarClick);
 
 // Sidebar navigation link clicks & escape key
 document.addEventListener('click', (e) => {
@@ -3379,14 +3423,14 @@ function renderGrammarHistory(){
     const attemptIdStr = String(r.id).replace(/'/g, "\\'");
     const meta = getSkillSvgMeta(r);
     return `
-    <div class="card history-item fade-in-enter">
+    <div class="card history-item fade-in-enter" role="button" tabindex="0" onclick="openAttemptResults('${attemptIdStr}')" style="cursor:pointer;">
       <div class="history-icon" style="background:${meta.bg};color:${meta.color};">${meta.svg}</div>
       <div class="history-main">
         ${mainLine}
         <div class="s" style="margin-top:3px;">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${r.correct}/${r.total}</b><div class="p">${pct}%</div></div>
-      <button type="button" class="history-btn-analyze" onclick="openAttemptResults('${attemptIdStr}')">
+      <button type="button" class="history-btn-analyze" onclick="event.stopPropagation(); openAttemptResults('${attemptIdStr}')">
         <span>Tahlil</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
       </button>
@@ -3601,14 +3645,14 @@ function renderHistoryList(){
     const scoreDisplay = isWritingOrSpeaking ? `${r.correct}/${r.total} ball` : `${r.correct}/${r.total}`;
     const meta = getSkillSvgMeta(r);
     return `
-    <div class="card history-item fade-in-enter">
+    <div class="card history-item fade-in-enter" role="button" tabindex="0" onclick="openAttemptResults('${attemptIdStr}')" style="cursor:pointer;">
       <div class="history-icon" style="background:${meta.bg};color:${meta.color};">${meta.svg}</div>
       <div class="history-main">
         <div class="t">${escapeHtml(formatHistoryDisplayTitle(r))}</div>
         <div class="s">${r.date}, ${r.time}</div>
       </div>
       <div class="history-score"><b>${scoreDisplay}</b><div class="p">${pct}%</div></div>
-      <button type="button" class="history-btn-analyze" onclick="openAttemptResults('${attemptIdStr}')">
+      <button type="button" class="history-btn-analyze" onclick="event.stopPropagation(); openAttemptResults('${attemptIdStr}')">
         <span>Tahlil</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
       </button>
@@ -3676,13 +3720,29 @@ function retryQuizFromHistory(section, topicId, topicLabel){
    URINISHDAGI BARCHA SAVOLLAR VA NATIJANI OCHISH (REVIEW SCREEN)
    ============================================================ */
 function openAttemptResults(id){
-  const idStr = String(id || '');
+  const idStr = String(id ?? '').trim();
   let rec = ATTEMPTS_STORE_MAP[idStr] ||
             HISTORY_DATA.find(r => String(r.id) === idStr) ||
             (Array.isArray(window.HISTORY_DATA_LIVE) ? window.HISTORY_DATA_LIVE.find(r => String(r.id) === idStr) : null);
 
+  if(!rec && idStr){
+    rec = HISTORY_DATA.find(r => String(r.id).toLowerCase() === idStr.toLowerCase() ||
+                                String(r.id).includes(idStr) ||
+                                idStr.includes(String(r.id)) ||
+                                (r.topic && r.topic === idStr) ||
+                                (r.topicId && String(r.topicId) === idStr));
+  }
+  if(!rec && Array.isArray(window.HISTORY_DATA_LIVE)){
+    const liveMatch = window.HISTORY_DATA_LIVE.find(r => String(r.id) === idStr || String(r.id).includes(idStr));
+    if(liveMatch) rec = mapBackendHistoryRow(liveMatch);
+  }
+  if(!rec && idStr && !isNaN(Number(idStr)) && HISTORY_DATA[Number(idStr)]){
+    rec = HISTORY_DATA[Number(idStr)];
+  }
+
   if(!rec){
-    rec = HISTORY_DATA.find(r => String(r.id).includes(idStr) || (r.topic && r.topic === idStr));
+    toast("Urinish ma'lumotlari topilmadi", 2000);
+    return;
   }
 
   // 1. Agar Kitaba (Yozish) yoki Muhavara (So'zlashuv) bo'lsa — maxsus tahlil modalini ochamiz
@@ -3702,86 +3762,135 @@ function openAttemptResults(id){
     return;
   }
 
-  const savedQuestions = (rec && Array.isArray(rec.questions) && rec.questions.length > 0)
+  // Barcha imtihon va testlar uchun to'g'ridan-to'g'ri NATIJALAR EKRANI (view-results)ni ochamiz!
+  let savedQuestions = (rec && Array.isArray(rec.questions) && rec.questions.length > 0)
     ? rec.questions
     : (ATTEMPTS_STORE_MAP[idStr] && Array.isArray(ATTEMPTS_STORE_MAP[idStr].questions) ? ATTEMPTS_STORE_MAP[idStr].questions : null);
+
+  const total = Math.max(1, Number(rec.total) || (savedQuestions ? savedQuestions.length : 1));
+  const correct = rec.correct !== undefined && rec.correct !== null ? Number(rec.correct) : (savedQuestions ? savedQuestions.filter(q => q.picked === q.a).length : 0);
+  const wrong = rec.wrong !== undefined && rec.wrong !== null ? Number(rec.wrong) : Math.max(0, total - correct);
+  const pct = rec.pct !== undefined && rec.pct !== null ? Number(rec.pct) : (total > 0 ? Math.round((correct / total) * 100) : 0);
+  const xp = rec.xp !== undefined && rec.xp !== null ? Number(rec.xp) : correct;
+  const sMeta = SKILL_META[rec?.skillId] || { section: rec?.section || 'Imtihon', color: rec?.color || 'var(--indigo-600)', bg: rec?.bg || 'var(--indigo-100)' };
+  const ringColor = rec?.color || sMeta.color || 'var(--indigo-600)';
+
+  // Xatolar ro'yxatini turli kesh manbalaridan tekshiramiz
+  let mistakeItems = [];
+  if(rec && Array.isArray(rec.mistakes) && rec.mistakes.length > 0){
+    mistakeItems = rec.mistakes;
+  } else if(ATTEMPT_MISTAKES_MAP[idStr] && Array.isArray(ATTEMPT_MISTAKES_MAP[idStr])){
+    mistakeItems = ATTEMPT_MISTAKES_MAP[idStr];
+  } else if(rec && rec.id && ATTEMPT_MISTAKES_MAP[String(rec.id)] && Array.isArray(ATTEMPT_MISTAKES_MAP[String(rec.id)])){
+    mistakeItems = ATTEMPT_MISTAKES_MAP[String(rec.id)];
+  }
+
+  // Agar to'liq savollar saqlanmagan bo'lsa (backenddan yuklangan eski urinishlar yoki tozalangan kesh holatida),
+  // foydalanuvchiga natija va savollar bo'yicha grid ko'rinishi uchun savollar ro'yxatini shakllantiramiz:
+  if(!savedQuestions || savedQuestions.length === 0){
+    savedQuestions = [];
+    let mIdx = 0;
+    for(let i = 0; i < total; i++){
+      if(i < wrong && mIdx < mistakeItems.length){
+        const m = mistakeItems[mIdx++];
+        savedQuestions.push({
+          q: m.q || `${i + 1}-savol`,
+          opts: m.options || [m.correct || "To'g'ri javob", m.picked || "Sizning javobingiz"],
+          picked: 1,
+          a: 0,
+          exp: m.exp || "Ushbu savolga xato javob berilgan.",
+          passage: m.passage || null,
+          category: m.category || rec?.section || null
+        });
+      } else if(i < wrong){
+        savedQuestions.push({
+          q: `${i + 1}-savol (Xato javob)`,
+          opts: ["To'g'ri javob", "Sizning javobingiz"],
+          picked: 1,
+          a: 0,
+          exp: "Ushbu urinishdagi xato javob berilgan savol.",
+          category: rec?.section || null
+        });
+      } else {
+        savedQuestions.push({
+          q: `${i + 1}-savol (To'g'ri javob)`,
+          opts: ["To'g'ri javob"],
+          picked: 0,
+          a: 0,
+          exp: "Bu savolga to'g'ri javob berilgan.",
+          category: rec?.section || null
+        });
+      }
+    }
+  }
 
   const activeViewEl = document.querySelector('.view.active');
   const activeViewName = activeViewEl ? activeViewEl.id.replace('view-', '') : 'history';
 
-  // 2. Agar ushbu urinishda tushgan savollarning to'liq ro'yxati (va user bergan javoblari) mavjud bo'lsa:
-  // Natijalar ekrani (view-results)ni ochib, to'liq Savollar bo'yicha tahlilni ko'rsatamiz!
-  if(savedQuestions && savedQuestions.length > 0){
-    const total = savedQuestions.length;
-    const correct = savedQuestions.filter(q => q.picked === q.a).length;
-    const wrong = total - correct;
-    const pct = total > 0 ? Math.round((correct / total) * 100) : (rec && rec.total ? Math.round((rec.correct / rec.total) * 100) : 0);
-    const xp = correct;
-    const sMeta = SKILL_META[rec?.skillId] || { section: rec?.section || 'Grammatika', color: rec?.color || 'var(--indigo-600)', bg: rec?.bg || 'var(--indigo-100)' };
+  currentQuiz = {
+    id: rec?.id || idStr,
+    skillId: rec?.skillId || 'grammatika',
+    topicId: rec?.topicId || null,
+    label: rec?.label || rec?.topic || sMeta.section,
+    mockId: rec?.mockId || null,
+    type: rec?.type || 'quiz',
+    color: ringColor,
+    bg: rec?.bg || sMeta.bg,
+    questions: savedQuestions,
+    isReviewMode: true,
+    originView: (activeViewName === 'results' || activeViewName === 'quiz') ? 'history' : activeViewName
+  };
 
-    currentQuiz = {
-      id: rec?.id || idStr,
-      skillId: rec?.skillId || 'grammatika',
-      topicId: rec?.topicId || null,
-      label: rec?.label || rec?.topic || sMeta.section,
-      mockId: rec?.mockId || null,
-      type: rec?.type || 'quiz',
-      color: rec?.color || sMeta.color,
-      bg: rec?.bg || sMeta.bg,
-      questions: savedQuestions,
-      isReviewMode: true,
-      originView: (activeViewName === 'results' || activeViewName === 'quiz') ? 'history' : activeViewName
-    };
+  window.lastCompletedQuiz = { ...currentQuiz };
 
-    window.lastCompletedQuiz = { ...currentQuiz };
+  // Natijalar ekranidagi elementlarni to'liq yangilaymiz
+  const topicEl = document.getElementById('resultTopic');
+  if(topicEl) topicEl.textContent = currentQuiz.label;
 
-    // Natijalar ekranidagi elementlarni yangilaymiz
-    const topicEl = document.getElementById('resultTopic');
-    if(topicEl) topicEl.textContent = currentQuiz.label;
+  const levelWrap = document.querySelector('.result-level-wrap');
+  const levelTagEl = document.querySelector('.result-level-tag');
+  const calculatedLevel = rec?.level || getCEFRLevel(pct) || 'B2';
 
-    const isMock = !!(rec?.mockId || rec?.type === 'mock');
-    const isSkillExam = !isMock && !rec?.topicId;
-    const levelWrap = document.querySelector('.result-level-wrap');
-    const levelTagEl = document.querySelector('.result-level-tag');
-    if(levelWrap){
-      levelWrap.style.display = (isSkillExam && rec?.level && pct >= 25) ? 'flex' : 'none';
-      if(rec?.level && pct >= 25){
-        if(levelTagEl) levelTagEl.style.display = '';
-        const lvlEl = document.getElementById('resultLevel');
-        if(lvlEl){
-          lvlEl.style.display = '';
-          lvlEl.textContent = rec.level;
-          if(rec.level.length > 3){
-            lvlEl.classList.add('is-message');
-          } else {
-            lvlEl.classList.remove('is-message');
-          }
+  if(levelWrap){
+    levelWrap.style.display = (pct >= 25 && calculatedLevel) ? 'flex' : 'none';
+    if(calculatedLevel && pct >= 25){
+      if(levelTagEl) levelTagEl.style.display = '';
+      const lvlEl = document.getElementById('resultLevel');
+      if(lvlEl){
+        lvlEl.style.display = '';
+        lvlEl.textContent = calculatedLevel;
+        if(calculatedLevel.length > 3){
+          lvlEl.classList.add('is-message');
+        } else {
+          lvlEl.classList.remove('is-message');
         }
       }
     }
+  }
 
-    const resTimeEl = document.getElementById('resTime');
-    if(resTimeEl) resTimeEl.textContent = rec?.elapsed || '00:00';
+  const resTimeEl = document.getElementById('resTime');
+  if(resTimeEl) resTimeEl.textContent = rec?.elapsed || (rec?.time ? rec.time : '—');
 
-    const r = 52, c = 2 * Math.PI * r;
-    const ring = document.getElementById('resultRing');
-    if(ring){
-      ring.style.stroke = currentQuiz.color;
-      ring.setAttribute('stroke-dasharray', c);
-      ring.setAttribute('stroke-dashoffset', c - (pct / 100) * c);
-    }
+  const r = 52, c = 2 * Math.PI * r;
+  const ring = document.getElementById('resultRing');
+  if(ring){
+    ring.style.stroke = currentQuiz.color;
+    ring.setAttribute('stroke-dasharray', c);
+    ring.setAttribute('stroke-dashoffset', c - (pct / 100) * c);
+  }
 
-    const cEl = document.getElementById('resultCorrect');
-    const tEl = document.getElementById('resultTotal');
-    const xpEl = document.getElementById('resultXP');
-    const wEl = document.getElementById('resWrong');
-    if(cEl) cEl.textContent = String(correct);
-    if(tEl) tEl.textContent = String(total);
-    if(xpEl) xpEl.textContent = `+${xp}`;
-    if(wEl) wEl.textContent = String(wrong);
+  const cEl = document.getElementById('resultCorrect');
+  const tEl = document.getElementById('resultTotal');
+  const xpEl = document.getElementById('resultXP');
+  const wEl = document.getElementById('resWrong');
+  if(cEl) cEl.textContent = String(correct);
+  if(tEl) tEl.textContent = String(total);
+  if(xpEl) xpEl.textContent = `+${xp}`;
+  if(wEl) wEl.textContent = String(wrong);
 
-    const titleEl = document.getElementById('resultTitle');
-    const subEl = document.getElementById('resultSub');
+  const titleEl = document.getElementById('resultTitle');
+  const subEl = document.getElementById('resultSub');
+  if(titleEl && subEl){
     if(pct < 25){
       if(levelTagEl) levelTagEl.style.display = 'none';
       titleEl.textContent = 'Daraja aniqlanmadi';
@@ -3802,20 +3911,27 @@ function openAttemptResults(id){
         subEl.textContent = "Yana biroz mashq qilsangiz, natija yanada yaxshilanadi.";
       }
     }
+  }
 
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    if(analyzeBtn){
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  if(analyzeBtn){
+    if(wrong === 0){
+      analyzeBtn.textContent = 'Bosh sahifaga qaytish';
+      analyzeBtn.onclick = () => showView('dashboard');
+    } else {
       analyzeBtn.textContent = 'Savollar tahlilini ko‘rish';
       analyzeBtn.onclick = showMistakes;
     }
-
-    renderReviewGrid();
-    showView('results');
-    return;
   }
 
-  // 3. Agar to'liq savollar ro'yxati yo'q bo'lsa (eski backend ma'lumoti) - xatolar tahlili modalini ochamiz
-  openMistakeModalFallback(rec, idStr);
+  renderReviewGrid();
+
+  // Orqaga qaytish zanjiridan quiz va results dublikatlarini tozalaymiz
+  while(viewHistory.length > 0 && (viewHistory[viewHistory.length - 1] === 'results' || viewHistory[viewHistory.length - 1] === 'quiz')){
+    viewHistory.pop();
+  }
+
+  showView('results');
 }
 
 // Alias for backwards-compatibility
@@ -10778,6 +10894,7 @@ function showFullExamResults(){
   const now = new Date();
   const fullExamHistoryRow = {
     id: attemptId,
+    skillId: 'attanal',
     section: 'Imtihon',
     topic: "To'liq At-Tanal imtihoni",
     date: now.toLocaleDateString('uz-UZ', { day:'numeric', month:'short' }),
@@ -10790,6 +10907,7 @@ function showFullExamResults(){
     bg: 'var(--indigo-100)',
     mistakes: allMistakes
   };
+  saveFullAttemptSnapshot(fullExamHistoryRow);
   HISTORY_DATA.unshift(fullExamHistoryRow);
   renderHistoryStats();
   renderHistoryList();
