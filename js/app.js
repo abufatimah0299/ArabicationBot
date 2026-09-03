@@ -341,28 +341,19 @@ async function loadLeaderboardFromBackend(forceRefresh = false){
     if(cached) return cached;
   }
   try{
-    const [res, counts] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() }),
-      loadAttemptCountsFromBackend()
-    ]);
+    let res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_period_view?select=*`, { headers: authHeaders() });
+    if(!res.ok){
+      res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard_view?select=*`, { headers: authHeaders() });
+    }
     if(!res.ok){
       console.warn('[loadLeaderboardFromBackend] error:', res.status);
       return [];
     }
     const data = await res.json();
-    // Har bir foydalanuvchining test/urinish sonini id bo'yicha asosiy qatorga qo'shamiz.
-    if(Array.isArray(data) && counts.length){
-      const countsById = new Map(counts.map(c => [String(pick(c, ['user_id','telegram_id','id'], '')), c]));
-      for(const row of data){
-        const rid = String(pick(row, ['user_id','telegram_id','id'], ''));
-        const extra = countsById.get(rid);
-        if(extra) Object.assign(row, extra);
-      }
-    }
     if(Array.isArray(data) && data.length > 0){
       SmartCache.set('leaderboard', data);
     }
-    return data;
+    return Array.isArray(data) ? data : [];
   }catch(e){ console.error('[loadLeaderboardFromBackend]', e); return []; }
 }
 /* Reyting ro'yxatini backenddan qayta yuklab, ekranni yangi ma'lumot bilan qayta
@@ -10270,15 +10261,13 @@ function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('')
    ustunlar qo'shilishi bilan reyting avtomatik to'g'ri ishlay boshlaydi. */
 function rankXpKeys(skill, period){
   if(skill === 'hammasi'){
-    if(period === 'hafta') return ['xp_week','xp_weekly','weekly_xp','total_xp'];
-    if(period === 'oy') return ['xp_month','xp_monthly','monthly_xp','total_xp'];
-    return ['xp_total','xp_all','total_xp','xp'];
+    if(period === 'hafta') return ['xp_week','xp_weekly','weekly_xp'];
+    if(period === 'oy') return ['xp_month','xp_monthly','monthly_xp'];
+    return ['total_xp','xp_total','xp_all','xp'];
   }
-  const keys = [];
-  if(period === 'hafta') keys.push(`${skill}_xp_week`, `xp_week_${skill}`);
-  else if(period === 'oy') keys.push(`${skill}_xp_month`, `xp_month_${skill}`);
-  keys.push(`${skill}_xp`, `xp_${skill}`, `${skill}Xp`, `${skill}_score`);
-  return keys;
+  if(period === 'hafta') return [`${skill}_score_week`, `${skill}_xp_week`, `xp_week_${skill}`];
+  if(period === 'oy') return [`${skill}_score_month`, `${skill}_xp_month`, `xp_month_${skill}`];
+  return [`${skill}_score`, `${skill}_xp`, `xp_${skill}`, `${skill}Xp`];
 }
 /* Ko'rsatiladigan "Daraja" — talab bo'yicha har doim foydalanuvchining ENG SO'NGGI
    TO'LIQ (5 mahorotli) imtihon natijasiga asoslanadi, XP'ga bog'liq emas:
@@ -10292,102 +10281,34 @@ function rankLevelFor(r, skill){
   if(skill === 'hammasi') return overall;
   return pick(r, [`${skill}_level`, `level_${skill}`, `${skill}Level`], overall);
 }
-/* "Barchasi" (hammasi) tanlanganda XP ko'rsatilmay qolish sababi: leaderboard_view'da
-   umumiy XP uchun kutilgan ustunlar (xp_week/xp_total/total_xp va h.k.) hali mavjud
-   emas yoki bo'sh — shu sabab pick() 0'ga tushadi va foydalanuvchi (xp>0 filtridan
-   o'tolmay) reytingdan butunlay yo'qolib qoladi. Muayyan mahorat tanlanganda esa
-   ${skill}_score ustuni (get_user_dashboard'da ham ishlatiladigan, haqiqatan mavjud
-   ustun) topilib, XP to'g'ri chiqadi.
-   YECHIM: "hammasi" uchun asosiy ustunlar topilmasa/0 bo'lsa, har bir mahoratning
-   ALLAQACHON ISHLAYOTGAN ${skill}_score ustunlaridan yig'indi hisoblab, shuni
-   umumiy XP sifatida ko'rsatamiz. Eslatma: bu yig'indi har doim UMUMIY (butun davr)
-   ball asosida — agar backendda haftalik/oylik XP uchun alohida ustunlar hali
-   qo'shilmagan bo'lsa, "Haftalik"/"Oylik" + "Barchasi" birikmasi ham shu umumiy
-   ballni ko'rsatadi (backendga tegishli ustunlar qo'shilgach avtomatik tuzaladi). */
 function rankXpFor(r, skill, period){
-  const xpKeys = rankXpKeys(skill, period);
-  const val = Number(pick(r, xpKeys, 0)) || 0;
-  if(val > 0 || skill !== 'hammasi') return val;
-  const skillScoreKeys = ['grammatika_score','qiroa_score','istima_score','muhavara_score','kitaba_score'];
-  const sum = skillScoreKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
-  return sum;
-}
-/* ---- XP qancha URINISH/TEST orqali yig'ilgani (2-bosqich talabi) ----
-   XP raqami yonida "necha ta test yechilgan" (grammatika/qiroa/istima) yoki
-   "necha marta urinilgan" (muhavara/kitaba — speaking/writing) ko'rsatiladi.
-   Backendda quiz_attempts jadvalida FAQAT yakunlangan (demak XP bergan)
-   urinishlar saqlanadi (chala qolganlari umuman yozilmaydi — kod ichidagi
-   eski izohga qarang), shu sabab bu hisoblagich = shu jadvaldagi qatorlar soni,
-   va u avtomatik ravishda faqat XP bergan urinishlarni anglatadi.
-   Ustun nomlari hali backendda (leaderboard_view'da) mavjud bo'lmasligi mumkin —
-   shu sabab rankXpKeys bilan bir xil pattern: bir nechta mumkin bo'lgan ustun
-   nomi sinaladi, topilmasa 0 qaytadi (raqam ko'rsatilmaydi, lekin sahifa
-   buzilmaydi). Backendda tegishli ustunlar qo'shilishi bilan avtomatik ishga
-   tushadi — pastdagi SQN taklifiga qarang. */
-function rankCountKeys(skill, period){
+  if(!r) return 0;
   if(skill === 'hammasi'){
-    if(period === 'hafta') return ['attempts_count_week','attempts_week','count_week'];
-    if(period === 'oy') return ['attempts_count_month','attempts_month','count_month'];
-    return ['attempts_count_total','attempts_count','total_attempts'];
+    if(period === 'hafta') return Number(r.xp_week) || 0;
+    if(period === 'oy') return Number(r.xp_month) || 0;
+    return Number(r.total_xp || r.xp_total || r.xp) || 0;
   }
-  const keys = [];
-  if(period === 'hafta') keys.push(`${skill}_count_week`, `${skill}_attempts_week`);
-  else if(period === 'oy') keys.push(`${skill}_count_month`, `${skill}_attempts_month`);
-  keys.push(`${skill}_count`, `${skill}_attempts`, `count_${skill}`);
-  return keys;
+  if(period === 'hafta') return Number(r[`${skill}_score_week`] || r[`${skill}_xp_week`]) || 0;
+  if(period === 'oy') return Number(r[`${skill}_score_month`] || r[`${skill}_xp_month`]) || 0;
+  return Number(r[`${skill}_score`] || r[`${skill}_xp`]) || 0;
 }
-/* Muhavara (speaking) va kitaba (writing) uchun "marta urinildi", qolganlarida
-   "ta test yechildi". "Hammasi" tanlanganda ikkalasini ham qamrab oladigan
-   umumiy "urinish" so'zi ishlatiladi. */
+
 function rankCountUnit(skill){
   if(skill === 'muhavara' || skill === 'kitaba') return 'marta urinildi';
   if(skill === 'hammasi') return 'ta urinish';
   return 'ta test yechildi';
 }
+
 function rankCountFor(r, skill, period){
-  const rid = pick(r, ['user_id','telegram_id','id'], '');
-  const isMe = String(rid) === String(TELEGRAM_PROFILE.rawId);
-
-  let val = 0;
+  if(!r) return 0;
   if(skill === 'hammasi'){
-    if(period === 'hafta') val = Number(r.attempts_count_week || r.attempts_week || r.count_week) || 0;
-    else if(period === 'oy') val = Number(r.attempts_count_month || r.attempts_month || r.count_month) || 0;
-    
-    // Agar haftalik/oylikda 0 bo'lsa (yoki backendda faqat total mavjud bo'lsa), umumiy sonini olamiz
-    if(val <= 0){
-      val = Number(r.attempts_count_total || r.attempts_count || r.total_attempts) || 0;
-    }
-    if(val <= 0){
-      const skillCountKeys = ['grammatika_count','qiroa_count','istima_count','muhavara_count','kitaba_count'];
-      val = skillCountKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
-    }
-  } else {
-    if(period === 'hafta') val = Number(r[`${skill}_count_week`] || r[`${skill}_attempts_week`]) || 0;
-    else if(period === 'oy') val = Number(r[`${skill}_count_month`] || r[`${skill}_attempts_month`]) || 0;
-
-    // Agar haftalik/oylik 0 bo'lsa, umumiy mahorat urinishlar sonini olamiz
-    if(val <= 0){
-      val = Number(r[`${skill}_count`] || r[`${skill}_attempts`] || r[`count_${skill}`]) || 0;
-    }
+    if(period === 'hafta') return Number(r.attempts_count_week) || 0;
+    if(period === 'oy') return Number(r.attempts_count_month) || 0;
+    return Number(r.attempts_count_total || r.attempts_count) || 0;
   }
-
-  // O'zimiz ("Siz") uchun: agar lokal tariximizda urinishlar soni ko'proq bo'lsa
-  if(isMe && Array.isArray(HISTORY_DATA) && HISTORY_DATA.length > 0){
-    const localCount = HISTORY_DATA.filter(h => {
-      if(skill === 'hammasi') return true;
-      if(typeof matchesHistoryItemSection === 'function') return matchesHistoryItemSection(h, skill);
-      return String(h.skillId||'').toLowerCase() === String(skill).toLowerCase() || String(h.section||'').toLowerCase() === String(skill).toLowerCase();
-    }).length;
-    if(localCount > val) val = localCount;
-  }
-
-  // Agar userda shu mahoratdan XP mavjud bo'lsa (xp > 0), lekin urinish hisoblagichi 0 bo'lsa kamida 1 ko'rsatamiz
-  if(val <= 0){
-    const xp = rankXpFor(r, skill, period);
-    if(xp > 0) val = 1;
-  }
-
-  return val;
+  if(period === 'hafta') return Number(r[`${skill}_count_week`]) || 0;
+  if(period === 'oy') return Number(r[`${skill}_count_month`]) || 0;
+  return Number(r[`${skill}_count`]) || 0;
 }
 function rankCountLabel(r, skill, period){
   const n = rankCountFor(r, skill, period);
