@@ -349,8 +349,23 @@ async function loadLeaderboardFromBackend(forceRefresh = false){
       console.warn('[loadLeaderboardFromBackend] error:', res.status);
       return [];
     }
-    const data = await res.json();
+    let data = await res.json();
     if(Array.isArray(data) && data.length > 0){
+      try {
+        const attemptCounts = await loadAttemptCountsFromBackend();
+        if(Array.isArray(attemptCounts) && attemptCounts.length > 0){
+          const countMap = new Map();
+          attemptCounts.forEach(ac => {
+            const uid = ac.user_id || ac.telegram_id || ac.id;
+            if(uid) countMap.set(String(uid), ac);
+          });
+          data = data.map(row => {
+            const uid = row.user_id || row.telegram_id || row.id;
+            const extra = uid ? countMap.get(String(uid)) : null;
+            return extra ? { ...extra, ...row } : row;
+          });
+        }
+      }catch(_){}
       SmartCache.set('leaderboard', data);
     }
     return Array.isArray(data) ? data : [];
@@ -10284,24 +10299,48 @@ function rankLevelFor(r, skill){
 function rankXpFor(r, skill, period){
   if(!r) return 0;
   if(skill === 'hammasi'){
-    if(period === 'hafta') return Number(r.xp_week) || 0;
-    if(period === 'oy') return Number(r.xp_month) || 0;
-    return Number(r.total_xp || r.xp_total || r.xp) || 0;
+    // "Barchasi / Umumiy" bo'limida sun'iy total_xp emas, 5 ta mahoratdan to'plangan haqiqiy ballar yig'indisi:
+    const skillIds = ['grammatika', 'qiroa', 'istima', 'muhavara', 'kitaba'];
+    let sum5 = 0;
+    let hasSkillData = false;
+    for(const sId of skillIds){
+      const val = rankXpFor(r, sId, period);
+      sum5 += val;
+      if(val > 0 || r[`${sId}_score`] !== undefined || r[`${sId}_xp`] !== undefined || r[`${sId}_score_week`] !== undefined || r[`${sId}_score_month`] !== undefined){
+        hasSkillData = true;
+      }
+    }
+    if(sum5 > 0 || hasSkillData) return sum5;
+    if(period === 'hafta') return Number(r.xp_week || r.xp_weekly || r.weekly_xp) || 0;
+    if(period === 'oy') return Number(r.xp_month || r.xp_monthly || r.monthly_xp) || 0;
+    return Number(r.total_xp || r.xp_total || r.xp_all || r.xp) || 0;
   }
-  if(period === 'hafta') return Number(r[`${skill}_score_week`] || r[`${skill}_xp_week`]) || 0;
-  if(period === 'oy') return Number(r[`${skill}_score_month`] || r[`${skill}_xp_month`]) || 0;
-  return Number(r[`${skill}_score`] || r[`${skill}_xp`]) || 0;
+  if(period === 'hafta') return Number(r[`${skill}_score_week`] || r[`${skill}_xp_week`] || r[`xp_week_${skill}`]) || 0;
+  if(period === 'oy') return Number(r[`${skill}_score_month`] || r[`${skill}_xp_month`] || r[`xp_month_${skill}`]) || 0;
+  return Number(r[`${skill}_score`] || r[`${skill}_xp`] || r[`xp_${skill}`] || r[`${skill}Xp`]) || 0;
 }
 
 function rankCountUnit(skill){
   if(skill === 'muhavara' || skill === 'kitaba') return 'marta urinildi';
-  if(skill === 'hammasi') return 'ta urinish';
+  if(skill === 'hammasi') return 'ta test yechildi';
   return 'ta test yechildi';
 }
 
 function rankCountFor(r, skill, period){
   if(!r) return 0;
   if(skill === 'hammasi'){
+    // "Barchasi / Umumiy" bo'limida 5 ta mahoratdan to'plangan urinishlar/testlar soni yig'indisi:
+    const skillIds = ['grammatika', 'qiroa', 'istima', 'muhavara', 'kitaba'];
+    let count5 = 0;
+    let hasCountData = false;
+    for(const sId of skillIds){
+      const c = rankCountFor(r, sId, period);
+      count5 += c;
+      if(c > 0 || r[`${sId}_count`] !== undefined || r[`${sId}_count_week`] !== undefined || r[`${sId}_count_month`] !== undefined){
+        hasCountData = true;
+      }
+    }
+    if(count5 > 0 || hasCountData) return count5;
     if(period === 'hafta') return Number(r.attempts_count_week) || 0;
     if(period === 'oy') return Number(r.attempts_count_month) || 0;
     return Number(r.attempts_count_total || r.attempts_count) || 0;
@@ -10339,7 +10378,8 @@ function sortedRank(period, skill){
 
   const hasMe = list.some(u => u.me);
   if(!hasMe){
-    const myOverallXp = PROFILE_STATS.xp || 0;
+    const my5SkillsXp = SKILLS.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
+    const myOverallXp = my5SkillsXp > 0 ? my5SkillsXp : (PROFILE_STATS.xp || 0);
     const mySkillXp = (SKILLS.find(s=>s.id===skill)?.score) || 0;
     const myXp = (skill === 'hammasi') ? myOverallXp : mySkillXp;
     if(myXp > 0){
@@ -10350,7 +10390,7 @@ function sortedRank(period, skill){
         showAvatar: getShowAvatarSetting(),
         level: 'A1',
         xp: myXp,
-        count: 1,
+        count: (skill === 'hammasi') ? (SKILLS.filter(s => (Number(s.score) || 0) > 0).length || 1) : 1,
         me: true,
         isSuperAdmin: false,
       });
