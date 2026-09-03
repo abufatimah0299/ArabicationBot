@@ -2233,6 +2233,7 @@ function showView(name, push=true){
   if(name==='dashboard') renderDashboardPracticeCards();
   if(name==='flashcards') renderFlashcardsView();
   if(name==='marathon') renderMarathonHub();
+  if(name==='history'){ if(typeof renderHistoryStats === 'function') renderHistoryStats(); if(typeof renderHistoryList === 'function') renderHistoryList(); }
   if(name==='bildirishnomalar' && typeof renderNotificationsView === 'function') renderNotificationsView();
   // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
   // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
@@ -2507,6 +2508,7 @@ function renderCustomDropdown(id){
   `;
 }
 document.addEventListener('click', (e)=>{
+  // 1) Biror variant (.cd-option) tanlansa
   const optBtn = e.target.closest('.cd-option');
   if(optBtn){
     const id = optBtn.dataset.ddId, val = optBtn.dataset.ddVal;
@@ -2516,20 +2518,97 @@ document.addEventListener('click', (e)=>{
       renderCustomDropdown(id);
       if(st.onChange) st.onChange(val);
     }
+    document.querySelectorAll('.cd-panel.show').forEach(p=>{
+      p.classList.remove('show');
+      p.closest('.cd-wrap')?.classList.remove('is-open');
+    });
     return;
   }
-  const trigger = e.target.closest('.cd-trigger');
-  if(trigger){
-    const wrapEl = trigger.closest('.cd-wrap');
-    const panel = wrapEl ? document.getElementById(wrapEl.id + '__panel') : null;
-    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p !== panel) p.classList.remove('show'); });
+
+  // 2) Dropdown tugmasi yoki uning qutisiga (.cd-wrap / .rank-dropdown) bosilsa
+  const wrap = e.target.closest('.cd-wrap');
+  if(wrap && !e.target.closest('.cd-panel')){
+    const panel = document.getElementById(wrap.id + '__panel');
+    const wasOpen = panel && panel.classList.contains('show');
+    // Boshqa ochiq bo'lgan barcha panellarni yopamiz
+    document.querySelectorAll('.cd-panel.show').forEach(p=>{
+      p.classList.remove('show');
+      p.closest('.cd-wrap')?.classList.remove('is-open');
+    });
     document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
-    if(panel) panel.classList.toggle('show');
+    if(panel && !wasOpen){
+      panel.classList.add('show');
+      wrap.classList.add('is-open');
+    }
     return;
   }
-  document.querySelectorAll('.cd-panel.show').forEach(p=>p.classList.remove('show'));
+
+  // 3) Boshqa istalgan joyga bosilganda dropdownlarni yopamiz
+  document.querySelectorAll('.cd-panel.show').forEach(p=>{
+    p.classList.remove('show');
+    p.closest('.cd-wrap')?.classList.remove('is-open');
+  });
   document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
 });
+
+/* Bildirishnomalar ko'rinishi ochish va chizish funksiyalari */
+function openNotificationsView(e){
+  const evt = e || (typeof window !== 'undefined' ? window.event : null);
+  if(evt && evt.stopPropagation) evt.stopPropagation();
+  showView('bildirishnomalar');
+}
+window.openNotificationsView = openNotificationsView;
+
+async function renderNotificationsView(){
+  const listEl = document.getElementById('notificationsList');
+  const emptyEl = document.getElementById('notificationsEmpty');
+  if(!listEl) return;
+
+  let msgs = Array.isArray(window.USER_MESSAGES) ? window.USER_MESSAGES : [];
+  if(!msgs.length && typeof rpc === 'function' && typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN){
+    try {
+      msgs = await rpc('get_my_messages') || [];
+      window.USER_MESSAGES = msgs;
+    } catch(err){
+      console.warn('Xabarlar olinmadi:', err);
+    }
+  }
+
+  if(!msgs.length){
+    listEl.innerHTML = '';
+    if(emptyEl) emptyEl.style.display = 'block';
+  } else {
+    if(emptyEl) emptyEl.style.display = 'none';
+    listEl.innerHTML = msgs.map(m => `
+      <div class="card notification-card ${m.read ? '' : 'unread'}" style="padding:16px 18px;border-radius:16px;margin-bottom:10px;position:relative;border:1.5px solid ${m.read ? 'var(--border)' : 'var(--indigo-400)'};background:var(--card);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${!m.read ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--indigo-600);flex-shrink:0;"></span>' : ''}
+            <h4 style="margin:0;font-size:15px;font-weight:700;color:var(--text);">${escapeHtml(m.title || 'Xabarnoma')}</h4>
+          </div>
+          <span style="font-size:11.5px;color:var(--text-faint);white-space:nowrap;">${m.created_at ? new Date(m.created_at).toLocaleDateString('uz-UZ', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}</span>
+        </div>
+        <p style="margin:0;font-size:13.5px;line-height:1.55;color:var(--text-dim);">${escapeHtml(m.body || '')}</p>
+      </div>
+    `).join('');
+  }
+
+  // O'qilgan deb belgilash
+  const unread = msgs.filter(m => !m.read).length;
+  if(unread > 0 && typeof rpc === 'function' && typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN){
+    try {
+      await rpc('mark_my_messages_read');
+      msgs.forEach(m => m.read = true);
+      const badge = document.getElementById('userMsgBadge');
+      if(badge){ badge.textContent = '0'; badge.style.display = 'none'; }
+      const dashBadge = document.getElementById('dashUserMsgBadge');
+      if(dashBadge){ dashBadge.textContent = '0'; dashBadge.style.display = 'none'; }
+    } catch(err){
+      console.warn('Xabarlarni o‘qilgan deb belgilashda xatolik:', err);
+    }
+  }
+}
+window.renderNotificationsView = renderNotificationsView;
 
 /* ---------- Sidebar Controls ---------- */
 function openSidebar(e){
@@ -3633,8 +3712,24 @@ function renderHistoryList(){
     return;
   }
   const list = HISTORY_DATA.filter(r=>{
-    const sOk = historyFilters.section==='Barchasi' || r.section===historyFilters.section;
-    const dOk = historyFilters.date==='hammasi' || r.dateGroup===historyFilters.date || (historyFilters.date==='oy' && r.dateGroup==='7kun');
+    const rSection = r.section || (SKILL_META[r.skillId] ? SKILL_META[r.skillId].section : '');
+    const sOk = historyFilters.section==='Barchasi' || rSection===historyFilters.section || (r.skillId && SKILLS.find(s=>s.id===r.skillId)?.name === historyFilters.section);
+    let dOk = true;
+    if(historyFilters.date === '7kun'){
+      if(r.createdAt){
+        const days = (Date.now() - new Date(r.createdAt).getTime()) / 86400000;
+        dOk = days <= 7;
+      } else {
+        dOk = (r.dateGroup === '7kun');
+      }
+    } else if(historyFilters.date === 'oy'){
+      if(r.createdAt){
+        const days = (Date.now() - new Date(r.createdAt).getTime()) / 86400000;
+        dOk = days <= 31;
+      } else {
+        dOk = (r.dateGroup === '7kun' || r.dateGroup === 'oy');
+      }
+    }
     return sOk && dOk;
   });
   document.getElementById('historyEmpty').style.display = list.length? 'none':'block';
@@ -10166,6 +10261,34 @@ function rankCountLabel(r, skill, period){
   if(!n) return '';
   return `${n} ${rankCountUnit(skill)}`;
 }
+/* ---- Davr (Haftalik/Oylik) bo'yicha HAQIQIY XP — Supabase'dagi
+   get_period_leaderboard RPC funksiyasidan (quiz_attempts.created_at asosida
+   real vaqtda hisoblanadi, .env/SQL'ga qarang) ----
+   Har bir filtr kombinatsiyasi (davr+mahorat) natijasi keshlanadi, shu sabab
+   bir xil filtrni qayta tanlaganda qayta so'rov ketmaydi. */
+const PERIOD_XP_CACHE = {};
+let CURRENT_PERIOD_XP_MAP = {};
+async function loadPeriodXp(period, skill){
+  const key = `${period}|${skill}`;
+  if(PERIOD_XP_CACHE[key]) return PERIOD_XP_CACHE[key];
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_period_leaderboard`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ p_period: period, p_skill: skill })
+    });
+    const rows = res.ok ? await res.json() : [];
+    const map = {};
+    (Array.isArray(rows)?rows:[]).forEach(r=>{
+      map[String(r.user_id)] = { xp: Number(r.xp)||0, count: Number(r.attempts_count)||0 };
+    });
+    PERIOD_XP_CACHE[key] = map;
+    return map;
+  }catch(e){
+    console.error('[loadPeriodXp]', e);
+    return {};
+  }
+}
 function sortedRank(period, skill){
   const myId = TELEGRAM_PROFILE.rawId;
   const list = RANK_RAW_ROWS.map(r=>{
@@ -10180,8 +10303,8 @@ function sortedRank(period, skill){
       photo: showAvatar ? rawPhoto : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
-      xp: rankXpFor(r, skill, period),
-      count: rankCountFor(r, skill, period),
+      xp: (CURRENT_PERIOD_XP_MAP[String(rid)] ? CURRENT_PERIOD_XP_MAP[String(rid)].xp : rankXpFor(r, skill, period)),
+      count: (CURRENT_PERIOD_XP_MAP[String(rid)] ? CURRENT_PERIOD_XP_MAP[String(rid)].count : rankCountFor(r, skill, period)),
       me: isMe,
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
@@ -10340,10 +10463,16 @@ function renderRankTop(period, skill, type){
     }
   }
 }
-function renderRank(period, skill, type){
+async function renderRank(period, skill, type){
   currentRankPeriod = period;
   currentRankSkill = skill;
   currentRankType = type || currentRankType || 'tanal';
+  if(currentRankType !== 'cefr'){
+    // Davr (hafta/oy/hammasi) filtri endi backenddan HAQIQIY hisoblanadi
+    // (get_period_leaderboard RPC, quiz_attempts.created_at asosida) —
+    // shu sabab bu yerda kutib turamiz, keyin render qilamiz.
+    CURRENT_PERIOD_XP_MAP = await loadPeriodXp(period, skill);
+  }
   renderRankTop(period, skill, currentRankType);
   renderPodium(period, skill, currentRankType);
   renderLeaderboard(period, skill, currentRankType);
