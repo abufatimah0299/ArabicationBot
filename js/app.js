@@ -2221,6 +2221,7 @@ function showView(name, push=true){
   document.getElementById('content').scrollTo?.(0,0);
   window.scrollTo(0,0);
   closeSidebar();
+  if(typeof closeAllCustomDropdowns === 'function') closeAllCustomDropdowns();
   const activeEl = document.getElementById('view-'+name);
   if(activeEl) runEntranceAnimations(activeEl, false, name === 'dashboard');
   if(name==='admin') renderAdminPanel();
@@ -2233,12 +2234,25 @@ function showView(name, push=true){
   if(name==='dashboard') renderDashboardPracticeCards();
   if(name==='flashcards') renderFlashcardsView();
   if(name==='marathon') renderMarathonHub();
-  if(name==='history'){ if(typeof renderHistoryStats === 'function') renderHistoryStats(); if(typeof renderHistoryList === 'function') renderHistoryList(); }
+  if(name==='history'){
+    historyLoaded = true;
+    if(typeof applyLiveHistory === 'function') applyLiveHistory();
+    if(typeof renderHistoryStats === 'function') renderHistoryStats();
+    if(typeof renderHistoryList === 'function') renderHistoryList();
+    if(typeof renderCustomDropdown === 'function'){
+      renderCustomDropdown('historySkillDropdown');
+      renderCustomDropdown('historyPeriodDropdown');
+    }
+  }
   if(name==='bildirishnomalar' && typeof renderNotificationsView === 'function') renderNotificationsView();
-  // Rank bo'limi ochilganda backenddan ENG SO'NGGI ma'lumotni qayta so'raymiz
-  // (avval bu yerda faqat eski/keshlangan RANK_DATASETS qayta chizilardi —
-  // shu sabab yangi to'plangan XP darhol ko'rinmasdi).
-  if(name==='rank') refreshRankFromBackend();
+  if(name==='rank'){
+    if(typeof renderCustomDropdown === 'function'){
+      renderCustomDropdown('rankSkillDropdown');
+      renderCustomDropdown('rankPeriodDropdown');
+    }
+    if(typeof renderRank === 'function') renderRank(currentRankPeriod, currentRankSkill, currentRankType);
+    refreshRankFromBackend();
+  }
 }
 
 /* ---------------- Universal Number Animation Helper ---------------- */
@@ -2474,7 +2488,7 @@ function exitQuizAbandoned(){
   handleQuizBack();
   currentQuiz = null;
 }
-document.querySelectorAll('[data-view]').forEach(el=>{
+document.querySelectorAll('.navlink[data-view], .bn-btn[data-view], .settings-item[data-view]').forEach(el=>{
   el.addEventListener('click', ()=> showView(el.dataset.view));
 });
 
@@ -2482,73 +2496,101 @@ document.querySelectorAll('[data-view]').forEach(el=>{
    bo'yash mumkin emasligi sababli — to'liq JS bilan yasalgan almashtiruvchi). ----
    initCustomDropdown('wrapId', { label, options:[{value,label}], value, onChange }) */
 let CUSTOM_DROPDOWN_STATE = {};
+
+function closeAllCustomDropdowns(){
+  document.querySelectorAll('.cd-panel.show').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.cd-wrap.is-open, .rank-dropdown.is-open').forEach(w => {
+    w.classList.remove('is-open');
+    const tr = w.querySelector('.cd-trigger');
+    if(tr) tr.setAttribute('aria-expanded', 'false');
+  });
+  document.querySelectorAll('.native-calendar-popup.show').forEach(p => p.classList.remove('show'));
+}
+
 function initCustomDropdown(id, config){
   CUSTOM_DROPDOWN_STATE[id] = { ...config };
   renderCustomDropdown(id);
 }
+
 function updateCustomDropdown(id, patch){
   const st = CUSTOM_DROPDOWN_STATE[id];
   if(!st) return;
   Object.assign(st, patch);
   renderCustomDropdown(id);
 }
+
+function selectCustomDropdownOption(id, val){
+  const st = CUSTOM_DROPDOWN_STATE[id];
+  if(!st) return;
+  st.value = val;
+  renderCustomDropdown(id);
+  closeAllCustomDropdowns();
+  if(typeof st.onChange === 'function'){
+    try {
+      st.onChange(val);
+    } catch(err) {
+      console.error(`[CustomDropdown] onChange xatosi (${id}):`, err);
+    }
+  }
+}
+
 function renderCustomDropdown(id){
   const st = CUSTOM_DROPDOWN_STATE[id];
   const wrap = document.getElementById(id);
   if(!st || !wrap) return;
   wrap.classList.add('cd-wrap');
-  const opt = st.options.find(o=>o.value===st.value) || st.options[0];
+  const opt = st.options.find(o => String(o.value) === String(st.value)) || st.options[0];
   wrap.innerHTML = `
     <label>${escapeHtml(st.label)}</label>
-    <button type="button" class="cd-trigger"><span class="cd-value">${escapeHtml(opt?opt.label:'')}</span></button>
+    <button type="button" class="cd-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="cd-value">${escapeHtml(opt ? opt.label : '')}</span></button>
     <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-    <div class="cd-panel" id="${id}__panel">
-      ${st.options.map(o=>`<button type="button" class="cd-option ${o.value===st.value?'active':''}" data-dd-id="${id}" data-dd-val="${escapeHtml(o.value)}">${escapeHtml(o.label)}</button>`).join('')}
+    <div class="cd-panel" id="${id}__panel" role="listbox">
+      ${st.options.map(o => {
+        const isAct = String(o.value) === String(st.value);
+        return `<button type="button" class="cd-option ${isAct ? 'active' : ''}" role="option" aria-selected="${isAct}" data-dd-id="${id}" data-dd-val="${escapeHtml(String(o.value))}">${escapeHtml(o.label)}</button>`;
+      }).join('')}
     </div>
   `;
-}
-document.addEventListener('click', (e)=>{
-  // 1) Biror variant (.cd-option) tanlansa
-  const optBtn = e.target.closest('.cd-option');
-  if(optBtn){
-    const id = optBtn.dataset.ddId, val = optBtn.dataset.ddVal;
-    const st = CUSTOM_DROPDOWN_STATE[id];
-    if(st){
-      st.value = val;
-      renderCustomDropdown(id);
-      if(st.onChange) st.onChange(val);
-    }
-    document.querySelectorAll('.cd-panel.show').forEach(p=>{
-      p.classList.remove('show');
-      p.closest('.cd-wrap')?.classList.remove('is-open');
-    });
-    return;
-  }
 
-  // 2) Dropdown tugmasi yoki uning qutisiga (.cd-wrap / .rank-dropdown) bosilsa
-  const wrap = e.target.closest('.cd-wrap');
-  if(wrap && !e.target.closest('.cd-panel')){
-    const panel = document.getElementById(wrap.id + '__panel');
+  const panel = wrap.querySelector('.cd-panel');
+  const trigger = wrap.querySelector('.cd-trigger');
+
+  const onToggle = (e) => {
+    if(e){
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const wasOpen = panel && panel.classList.contains('show');
-    // Boshqa ochiq bo'lgan barcha panellarni yopamiz
-    document.querySelectorAll('.cd-panel.show').forEach(p=>{
-      p.classList.remove('show');
-      p.closest('.cd-wrap')?.classList.remove('is-open');
-    });
-    document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
+    closeAllCustomDropdowns();
     if(panel && !wasOpen){
       panel.classList.add('show');
       wrap.classList.add('is-open');
+      if(trigger) trigger.setAttribute('aria-expanded', 'true');
     }
-    return;
-  }
+  };
 
-  // 3) Boshqa istalgan joyga bosilganda dropdownlarni yopamiz
-  document.querySelectorAll('.cd-panel.show').forEach(p=>{
-    p.classList.remove('show');
-    p.closest('.cd-wrap')?.classList.remove('is-open');
-  });
-  document.querySelectorAll('.native-calendar-popup.show').forEach(p=>p.classList.remove('show'));
+  wrap.onclick = (e) => {
+    if(e.target.closest('.cd-panel')) return;
+    onToggle(e);
+  };
+
+  if(panel){
+    panel.querySelectorAll('.cd-option').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const val = btn.dataset.ddVal;
+        selectCustomDropdownOption(id, val);
+      };
+    });
+  }
+}
+
+document.addEventListener('click', (e) => {
+  // Agar dropdown qutisidan tashqariga bosilsa, barcha ochiq dropdownlarni yopamiz
+  if(!e.target.closest('.cd-wrap, .rank-dropdown, .native-date-picker-wrap')){
+    closeAllCustomDropdowns();
+  }
 });
 
 /* Bildirishnomalar ko'rinishi ochish va chizish funksiyalari */
@@ -3692,46 +3734,80 @@ function statusOf(pct){
 function renderHistoryStats(){
   // Tarix sahifasidagi umumiy statistika kartalari foydalanuvchi talabiga ko'ra olib tashlangan
 }
+function normalizeHistorySectionKey(val){
+  if(!val) return '';
+  const s = String(val).toLowerCase().trim();
+  if(s.includes('gram') || s === 'qoidalar') return 'grammatika';
+  if(s.includes('qiro') || s.includes("o'qish") || s.includes('oqish')) return 'qiroa';
+  if(s.includes('istim') || s.includes('tingla')) return 'istima';
+  if(s.includes('muhav') || s.includes("so'zlash") || s.includes('sozlash') || s.includes('nutq') || s.includes('gapir')) return 'muhavara';
+  if(s.includes('kitab') || s.includes('yoz') || s.includes('insho')) return 'kitaba';
+  if(s.includes('attan') || s.includes('imtihon') || s.includes('mock') || s.includes('cefr')) return 'imtihon';
+  return s;
+}
+
+function matchesHistoryItemSection(r, filterSection){
+  if(!filterSection || filterSection === 'Barchasi') return true;
+  const targetKey = normalizeHistorySectionKey(filterSection);
+  const isExamRow = (r.skillId === 'attanal' || r.section === 'Imtihon' || r.type === 'mock' || !!r.mockId || String(r.topic||'').toLowerCase().includes('mock') || String(r.topic||'').toLowerCase().includes('imtihon'));
+  if(targetKey === 'imtihon') return isExamRow;
+  
+  const rSkillKey = normalizeHistorySectionKey(r.skillId);
+  const rSecKey = normalizeHistorySectionKey(r.section);
+  const rMetaSecKey = normalizeHistorySectionKey(SKILL_META[r.skillId]?.section);
+  const rTopicKey = normalizeHistorySectionKey(r.topic);
+
+  return (rSkillKey === targetKey || rSecKey === targetKey || rMetaSecKey === targetKey || rTopicKey === targetKey);
+}
+
+function matchesHistoryItemDate(r, filterDate){
+  if(!filterDate || filterDate === 'hammasi') return true;
+  if(r.createdAt){
+    const t = new Date(r.createdAt).getTime();
+    if(!isNaN(t) && t > 0){
+      const days = (Date.now() - t) / 86400000;
+      if(filterDate === '7kun') return days <= 7.05;
+      if(filterDate === 'oy') return days <= 31.05;
+      return true;
+    }
+  }
+  if(r.dateGroup){
+    if(filterDate === '7kun') return r.dateGroup === '7kun';
+    if(filterDate === 'oy') return r.dateGroup === '7kun' || r.dateGroup === 'oy';
+    return true;
+  }
+  const dStr = String(r.date || '').toLowerCase();
+  if(dStr.includes('bugun') || dStr.includes('kecha') || dStr.includes('kun oldin')){
+    return true;
+  }
+  if(filterDate === '7kun') return false;
+  return true;
+}
+
 function renderHistoryList(){
   const el = document.getElementById('historyList');
   if(!el) return;
   if(!historyLoaded){
-    const emptyEl = document.getElementById('historyEmpty');
-    if(emptyEl) emptyEl.style.display = 'none';
-    el.innerHTML = Array.from({length:4}).map(()=>`
-      <div class="card history-item skel-history-item">
-        <div class="skel skel-circle" style="width:42px;height:42px;border-radius:12px;"></div>
-        <div class="history-main" style="display:flex;flex-direction:column;gap:6px;">
-          <div class="skel skel-line" style="width:55%;height:14px;"></div>
-          <div class="skel skel-line" style="width:35%;height:11px;"></div>
+    if(Array.isArray(HISTORY_DATA) && HISTORY_DATA.length > 0){
+      historyLoaded = true;
+    } else {
+      const emptyEl = document.getElementById('historyEmpty');
+      if(emptyEl) emptyEl.style.display = 'none';
+      el.innerHTML = Array.from({length:4}).map(()=>`
+        <div class="card history-item skel-history-item">
+          <div class="skel skel-circle" style="width:42px;height:42px;border-radius:12px;"></div>
+          <div class="history-main" style="display:flex;flex-direction:column;gap:6px;">
+            <div class="skel skel-line" style="width:55%;height:14px;"></div>
+            <div class="skel skel-line" style="width:35%;height:11px;"></div>
+          </div>
+          <div class="skel skel-box" style="width:52px;height:24px;border-radius:8px;"></div>
+          <div class="skel skel-box" style="width:64px;height:22px;border-radius:12px;"></div>
         </div>
-        <div class="skel skel-box" style="width:52px;height:24px;border-radius:8px;"></div>
-        <div class="skel skel-box" style="width:64px;height:22px;border-radius:12px;"></div>
-      </div>
-    `).join('');
-    return;
-  }
-  const list = HISTORY_DATA.filter(r=>{
-    const rSection = r.section || (SKILL_META[r.skillId] ? SKILL_META[r.skillId].section : '');
-    const sOk = historyFilters.section==='Barchasi' || rSection===historyFilters.section || (r.skillId && SKILLS.find(s=>s.id===r.skillId)?.name === historyFilters.section);
-    let dOk = true;
-    if(historyFilters.date === '7kun'){
-      if(r.createdAt){
-        const days = (Date.now() - new Date(r.createdAt).getTime()) / 86400000;
-        dOk = days <= 7;
-      } else {
-        dOk = (r.dateGroup === '7kun');
-      }
-    } else if(historyFilters.date === 'oy'){
-      if(r.createdAt){
-        const days = (Date.now() - new Date(r.createdAt).getTime()) / 86400000;
-        dOk = days <= 31;
-      } else {
-        dOk = (r.dateGroup === '7kun' || r.dateGroup === 'oy');
-      }
+      `).join('');
+      return;
     }
-    return sOk && dOk;
-  });
+  }
+  const list = HISTORY_DATA.filter(r => matchesHistoryItemSection(r, historyFilters.section) && matchesHistoryItemDate(r, historyFilters.date));
   document.getElementById('historyEmpty').style.display = list.length? 'none':'block';
   el.innerHTML = list.map(r=>{
     const pct = Math.round(r.correct/r.total*100);
@@ -4606,22 +4682,41 @@ function renderExamSectionDropdown(){
   wrap.classList.add('cd-wrap');
   const trigger = document.getElementById('repSectionTrigger');
   const panel = document.getElementById('repSectionPanel');
-  trigger.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    document.querySelectorAll('.cd-panel.show').forEach(p=>{ if(p!==panel) p.classList.remove('show'); });
-    panel.classList.toggle('show');
-  });
-  panel.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    const opt = e.target.closest('.cd-option-multi'); if(!opt) return;
-    const sec = opt.dataset.sec;
-    examChipSelection = examChipSelection.includes(sec)
-      ? examChipSelection.filter(s=>s!==sec)
-      : [...examChipSelection, sec];
-    renderExamSectionDropdown();
-    document.getElementById('repSectionPanel').classList.add('show');
-    renderExamSectionBlocks();
-  });
+
+  const togglePanel = (e) => {
+    if(e){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const wasOpen = panel && panel.classList.contains('show');
+    closeAllCustomDropdowns();
+    if(panel && !wasOpen){
+      panel.classList.add('show');
+      wrap.classList.add('is-open');
+    }
+  };
+
+  if(trigger) trigger.onclick = togglePanel;
+  wrap.onclick = (e) => {
+    if(!e.target.closest('.cd-panel')) togglePanel(e);
+  };
+
+  if(panel){
+    panel.onclick = (e) => {
+      e.stopPropagation();
+      const opt = e.target.closest('.cd-option-multi'); if(!opt) return;
+      const sec = opt.dataset.sec;
+      examChipSelection = examChipSelection.includes(sec)
+        ? examChipSelection.filter(s=>s!==sec)
+        : [...examChipSelection, sec];
+      renderExamSectionDropdown();
+      const newPanel = document.getElementById('repSectionPanel');
+      const newWrap = document.getElementById('repSectionDropdown');
+      if(newPanel) newPanel.classList.add('show');
+      if(newWrap) newWrap.classList.add('is-open');
+      renderExamSectionBlocks();
+    };
+  }
 }
 
 /* ---- Tanlangan bo'limlarga qarab pastda mahoratga mos yozish maydonlarini chizadi ---- */
@@ -10261,34 +10356,6 @@ function rankCountLabel(r, skill, period){
   if(!n) return '';
   return `${n} ${rankCountUnit(skill)}`;
 }
-/* ---- Davr (Haftalik/Oylik) bo'yicha HAQIQIY XP — Supabase'dagi
-   get_period_leaderboard RPC funksiyasidan (quiz_attempts.created_at asosida
-   real vaqtda hisoblanadi, .env/SQL'ga qarang) ----
-   Har bir filtr kombinatsiyasi (davr+mahorat) natijasi keshlanadi, shu sabab
-   bir xil filtrni qayta tanlaganda qayta so'rov ketmaydi. */
-const PERIOD_XP_CACHE = {};
-let CURRENT_PERIOD_XP_MAP = {};
-async function loadPeriodXp(period, skill){
-  const key = `${period}|${skill}`;
-  if(PERIOD_XP_CACHE[key]) return PERIOD_XP_CACHE[key];
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_period_leaderboard`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ p_period: period, p_skill: skill })
-    });
-    const rows = res.ok ? await res.json() : [];
-    const map = {};
-    (Array.isArray(rows)?rows:[]).forEach(r=>{
-      map[String(r.user_id)] = { xp: Number(r.xp)||0, count: Number(r.attempts_count)||0 };
-    });
-    PERIOD_XP_CACHE[key] = map;
-    return map;
-  }catch(e){
-    console.error('[loadPeriodXp]', e);
-    return {};
-  }
-}
 function sortedRank(period, skill){
   const myId = TELEGRAM_PROFILE.rawId;
   const list = RANK_RAW_ROWS.map(r=>{
@@ -10303,13 +10370,34 @@ function sortedRank(period, skill){
       photo: showAvatar ? rawPhoto : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
-      xp: (CURRENT_PERIOD_XP_MAP[String(rid)] ? CURRENT_PERIOD_XP_MAP[String(rid)].xp : rankXpFor(r, skill, period)),
-      count: (CURRENT_PERIOD_XP_MAP[String(rid)] ? CURRENT_PERIOD_XP_MAP[String(rid)].count : rankCountFor(r, skill, period)),
+      xp: rankXpFor(r, skill, period),
+      count: rankCountFor(r, skill, period),
       me: isMe,
       isSuperAdmin: ADMIN_TELEGRAM_IDS.map(String).includes(String(rid)),
     };
   })
   .filter(u=>u.xp > 0); // XP to'plamagan foydalanuvchilar reytingda ko'rsatilmaydi
+
+  const hasMe = list.some(u => u.me);
+  if(!hasMe){
+    const myOverallXp = PROFILE_STATS.xp || 0;
+    const mySkillXp = (SKILLS.find(s=>s.id===skill)?.score) || 0;
+    const myXp = (skill === 'hammasi') ? myOverallXp : mySkillXp;
+    if(myXp > 0){
+      list.push({
+        id: myId || 'me',
+        name: TELEGRAM_PROFILE.fullName || 'Siz',
+        photo: getShowAvatarSetting() ? TELEGRAM_PROFILE.photoUrl : null,
+        showAvatar: getShowAvatarSetting(),
+        level: 'A1',
+        xp: myXp,
+        count: 1,
+        me: true,
+        isSuperAdmin: false,
+      });
+    }
+  }
+
   return list.sort((a,b)=>b.xp-a.xp).map((u,i)=>({...u, rank:i+1}));
 }
 /* Profil rasmi bor bo'lsa uni, bo'lmasa harflardan iborat rangli doirani chizadi.
@@ -10463,16 +10551,10 @@ function renderRankTop(period, skill, type){
     }
   }
 }
-async function renderRank(period, skill, type){
+function renderRank(period, skill, type){
   currentRankPeriod = period;
   currentRankSkill = skill;
   currentRankType = type || currentRankType || 'tanal';
-  if(currentRankType !== 'cefr'){
-    // Davr (hafta/oy/hammasi) filtri endi backenddan HAQIQIY hisoblanadi
-    // (get_period_leaderboard RPC, quiz_attempts.created_at asosida) —
-    // shu sabab bu yerda kutib turamiz, keyin render qilamiz.
-    CURRENT_PERIOD_XP_MAP = await loadPeriodXp(period, skill);
-  }
   renderRankTop(period, skill, currentRankType);
   renderPodium(period, skill, currentRankType);
   renderLeaderboard(period, skill, currentRankType);
@@ -10493,7 +10575,10 @@ initCustomDropdown('rankSkillDropdown', {
   label: 'Mahorat',
   options: [{value:'hammasi', label:'Barchasi'}].concat(SKILLS.map(s=>({value:s.id, label:s.name}))),
   value: currentRankSkill,
-  onChange: (val)=> renderRank(currentRankPeriod, val, currentRankType),
+  onChange: (val)=> {
+    currentRankSkill = val;
+    renderRank(currentRankPeriod, val, currentRankType);
+  },
 });
 initCustomDropdown('rankPeriodDropdown', {
   label: 'Davr',
@@ -10503,7 +10588,10 @@ initCustomDropdown('rankPeriodDropdown', {
     {value:'hammasi', label:'Butun davr'},
   ],
   value: currentRankPeriod,
-  onChange: (val)=> renderRank(val, currentRankSkill, currentRankType),
+  onChange: (val)=> {
+    currentRankPeriod = val;
+    renderRank(val, currentRankSkill, currentRankType);
+  },
 });
 renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 
