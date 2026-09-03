@@ -10242,7 +10242,7 @@ function renderPodium(period, skill, type){
       <div class="podium-medal">${medals[i]}</div>
       <div class="podium-avatar" style="background:${RANK_COLORS[i]};">${rankAvatarHTML(u, RANK_COLORS[i])}</div>
       <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}</div>
-      <div class="podium-xp"><span class="num-target" data-target="${u.xp}">0</span> XP</div>
+      <div class="podium-xp"><span class="num-target" data-target="${u.xp}">0</span><img src="public/starxp.svg" class="rank-star-icon" alt="" width="13" height="13" /></div>
     </div>`;
   }).join('');
   runEntranceAnimations(podiumEl, true);
@@ -10281,7 +10281,7 @@ function renderLeaderboard(period, skill, type){
         <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin?VERIFIED_BADGE_SVG:''}${u.me?'<span class="me-tag">Siz</span>':''}</div>
         ${countTxt ? `<div class="l">${escapeHtml(countTxt)}</div>` : ''}
       </div>
-      <div class="lb-xp"><span class="num-target" data-target="${u.xp}">0</span><span style="font-size:10.5px;color:var(--text-faint);font-weight:600;"> XP</span></div>
+      <div class="lb-xp"><span class="num-target" data-target="${u.xp}">0</span><img src="public/starxp.svg" class="rank-star-icon" alt="" width="14" height="14" /></div>
     </div>
   `;
   }).join('');
