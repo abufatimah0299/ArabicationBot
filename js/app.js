@@ -10263,7 +10263,7 @@ function applyLiveLeaderboard(rows){
   RANK_RAW_ROWS = Array.isArray(rows) ? rows : [];
   if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod, currentRankSkill, currentRankType);
 }
-let currentRankPeriod = 'hafta';
+let currentRankPeriod = 'hammasi';
 let currentRankSkill = 'hammasi'; // 'hammasi' yoki SKILLS ichidagi id (grammatika/qiroa/istima/muhavara/kitaba)
 let currentRankType = 'tanal';    // 'tanal' yoki 'cefr' — tepadagi Imtihon turi filtri
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
@@ -10572,7 +10572,7 @@ document.getElementById('rankTypeToggle').addEventListener('click', e=>{
    ro'yxatidan avtomatik, shu bilan bo'lim nomlari boshqa joylar bilan mos keladi. */
 initCustomDropdown('rankSkillDropdown', {
   label: 'Mahorat',
-  options: [{value:'hammasi', label:'Barchasi'}].concat(SKILLS.map(s=>({value:s.id, label:s.name}))),
+  options: [{value:'hammasi', label:'Barchasi'}].concat(SKILLS.map(s=>({value:s.id, label: s.ar || s.name}))),
   value: currentRankSkill,
   onChange: (val)=> {
     currentRankSkill = val;
@@ -10582,9 +10582,9 @@ initCustomDropdown('rankSkillDropdown', {
 initCustomDropdown('rankPeriodDropdown', {
   label: 'Davr',
   options: [
-    {value:'hafta', label:'Haftalik'},
-    {value:'oy', label:'Oylik'},
     {value:'hammasi', label:'Butun davr'},
+    {value:'oy', label:'Shu oy'},
+    {value:'hafta', label:'Shu hafta'},
   ],
   value: currentRankPeriod,
   onChange: (val)=> {

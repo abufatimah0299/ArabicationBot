@@ -2363,7 +2363,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   width:0 !important;
   height:0 !important;
 }
-.cd-panel.show{ display:block; animation:asUp .15s var(--ease); }
+.cd-panel.show{ display:block; animation:dropdownDown .16s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top center; }
 .cd-option{
   display:block; width:100%; text-align:start; padding:10px 12px; border-radius:10px; border:none; background:transparent;
   font-family:inherit; font-size:13px; font-weight:600; color:var(--text-dim); cursor:pointer; margin-bottom:2px; transition:.12s var(--ease);
@@ -2373,6 +2373,10 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .cd-option:hover{ background:var(--card-alt); color:var(--text); }
 .cd-option:active{ transform:scale(0.98); }
 .cd-option.active{ background:var(--indigo-100); color:var(--indigo-700); }
+@keyframes dropdownDown{
+  from{ transform:translateY(-8px) scale(0.98); opacity:0; }
+  to{ transform:translateY(0) scale(1); opacity:1; }
+}
 /* ---- Ko'p tanlovli (multi-select) custom dropdown — "Qaysi bo'lim(lar)dan savol tushdi?"
    uchun. Bir xil cd- vizual uslubdan foydalanadi, lekin panel tanlashda yopilmaydi va
    har bir option checkbox bilan ko'rsatiladi. ---- */
@@ -2401,7 +2405,7 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   background:var(--card); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
   border:1.5px solid var(--border); border-radius:18px;
   box-shadow:0 14px 36px -8px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.12);
-  padding:14px; display:none; animation:asUp .18s var(--ease);
+  padding:14px; display:none; animation:dropdownDown .18s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top center;
 }
 .native-calendar-popup.show{ display:block; }
 .ncp-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
