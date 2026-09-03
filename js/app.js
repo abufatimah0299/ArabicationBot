@@ -10345,11 +10345,49 @@ function rankCountUnit(skill){
   return 'ta test yechildi';
 }
 function rankCountFor(r, skill, period){
-  const keys = rankCountKeys(skill, period);
-  const val = Number(pick(r, keys, 0)) || 0;
-  if(val > 0 || skill !== 'hammasi') return val;
-  const skillCountKeys = ['grammatika_count','qiroa_count','istima_count','muhavara_count','kitaba_count'];
-  return skillCountKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
+  const rid = pick(r, ['user_id','telegram_id','id'], '');
+  const isMe = String(rid) === String(TELEGRAM_PROFILE.rawId);
+
+  let val = 0;
+  if(skill === 'hammasi'){
+    if(period === 'hafta') val = Number(r.attempts_count_week || r.attempts_week || r.count_week) || 0;
+    else if(period === 'oy') val = Number(r.attempts_count_month || r.attempts_month || r.count_month) || 0;
+    
+    // Agar haftalik/oylikda 0 bo'lsa (yoki backendda faqat total mavjud bo'lsa), umumiy sonini olamiz
+    if(val <= 0){
+      val = Number(r.attempts_count_total || r.attempts_count || r.total_attempts) || 0;
+    }
+    if(val <= 0){
+      const skillCountKeys = ['grammatika_count','qiroa_count','istima_count','muhavara_count','kitaba_count'];
+      val = skillCountKeys.reduce((acc,k)=> acc + (Number(r[k]) || 0), 0);
+    }
+  } else {
+    if(period === 'hafta') val = Number(r[`${skill}_count_week`] || r[`${skill}_attempts_week`]) || 0;
+    else if(period === 'oy') val = Number(r[`${skill}_count_month`] || r[`${skill}_attempts_month`]) || 0;
+
+    // Agar haftalik/oylik 0 bo'lsa, umumiy mahorat urinishlar sonini olamiz
+    if(val <= 0){
+      val = Number(r[`${skill}_count`] || r[`${skill}_attempts`] || r[`count_${skill}`]) || 0;
+    }
+  }
+
+  // O'zimiz ("Siz") uchun: agar lokal tariximizda urinishlar soni ko'proq bo'lsa
+  if(isMe && Array.isArray(HISTORY_DATA) && HISTORY_DATA.length > 0){
+    const localCount = HISTORY_DATA.filter(h => {
+      if(skill === 'hammasi') return true;
+      if(typeof matchesHistoryItemSection === 'function') return matchesHistoryItemSection(h, skill);
+      return String(h.skillId||'').toLowerCase() === String(skill).toLowerCase() || String(h.section||'').toLowerCase() === String(skill).toLowerCase();
+    }).length;
+    if(localCount > val) val = localCount;
+  }
+
+  // Agar userda shu mahoratdan XP mavjud bo'lsa (xp > 0), lekin urinish hisoblagichi 0 bo'lsa kamida 1 ko'rsatamiz
+  if(val <= 0){
+    const xp = rankXpFor(r, skill, period);
+    if(xp > 0) val = 1;
+  }
+
+  return val;
 }
 function rankCountLabel(r, skill, period){
   const n = rankCountFor(r, skill, period);
