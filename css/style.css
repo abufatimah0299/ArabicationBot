@@ -2299,34 +2299,79 @@ html[data-theme="dark"] .attanal-tab-btn.active{
 .rank-type-btn.active{ background:var(--indigo-700); border-color:var(--indigo-700); color:#fff; }
 /* Reyting sahifasi tepasidagi "Davr" / "Mahorat" dropdown filtrlar (chiplar o'rniga,
    joy tejash uchun) — label ustida kichik, tanlangan qiymat ostida katta harflarda. */
-.rank-filter-row{ display:flex; gap:10px; margin-bottom:16px; }
-.rank-dropdown{
-  flex:1 1 0; min-width:0; position:relative; border:1.5px solid var(--border); border-radius:14px;
-  padding:9px 32px 9px 14px; background:var(--card); box-sizing:border-box;
+.rank-filter-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
+  position:relative;
+  z-index:900;
 }
-.rank-dropdown label{ display:block; font-size:10.5px; font-weight:600; color:var(--text-faint); margin-bottom:1px; }
+.rank-dropdown{
+  flex:1 1 0;
+  min-width:0;
+  position:relative;
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:9px 32px 9px 14px;
+  background:var(--card);
+  box-sizing:border-box;
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.rank-dropdown.is-open, .cd-wrap.is-open{
+  z-index:1000 !important;
+  border-color:var(--indigo-600) !important;
+  box-shadow:0 0 0 3px rgba(79, 70, 229, 0.14) !important;
+}
+.rank-dropdown label{ display:block; font-size:10.5px; font-weight:600; color:var(--text-faint); margin-bottom:1px; cursor:pointer; pointer-events:none; }
 .rank-dropdown select{
   appearance:none; -webkit-appearance:none; -moz-appearance:none; border:none; background:transparent; outline:none;
   font-family:inherit; font-size:13.5px; font-weight:600; color:var(--text); width:100%; cursor:pointer; padding:0;
 }
 .rank-dropdown select:focus{ outline:none; }
-.rank-dropdown .chev{ position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-faint); }
+.rank-dropdown .chev{ position:absolute; right:12px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--text-faint); transition:transform .2s var(--ease); }
+.rank-dropdown.is-open .chev, .cd-wrap.is-open .chev{ transform:translateY(-50%) rotate(180deg); color:var(--indigo-600); }
 
 /* ---- Custom dropdown (native <select> popup'ini to'liq stillash mumkin emasligi
    sababli — o'zimizning JS bilan yasalgan, ilova dizayniga mos ochilma ro'yxat) ---- */
+.cd-wrap{ cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }
 .cd-trigger{ all:unset; display:block; width:100%; box-sizing:border-box; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--text); }
-.cd-value{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cd-value{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; }
 .cd-panel{
-  position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--card); border:1.5px solid var(--border);
-  border-radius:14px; box-shadow:var(--shadow); padding:6px; z-index:80; max-height:260px; overflow-y:auto; display:none;
+  position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--card); border:1.5px solid var(--border);
+  border-radius:14px; box-shadow:0 14px 34px -4px rgba(0, 0, 0, 0.22), 0 4px 12px rgba(0, 0, 0, 0.08); padding:6px; z-index:1001 !important; max-height:260px; overflow-y:auto; display:none;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.cd-panel::-webkit-scrollbar{
+  display:none;
+  width:0;
+  height:0;
+}
+#historySkillDropdown__panel,
+#historySkillDropdown .cd-panel{
+  scrollbar-width:none !important;
+  -ms-overflow-style:none !important;
+}
+#historySkillDropdown__panel::-webkit-scrollbar,
+#historySkillDropdown .cd-panel::-webkit-scrollbar{
+  display:none !important;
+  width:0 !important;
+  height:0 !important;
 }
 .cd-panel.show{ display:block; animation:asUp .15s var(--ease); }
 .cd-option{
   display:block; width:100%; text-align:start; padding:10px 12px; border-radius:10px; border:none; background:transparent;
   font-family:inherit; font-size:13px; font-weight:600; color:var(--text-dim); cursor:pointer; margin-bottom:2px; transition:.12s var(--ease);
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
 }
 .cd-option:last-child{ margin-bottom:0; }
 .cd-option:hover{ background:var(--card-alt); color:var(--text); }
+.cd-option:active{ transform:scale(0.98); }
 .cd-option.active{ background:var(--indigo-100); color:var(--indigo-700); }
 /* ---- Ko'p tanlovli (multi-select) custom dropdown — "Qaysi bo'lim(lar)dan savol tushdi?"
    uchun. Bir xil cd- vizual uslubdan foydalanadi, lekin panel tanlashda yopilmaydi va
