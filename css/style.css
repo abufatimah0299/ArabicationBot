@@ -3559,7 +3559,7 @@ html[data-theme="dark"] .dr-bar-fill.dr-orange { background: #FF7A00; }
 .podium-item.first .podium-avatar{ width:64px; height:64px; font-size:19px; border-color:#E3A83F; box-shadow:0 0 16px rgba(227,168,63,0.4); }
 .podium-avatar img, .lb-avatar img{ width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
 .podium-name{ font-size:12.5px; font-weight:600; margin-top:4px; width:100%; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.podium-xp{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:2px; font-variant-numeric: tabular-nums; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-flex; align-items:center; justify-content:center; gap:4px; }
 
 .lb-row{ display:flex; align-items:center; gap:12px; padding:12px 12px; border-radius:14px; transition:background-color .2s var(--ease), transform .15s var(--ease); }
 .lb-row:hover{ background:var(--indigo-100); }
@@ -3570,7 +3570,12 @@ html[data-theme="dark"] .dr-bar-fill.dr-orange { background: #FF7A00; }
 .lb-info .n{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:600; }
 .lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:1px; }
-.lb-xp{ font-weight:600; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; }
+.lb-xp{ font-weight:600; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; display:inline-flex; align-items:center; justify-content:flex-end; gap:5px; flex-shrink:0; }
+.rank-star-icon{ display:inline-block; vertical-align:middle; flex-shrink:0; object-fit:contain; }
+.lb-xp .rank-star-icon{ width:14px; height:14px; margin-top:-2px; }
+.podium-xp .rank-star-icon{ margin-top:-2px; margin-left:0px; margin-right:0px; margin-bottom:0px; padding:0; }
+.rank-top-xp-num{ display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.rank-top-star{ position:relative; top:1px; }
 
 /* ---------- Profile ---------- */
 .profile-header{ padding:24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
