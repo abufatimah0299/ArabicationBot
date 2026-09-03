@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#126830" flood-opacity="0.35" />
+    </filter>
+
+    <!-- 3D Extrusion base gradient -->
+    <linearGradient id="baseExtrude" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2ba853" />
+      <stop offset="50%" stop-color="#1b7835" />
+      <stop offset="100%" stop-color="#115523" />
+    </linearGradient>
+
+    <!-- Outer rim gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5ced85" />
+      <stop offset="40%" stop-color="#3ad96a" />
+      <stop offset="100%" stop-color="#24a44b" />
+    </linearGradient>
+
+    <!-- Inner face background gradient -->
+    <linearGradient id="innerFace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d4fedf" />
+      <stop offset="35%" stop-color="#b6fbc8" />
+      <stop offset="100%" stop-color="#83f2a5" />
+    </linearGradient>
+
+    <!-- Inner face bevel/shadow gradient -->
+    <linearGradient id="innerRimGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#5ddb80" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Center bolt 3D bevel gradient -->
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#46df75" />
+      <stop offset="60%" stop-color="#27b552" />
+      <stop offset="100%" stop-color="#168b3b" />
+    </linearGradient>
+
+    <!-- Bolt shadow filter -->
+    <filter id="boltShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#156e30" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- 3D Extrusion Body (offset down for thickness) -->
+  <g filter="url(#shadow)">
+    <!-- Extruded Lower Base -->
+    <path d="M 92 28
+             C 97 18, 103 18, 108 28
+             L 122 55
+             C 125 61, 131 65, 137 66
+             L 168 71
+             C 179 73, 183 82, 175 90
+             L 153 112
+             C 148 117, 146 123, 147 130
+             L 152 161
+             C 154 172, 147 178, 137 173
+             L 109 158
+             C 103 155, 97 155, 91 158
+             L 63 173
+             C 53 178, 46 172, 48 161
+             L 53 130
+             C 54 123, 52 117, 47 112
+             L 25 90
+             C 17 82, 21 73, 32 71
+             L 63 66
+             C 69 65, 75 61, 78 55
+             Z"
+          fill="url(#baseExtrude)"
+          transform="translate(0, 16)" />
+
+    <!-- 3D side edge fillets connecting bottom points -->
+    <path d="M 48 177 L 48 161 C 46 172, 53 178, 63 173 L 63 189 C 53 194, 46 188, 48 177 Z" fill="#15642a" />
+    <path d="M 137 189 L 137 173 C 147 178, 154 172, 152 161 L 152 177 C 154 188, 147 194, 137 189 Z" fill="#15642a" />
+    <path d="M 175 106 L 175 90 C 183 82, 179 73, 168 71 L 168 87 C 179 89, 183 98, 175 106 Z" fill="#176a2e" />
+
+    <!-- Front Star Body (Outer Bevel Rim) -->
+    <path d="M 92 24
+             C 97 14, 103 14, 108 24
+             L 122 51
+             C 125 57, 131 61, 137 62
+             L 168 67
+             C 179 69, 183 78, 175 86
+             L 153 108
+             C 148 113, 146 119, 147 126
+             L 152 157
+             C 154 168, 147 174, 137 169
+             L 109 154
+             C 103 151, 97 151, 91 154
+             L 63 169
+             C 53 174, 46 168, 48 157
+             L 53 126
+             C 54 119, 52 113, 47 108
+             L 25 86
+             C 17 78, 21 69, 32 67
+             L 63 62
+             C 69 61, 75 57, 78 51
+             Z"
+          fill="url(#rimGrad)" />
+
+    <!-- Inner Recessed Star Face -->
+    <path d="M 93 38
+             C 97 30, 103 30, 107 38
+             L 119 60
+             C 122 66, 128 69, 133 70
+             L 158 74
+             C 167 76, 170 83, 163 90
+             L 145 108
+             C 140 113, 138 118, 139 124
+             L 143 149
+             C 145 158, 139 163, 131 159
+             L 108 147
+             C 103 144, 97 144, 92 147
+             L 69 159
+             C 61 163, 55 158, 57 149
+             L 61 124
+             C 62 118, 60 113, 55 108
+             L 37 90
+             C 30 83, 33 76, 42 74
+             L 67 70
+             C 72 69, 78 66, 81 60
+             Z"
+          fill="url(#innerFace)"
+          stroke="#4fd876"
+          stroke-width="2.5" />
+
+    <!-- Inner Face Top Highlight / Gloss Curve -->
+    <path d="M 93 40
+             C 97 32, 103 32, 107 40
+             L 118 61
+             C 121 67, 126 69, 131 70
+             L 155 74
+             C 162 75, 165 81, 160 86
+             C 140 76, 100 68, 40 86
+             C 35 81, 38 75, 45 74
+             L 69 70
+             C 74 69, 79 67, 82 61
+             Z"
+          fill="url(#innerRimGlow)"
+          opacity="0.6" />
+
+    <!-- Embossed 3D Lightning Bolt in the Center -->
+    <g filter="url(#boltShadow)">
+      <!-- Bolt bevel bottom shadow -->
+      <path d="M 104 64 L 83 99 L 98 99 L 90 134 L 119 93 L 103 93 L 115 64 Z"
+            fill="#177332"
+            transform="translate(0, 2)" />
+
+      <!-- Bolt main body with gradient -->
+      <path d="M 104 63
+               L 83 98
+               C 82 100, 83 101, 85 101
+               L 97 101
+               L 89 133
+               C 88 135, 91 136, 92 134
+               L 119 94
+               C 120 92, 119 91, 117 91
+               L 104 91
+               L 115 65
+               C 116 63, 113 62, 111 62
+               L 105 62
+               C 104.5 62, 104.2 62.5, 104 63 Z"
+            fill="url(#boltGrad)" />
+
+      <!-- Bolt top edge highlight -->
+      <path d="M 105 63 L 114 65 L 104 91 L 117 91 L 108 104 L 106 100 L 112 93 L 101 93 L 105 63 Z"
+            fill="#7aff9e"
+            opacity="0.45" />
+    </g>
+  </g>
+</svg>
