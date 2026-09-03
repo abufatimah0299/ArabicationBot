@@ -456,7 +456,7 @@ body, .sidebar, .card, .topbar, .modal-box, .modal-head, .modal-close, .bottom-n
   display:flex; align-items:center; justify-content:space-between;
   padding:calc(18px + var(--app-safe-top, 0px)) calc(16px + var(--app-safe-right, 0px)) 10px calc(16px + var(--app-safe-left, 0px));
   gap:16px; flex-wrap:nowrap;
-  position:relative; z-index:10; pointer-events:none;
+  position:relative; z-index:100; pointer-events:none;
   width:100%; max-width:100%; box-sizing:border-box;
 }
 .hello{ min-width:0; pointer-events:auto; }
@@ -492,7 +492,22 @@ html[data-theme="dark"] .topbar.hero-banner{
   .topbar.hero-banner .hello p{ font-size:12px; }
   .topbar.hero-banner .avatar{ width:40px; height:40px; font-size:15px; }
 }
-.topbar-right{ display:flex; align-items:center; gap:12px; flex-shrink:0; pointer-events:auto; }
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-shrink:0;
+  pointer-events:auto;
+  position:relative;
+  z-index:105;
+}
+#userMsgBell{
+  cursor:pointer;
+  pointer-events:auto;
+  position:relative;
+  z-index:106;
+  -webkit-tap-highlight-color: transparent;
+}
 .avatar{
   width:38px; height:38px; border-radius:50%; background:var(--indigo-700);
   display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:14px; flex-shrink:0;
@@ -515,7 +530,12 @@ html[data-theme="light"] .theme-toggle .icon-sun{ display:block; }
 .topbar.hero-banner .theme-toggle{
   border-color:rgba(255,255,255,0.28); background:rgba(255,255,255,0.14); color:#fff;
 }
-.topbar.hero-banner .theme-toggle:hover{ background:rgba(255,255,255,0.22); }.content{ padding:0 32px 48px 32px; }
+.topbar.hero-banner .theme-toggle:hover{ background:rgba(255,255,255,0.22); }
+/* Notify (xabarlar qo'ng'irog'i) faqat Asosiy (dashboard) va Profil sahifalarida ko'rinadi */
+body:not([data-view="dashboard"]):not([data-view="profil"]) #userMsgBell {
+  display: none !important;
+}
+.content{ padding:0 32px 48px 32px; }
 
 /* ---------- Cards / grids ---------- */
 .card{
@@ -2387,7 +2407,18 @@ html[data-theme="dark"] .attanal-tab-btn.active{
   align-items:center;
   gap:12px;
   flex-wrap:nowrap;
-  transition:transform .2s var(--ease), box-shadow .2s var(--ease);
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  transition:transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.history-item:hover{
+  border-color:var(--indigo-300, #a5b4fc);
+  transform:translateY(-1.5px);
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);
+}
+.history-item:active{
+  transform:scale(0.985);
 }
 .history-icon{
   width:38px; height:38px; border-radius:12px;
@@ -4993,6 +5024,8 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + var(--app-safe-bottom, 0
   max-width: 100%;
   box-sizing: border-box;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 520px) {
@@ -5022,8 +5055,14 @@ body.no-bottom-nav .content{ padding-bottom:calc(24px + var(--app-safe-bottom, 0
   border: 2.5px solid rgba(255, 255, 255, 0.9);
   transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s ease, border-color .22s ease;
   position: relative;
+  z-index: 25;
+  pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+.dash-avatar-circle * {
+  pointer-events: none;
 }
 
 html[data-theme="dark"] .dash-avatar-circle {
@@ -6884,3 +6923,87 @@ html[data-theme="light"] .pin-dot.filled{
 .passcode-tab-btn.active{
   background:var(--card); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.06);
 }
+
+/* ============ BILDIRISHNOMALAR (Notifications View) ============ */
+.notif-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 18px;
+  box-shadow:var(--shadow);
+  transition:border-color .2s ease, box-shadow .2s ease;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.notif-card.unread{
+  border-color:rgba(99, 102, 241, 0.4);
+  background:rgba(99, 102, 241, 0.04);
+}
+html[data-theme="dark"] .notif-card.unread{
+  background:rgba(99, 102, 241, 0.09);
+  border-color:rgba(99, 102, 241, 0.45);
+}
+.notif-card-header{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+.notif-icon-wrap{
+  width:38px;
+  height:38px;
+  min-width:38px;
+  border-radius:12px;
+  background:rgba(99, 102, 241, 0.12);
+  color:var(--indigo-600);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.notif-icon-wrap svg{
+  width:20px;
+  height:20px;
+}
+.notif-meta{
+  flex:1;
+  min-width:0;
+}
+.notif-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.notif-title{
+  font-size:15px;
+  font-weight:600;
+  color:var(--text);
+  margin:0;
+  line-height:1.35;
+}
+.notif-badge-new{
+  font-size:10.5px;
+  font-weight:700;
+  color:#fff;
+  background:var(--indigo-600);
+  padding:2px 8px;
+  border-radius:999px;
+  text-transform:uppercase;
+  letter-spacing:0.3px;
+  flex-shrink:0;
+}
+.notif-time{
+  font-size:11.5px;
+  color:var(--text-faint);
+  font-weight:500;
+  display:block;
+  margin-top:2px;
+}
+.notif-body{
+  font-size:13.5px;
+  color:var(--text-dim);
+  line-height:1.55;
+  white-space:pre-line;
+  word-break:break-word;
+}
+
