@@ -3575,7 +3575,7 @@ html[data-theme="dark"] .dr-bar-fill.dr-orange { background: #FF7A00; }
 .lb-xp .rank-star-icon{ width:14px; height:14px; margin-top:-2px; }
 .podium-xp .rank-star-icon{ margin-top:-2px; margin-left:0px; margin-right:0px; margin-bottom:0px; padding:0; }
 .rank-top-xp-num{ display:inline-flex; align-items:center; justify-content:center; gap:6px; }
-.rank-top-star{ position:relative; top:1px; }
+.rank-top-star{ margin-top:-2px; }
 
 /* ---------- Profile ---------- */
 .profile-header{ padding:24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
@@ -7021,4 +7021,3 @@ html[data-theme="dark"] .notif-card.unread{
   white-space:pre-line;
   word-break:break-word;
 }
-
