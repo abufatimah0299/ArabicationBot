@@ -3618,7 +3618,7 @@ html[data-theme="dark"] .dr-bar-fill.dr-orange { background: #FF7A00; }
 .lb-info{ flex:1; min-width:0; }
 .lb-info .n{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
 .lb-info .n .me-tag{ font-size:10px; background:var(--indigo-700); color:#fff; padding:1px 7px; border-radius:999px; font-weight:600; }
-.lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+.lb-info .l{ font-size:11px; color:var(--text-faint); font-weight:600; margin-top:4px; }
 .lb-xp{ font-weight:600; font-size:13px; text-align:right; font-variant-numeric: tabular-nums; display:inline-flex; align-items:center; justify-content:flex-end; gap:5px; flex-shrink:0; }
 .rank-star-icon{ display:inline-block; vertical-align:middle; flex-shrink:0; object-fit:contain; }
 .lb-xp .rank-star-icon{ width:14px; height:14px; margin-top:-2px; }
@@ -5883,6 +5883,30 @@ html[data-theme="dark"] .marathon-action-card.card-duel-friends:hover .dmb-arrow
 html[data-theme="dark"] .marathon-action-card.card-duel-nahv:hover .dmb-arrow,
 html[data-theme="dark"] .marathon-action-card.card-duel-topic:hover .dmb-arrow {
   color: #60A5FA;
+}
+
+/* 5b. Duel Rank (Purple / Violet) */
+.marathon-action-card.card-duel-rank {
+  background: #FAF5FF;
+  border-color: #F3E8FF;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.05);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-rank {
+  background: rgba(109, 40, 217, 0.22);
+  border-color: rgba(139, 92, 246, 0.28);
+}
+.marathon-action-card.card-duel-rank:hover {
+  border-color: #E9D5FF;
+  box-shadow: 0 10px 24px -4px rgba(139, 92, 246, 0.12);
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-rank:hover {
+  border-color: rgba(192, 132, 252, 0.4);
+}
+.marathon-action-card.card-duel-rank:hover .dmb-arrow {
+  color: #8B5CF6;
+}
+html[data-theme="dark"] .marathon-action-card.card-duel-rank:hover .dmb-arrow {
+  color: #C084FC;
 }
 
 /* 6. Sarf (Green) */

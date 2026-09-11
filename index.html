@@ -1296,31 +1296,35 @@
             </div>
           </div>
 
-          <!-- 2-Card: Bellashuvlar tarixi -->
-          <div class="marathon-action-card card-duel-history" onclick="showView('duelhistory')" role="button" tabindex="0">
+          <!-- 2-Card: Bellashuv reytingi -->
+          <div class="marathon-action-card card-duel-rank" onclick="showView('duelrank')" role="button" tabindex="0">
             <div class="dmb-left">
               <div class="dmb-badge">
                 <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
                   <defs>
-                    <linearGradient id="dmbOrangeHistoryGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#FB923C"/>
-                      <stop offset="0.6" stop-color="#F97316"/>
-                      <stop offset="1" stop-color="#C2410C"/>
+                    <linearGradient id="dmbPurpleDuelRankGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A855F7"/>
+                      <stop offset="0.6" stop-color="#8B5CF6"/>
+                      <stop offset="1" stop-color="#6D28D9"/>
                     </linearGradient>
-                    <filter id="dmbOrangeHistoryGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#C2410C" flood-opacity="0.32"/>
+                    <filter id="dmbPurpleDuelRankGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#6D28D9" flood-opacity="0.32"/>
                     </filter>
                   </defs>
-                  <circle cx="22" cy="22" r="18" fill="url(#dmbOrangeHistoryGrad)" filter="url(#dmbOrangeHistoryGlow)"/>
+                  <circle cx="22" cy="22" r="18" fill="url(#dmbPurpleDuelRankGrad)" filter="url(#dmbPurpleDuelRankGlow)"/>
                   <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
                   </g>
                 </svg>
               </div>
               <div class="dmb-text-block">
-                <div class="dmb-title">Bellashuvlar tarixi</div>
-                <div class="dmb-sub">O'tgan va joriy bellashuvlaringiz</div>
+                <div class="dmb-title">Bellashuv reytingi</div>
+                <div class="dmb-sub">Peshqadam bellashuvchilar va ballar</div>
               </div>
             </div>
             <div class="dmb-right">
@@ -1331,43 +1335,31 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 3-Card: Do'stlarim -->
-          <div class="marathon-action-card card-duel-friends" onclick="showView('dostlarim')" role="button" tabindex="0">
-            <div class="dmb-left">
-              <div class="dmb-badge">
-                <svg class="dmb-badge-svg" viewBox="0 0 44 44" fill="none">
-                  <defs>
-                    <linearGradient id="dmbBlueFriendsGrad" x1="4" y1="4" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#60A5FA"/>
-                      <stop offset="0.6" stop-color="#3B82F6"/>
-                      <stop offset="1" stop-color="#1D4ED8"/>
-                    </linearGradient>
-                    <filter id="dmbBlueFriendsGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1D4ED8" flood-opacity="0.3"/>
-                    </filter>
-                  </defs>
-                  <circle cx="22" cy="22" r="18" fill="url(#dmbBlueFriendsGrad)" filter="url(#dmbBlueFriendsGlow)"/>
-                  <g transform="translate(13, 13) scale(0.75)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </g>
-                </svg>
-              </div>
-              <div class="dmb-text-block">
-                <div class="dmb-title">Do'stlarim</div>
-                <div class="dmb-sub">Bellashgan do'stlaringiz va statistika</div>
-              </div>
+        <div class="section-title">Ko'proq</div>
+        <div class="card settings-list">
+          <div class="settings-item" onclick="showView('duelhistory')">
+            <div class="si-icon" style="background:var(--muhavara-bg);color:var(--muhavara);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
             </div>
-            <div class="dmb-right">
-              <div class="dmb-arrow">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </div>
+            <div class="si-text"><div class="t">Tarix</div><div class="s">O'tgan va joriy bellashuvlaringiz</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+          <div class="settings-item" onclick="showView('dostlarim')">
+            <div class="si-icon" style="background:var(--istima-bg);color:var(--istima);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
             </div>
+            <div class="si-text"><div class="t">Do'stlarim</div><div class="s">Bellashgan do'stlaringiz va statistika</div></div>
+            <svg class="arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </div>
         </div>
       </div>
@@ -1385,6 +1377,41 @@
           <h3>Hali bellashuvlaringiz yo'q</h3>
           <p>Do'stingizni bellashuvga chaqiring — havolani Telegram orqali ulashing va kim ko'proq to'g'ri javob berishini bilib oling.</p>
         </div>
+      </div>
+
+      <!-- ============ DUEL RANK (Bellashuv reytingi) ============ -->
+      <div class="view" id="view-duelrank">
+        <div class="back-row" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Ortga
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;">
+          <div class="view-title" style="margin:0;">Bellashuv reytingi</div>
+          <button type="button" class="rank-info-btn" title="Bellashuv reytingi qanday tuziladi" onclick="toast('ℹ️ Bellashuv reytingi bellashuvlarda qozonilgan g\'alabalar va to\'plangan XP asosida tuziladi.', 5000)">ⓘ</button>
+        </div>
+
+        <div class="card rank-top-card">
+          <div class="rank-top-cols">
+            <div class="rank-top-col">
+              <div class="num" id="duelRankNum">—</div>
+              <div class="lbl">O'rningiz</div>
+            </div>
+            <div class="rank-top-col">
+              <div class="num rank-top-xp-num"><span id="duelRankXpNum">—</span><img src="public/starxp.svg" class="rank-star-icon rank-top-star" alt="" width="20" height="20" /></div>
+              <div class="lbl">Yig'ilgan XP</div>
+              <div class="lbl" id="duelRankWinCountLbl" style="margin-top:2px;opacity:0.8;"></div>
+            </div>
+            <div class="rank-top-col">
+              <div class="num" id="duelRankGapNum">—</div>
+              <div class="lbl">G'alabalar soni</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="podium" id="duelPodium"></div>
+
+        <div class="section-title">Umumiy bellashuv jadvali</div>
+        <div class="card" style="padding:6px 8px;" id="duelLeaderboardList"></div>
       </div>
 
       <!-- ============ DUEL NATIJASI (Full-screen) ============ -->
@@ -1714,7 +1741,7 @@
             <div class="si-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
-            <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Telegram profil rasmingiz ko'rinadi</div></div>
+            <div class="si-text"><div class="t">Profil rasmini ko'rsatish</div><div class="s" id="avatarSettingSub">Reyting va bellashuvlarda profil rasmingiz ko'rinadi</div></div>
             <label class="switch"><input type="checkbox" id="avatarSettingSwitch" onchange="toggleAvatarVisibility()"><span class="switch-track"></span></label>
           </div>
           <div class="settings-item" onclick="openPasscodeSettingsModal()" style="display:none;">
@@ -1873,7 +1900,7 @@
               <div class="admin-tab-top">
                 <span class="admin-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></span>
               </div>
-              <div class="admin-tab-title">Speaking Duel savollari</div>
+              <div class="admin-tab-title">Muhadasa bellashuvi savollari</div>
               <div class="admin-tab-sub">Bellashuv uchun savollar banki</div>
             </button>
             <button class="admin-tab tab-slate" data-atab="admins" onclick="openAdminPanelModal('admins')" style="display:none;">
@@ -1932,7 +1959,7 @@
                 🗑 Imtihon tarixini tozalash
               </button>
               <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);font-size:12px;padding:7px 12px;" onclick="clearAllDuelHistory()">
-                ⚔️ Duel tarixini tozalash
+                ⚔️ Bellashuvlar tarixini tozalash
               </button>
               <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);font-size:12px;padding:7px 12px;" onclick="resetAllUsersXp()">
                 ↺ XP'larni 0'ga qaytarish
@@ -2061,7 +2088,7 @@
 <!-- SPEAKING DUEL SAVOLLARI -->
 <div class="admin-panel-body" id="adminTab-speakingduel" style="display:none;">
   <p style="font-size:13px;color:var(--text-dim);font-weight:600;margin-bottom:16px;">
-    Bu savollar faqat Speaking Duel (Muhavara bellashuvi)da ishlatiladi — oddiy Muhavara mashqlaridan mustaqil, alohida bank. Har duelda ular orasidan tasodifiy 3 tasi tanlanadi.
+    Bu savollar faqat Muhadasa bellashuvida ishlatiladi — oddiy Muhavara mashqlaridan mustaqil, alohida bank. Har bir bellashuvda ular orasidan tasodifiy 3 tasi tanlanadi.
   </p>
   <div class="card" style="padding:16px;margin-bottom:16px;">
     <div style="font-weight:600;font-size:13.5px;margin-bottom:12px;">+ Yangi savol qo'shish</div>

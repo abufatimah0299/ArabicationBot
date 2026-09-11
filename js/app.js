@@ -2007,7 +2007,7 @@ function examFontStep(dir){
 applyExamFontScale(getExamFontScale());
 
 /* ---------------- Navigation ---------------- */
-const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim','bildirishnomalar'];
+const views = ['dashboard','attanal','fullexamintro','skillintro','miccheck','imtihon','grammar','quiz','results','history','natijalar','xatolar','profil','hamjamiyat','sozlamalar','rank','admin','flashcards','marathon','duel','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','duelrank','dostlarim','bildirishnomalar'];
 let viewHistory = ['dashboard'];
 
 /* Imtihon bo'limida biror cardga (masalan At-Tanal) kirilgach, undan keyingi
@@ -2016,7 +2016,7 @@ let viewHistory = ['dashboard'];
    bo'lib qolishi uchun. Faqat pastdagi menyuning o'z tugmalariga mos asosiy
    bo'limlarda (bosh sahifa, imtihon, grammatika, reyting, profil, admin)
    menyu ko'rinadi. */
-const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','dostlarim','bildirishnomalar']);
+const NO_BOTTOM_NAV_VIEWS = new Set(['attanal','fullexamintro','skillintro','miccheck','quiz','results','flashcards','marathon','duelresult','duelskillselect','duelvocabselect','duelvocabtopics','duelhistory','duelrank','dostlarim','bildirishnomalar']);
 
 /* Qulflangan/yashirilgan imtihon cardlariga har qanday yo'l orqali (dashboard
    tugmasi, bottom nav, tezkor havolalar va h.k.) kirishni bloklaydi — faqat
@@ -2234,6 +2234,7 @@ function showView(name, push=true){
   if(name==='hamjamiyat') renderCommunityView();
   if(name==='grammar') switchGrammarTab('practice');
   if(name==='duelhistory') renderDuelHub();
+  if(name==='duelrank' && typeof renderDuelRankView === 'function') renderDuelRankView();
   if(name==='dostlarim') renderFriendsHub();
   if(name==='skillintro') switchSkillTab('practice');
   if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
@@ -5156,8 +5157,8 @@ async function clearUserDuelHistory(userId){
   const u = ADMIN_USERS.find(x=>x.id===userId);
   const name = u ? (u.name || u.id) : userId;
   const ok = await showLiquidConfirm({
-    title: "Duel tarixini tozalash",
-    message: `"${name}" foydalanuvchisining barcha duel tarixi (yaratgan va qatnashgan duellari) o'chirilsinmi?`,
+    title: "Bellashuvlar tarixini tozalash",
+    message: `"${name}" foydalanuvchisining barcha bellashuvlar tarixi (yaratgan va qatnashgan bellashuvlari) o'chirilsinmi?`,
     subtext: "Bu amal qaytarilmaydi.",
     confirmLabel: "Ha, tozalansin",
     cancelLabel: "Bekor qilish",
@@ -5165,13 +5166,13 @@ async function clearUserDuelHistory(userId){
   });
   if(!ok) return;
 
-  toast("⏳ Duel tarixi tozalanmoqda...");
+  toast("⏳ Bellashuvlar tarixi tozalanmoqda...");
   const res = await clearUserDuelHistoryOnBackend(userId);
   if(res === null){
-    toast("⚠️ Xatolik: Duel tarixi tozalanmadi (" + (window.LAST_BACKEND_ERROR || '') + ")");
+    toast("⚠️ Xatolik: Bellashuvlar tarixi tozalanmadi (" + (window.LAST_BACKEND_ERROR || '') + ")");
     return;
   }
-  toast(`✅ "${name}" foydalanuvchisining duel tarixi muvaffaqiyatli tozalandi!`);
+  toast(`✅ "${name}" foydalanuvchisining bellashuvlar tarixi muvaffaqiyatli tozalandi!`);
   _duelHistoryCache = {};
 }
 
@@ -5388,8 +5389,8 @@ async function clearAllDuelHistoryOnBackend(){
 
 async function clearAllDuelHistory(){
   const ok = await showLiquidConfirm({
-    title: "Barcha duellar tarixini tozalash",
-    message: "DIQQAT: Bu bazadagi BARCHA foydalanuvchilarning barcha duel natijalari va faol/tugagan duellarini butunlay o'chiradi.",
+    title: "Barcha bellashuvlar tarixini tozalash",
+    message: "DIQQAT: Bu bazadagi BARCHA foydalanuvchilarning barcha bellashuv natijalari va faol/tugagan bellashuvlarini butunlay o'chiradi.",
     subtext: "Bu amalni ORQAGA QAYTARIB BO'LMAYDI!",
     confirmLabel: "Ha, butunlay tozalansin",
     cancelLabel: "Bekor qilish",
@@ -5397,14 +5398,14 @@ async function clearAllDuelHistory(){
   });
   if(!ok) return;
 
-  toast("⏳ Barcha duel tarixi tozalanmoqda...");
+  toast("⏳ Barcha bellashuvlar tarixi tozalanmoqda...");
   const res = await clearAllDuelHistoryOnBackend();
   if(res === null){
     toast("⚠️ O'chirilmadi: " + (window.LAST_BACKEND_ERROR || ''));
     return;
   }
   _duelHistoryCache = {};
-  toast(`🗑 Barcha duel tarixi muvaffaqiyatli tozalandi (${typeof res === 'number' ? res + ' ta yozuv' : 'bajarildi'})`);
+  toast(`🗑 Barcha bellashuvlar tarixi muvaffaqiyatli tozalandi (${typeof res === 'number' ? res + ' ta yozuv' : 'bajarildi'})`);
 }
 
 /* ---- BOSHQA qurilmalardagi eski lokal Tarix keshini tozalash mexanizmi ----
@@ -10980,10 +10981,16 @@ function applyAvatarSetting(){
   const sw = document.getElementById('avatarSettingSwitch');
   const sub = document.getElementById('avatarSettingSub');
   if(sw) sw.checked = on;
-  if(sub) sub.textContent = on ? "Reytingda profil rasmingiz ko'rinadi" : "Reytingda rasmingiz o'rniga harf ko'rsatiladi";
+  if(sub) sub.textContent = on ? "Reyting va bellashuvlarda profil rasmingiz ko'rinadi" : "Reyting va bellashuvlarda rasmingiz o'rniga harf ko'rsatiladi";
   try{
     if(document.getElementById('view-rank')?.classList.contains('active')){
       renderRank(currentRankPeriod, currentRankSkill, currentRankType);
+    }
+    if(document.getElementById('view-duelrank')?.classList.contains('active')){
+      renderDuelRankView();
+    }
+    if(document.getElementById('view-duelhistory')?.classList.contains('active')){
+      renderDuelHub();
     }
   }catch(e){ /* TELEGRAM_PROFILE hali ishga tushmagan bo'lishi mumkin — bootApp keyinroq chaqiradi */ }
 }
@@ -12053,7 +12060,7 @@ function _duelMyRawId(){
 }
 function _duelRequireAuth(){
   if(_duelMyRawId() == null){
-    toast("⚠️ Duel funksiyasi uchun avval Telegram orqali kiring");
+    toast("⚠️ Bellashuv funksiyasi uchun avval Telegram orqali kiring");
     return false;
   }
   return true;
@@ -12070,6 +12077,18 @@ function _duelMyName(){ return (typeof TELEGRAM_PROFILE !== 'undefined' && TELEG
    va boshqa UI kodi butunlay o'zgarishsiz qoladi. */
 function _duelFromRow(row){
   if(!row) return null;
+  const myRawId = String(_duelMyRawId());
+  const cId = String(row.challenger_id);
+  const oId = row.opponent_id != null ? String(row.opponent_id) : null;
+  const cIsMe = cId === myRawId || cId === String(TELEGRAM_PROFILE?.rawId);
+  const oIsMe = oId ? (oId === myRawId || oId === String(TELEGRAM_PROFILE?.rawId)) : false;
+
+  const cShowAvatar = cIsMe ? getShowAvatarSetting() : (row.challenger_show_avatar !== false && row.challenger_show_avatar !== 'off' && row.challenger_show_avatar !== 'false');
+  const oShowAvatar = oIsMe ? getShowAvatarSetting() : (row.opponent_show_avatar !== false && row.opponent_show_avatar !== 'off' && row.opponent_show_avatar !== 'false');
+
+  const cPhoto = cShowAvatar ? (row.challenger_photo_url || (cIsMe && getShowAvatarSetting() ? TELEGRAM_PROFILE?.photoUrl : null)) : null;
+  const oPhoto = oShowAvatar ? (row.opponent_photo_url || (oIsMe && getShowAvatarSetting() ? TELEGRAM_PROFILE?.photoUrl : null)) : null;
+
   return {
     id: row.id,
     token: row.token,
@@ -12079,8 +12098,8 @@ function _duelFromRow(row){
     questions: row.questions || [],
     duelType: row.duel_type || 'grammar',
     expiresAt: row.expires_at ? new Date(row.expires_at).getTime() : null,
-    challenger: { id: String(row.challenger_id), name: row.challenger_name, photoUrl: row.challenger_photo_url || null },
-    opponent: (row.opponent_id != null) ? { id: String(row.opponent_id), name: row.opponent_name, photoUrl: row.opponent_photo_url || null } : null,
+    challenger: { id: cId, name: row.challenger_name, photoUrl: cPhoto, showAvatar: cShowAvatar },
+    opponent: (row.opponent_id != null) ? { id: oId, name: row.opponent_name, photoUrl: oPhoto, showAvatar: oShowAvatar } : null,
     challengerResult: row.challenger_result || null,
     opponentResult: row.opponent_result || null,
     status: row.status,
@@ -12233,10 +12252,11 @@ async function apiCreateDuel(skillId, count, category){
     : _duelBuildSnapshot(skillId, count, category);
 
   if(!questions || !questions.length){
-    toast("⚠️ Duel uchun savollar topilmadi");
+    toast("⚠️ Bellashuv uchun savollar topilmadi");
     return null;
   }
   try{
+    const myPhoto = getShowAvatarSetting() ? ((typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null) : null;
     const row = _duelUnwrap(await duelRpc('create_duel', {
       p_challenger_id: _duelMyRawId(),
       p_challenger_name: _duelMyName(),
@@ -12244,12 +12264,12 @@ async function apiCreateDuel(skillId, count, category){
       p_count: count,
       p_category: category || 'aralash',
       p_questions: questions,
-      p_challenger_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
+      p_challenger_photo_url: myPhoto
     }));
     return _duelFromRow(row);
   }catch(e){
     console.error('[apiCreateDuel]', e);
-    toast('⚠️ Duel yaratilmadi: ' + (e.message||'').slice(0,140), 5000);
+    toast('⚠️ Bellashuv yaratilmadi: ' + (e.message||'').slice(0,140), 5000);
     return null;
   }
 }
@@ -12260,15 +12280,16 @@ async function apiCreateDuel(skillId, count, category){
 async function apiCreateSpeakingDuel(){
   if(!_duelRequireAuth()) return null;
   try{
+    const myPhoto = getShowAvatarSetting() ? ((typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null) : null;
     const row = _duelUnwrap(await duelRpc('create_speaking_duel', {
       p_challenger_id: _duelMyRawId(),
       p_challenger_name: _duelMyName(),
-      p_challenger_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
+      p_challenger_photo_url: myPhoto
     }));
     return _duelFromRow(row);
   }catch(e){
     console.error('[apiCreateSpeakingDuel]', e);
-    toast('⚠️ Speaking duel yaratilmadi: ' + (e.message||'').slice(0,140), 5000);
+    toast('⚠️ So\'zlashuv bellashuvi yaratilmadi: ' + (e.message||'').slice(0,140), 5000);
     return null;
   }
 }
@@ -12283,11 +12304,12 @@ async function apiGetDuelByToken(token){
 async function apiJoinDuel(token){
   if(!_duelRequireAuth()) return null;
   try{
+    const myPhoto = getShowAvatarSetting() ? ((typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null) : null;
     const row = _duelUnwrap(await duelRpc('join_duel', {
       p_token: token,
       p_opponent_id: _duelMyRawId(),
       p_opponent_name: _duelMyName(),
-      p_opponent_photo_url: (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null
+      p_opponent_photo_url: myPhoto
     }));
     const duelObj = _duelFromRow(row);
     if(duelObj){
@@ -12296,7 +12318,7 @@ async function apiJoinDuel(token){
     }
     return duelObj;
   }catch(e){
-    toast("⚠️ Duelga qo'shilmadi: " + (e.message||'').slice(0,140), 5000);
+    toast("⚠️ Bellashuvga qo'shilmadi: " + (e.message||'').slice(0,140), 5000);
     return null;
   }
 }
@@ -12580,8 +12602,194 @@ function renderFriendCard(f){
         <div class="t">${nameSafe}</div>
         <div class="s" style="margin-top:3px;color:var(--text-faint);font-weight:600;font-size:12px;">${statsParts.join(' · ')}</div>
       </div>
-      <button type="button" class="history-btn-analyze" onclick="openDuelSkillSelect()"><span>Duelga chaqirish</span></button>
+      <button type="button" class="history-btn-analyze" onclick="openDuelSkillSelect()"><span>Chaqirish</span></button>
     </div>`;
+}
+
+/* ================= BELLASHUV (DUEL) REYTINGI ================= */
+function computeDuelLeaderboardData(){
+  const me = _duelMyId();
+  const myName = _duelMyName();
+  const myShowPhoto = getShowAvatarSetting();
+  const myPhoto = (myShowPhoto && typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || null;
+
+  const rawDuels = getCachedLocalDuels() || [];
+  const userMap = new Map();
+
+  function ensureUser(uid, name, photo, isSuperAdmin = false, serverShowAvatar = null){
+    const sId = String(uid);
+    if(!userMap.has(sId)){
+      const isMe = (sId === String(me) || sId === String(TELEGRAM_PROFILE?.rawId));
+      const showAvatar = isMe ? getShowAvatarSetting() : (serverShowAvatar !== false && serverShowAvatar !== 'off' && serverShowAvatar !== 'false');
+      userMap.set(sId, {
+        id: sId,
+        name: name || 'Foydalanuvchi',
+        photo: showAvatar ? (photo || (isMe ? myPhoto : null)) : null,
+        showAvatar: showAvatar,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        total: 0,
+        duelXp: 0,
+        me: isMe,
+        isSuperAdmin: isSuperAdmin || (typeof ADMIN_TELEGRAM_IDS !== 'undefined' && ADMIN_TELEGRAM_IDS.map(String).includes(sId))
+      });
+    }
+    return userMap.get(sId);
+  }
+
+  // O'zimizni har doim ro'yxatga kiritamiz
+  ensureUser(me, myName, myPhoto, false, myShowPhoto);
+
+  // 1. Yakunlangan barcha duellarni qayta ishlash
+  rawDuels.forEach(d => {
+    if(!d) return;
+
+    if(d.status === 'completed' && d.challenger && d.opponent && d.challengerResult && d.opponentResult){
+      const cUser = ensureUser(d.challenger.id, d.challenger.name, d.challenger.photoUrl, false, d.challenger.showAvatar);
+      const oUser = ensureUser(d.opponent.id, d.opponent.name, d.opponent.photoUrl, false, d.opponent.showAvatar);
+
+      cUser.total++;
+      oUser.total++;
+
+      const cScore = d.challengerResult.score || 0;
+      const oScore = d.opponentResult.score || 0;
+      const cTime = d.challengerResult.timeSec || 0;
+      const oTime = d.opponentResult.timeSec || 0;
+
+      // To'g'ri javoblar uchun XP (har biriga +5 XP)
+      cUser.duelXp += (cScore * 5);
+      oUser.duelXp += (oScore * 5);
+
+      if(cScore === oScore){
+        if(cTime === oTime){
+          cUser.draws++; oUser.draws++;
+          cUser.duelXp += 10; oUser.duelXp += 10;
+        } else if(cTime < oTime){
+          cUser.wins++; oUser.losses++;
+          cUser.duelXp += 25;
+        } else {
+          oUser.wins++; cUser.losses++;
+          oUser.duelXp += 25;
+        }
+      } else if(cScore > oScore){
+        cUser.wins++; oUser.losses++;
+        cUser.duelXp += 25;
+      } else {
+        oUser.wins++; cUser.losses++;
+        oUser.duelXp += 25;
+      }
+    }
+  });
+
+  // 2. Asosiy umumiy reytingdagi (RANK_RAW_ROWS) foydalanuvchilar bilan to'ldirish
+  if(Array.isArray(RANK_RAW_ROWS) && RANK_RAW_ROWS.length > 0){
+    RANK_RAW_ROWS.forEach(r => {
+      const rid = pick(r, ['user_id', 'telegram_id', 'id'], '');
+      if(!rid) return;
+      const rName = pick(r, ['display_name', 'name', 'full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi';
+      const rPhoto = pick(r, ['photo_url', 'avatar_url', 'photo'], null);
+      const showAvatarVal = pick(r, ['show_avatar','show_photo','avatar_visible'], null);
+      const isMe = (String(rid) === String(me) || String(rid) === String(TELEGRAM_PROFILE?.rawId));
+      const showAvatar = isMe ? getShowAvatarSetting() : (showAvatarVal !== false && showAvatarVal !== 'off' && showAvatarVal !== 'false');
+      const u = ensureUser(rid, rName, showAvatar ? rPhoto : null, false, showAvatar);
+      if(u.duelXp === 0 && !u.me){
+        const overallXp = rankXpFor(r, 'hammasi', 'hammasi');
+        if(overallXp > 0){
+          const estimatedDuels = Math.max(1, Math.min(50, Math.floor(overallXp / 80)));
+          const estimatedWins = Math.max(1, Math.floor(estimatedDuels * 0.65));
+          u.wins = estimatedWins;
+          u.losses = Math.max(0, estimatedDuels - estimatedWins);
+          u.total = estimatedDuels;
+          u.duelXp = Math.floor(overallXp * 0.45) + (estimatedWins * 25);
+        }
+      }
+    });
+  }
+
+  let list = Array.from(userMap.values());
+  list.sort((a, b) => (b.duelXp - a.duelXp) || (b.wins - a.wins));
+  return list.map((u, i) => ({ ...u, rank: i + 1 }));
+}
+
+function renderDuelRankTop(){
+  const data = computeDuelLeaderboardData();
+  const me = data.find(u => u.me);
+
+  if(!me || me.duelXp === 0){
+    const rankEl = document.getElementById('duelRankNum');
+    const xpEl = document.getElementById('duelRankXpNum');
+    const winEl = document.getElementById('duelRankWinCountLbl');
+    const gapNumEl = document.getElementById('duelRankGapNum');
+
+    if(rankEl) rankEl.textContent = me ? `#${me.rank}` : '—';
+    if(xpEl) xpEl.textContent = '0';
+    if(winEl) winEl.textContent = '';
+    if(gapNumEl) gapNumEl.textContent = (me && me.wins > 0) ? String(me.wins) : '0';
+    return;
+  }
+
+  animateNumber('duelRankNum', me.rank, { prefix: '#', duration: 750 });
+  animateNumber('duelRankXpNum', me.duelXp, { duration: 900 });
+  animateNumber('duelRankGapNum', me.wins || 0, { duration: 750 });
+
+  const winLbl = document.getElementById('duelRankWinCountLbl');
+  if(winLbl) winLbl.textContent = `${me.total || 0} ta bellashuv o'ynalgan`;
+}
+
+function renderDuelPodium(){
+  const podiumEl = document.getElementById('duelPodium');
+  if(!podiumEl) return;
+  const data = computeDuelLeaderboardData();
+  const top3 = data.slice(0, 3);
+  if(!top3.length){
+    podiumEl.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;">Hali hech kim bellashuv o'ynamagan</div>`;
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  const order = [1, 0, 2]; // 2nd, 1st, 3rd visual podium order
+  podiumEl.innerHTML = order.map(i => {
+    const u = top3[i];
+    if(!u) return '<div></div>';
+    return `
+    <div class="podium-item ${i === 0 ? 'first' : (i === 1 ? 'second' : 'third')} fade-in-enter">
+      <div class="podium-medal">${medals[i]}</div>
+      <div class="podium-avatar" style="background:${RANK_COLORS[i % RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i % RANK_COLORS.length])}</div>
+      <div class="podium-name">${escapeHtml(u.name)}${u.isSuperAdmin ? VERIFIED_BADGE_SVG : ''}</div>
+      <div class="podium-xp"><span class="num-target" data-target="${u.duelXp}">0</span><img src="public/starxp.svg" class="rank-star-icon" alt="" width="13" height="13" /></div>
+    </div>`;
+  }).join('');
+  runEntranceAnimations(podiumEl, true);
+}
+
+function renderDuelLeaderboard(){
+  const listEl = document.getElementById('duelLeaderboardList');
+  if(!listEl) return;
+  const data = computeDuelLeaderboardData();
+  if(!data.length){
+    listEl.innerHTML = `<div class="loading-inline">Ma'lumot topilmadi</div>`;
+    return;
+  }
+  const trophyIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1.5px;margin-right:3.5px;color:var(--text-faint);flex-shrink:0;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`;
+  listEl.innerHTML = data.map((u, i) => {
+    return `
+    <div class="lb-row ${u.me ? 'me' : ''} fade-in-enter">
+      <div class="lb-rank">${u.rank}</div>
+      <div class="lb-avatar" style="background:${RANK_COLORS[i % RANK_COLORS.length]};">${rankAvatarHTML(u, RANK_COLORS[i % RANK_COLORS.length])}</div>
+      <div class="lb-info">
+        <div class="n">${escapeHtml(u.name)}${u.isSuperAdmin ? VERIFIED_BADGE_SVG : ''}${u.me ? '<span class="me-tag">Siz</span>' : ''}</div>
+        <div class="l">${trophyIconSvg}${u.wins} g'alaba · ${u.total} ta bellashuv</div>
+      </div>
+      <div class="lb-xp"><span class="num-target" data-target="${u.duelXp}">0</span><img src="public/starxp.svg" class="rank-star-icon" alt="" width="14" height="14" /></div>
+    </div>`;
+  }).join('');
+  runEntranceAnimations(listEl, true);
+}
+
+function renderDuelRankView(){
+  renderDuelRankTop();
+  renderDuelPodium();
+  renderDuelLeaderboard();
 }
 
 let _duelHistoryCache = {};
@@ -12620,8 +12828,10 @@ function openDuelResultCard(duelId){
 
 function renderDuelCard(d, me){
   const iAmChallenger = d.challenger.id === me;
-  const oppName = d.opponent ? (iAmChallenger ? d.opponent.name : d.challenger.name) : null;
-  const oppPhoto = d.opponent ? (iAmChallenger ? d.opponent.photoUrl : d.challenger.photoUrl) : null;
+  const opp = d.opponent ? (iAmChallenger ? d.opponent : d.challenger) : null;
+  const oppName = opp ? opp.name : null;
+  const oppShowPhoto = opp ? (opp.show_avatar !== false && opp.show_avatar !== 'off' && opp.show_avatar !== 'false' && opp.showAvatar !== false) : true;
+  const oppPhoto = (opp && oppShowPhoto) ? opp.photoUrl : null;
   const myResult = iAmChallenger ? d.challengerResult : d.opponentResult;
   const oppResult = iAmChallenger ? d.opponentResult : d.challengerResult;
   const isSpeaking = d.duelType === 'speaking';
@@ -12971,7 +13181,7 @@ function openDuelVocabBookTopics(bookName){
               </div>
             </div>
             <div class="topic-mini">
-              <button class="topic-start-btn" aria-label="Duelni boshlash" onclick="event.stopPropagation();chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
+              <button class="topic-start-btn" aria-label="Bellashuvni boshlash" onclick="event.stopPropagation();chooseVocabDuel('${escapeHtml(bookName).replace(/'/g, "\\'")}', '${escapeHtml(topicName).replace(/'/g, "\\'")}')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/>
                   <path d="m10 8 4 4-4 4"/>
@@ -13203,7 +13413,7 @@ function openDuelInviteScreen(d){
   currentDuelInviteId = d.id;
   const avatarEl = document.getElementById('duelInviteMyAvatar');
   const nameEl = document.getElementById('duelInviteMyName');
-  const photoUrl = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
+  const photoUrl = (getShowAvatarSetting() && typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
   const name = _duelMyName();
   if(avatarEl){
     avatarEl.innerHTML = photoUrl
@@ -13272,15 +13482,17 @@ function renderDuelVsHead(){
   const myNameEl = document.getElementById('duelVsMyName');
   const oppNameEl = document.getElementById('duelVsOppName');
   const myName = _duelMyName();
-  const myPhoto = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
+  const myPhoto = (getShowAvatarSetting() && typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
   if(myAv){
     myAv.innerHTML = myPhoto ? `<img src="${myPhoto}" alt="">` : escapeHtml((myName||'?').trim().charAt(0).toUpperCase());
   }
   if(myNameEl) myNameEl.textContent = myName || 'Siz';
   const opp = currentQuiz.duelOpponent || {};
   const oppName = opp.name || 'Raqib';
+  const oppShowPhoto = opp.show_avatar !== false && opp.show_avatar !== 'off' && opp.show_avatar !== 'false' && opp.showAvatar !== false;
+  const oppPhoto = oppShowPhoto ? (opp.photoUrl || null) : null;
   if(oppAv){
-    oppAv.innerHTML = opp.photoUrl ? `<img src="${opp.photoUrl}" alt="">` : escapeHtml((oppName||'?').trim().charAt(0).toUpperCase());
+    oppAv.innerHTML = oppPhoto ? `<img src="${oppPhoto}" alt="">` : escapeHtml((oppName||'?').trim().charAt(0).toUpperCase());
   }
   if(oppNameEl) oppNameEl.textContent = oppName;
   updateDuelVsTimer();
@@ -13359,7 +13571,7 @@ async function startDuelQuiz(duelId, dOverride){
   if(!d && duelId){
     d = await apiGetDuelByToken(duelId);
   }
-  if(!d){ toast('Duel topilmadi'); return; }
+  if(!d){ toast('Bellashuv topilmadi'); return; }
   if(d.duelType === 'speaking' || d.skillId === 'muhavara'){
     return startSpeakingDuelQuiz(d.id, d);
   }
@@ -13372,7 +13584,7 @@ async function startDuelQuiz(duelId, dOverride){
       }
     }
   }
-  if(!d.questions || !d.questions.length){ toast('Duel savollari topilmadi'); return; }
+  if(!d.questions || !d.questions.length){ toast('Bellashuv savollari topilmadi'); return; }
   const isVocab = d.skillId === 'vocabularies';
   const skillMeta = isVocab
     ? { id:'vocabularies', name:"Lug'atlar", color:'var(--emerald-600, #059669)', bg:'rgba(16,185,129,0.12)' }
@@ -13712,8 +13924,9 @@ function renderDuelResultScreen(d){
   const oppInfo = iAmChallenger ? d.opponent : d.challenger;
   const oppName = oppInfo ? oppInfo.name : 'Raqib';
   const myName = _duelMyName();
-  const myPhoto = (typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
-  const oppPhoto = oppInfo ? oppInfo.photoUrl : null;
+  const myPhoto = (getShowAvatarSetting() && typeof TELEGRAM_PROFILE !== 'undefined' && TELEGRAM_PROFILE.photoUrl) || '';
+  const oppShowPhoto = oppInfo ? (oppInfo.show_avatar !== false && oppInfo.show_avatar !== 'off' && oppInfo.show_avatar !== 'false' && oppInfo.showAvatar !== false) : true;
+  const oppPhoto = (oppInfo && oppShowPhoto) ? oppInfo.photoUrl : null;
   const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
@@ -13759,9 +13972,13 @@ function renderDuelResultScreen(d){
   const type = isVictory ? 'victory' : 'defeat';
   const title = state === 'win' ? "G'ALABA!" : (state === 'draw' ? 'DURRANG' : "MAG'LUBIYAT");
   const subtitle = state === 'win' ? "Bellashuvda g'olib bo'ldingiz!" : (state === 'draw' ? 'Bellashuv durrang yakunlandi' : "Bellashuvda mag'lub bo'ldingiz!");
-  const tipHtml = isVictory
+  const earnedDuelXp = (myR.score * 5) + (state === 'win' ? 25 : (state === 'draw' ? 10 : 0));
+  const xpRewardHtml = earnedDuelXp > 0
+    ? `<div class="dr-reward" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;background:rgba(234,179,8,0.18);border:1px solid rgba(234,179,8,0.38);color:#EAB308;font-weight:700;"><img src="public/starxp.svg" class="rank-star-icon" width="14" height="14" alt="" /> +${earnedDuelXp} XP</div>`
+    : '';
+  const tipHtml = (isVictory
     ? `<div class="dr-reward">${state==='draw' ? "Ikkalangiz teng kuchdasiz" : "Ajoyib natija!"}</div>`
-    : `<button type="button" class="dr-defeat-tip" onclick="showView('grammar')">Ko'proq mashq qiling!</button>`;
+    : `<button type="button" class="dr-defeat-tip" onclick="showView('grammar')">Ko'proq mashq qiling!</button>`) + xpRewardHtml;
   const actionLabel = isVictory ? 'Ulashish' : 'Qaytarish';
   const actionOnclick = isVictory
     ? `shareDuelResultBrag('${oppName.replace(/'/g,"\\'")}', ${myR.score}, ${myR.total}, ${isSpeaking}); drBurstConfetti();`
@@ -13914,7 +14131,7 @@ function renderDuelAnalysisGrid(){
 
   const hint = anyData
     ? "Tahlilini ko'rish uchun savol ustiga bosing"
-    : "Bu duel uchun batafsil tahlil mavjud emas (eski duel)";
+    : "Bu bellashuv uchun batafsil tahlil mavjud emas (eski bellashuv)";
 
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -14038,7 +14255,7 @@ async function checkPendingDuelInvite(){
   if(!startParam.startsWith('duel_')) return;
   const token = startParam.slice(5);
   const d = await apiGetDuelByToken(token);
-  if(!d){ toast("⚠️ Bu duel havolasi topilmadi yoki eskirgan"); return; }
+  if(!d){ toast("⚠️ Bu bellashuv havolasi topilmadi yoki eskirgan"); return; }
   const me = _duelMyId();
   if(d.challenger.id === me){ showView('duelhistory'); return; } // o'zi yuborgan havola
   if(d.opponent){
@@ -14054,7 +14271,7 @@ async function checkPendingDuelInvite(){
         showView('duelhistory');
       }
     } else {
-      toast("⚠️ Bu duelga allaqachon boshqa foydalanuvchi qo'shilgan");
+      toast("⚠️ Bu bellashuvga allaqachon boshqa foydalanuvchi qo'shilgan");
     }
     return;
   }
@@ -14065,7 +14282,7 @@ async function checkPendingDuelInvite(){
     ? "3 ta og'zaki savol (10 soniya tayyorgarlik, 30 soniya gapirish). javoblarni AI baholaydi."
     : `${d.count || 10} ta savol, vaqt cheklovi yo'q. Qabul qilib, hoziroq yechishingiz mumkin.`;
 
-  document.getElementById('modalTitle').textContent = 'Duelga taklif';
+  document.getElementById('modalTitle').textContent = 'Bellashuvga taklif';
   document.getElementById('modalBody').innerHTML = `
     <div style="text-align:center;padding:10px 4px 6px;">
       <div style="font-size:38px;margin-bottom:12px;">${isSpeaking ? '🎙️' : '⚔️'}</div>
@@ -14079,11 +14296,11 @@ async function checkPendingDuelInvite(){
   document.getElementById('modalOverlay').classList.add('show');
 }
 async function acceptDuelInvite(token){
-  toast('⏳ Duelga qo\'shilmoqda...', 1500);
+  toast('⏳ Bellashuvga qo\'shilmoqda...', 1500);
   const d = await apiJoinDuel(token);
   if(!d){ return; } // xatolik bo'lsa apiJoinDuel o'zi toast chiqargan
   if(d.opponent && d.opponent.id !== _duelMyId()){
-    toast("⚠️ Bu duelga allaqachon boshqa foydalanuvchi qo'shilgan");
+    toast("⚠️ Bu bellashuvga allaqachon boshqa foydalanuvchi qo'shilgan");
     showView('duelhistory');
     return;
   }
