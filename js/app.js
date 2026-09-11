@@ -372,10 +372,10 @@ async function loadLeaderboardFromBackend(forceRefresh = false){
   }catch(e){ console.error('[loadLeaderboardFromBackend]', e); return []; }
 }
 /* Reyting ro'yxatini backenddan qayta yuklab, ekranni yangi ma'lumot bilan qayta
-   chizadi. applyLiveLeaderboard() ichida view-rank ochiq bo'lsa renderRank() ni
+   chizadi. applyLiveLeaderboard() ichida view-rank ochiq bo'lsa va ma'lumot o'zgargan bo'lsa renderRank() ni
    o'zi chaqiradi — shu sabab bu yerda alohida render() chaqirish shart emas. */
-async function refreshRankFromBackend(){
-  const lb = await loadLeaderboardFromBackend(true);
+async function refreshRankFromBackend(forceRefresh = false){
+  const lb = await loadLeaderboardFromBackend(forceRefresh);
   applyLiveLeaderboard(lb);
 }
 
@@ -2257,7 +2257,7 @@ function showView(name, push=true){
       renderCustomDropdown('rankPeriodDropdown');
     }
     if(typeof renderRank === 'function') renderRank(currentRankPeriod, currentRankSkill, currentRankType);
-    refreshRankFromBackend();
+    refreshRankFromBackend(false);
   }
 }
 
@@ -10258,10 +10258,32 @@ let rankLoaded = false;
    MUHIM: XP=0 bo'lgan foydalanuvchilar reytingda umuman ko'rsatilmaydi — faqat
    kamida 1 XP to'plagan foydalanuvchilar ro'yxatga kiradi (pastga qarang: sortedRank). */
 let RANK_RAW_ROWS = [];
+function isLeaderboardDataEqual(a, b){
+  if(!Array.isArray(a) || !Array.isArray(b)) return false;
+  if(a.length !== b.length) return false;
+  for(let i = 0; i < a.length; i++){
+    const rowA = a[i], rowB = b[i];
+    if(!rowA || !rowB) return false;
+    const idA = rowA.user_id || rowA.telegram_id || rowA.id;
+    const idB = rowB.user_id || rowB.telegram_id || rowB.id;
+    if(idA !== idB) return false;
+    if((rowA.total_xp || 0) !== (rowB.total_xp || 0)) return false;
+    if((rowA.xp || 0) !== (rowB.xp || 0)) return false;
+    if(rowA.full_name !== rowB.full_name) return false;
+    if(rowA.avatar_url !== rowB.avatar_url) return false;
+    if((rowA.count || 0) !== (rowB.count || 0)) return false;
+  }
+  return true;
+}
 function applyLiveLeaderboard(rows){
+  const wasLoaded = rankLoaded;
   rankLoaded = true; // backenddan javob (bo'sh bo'lsa ham) keldi — endi "Yuklanmoqda" ko'rsatilmaydi
-  RANK_RAW_ROWS = Array.isArray(rows) ? rows : [];
-  if(document.getElementById('view-rank')?.classList.contains('active')) renderRank(currentRankPeriod, currentRankSkill, currentRankType);
+  const newRows = Array.isArray(rows) ? rows : [];
+  const changed = !wasLoaded || !isLeaderboardDataEqual(newRows, RANK_RAW_ROWS);
+  RANK_RAW_ROWS = newRows;
+  if(changed && document.getElementById('view-rank')?.classList.contains('active')){
+    renderRank(currentRankPeriod, currentRankSkill, currentRankType);
+  }
 }
 let currentRankPeriod = 'hammasi';
 let currentRankSkill = 'hammasi'; // 'hammasi' yoki SKILLS ichidagi id (grammatika/qiroa/istima/muhavara/kitaba)
