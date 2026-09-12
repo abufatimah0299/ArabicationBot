@@ -1330,60 +1330,69 @@ async function bootApp(){
     const cachedQuestions = JSON.parse(localStorage.getItem('arab_questions_cache_v1') || 'null');
     if(Array.isArray(cachedQuestions) && cachedQuestions.length) applyLiveQuestions(cachedQuestions);
   }catch(e){}
-  const user = await tgInitAndAuth();
-  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-  const tgName = tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim() : '';
-  const tgUsername = tgUser?.username ? `@${tgUser.username}` : '';
-  const savedPhoto = (function(){ try { return localStorage.getItem('arabication_saved_photo_url'); }catch(e){ return null; } })();
-  const tgPhoto = tgUser?.photo_url || (user && user.photo_url) || savedPhoto || null;
 
-  if(user){
+  const user = await tgInitAndAuth();
+
+  // Telegram ma'lumotlarini bir necha ishonchli manbadan olish (SDK, initData query string yoki auth server javobi)
+  let rawTgUser = null;
+  if(window.Telegram?.WebApp?.initDataUnsafe?.user){
+    rawTgUser = window.Telegram.WebApp.initDataUnsafe.user;
+  } else if(window.Telegram?.WebApp?.initData){
+    try {
+      const p = new URLSearchParams(window.Telegram.WebApp.initData);
+      const uStr = p.get('user');
+      if(uStr) rawTgUser = JSON.parse(uStr);
+    } catch(e){}
+  }
+  if(!rawTgUser && user){
+    rawTgUser = user;
+  }
+
+  const tgFullName = rawTgUser ? [rawTgUser.first_name, rawTgUser.last_name].filter(Boolean).join(' ').trim() : '';
+  const tgUsernameRaw = (rawTgUser?.username || user?.username || '').replace(/^@/, '').trim();
+  const tgUsername = tgUsernameRaw ? `@${tgUsernameRaw}` : '';
+  const savedPhoto = (function(){ try { return localStorage.getItem('arabication_saved_photo_url'); }catch(e){ return null; } })();
+  const tgPhoto = rawTgUser?.photo_url || user?.photo_url || savedPhoto || null;
+
+  const currentTgId = String(rawTgUser?.id || user?.id || (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) || '');
+  const currentTgRawId = rawTgUser?.id || user?.id || (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) || null;
+
+  if(user || rawTgUser){
     TELEGRAM_PROFILE = {
-      name: tgName || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
-      username: tgUsername || (user.username ? `@${user.username}` : ''),
-      id: String(user.id || tgUser?.id || ''),
-      rawId: user.id || tgUser?.id || null,
+      name: tgFullName || [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || localStorage.getItem('arabication_custom_name') || 'Foydalanuvchi',
+      username: tgUsername,
+      id: currentTgId,
+      rawId: currentTgRawId,
       photoUrl: tgPhoto,
     };
   } else {
     // Telegram tashqarisida yoki to'g'ridan-to'g'ri brauzerda ochilganda (Mehmon rejimi)
-    if(tgUser){
-      TELEGRAM_PROFILE = {
-        name: tgName || 'Foydalanuvchi',
-        username: tgUsername,
-        id: String(tgUser.id),
-        rawId: tgUser.id,
-        photoUrl: tgPhoto,
-      };
-    } else {
-      TELEGRAM_PROFILE = {
-        name: 'Mehmon',
-        username: '',
-        id: '',
-        rawId: null,
-        photoUrl: tgPhoto,
-        gender: 'unspecified'
-      };
-    }
+    const savedName = localStorage.getItem('arabication_custom_name');
+    TELEGRAM_PROFILE = {
+      name: savedName && savedName.trim() ? savedName.trim() : 'Mehmon',
+      username: '',
+      id: '',
+      rawId: null,
+      photoUrl: tgPhoto,
+      gender: 'unspecified'
+    };
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
+  }
+
+  if(tgFullName){
+    TELEGRAM_PROFILE.name = tgFullName;
+    try{ localStorage.setItem('arabication_custom_name', tgFullName); }catch(e){}
   }
   if(TELEGRAM_PROFILE.photoUrl){
     try{ localStorage.setItem('arabication_saved_photo_url', TELEGRAM_PROFILE.photoUrl); }catch(e){}
   }
   try{
-    if(tgName){
-      localStorage.setItem('arabication_custom_name', tgName);
-    } else {
-      const savedName = localStorage.getItem('arabication_custom_name');
-      if(savedName && savedName.trim()){
-        TELEGRAM_PROFILE.name = savedName.trim();
-      }
-    }
     const savedGender = localStorage.getItem('arabication_user_gender');
     if(savedGender){
       TELEGRAM_PROFILE.gender = savedGender;
     }
   }catch(e){}
+
   renderGreetingFromProfile();
   applyProfileHeader(null);
   try{ checkPendingDuelInvite(); }catch(e){ console.error('[checkPendingDuelInvite]', e); }
@@ -1409,14 +1418,14 @@ async function bootApp(){
       applyProfileHeader(dash);
       
       // Telegram nickname yoki ism o'zgargan bo'lsa, backend va platformani avtomatik sinxronlash
-      if(tgName){
-        TELEGRAM_PROFILE.name = tgName;
-        try{ localStorage.setItem('arabication_custom_name', tgName); }catch(e){}
-        if(dash && dash.display_name !== tgName && SESSION_TOKEN){
+      if(tgFullName){
+        TELEGRAM_PROFILE.name = tgFullName;
+        try{ localStorage.setItem('arabication_custom_name', tgFullName); }catch(e){}
+        if((!dash || dash.display_name !== tgFullName) && SESSION_TOKEN){
           fetch(`${SUPABASE_URL}/rest/v1/rpc/update_display_name`, {
             method: "POST",
             headers: authHeaders(),
-            body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_display_name: tgName })
+            body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_display_name: tgFullName })
           }).then(()=>{
             refreshRankFromBackend(true);
           }).catch(e=>console.error('[autoSyncTgName]', e));
@@ -2260,8 +2269,8 @@ function showView(name, push=true){
   if(name==='duelrank' && typeof renderDuelRankView === 'function') renderDuelRankView();
   if(name==='dostlarim') renderFriendsHub();
   if(name==='skillintro') switchSkillTab('practice');
-  if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
-  if(name==='dashboard') renderDashboardPracticeCards();
+  if(name==='sozlamalar' || name==='profil') { updatePasscodeStatusText(); renderGreetingFromProfile(); }
+  if(name==='dashboard') { renderDashboardPracticeCards(); renderGreetingFromProfile(); }
   if(name==='flashcards') renderFlashcardsView();
   if(name==='marathon') renderMarathonHub();
   if(name==='history'){
@@ -10410,8 +10419,8 @@ function sortedRank(period, skill){
     const rawPhoto = pick(r, ['photo_url','avatar_url','photo'], null);
     return {
       id: rid,
-      name: pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
-      photo: showAvatar ? rawPhoto : null,
+      name: isMe ? (TELEGRAM_PROFILE.name || pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi') : (pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi'),
+      photo: showAvatar ? (isMe ? (TELEGRAM_PROFILE.photoUrl || rawPhoto) : rawPhoto) : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
       xp: rankXpFor(r, skill, period),
@@ -10431,7 +10440,7 @@ function sortedRank(period, skill){
     if(myXp > 0){
       list.push({
         id: myId || 'me',
-        name: TELEGRAM_PROFILE.fullName || 'Siz',
+        name: TELEGRAM_PROFILE.name || 'Siz',
         photo: getShowAvatarSetting() ? TELEGRAM_PROFILE.photoUrl : null,
         showAvatar: getShowAvatarSetting(),
         level: 'A1',
@@ -12646,8 +12655,8 @@ function computeDuelLeaderboardData(){
       const showAvatar = isMe ? getShowAvatarSetting() : (serverShowAvatar !== false && serverShowAvatar !== 'off' && serverShowAvatar !== 'false');
       userMap.set(sId, {
         id: sId,
-        name: name || 'Foydalanuvchi',
-        photo: showAvatar ? (photo || (isMe ? myPhoto : null)) : null,
+        name: isMe ? (myName || name || 'Foydalanuvchi') : (name || 'Foydalanuvchi'),
+        photo: showAvatar ? (isMe ? (myPhoto || photo) : photo) : null,
         showAvatar: showAvatar,
         wins: 0,
         losses: 0,
