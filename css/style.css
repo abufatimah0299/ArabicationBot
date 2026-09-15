@@ -7094,3 +7094,278 @@ html[data-theme="dark"] .notif-card.unread{
   white-space:pre-line;
   word-break:break-word;
 }
+
+/* =========================================================
+   ADMIN PANEL: UMUMIY ANALITIKA (NEW USERS & ACTIVITY SPLINE)
+   ========================================================= */
+.admin-analytics-card{
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--card);
+  transition:box-shadow .2s ease;
+}
+.admin-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.admin-card-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.3;
+}
+.admin-card-sub{
+  font-size:12px;
+  color:var(--text-faint);
+  font-weight:500;
+  margin-top:2px;
+}
+.admin-dropdown-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+}
+.admin-select-filter{
+  appearance:none;
+  -webkit-appearance:none;
+  background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:12.5px;
+  font-weight:600;
+  padding:6px 28px 6px 12px;
+  border-radius:9px;
+  cursor:pointer;
+  outline:none;
+  transition:all .2s ease;
+}
+.admin-select-filter:hover{
+  border-color:var(--indigo-400);
+}
+.admin-select-filter:focus{
+  border-color:var(--indigo-600);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+}
+.admin-peak-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  background:rgba(244,63,94,0.1);
+  border:1px solid rgba(244,63,94,0.25);
+  border-radius:999px;
+  font-size:11.5px;
+  font-weight:700;
+  color:#e11d48;
+}
+.pulse-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#f43f5e;
+  box-shadow:0 0 0 0 rgba(244,63,94,0.6);
+  animation:pulseDotAnim 1.8s infinite;
+}
+@keyframes pulseDotAnim{
+  0%{ box-shadow:0 0 0 0 rgba(244,63,94,0.7); }
+  70%{ box-shadow:0 0 0 7px rgba(244,63,94,0); }
+  100%{ box-shadow:0 0 0 0 rgba(244,63,94,0); }
+}
+.admin-mastery-score-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 12px;
+  background:rgba(16,185,129,0.12);
+  border:1px solid rgba(16,185,129,0.25);
+  border-radius:999px;
+  font-size:12.5px;
+  font-weight:800;
+  color:var(--emerald-600);
+}
+
+/* Yangi foydalanuvchilar summary paneli */
+.admin-new-users-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(135px, 1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.admin-nu-stat-box{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.admin-nu-stat-val{
+  font-size:18px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1.2;
+}
+.admin-nu-stat-lbl{
+  font-size:11px;
+  font-weight:600;
+  color:var(--text-faint);
+  margin-top:3px;
+}
+.admin-trend-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  font-size:10.5px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:6px;
+  margin-top:4px;
+  width:fit-content;
+}
+.admin-trend-up{
+  background:rgba(16,185,129,0.15);
+  color:var(--emerald-600);
+}
+.admin-trend-down{
+  background:rgba(239,68,68,0.12);
+  color:var(--red);
+}
+.admin-trend-neutral{
+  background:rgba(148,163,184,0.15);
+  color:var(--text-faint);
+}
+
+/* Yangi foydalanuvchilar trend charti */
+.admin-nu-bars-container{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  position:relative;
+}
+
+/* Faollik Spline Wave Chart (rasmdagi kabi) */
+.activity-spline-wrapper{
+  position:relative;
+  background:linear-gradient(180deg, var(--bg) 0%, rgba(244,63,94,0.03) 100%);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 12px 10px;
+  margin-bottom:14px;
+  overflow:hidden;
+}
+.activity-svg-stage{
+  width:100%;
+  height:190px;
+  display:block;
+  overflow:visible;
+  cursor:crosshair;
+  touch-action:none;
+}
+.activity-tooltip{
+  position:absolute;
+  pointer-events:none;
+  background:rgba(15,23,42,0.92);
+  color:#fff;
+  padding:7px 11px;
+  border-radius:9px;
+  font-size:11.5px;
+  font-weight:600;
+  box-shadow:0 8px 20px -4px rgba(0,0,0,0.35);
+  transform:translate(-50%, -115%);
+  transition:opacity .15s ease, transform .1s ease;
+  z-index:20;
+  white-space:nowrap;
+  display:none;
+  border:1px solid rgba(244,63,94,0.4);
+}
+.activity-tooltip::after{
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border-width:5px;
+  border-style:solid;
+  border-color:rgba(15,23,42,0.92) transparent transparent transparent;
+}
+
+/* Kun vaqtlari bo'yicha taqsimot */
+.admin-time-slots-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.admin-slot-card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  position:relative;
+  overflow:hidden;
+}
+.admin-slot-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:4px;
+}
+.admin-slot-name{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.admin-slot-pct{
+  font-size:13px;
+  font-weight:800;
+  color:var(--indigo-600);
+}
+.admin-slot-hours{
+  font-size:10.5px;
+  color:var(--text-faint);
+  font-weight:500;
+  margin-bottom:6px;
+}
+.admin-slot-bar-bg{
+  height:5px;
+  border-radius:99px;
+  background:var(--border);
+  overflow:hidden;
+}
+.admin-slot-bar-fill{
+  height:100%;
+  border-radius:99px;
+  transition:width .6s ease;
+}
+
+/* Tavsiya bloki */
+.admin-insight-box{
+  background:rgba(99,102,241,0.06);
+  border:1px solid rgba(99,102,241,0.18);
+  border-radius:11px;
+  padding:10px 13px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--text);
+}
+.admin-insight-icon{
+  font-size:16px;
+  flex-shrink:0;
+  line-height:1;
+  margin-top:1px;
+}
+

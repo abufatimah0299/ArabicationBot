@@ -1932,9 +1932,63 @@
 
         <!-- 1) UMUMIY KO'RINISH -->
         <div class="admin-panel-body" id="adminTab-overview">
+          <!-- Asosiy ko'rsatkichlar -->
           <div class="stat-grid" id="adminStatGrid"></div>
-          <div class="card" style="padding:18px 20px;">
-            <div style="font-weight:600;font-size:13.5px;margin-bottom:12px;">Ko'nikmalar bo'yicha umumiy o'zlashtirish</div>
+
+          <!-- 1. YANGI FOYDALANUVCHILAR (DROPDOWN FILTR BILAN) -->
+          <div class="card admin-analytics-card" id="adminNewUsersCard" style="padding:18px 20px;margin-bottom:16px;">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--indigo-600);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                  Yangi qo'shilgan foydalanuvchilar
+                </div>
+                <div class="admin-card-sub" id="adminNewUsersSubText">Belgilangan davrda ro'yxatdan o'tganlar statistikasi</div>
+              </div>
+              <div class="admin-dropdown-wrap">
+                <select id="adminNewUserPeriodSelect" class="admin-select-filter" onchange="setAdminNewUserFilter(this.value)" aria-label="Yangi foydalanuvchilar davr filtri">
+                  <option value="today">Bugun (kun)</option>
+                  <option value="week" selected>Bu hafta</option>
+                  <option value="month">Bu oy</option>
+                  <option value="all">Barchasi</option>
+                </select>
+              </div>
+            </div>
+            <div id="adminNewUsersContent"></div>
+          </div>
+
+          <!-- 2. FOYDALANUVCHILAR FAOLLIK VAQTI (RASMDAGI TO'LQINSIMON SPLINE GRAFIK) -->
+          <div class="card admin-analytics-card" id="adminActivityCard" style="padding:18px 20px;margin-bottom:16px;">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#f43f5e;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Foydalanuvchilar faollik vaqti (Analitika)
+                </div>
+                <div class="admin-card-sub">Mavjud foydalanuvchilarning kun davomida eng faol bo'lgan soatlari taqsimoti</div>
+              </div>
+              <div id="adminPeakTimeBadge" class="admin-peak-badge">
+                <span class="pulse-dot"></span>
+                <span id="adminPeakTimeText">Yuklanmoqda...</span>
+              </div>
+            </div>
+            <div id="adminActivityContent"></div>
+          </div>
+
+          <!-- 3. KO'NIKMALAR BO'YICHA UMUMIY O'ZLASHTIRISH -->
+          <div class="card admin-analytics-card" id="adminSkillMasteryCard" style="padding:18px 20px;">
+            <div class="admin-card-header" style="margin-bottom:14px;">
+              <div>
+                <div class="admin-card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--emerald-600);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Ko'nikmalar bo'yicha umumiy o'zlashtirish
+                </div>
+                <div class="admin-card-sub" id="adminSkillMasterySub">O'quvchilarning 5 ta asosiy ko'nikma bo'yicha o'rtacha natijalari</div>
+              </div>
+              <div id="adminOverallMasteryBadge" class="admin-mastery-score-badge">
+                <span id="adminOverallMasteryVal">0%</span>
+              </div>
+            </div>
             <div id="adminSkillBars"></div>
           </div>
         </div>

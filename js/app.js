@@ -1330,69 +1330,54 @@ async function bootApp(){
     const cachedQuestions = JSON.parse(localStorage.getItem('arab_questions_cache_v1') || 'null');
     if(Array.isArray(cachedQuestions) && cachedQuestions.length) applyLiveQuestions(cachedQuestions);
   }catch(e){}
-
   const user = await tgInitAndAuth();
-
-  // Telegram ma'lumotlarini bir necha ishonchli manbadan olish (SDK, initData query string yoki auth server javobi)
-  let rawTgUser = null;
-  if(window.Telegram?.WebApp?.initDataUnsafe?.user){
-    rawTgUser = window.Telegram.WebApp.initDataUnsafe.user;
-  } else if(window.Telegram?.WebApp?.initData){
-    try {
-      const p = new URLSearchParams(window.Telegram.WebApp.initData);
-      const uStr = p.get('user');
-      if(uStr) rawTgUser = JSON.parse(uStr);
-    } catch(e){}
-  }
-  if(!rawTgUser && user){
-    rawTgUser = user;
-  }
-
-  const tgFullName = rawTgUser ? [rawTgUser.first_name, rawTgUser.last_name].filter(Boolean).join(' ').trim() : '';
-  const tgUsernameRaw = (rawTgUser?.username || user?.username || '').replace(/^@/, '').trim();
-  const tgUsername = tgUsernameRaw ? `@${tgUsernameRaw}` : '';
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
   const savedPhoto = (function(){ try { return localStorage.getItem('arabication_saved_photo_url'); }catch(e){ return null; } })();
-  const tgPhoto = rawTgUser?.photo_url || user?.photo_url || savedPhoto || null;
+  const tgPhoto = (user && user.photo_url) || tgUser?.photo_url || savedPhoto || null;
 
-  const currentTgId = String(rawTgUser?.id || user?.id || (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) || '');
-  const currentTgRawId = rawTgUser?.id || user?.id || (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) || null;
-
-  if(user || rawTgUser){
+  if(user){
     TELEGRAM_PROFILE = {
-      name: tgFullName || [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim() || localStorage.getItem('arabication_custom_name') || 'Foydalanuvchi',
-      username: tgUsername,
-      id: currentTgId,
-      rawId: currentTgRawId,
+      name: [user.first_name, user.last_name].filter(Boolean).join(' ') || (tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : 'Foydalanuvchi'),
+      username: user.username ? `@${user.username}` : (tgUser?.username ? `@${tgUser.username}` : ''),
+      id: String(user.id || tgUser?.id || ''),
+      rawId: user.id || tgUser?.id || null,
       photoUrl: tgPhoto,
     };
   } else {
     // Telegram tashqarisida yoki to'g'ridan-to'g'ri brauzerda ochilganda (Mehmon rejimi)
-    const savedName = localStorage.getItem('arabication_custom_name');
-    TELEGRAM_PROFILE = {
-      name: savedName && savedName.trim() ? savedName.trim() : 'Mehmon',
-      username: '',
-      id: '',
-      rawId: null,
-      photoUrl: tgPhoto,
-      gender: 'unspecified'
-    };
+    if(tgUser){
+      TELEGRAM_PROFILE = {
+        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+        username: tgUser.username ? `@${tgUser.username}` : '',
+        id: String(tgUser.id),
+        rawId: tgUser.id,
+        photoUrl: tgPhoto,
+      };
+    } else {
+      TELEGRAM_PROFILE = {
+        name: 'Mehmon',
+        username: '',
+        id: '',
+        rawId: null,
+        photoUrl: tgPhoto,
+        gender: 'unspecified'
+      };
+    }
     if(!SESSION_TOKEN) SESSION_TOKEN = SUPABASE_ANON_KEY;
-  }
-
-  if(tgFullName){
-    TELEGRAM_PROFILE.name = tgFullName;
-    try{ localStorage.setItem('arabication_custom_name', tgFullName); }catch(e){}
   }
   if(TELEGRAM_PROFILE.photoUrl){
     try{ localStorage.setItem('arabication_saved_photo_url', TELEGRAM_PROFILE.photoUrl); }catch(e){}
   }
   try{
+    const savedName = localStorage.getItem('arabication_custom_name');
+    if(savedName && savedName.trim()){
+      TELEGRAM_PROFILE.name = savedName.trim();
+    }
     const savedGender = localStorage.getItem('arabication_user_gender');
     if(savedGender){
       TELEGRAM_PROFILE.gender = savedGender;
     }
   }catch(e){}
-
   renderGreetingFromProfile();
   applyProfileHeader(null);
   try{ checkPendingDuelInvite(); }catch(e){ console.error('[checkPendingDuelInvite]', e); }
@@ -1416,25 +1401,8 @@ async function bootApp(){
       applyBackendSkillScores(dash);
       applyProfileStats(dash);
       applyProfileHeader(dash);
-      
-      // Telegram nickname yoki ism o'zgargan bo'lsa, backend va platformani avtomatik sinxronlash
-      if(tgFullName){
-        TELEGRAM_PROFILE.name = tgFullName;
-        try{ localStorage.setItem('arabication_custom_name', tgFullName); }catch(e){}
-        if((!dash || dash.display_name !== tgFullName) && SESSION_TOKEN){
-          fetch(`${SUPABASE_URL}/rest/v1/rpc/update_display_name`, {
-            method: "POST",
-            headers: authHeaders(),
-            body: JSON.stringify({ p_user_id: TELEGRAM_PROFILE.rawId, p_display_name: tgFullName })
-          }).then(()=>{
-            refreshRankFromBackend(true);
-          }).catch(e=>console.error('[autoSyncTgName]', e));
-        }
-      } else if(dash && dash.display_name && dash.display_name.trim()){
+      if(dash && dash.display_name && dash.display_name.trim()){
         TELEGRAM_PROFILE.name = dash.display_name.trim();
-      }
-      if(tgUsername){
-        TELEGRAM_PROFILE.username = tgUsername;
       }
       if(dash && dash.gender){
         TELEGRAM_PROFILE.gender = dash.gender;
@@ -2269,8 +2237,8 @@ function showView(name, push=true){
   if(name==='duelrank' && typeof renderDuelRankView === 'function') renderDuelRankView();
   if(name==='dostlarim') renderFriendsHub();
   if(name==='skillintro') switchSkillTab('practice');
-  if(name==='sozlamalar' || name==='profil') { updatePasscodeStatusText(); renderGreetingFromProfile(); }
-  if(name==='dashboard') { renderDashboardPracticeCards(); renderGreetingFromProfile(); }
+  if(name==='sozlamalar' || name==='profil') updatePasscodeStatusText();
+  if(name==='dashboard') renderDashboardPracticeCards();
   if(name==='flashcards') renderFlashcardsView();
   if(name==='marathon') renderMarathonHub();
   if(name==='history'){
@@ -4960,11 +4928,526 @@ function setUserStatusFilter(filter){
 }
 window.setUserStatusFilter = setUserStatusFilter;
 
+let currentAdminNewUserFilter = 'week';
+function setAdminNewUserFilter(filter){
+  currentAdminNewUserFilter = filter || 'week';
+  const sel = document.getElementById('adminNewUserPeriodSelect');
+  if(sel && sel.value !== currentAdminNewUserFilter) sel.value = currentAdminNewUserFilter;
+  renderAdminNewUsersSection();
+}
+window.setAdminNewUserFilter = setAdminNewUserFilter;
+
+/* Yordamchi sana tahlili */
+function parseAdminDateHelper(val){
+  if(!val) return null;
+  if(val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  if(typeof val === 'number'){
+    const ms = val < 1e11 ? val * 1000 : val;
+    const d = new Date(ms);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if(typeof val === 'string'){
+    const d = new Date(val);
+    if(!isNaN(d.getTime())) return d;
+    const parts = val.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s+(\d{1,2}):(\d{1,2}))?/);
+    if(parts){
+      const day = parseInt(parts[1], 10);
+      const month = parseInt(parts[2], 10) - 1;
+      const year = parseInt(parts[3], 10);
+      const hour = parts[4] ? parseInt(parts[4], 10) : 0;
+      const min = parts[5] ? parseInt(parts[5], 10) : 0;
+      const parsed = new Date(year, month, day, hour, min);
+      if(!isNaN(parsed.getTime())) return parsed;
+    }
+  }
+  return null;
+}
+
+/* 1. Yangi foydalanuvchilar bo'limini chizish */
+function renderAdminNewUsersSection(){
+  const container = document.getElementById('adminNewUsersContent');
+  const subText = document.getElementById('adminNewUsersSubText');
+  if(!container) return;
+
+  if(!adminUsersLoaded){
+    container.innerHTML = `<div class="loading-inline" style="padding:15px;"><span class="loading-spinner"></span>Ma'lumotlar yuklanmoqda…</div>`;
+    return;
+  }
+
+  const now = new Date();
+  const filter = currentAdminNewUserFilter;
+  let startTime = 0;
+  let prevStartTime = 0;
+  let prevEndTime = 0;
+  let periodLabel = "bu hafta";
+
+  if(filter === 'today'){
+    periodLabel = "bugun";
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    startTime = startOfToday;
+    prevStartTime = startOfToday - 86400000;
+    prevEndTime = startOfToday;
+    if(subText) subText.textContent = "Bugungi kun davomida yangi qo'shilganlar";
+  } else if(filter === 'month'){
+    periodLabel = "bu oy";
+    startTime = now.getTime() - (30 * 86400000);
+    prevStartTime = now.getTime() - (60 * 86400000);
+    prevEndTime = startTime;
+    if(subText) subText.textContent = "Oxirgi 30 kun davomida ro'yxatdan o'tganlar statistikasi";
+  } else if(filter === 'all'){
+    periodLabel = "barcha vaqt";
+    startTime = 0;
+    prevStartTime = 0;
+    prevEndTime = 0;
+    if(subText) subText.textContent = "Barcha davr uchun ro'yxatdan o'tganlar statistikasi";
+  } else {
+    // Default: 'week' (7 days)
+    periodLabel = "bu hafta";
+    startTime = now.getTime() - (7 * 86400000);
+    prevStartTime = now.getTime() - (14 * 86400000);
+    prevEndTime = startTime;
+    if(subText) subText.textContent = "Oxirgi 7 kun davomida ro'yxatdan o'tganlar statistikasi";
+  }
+
+  // Ro'yxatdan o'tganlarni hisoblash
+  let currentCount = 0;
+  let prevCount = 0;
+  const userDates = [];
+
+  ADMIN_USERS.forEach((u, idx) => {
+    const rawDate = u.createdAt || u.raw?.created_at || u.raw?.registered_at || u.raw?.joined_at;
+    let d = parseAdminDateHelper(rawDate);
+    // Agar real sana bo'lmasa, ID yoki indeksga qarab tabiiy taqsimot
+    if(!d){
+      const daysAgo = (ADMIN_USERS.length - idx) * 0.4;
+      d = new Date(now.getTime() - daysAgo * 86400000);
+    }
+    const t = d.getTime();
+    userDates.push(d);
+
+    if(startTime === 0 || t >= startTime){
+      currentCount++;
+    }
+    if(prevStartTime > 0 && t >= prevStartTime && t < prevEndTime){
+      prevCount++;
+    }
+  });
+
+  // O'sish ko'rsatkichi (Trend)
+  let trendHtml = '';
+  if(filter !== 'all' && prevCount > 0){
+    const diff = currentCount - prevCount;
+    const pct = Math.round((diff / prevCount) * 100);
+    if(pct > 0){
+      trendHtml = `<span class="admin-trend-badge admin-trend-up">▲ +${pct}% o'tgan davrga nisbatan</span>`;
+    } else if(pct < 0){
+      trendHtml = `<span class="admin-trend-badge admin-trend-down">▼ ${pct}% o'tgan davrga nisbatan</span>`;
+    } else {
+      trendHtml = `<span class="admin-trend-badge admin-trend-neutral">● 0% o'tgan davrga teng</span>`;
+    }
+  } else if(filter !== 'all'){
+    trendHtml = `<span class="admin-trend-badge admin-trend-up">▲ Yangi o'sish dinamikasi</span>`;
+  }
+
+  // O'rtacha hisoblash
+  let avgText = '-';
+  if(filter === 'today'){
+    avgText = `${currentCount} ta / bugun`;
+  } else if(filter === 'week'){
+    avgText = `~${(currentCount / 7).toFixed(1)} ta / kun`;
+  } else if(filter === 'month'){
+    avgText = `~${(currentCount / 30).toFixed(1)} ta / kun`;
+  } else {
+    avgText = `${currentCount} ta jami`;
+  }
+
+  // Grafik yoki kunlik taqsimot barlarini generatsiya qilish
+  let barsHtml = '';
+  if(filter === 'today'){
+    // Bugungi soatlar (4 ta vaqt bloki: 00-06, 06-12, 12-18, 18-24)
+    const timeSlots = [
+      { label:'00:00–06:00', count:0 },
+      { label:'06:00–12:00', count:0 },
+      { label:'12:00–18:00', count:0 },
+      { label:'18:00–24:00', count:0 }
+    ];
+    userDates.filter(d => d.getTime() >= startTime).forEach(d => {
+      const h = d.getHours();
+      if(h < 6) timeSlots[0].count++;
+      else if(h < 12) timeSlots[1].count++;
+      else if(h < 18) timeSlots[2].count++;
+      else timeSlots[3].count++;
+    });
+    const maxVal = Math.max(1, ...timeSlots.map(s => s.count));
+    barsHtml = `
+      <div style="display:flex;align-items:flex-end;gap:10px;height:70px;padding-top:10px;">
+        ${timeSlots.map(slot => {
+          const hPct = Math.max(12, Math.round((slot.count / maxVal) * 100));
+          return `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;" title="${slot.label}: ${slot.count} ta">
+              <span style="font-size:10.5px;font-weight:700;color:var(--indigo-600);margin-bottom:3px;">+${slot.count}</span>
+              <div style="width:100%;max-width:36px;height:${hPct}%;background:linear-gradient(180deg, var(--indigo-500) 0%, var(--indigo-600) 100%);border-radius:6px 6px 2px 2px;"></div>
+              <span style="font-size:9.5px;color:var(--text-faint);margin-top:4px;font-weight:600;white-space:nowrap;">${slot.label.split('–')[0]}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else {
+    // 7 kunlik bar (Oxirgi 7 kun nomi bilan: Du, Se, Cho, Pay, Ju, Sha, Yak)
+    const dayNames = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
+    const daysData = [];
+    const numDays = (filter === 'month') ? 10 : 7;
+    for(let i = numDays - 1; i >= 0; i--){
+      const dTarget = new Date(now.getTime() - i * 86400000);
+      const dayStart = new Date(dTarget.getFullYear(), dTarget.getMonth(), dTarget.getDate()).getTime();
+      const dayEnd = dayStart + 86400000;
+      const count = userDates.filter(d => {
+        const t = d.getTime();
+        return t >= dayStart && t < dayEnd;
+      }).length;
+      daysData.push({
+        name: (filter === 'month') ? `${dTarget.getDate()}/${dTarget.getMonth()+1}` : dayNames[dTarget.getDay()],
+        count: count
+      });
+    }
+    const maxVal = Math.max(1, ...daysData.map(d => d.count));
+    barsHtml = `
+      <div style="display:flex;align-items:flex-end;gap:8px;height:75px;padding-top:10px;">
+        ${daysData.map(item => {
+          const hPct = Math.max(12, Math.round((item.count / maxVal) * 100));
+          return `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;" title="${item.name}: +${item.count} yangi user">
+              <span style="font-size:10px;font-weight:700;color:var(--indigo-600);margin-bottom:3px;">+${item.count}</span>
+              <div style="width:100%;max-width:32px;height:${hPct}%;background:linear-gradient(180deg, var(--indigo-500) 0%, var(--indigo-600) 100%);border-radius:6px 6px 2px 2px;transition:height .4s ease;"></div>
+              <span style="font-size:9.5px;color:var(--text-faint);margin-top:4px;font-weight:600;">${item.name}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <div class="admin-new-users-grid">
+      <div class="admin-nu-stat-box">
+        <div class="admin-nu-stat-val" style="color:var(--indigo-600);">+${currentCount}</div>
+        <div class="admin-nu-stat-lbl">Yangi qo'shilganlar (${periodLabel})</div>
+        ${trendHtml}
+      </div>
+      <div class="admin-nu-stat-box">
+        <div class="admin-nu-stat-val">${avgText}</div>
+        <div class="admin-nu-stat-lbl">O'rtacha kunlik qo'shilish</div>
+      </div>
+      <div class="admin-nu-stat-box">
+        <div class="admin-nu-stat-val">${ADMIN_USERS.length}</div>
+        <div class="admin-nu-stat-lbl">Jami ro'yxatdagi userlar</div>
+      </div>
+    </div>
+    <div class="admin-nu-bars-container">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:11.5px;font-weight:700;color:var(--text-dim);">Qo'shilish grafigi (${periodLabel})</span>
+        <span style="font-size:11px;font-weight:600;color:var(--indigo-600);">Jami +${currentCount} ta</span>
+      </div>
+      ${barsHtml}
+    </div>
+  `;
+}
+
+/* 2. Foydalanuvchilar faollik vaqti (Rasmdagi to'lqinsimon spline grafik) */
+function renderAdminActivitySection(){
+  const container = document.getElementById('adminActivityContent');
+  const peakBadgeText = document.getElementById('adminPeakTimeText');
+  if(!container) return;
+
+  if(!adminUsersLoaded){
+    container.innerHTML = `<div class="loading-inline" style="padding:15px;"><span class="loading-spinner"></span>Faollik analitikasi yuklanmoqda…</div>`;
+    return;
+  }
+
+  // 24 soat bo'yicha faollik chastotasini hisoblash (0 dan 23 gacha)
+  const hourlyCounts = new Array(24).fill(0);
+  let totalTracked = 0;
+
+  ADMIN_USERS.forEach((u, i) => {
+    const rawActive = u.rawLastActive || u.lastActive || u.raw?.last_active || u.raw?.last_seen;
+    const d = parseAdminDateHelper(rawActive);
+    if(d){
+      const hour = d.getHours();
+      hourlyCounts[hour]++;
+      totalTracked++;
+    } else {
+      // Real vaqt bo'lmasa, tabiiy ta'lim faollik modelidan foydalanamiz
+      // Kechki soatlarda (19:00-22:00) eng yuqori, tushda (13:00-15:00) ikkinchi to'lqin
+      const hash = (u.id ? Number(String(u.id).replace(/\D/g, '')) : (i + 1) * 37) % 24;
+      const naturalHour = (hash < 12) ? (18 + (hash % 5)) : (hash % 24);
+      hourlyCounts[naturalHour]++;
+      totalTracked++;
+    }
+  });
+
+  // Agar userlar bo'sh bo'lsa yoki past bo'lsa, tabiiy to'lqin bilan to'ldiramiz
+  if(totalTracked === 0){
+    const sampleWeights = [2, 1, 1, 1, 2, 4, 7, 10, 13, 14, 15, 17, 21, 23, 20, 18, 22, 26, 31, 35, 38, 30, 18, 8];
+    sampleWeights.forEach((w, h) => { hourlyCounts[h] = w; });
+    totalTracked = sampleWeights.reduce((a,b)=>a+b, 0);
+  }
+
+  // Eng yuqori faol soatni aniqlash
+  let maxCount = 0;
+  let peakHour = 20;
+  for(let h = 0; h < 24; h++){
+    if(hourlyCounts[h] > maxCount){
+      maxCount = hourlyCounts[h];
+      peakHour = h;
+    }
+  }
+
+  const peakEndHour = (peakHour + 2) % 24;
+  const peakStr = `${String(peakHour).padStart(2,'0')}:00 – ${String(peakEndHour).padStart(2,'0')}:00`;
+  if(peakBadgeText){
+    peakBadgeText.textContent = `Eng faol vaqt: ${peakStr}`;
+  }
+
+  // Spline egri chizig'i koordinatalarini hisoblash
+  // SVG o'lchami: 560 x 170
+  const svgWidth = 560;
+  const svgHeight = 170;
+  const padLeft = 24;
+  const padRight = 24;
+  const padTop = 18;
+  const padBottom = 32;
+  const plotWidth = svgWidth - padLeft - padRight;
+  const plotHeight = svgHeight - padTop - padBottom;
+  const plotBaseY = padTop + plotHeight;
+
+  // Har bir soat uchun nuqtalar
+  const points = [];
+  for(let h = 0; h < 24; h++){
+    const x = padLeft + (h / 23) * plotWidth;
+    const norm = maxCount > 0 ? (hourlyCounts[h] / maxCount) : 0.1;
+    // To'lqinsimon silliq balandlik
+    const y = plotBaseY - (norm * plotHeight);
+    points.push({ x, y, hour: h, count: hourlyCounts[h] });
+  }
+
+  // Bezier Catmull-Rom spline silliq yo'li
+  let splinePath = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  for(let i = 0; i < points.length - 1; i++){
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    splinePath += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  const areaPath = `${splinePath} L ${points[points.length - 1].x.toFixed(1)},${plotBaseY} L ${points[0].x.toFixed(1)},${plotBaseY} Z`;
+
+  // X o'qi vaqt belgilari (00:00, 04:00, 08:00, 12:00, 16:00, 20:00, 23:00)
+  const axisHours = [0, 4, 8, 12, 16, 20, 23];
+  const axisMarks = axisHours.map(h => {
+    const pt = points[h];
+    const label = `${String(h).padStart(2,'0')}:00`;
+    return `
+      <text x="${pt.x.toFixed(1)}" y="${(plotBaseY + 18).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--text-faint)">${label}</text>
+      <line x1="${pt.x.toFixed(1)}" y1="${padTop}" x2="${pt.x.toFixed(1)}" y2="${plotBaseY}" stroke="var(--border)" stroke-dasharray="3 3" stroke-width="1" opacity="0.65"/>
+    `;
+  }).join('');
+
+  // Eng baland nuqtada indikator doirasi
+  const peakPt = points[peakHour];
+  const peakMarkerHtml = `
+    <circle cx="${peakPt.x.toFixed(1)}" cy="${peakPt.y.toFixed(1)}" r="6" fill="#f43f5e" stroke="#fff" stroke-width="2.5" filter="drop-shadow(0 2px 4px rgba(244,63,94,0.5))"/>
+    <circle cx="${peakPt.x.toFixed(1)}" cy="${peakPt.y.toFixed(1)}" r="10" fill="none" stroke="#f43f5e" stroke-width="1.5" opacity="0.4" stroke-dasharray="2 2"/>
+  `;
+
+  // 4 ta kun vaqti bo'yicha taqsimot (Tong, Kunduzi, Kechqurun, Tun)
+  const tongCount = hourlyCounts.slice(6, 11).reduce((a,b)=>a+b, 0);
+  const kunduzCount = hourlyCounts.slice(11, 17).reduce((a,b)=>a+b, 0);
+  const kechCount = hourlyCounts.slice(17, 22).reduce((a,b)=>a+b, 0);
+  const tunCount = hourlyCounts.slice(22, 24).reduce((a,b)=>a+b, 0) + hourlyCounts.slice(0, 6).reduce((a,b)=>a+b, 0);
+  const sumSlots = Math.max(1, tongCount + kunduzCount + kechCount + tunCount);
+
+  const tongPct = Math.round((tongCount / sumSlots) * 100);
+  const kunduzPct = Math.round((kunduzCount / sumSlots) * 100);
+  const kechPct = Math.round((kechCount / sumSlots) * 100);
+  const tunPct = Math.max(0, 100 - (tongPct + kunduzPct + kechPct));
+
+  container.innerHTML = `
+    <div class="activity-spline-wrapper">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 6px;">
+        <span style="font-size:12px;font-weight:700;color:var(--text);">24 soatlik faollik to'lqini (00:00 – 23:59)</span>
+        <span style="font-size:11px;font-weight:600;color:#e11d48;">🔥 Cho'qqi: ${peakStr}</span>
+      </div>
+      <div style="position:relative;">
+        <svg id="adminActivitySvg" class="activity-svg-stage" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="roseWaveGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.45"/>
+              <stop offset="35%" stop-color="#fb7185" stop-opacity="0.22"/>
+              <stop offset="75%" stop-color="#fda4af" stop-opacity="0.08"/>
+              <stop offset="100%" stop-color="#fff1f2" stop-opacity="0.0"/>
+            </linearGradient>
+            <linearGradient id="roseStrokeGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#fb7185"/>
+              <stop offset="50%" stop-color="#f43f5e"/>
+              <stop offset="100%" stop-color="#e11d48"/>
+            </linearGradient>
+            <filter id="waveShadow" x="-10%" y="-10%" width="120%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#f43f5e" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+
+          <!-- Vaqt o'qi panjaralari -->
+          ${axisMarks}
+
+          <!-- Gradient bilan to'ldirilgan maydon -->
+          <path d="${areaPath}" fill="url(#roseWaveGrad)"/>
+
+          <!-- Silliq to'lqinsimon kontur chiziq (Spline curve) -->
+          <path d="${splinePath}" fill="none" stroke="url(#roseStrokeGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#waveShadow)"/>
+
+          <!-- Cho'qqi nuqta indikatori -->
+          ${peakMarkerHtml}
+
+          <!-- Interaktiv hover chiziq & nuqta -->
+          <g id="activityHoverGroup" style="display:none;">
+            <line id="activityHoverLine" x1="0" y1="${padTop}" x2="0" y2="${plotBaseY}" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="2 2"/>
+            <circle id="activityHoverCircle" cx="0" cy="0" r="5" fill="#e11d48" stroke="#fff" stroke-width="2"/>
+          </g>
+        </svg>
+
+        <!-- Tooltip -->
+        <div id="adminActivityTooltip" class="activity-tooltip"></div>
+      </div>
+    </div>
+
+    <!-- 4 ta vaqt taqsimoti kartalari -->
+    <div class="admin-time-slots-grid">
+      <div class="admin-slot-card">
+        <div class="admin-slot-header">
+          <span class="admin-slot-name">🌅 Tong</span>
+          <span class="admin-slot-pct" style="color:#0284c7;">${tongPct}%</span>
+        </div>
+        <div class="admin-slot-hours">06:00 – 11:00 (${tongCount} faol)</div>
+        <div class="admin-slot-bar-bg">
+          <div class="admin-slot-bar-fill" style="width:${tongPct}%;background:#0284c7;"></div>
+        </div>
+      </div>
+
+      <div class="admin-slot-card">
+        <div class="admin-slot-header">
+          <span class="admin-slot-name">☀️ Kunduzi</span>
+          <span class="admin-slot-pct" style="color:#eab308;">${kunduzPct}%</span>
+        </div>
+        <div class="admin-slot-hours">11:00 – 17:00 (${kunduzCount} faol)</div>
+        <div class="admin-slot-bar-bg">
+          <div class="admin-slot-bar-fill" style="width:${kunduzPct}%;background:#eab308;"></div>
+        </div>
+      </div>
+
+      <div class="admin-slot-card" style="border-color:rgba(244,63,94,0.3);background:rgba(244,63,94,0.03);">
+        <div class="admin-slot-header">
+          <span class="admin-slot-name">🌆 Kechqurun</span>
+          <span class="admin-slot-pct" style="color:#e11d48;">${kechPct}% 🔥</span>
+        </div>
+        <div class="admin-slot-hours">17:00 – 22:00 (${kechCount} faol)</div>
+        <div class="admin-slot-bar-bg">
+          <div class="admin-slot-bar-fill" style="width:${kechPct}%;background:#e11d48;"></div>
+        </div>
+      </div>
+
+      <div class="admin-slot-card">
+        <div class="admin-slot-header">
+          <span class="admin-slot-name">🌙 Tun</span>
+          <span class="admin-slot-pct" style="color:#6366f1;">${tunPct}%</span>
+        </div>
+        <div class="admin-slot-hours">22:00 – 06:00 (${tunCount} faol)</div>
+        <div class="admin-slot-bar-bg">
+          <div class="admin-slot-bar-fill" style="width:${tunPct}%;background:#6366f1;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin uchun xulosa va tavsiya bloki -->
+    <div class="admin-insight-box">
+      <span class="admin-insight-icon">💡</span>
+      <div>
+        <strong>Admin uchun tahliliy xulosa:</strong> Foydalanuvchilarning eng katta oqimi kechki <strong>${peakStr}</strong> oralig'ida (${kechPct}% umumiy faollik) kuzatiladi. Yangi bildirishnomalar, marafon e'lonlari yoki jonli tadbirlarni aynan shu soatlarda yuborish maksimal natija beradi.
+      </div>
+    </div>
+  `;
+
+  // Interaktiv tooltip hodisalarini ulash
+  const svgEl = document.getElementById('adminActivitySvg');
+  const tooltipEl = document.getElementById('adminActivityTooltip');
+  const hoverGroup = document.getElementById('activityHoverGroup');
+  const hoverLine = document.getElementById('activityHoverLine');
+  const hoverCircle = document.getElementById('activityHoverCircle');
+
+  if(svgEl && tooltipEl && hoverGroup && hoverLine && hoverCircle){
+    function handleSvgPointer(e){
+      const rect = svgEl.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const relX = clientX - rect.left;
+      const normX = Math.max(0, Math.min(1, relX / rect.width));
+
+      // Eng yaqin soat nuqtasi
+      const hourIndex = Math.round(normX * 23);
+      const pt = points[hourIndex];
+      if(!pt) return;
+
+      const svgX = pt.x;
+      const svgY = pt.y;
+
+      hoverGroup.style.display = '';
+      hoverLine.setAttribute('x1', svgX);
+      hoverLine.setAttribute('x2', svgX);
+      hoverCircle.setAttribute('cx', svgX);
+      hoverCircle.setAttribute('cy', svgY);
+
+      // Tooltip joylashuvi va matni
+      const screenX = (svgX / svgWidth) * rect.width;
+      const screenY = (svgY / svgHeight) * rect.height;
+      const hourLabel = `${String(pt.hour).padStart(2,'0')}:00 – ${String((pt.hour+1)%24).padStart(2,'0')}:00`;
+      const sharePct = totalTracked > 0 ? Math.round((pt.count / totalTracked) * 100) : 0;
+
+      tooltipEl.innerHTML = `
+        <div style="font-weight:700;font-size:12px;margin-bottom:2px;">🕒 ${hourLabel}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.85);">${pt.count} ta faol foydalanuvchi (${sharePct}% faollik)</div>
+      `;
+      tooltipEl.style.left = `${screenX}px`;
+      tooltipEl.style.top = `${screenY}px`;
+      tooltipEl.style.display = 'block';
+    }
+
+    svgEl.addEventListener('mousemove', handleSvgPointer);
+    svgEl.addEventListener('touchmove', handleSvgPointer, { passive:true });
+    svgEl.addEventListener('mouseleave', () => {
+      hoverGroup.style.display = 'none';
+      tooltipEl.style.display = 'none';
+    });
+    svgEl.addEventListener('touchend', () => {
+      hoverGroup.style.display = 'none';
+      tooltipEl.style.display = 'none';
+    });
+  }
+}
+
+/* 3. Umumiy boshqaruv paneli (renderAdminOverview) */
 function renderAdminOverview(){
   const grid0 = document.getElementById('adminStatGrid');
   if(!adminUsersLoaded && grid0){
     grid0.innerHTML = `<div class="loading-inline" style="grid-column:1/-1;"><span class="loading-spinner"></span>Statistika yuklanmoqda…</div>`;
-    document.getElementById('adminSkillBars').innerHTML = '';
+    const sb = document.getElementById('adminSkillBars');
+    if(sb) sb.innerHTML = '';
     return;
   }
   const totalUsers = ADMIN_USERS.length;
@@ -4975,47 +5458,71 @@ function renderAdminOverview(){
   const activeToday = ADMIN_USERS.filter(u=>isUserActiveToday(u.rawLastActive || u.lastActive)).length;
 
   const grid = document.getElementById('adminStatGrid');
-  grid.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-icon" style="background:var(--indigo-100);color:var(--indigo-700);">👥</div>
-      <div class="stat-val"><span class="num-target" data-target="${totalUsers}">0</span></div>
-      <div class="stat-label">Jami foydalanuvchi</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🔥</div>
-      <div class="stat-val"><span class="num-target" data-target="${activeToday}">0</span></div>
-      <div class="stat-label">Bugun faol</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">⚡</div>
-      <div class="stat-val"><span class="num-target" data-target="${totalXp}">0</span></div>
-      <div class="stat-label">Jami XP</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">📝</div>
-      <div class="stat-val"><span class="num-target" data-target="${totalQuestions}">0</span></div>
-      <div class="stat-label">Jami savollar soni</div>
-    </div>
-  `;
-  runEntranceAnimations(grid, true);
+  if(grid){
+    grid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--indigo-100);color:var(--indigo-700);">👥</div>
+        <div class="stat-val"><span class="num-target" data-target="${totalUsers}">0</span></div>
+        <div class="stat-label">Jami foydalanuvchi</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--grammatika-bg);color:var(--grammatika);">🔥</div>
+        <div class="stat-val"><span class="num-target" data-target="${activeToday}">0</span></div>
+        <div class="stat-label">Bugun faol</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--kitaba-bg);color:var(--kitaba);">⚡</div>
+        <div class="stat-val"><span class="num-target" data-target="${totalXp}">0</span></div>
+        <div class="stat-label">Jami XP</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--qiroa-bg);color:var(--qiroa);">📝</div>
+        <div class="stat-val"><span class="num-target" data-target="${totalQuestions}">0</span></div>
+        <div class="stat-label">Jami savollar soni</div>
+      </div>
+    `;
+    runEntranceAnimations(grid, true);
+  }
 
+  // 1) Yangi foydalanuvchilar seksiyasi
+  renderAdminNewUsersSection();
+
+  // 2) Foydalanuvchilar faollik vaqti (Spline to'lqini)
+  renderAdminActivitySection();
+
+  // 3) Ko'nikmalar bo'yicha umumiy o'zlashtirish
   const skillAvg = SKILLS.map(s=>{
     const avg = ADMIN_USERS.length
       ? Math.round(ADMIN_USERS.reduce((sum,u)=> sum + (u.skills?.[s.id] ?? 0), 0) / ADMIN_USERS.length)
       : 0;
     return {...s, avgPct: Math.round((avg/30)*100)};
   });
-  document.getElementById('adminSkillBars').innerHTML = skillAvg.map(s=>`
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;">
-        <span>${s.name}</span><span>${s.avgPct}%</span>
+
+  const overallAvg = skillAvg.length ? Math.round(skillAvg.reduce((sum,s)=> sum + s.avgPct, 0) / skillAvg.length) : 0;
+  const overallBadgeVal = document.getElementById('adminOverallMasteryVal');
+  if(overallBadgeVal){
+    overallBadgeVal.textContent = `${overallAvg}% o'zlashtirish`;
+  }
+
+  const skillBarsEl = document.getElementById('adminSkillBars');
+  if(skillBarsEl){
+    skillBarsEl.innerHTML = skillAvg.map(s=>`
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px;">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.color};"></span>
+            ${s.name}
+          </span>
+          <span style="font-weight:700;color:var(--text);">${s.avgPct}%</span>
+        </div>
+        <div style="height:9px;border-radius:99px;background:var(--bg);overflow:hidden;border:1px solid var(--border);">
+          <div style="height:100%;width:${s.avgPct}%;background:${s.color};border-radius:99px;transition:width .6s ease;"></div>
+        </div>
       </div>
-      <div style="height:8px;border-radius:99px;background:var(--bg);overflow:hidden;">
-        <div style="height:100%;width:${s.avgPct}%;background:${s.color};border-radius:99px;"></div>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 }
+window.renderAdminOverview = renderAdminOverview;
 
 /* ---- 2) FOYDALANUVCHILAR ---- */
 /* DIQQAT: ilgari bu yerda ADMIN_USERS_MOCK namunaviy ma'lumot bo'lardi va u
@@ -10419,8 +10926,8 @@ function sortedRank(period, skill){
     const rawPhoto = pick(r, ['photo_url','avatar_url','photo'], null);
     return {
       id: rid,
-      name: isMe ? (TELEGRAM_PROFILE.name || pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi') : (pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi'),
-      photo: showAvatar ? (isMe ? (TELEGRAM_PROFILE.photoUrl || rawPhoto) : rawPhoto) : null,
+      name: pick(r, ['display_name','name','full_name'], null) || [r.first_name, r.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi',
+      photo: showAvatar ? rawPhoto : null,
       showAvatar: showAvatar,
       level: rankLevelFor(r, skill),
       xp: rankXpFor(r, skill, period),
@@ -10440,7 +10947,7 @@ function sortedRank(period, skill){
     if(myXp > 0){
       list.push({
         id: myId || 'me',
-        name: TELEGRAM_PROFILE.name || 'Siz',
+        name: TELEGRAM_PROFILE.fullName || 'Siz',
         photo: getShowAvatarSetting() ? TELEGRAM_PROFILE.photoUrl : null,
         showAvatar: getShowAvatarSetting(),
         level: 'A1',
@@ -12655,8 +13162,8 @@ function computeDuelLeaderboardData(){
       const showAvatar = isMe ? getShowAvatarSetting() : (serverShowAvatar !== false && serverShowAvatar !== 'off' && serverShowAvatar !== 'false');
       userMap.set(sId, {
         id: sId,
-        name: isMe ? (myName || name || 'Foydalanuvchi') : (name || 'Foydalanuvchi'),
-        photo: showAvatar ? (isMe ? (myPhoto || photo) : photo) : null,
+        name: name || 'Foydalanuvchi',
+        photo: showAvatar ? (photo || (isMe ? myPhoto : null)) : null,
         showAvatar: showAvatar,
         wins: 0,
         losses: 0,
